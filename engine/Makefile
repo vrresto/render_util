@@ -1,7 +1,7 @@
 PLATFORM= native
 BASE_BUILD_DIR:= ../build/$(PLATFORM)
 BUILD_DIR:= $(BASE_BUILD_DIR)/engine
-FASTNOISE_DIR:= ../../FastNoise
+FASTNOISE_DIR:= ../FastNoise
 
 CXX_native:=g++
 CXX_wine:=wineg++
