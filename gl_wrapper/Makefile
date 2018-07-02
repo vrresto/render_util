@@ -1,7 +1,7 @@
 PLATFORM= native
 BASE_BUILD_DIR:= ../build/$(PLATFORM)
 BUILD_DIR:= $(BASE_BUILD_DIR)/gl_wrapper
-MESA_PATH:= $(HOME)/src/mesa
+MESA_PATH:= ../mesa
 PYTHONPATH:= $(MESA_PATH)/src/mapi/glapi/gen
 
 include ../cflags.mk

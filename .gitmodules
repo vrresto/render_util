@@ -1,3 +1,6 @@
 [submodule "FastNoise"]
 	path = FastNoise
 	url = https://github.com/Auburns/FastNoise.git
+[submodule "mesa"]
+	path = mesa
+	url = https://gitlab.freedesktop.org/mesa/mesa.git
