@@ -1,0 +1,7 @@
+vert terrain
+frag forest
+frag forest_util
+frag atmosphere
+frag noise
+texunit curvature_map
+texunit atmosphere_thickness_map

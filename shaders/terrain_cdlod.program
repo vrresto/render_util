@@ -1,0 +1,11 @@
+vert terrain_cdlod
+frag terrain
+frag atmosphere
+frag noise
+frag forest_util
+frag terrain_util
+frag main
+texunit terrain_cdlod_height_map
+texunit terrain_cdlod_normal_map
+texunit curvature_map
+texunit atmosphere_thickness_map

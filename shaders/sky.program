@@ -1,0 +1,5 @@
+frag main
+frag atmosphere
+frag sky
+vert sky
+texunit atmosphere_thickness_map

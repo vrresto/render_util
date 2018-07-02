@@ -1,0 +1,405 @@
+/**
+ *    Rendering utilities
+ *    Copyright (C) 2018  Jan Lepper
+ *
+ *    This program is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU Lesser General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public License
+ *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#version 130
+
+#extension GL_ARB_texture_query_lod : require
+
+#define ENABLE_TERRAIN_NOISE 1
+#define ENABLE_FAR_TEXTURE 1
+// #define ENABLE_WATER 1
+#define ENABLE_WATER_TYPE_MAP 1
+#define ENABLE_FOREST 1
+#define DETAILED_FOREST false
+#define ENABLE_TERRAIN_NORMAL_MAP 1
+#define ENABLE_TYPE_MAP 1
+
+
+vec3 calcLight(vec3 pos, vec3 normal);
+vec4 getForestFarColor(vec2 pos);
+vec4 getForestFarColorSimple(vec2 pos);
+vec4 getForestColor(vec2 pos, int layer);
+float getWaterDepth(vec2 pos);
+void sampleWaterType(vec2 pos, out float shallow_sea_amount, out float river_amount);
+vec4 applyWater(vec4 color,
+  vec3 view_dir,
+  float dist,
+  float waterDepth,
+  vec2 mapCoords,
+  vec2 pos,
+  float shallow_sea_amount,
+  float river_amount,
+  float bank_amount);
+
+const float meters_per_tile = 1600;
+const float near_distance = 80000;
+
+uniform sampler2D sampler_terrain_cdlod_normal_map;
+uniform sampler2DArray sampler_terrain;
+uniform sampler1D sampler_terrain_scale_map;
+uniform sampler2D sampler_type_map;
+uniform sampler2D sampler_terrain_noise;
+uniform sampler2D sampler_terrain_far;
+uniform sampler2D sampler_shallow_water;
+uniform sampler2DArray sampler_beach;
+
+
+uniform ivec2 typeMapSize;
+uniform vec2 map_size;
+uniform vec3 cameraPosWorld;
+
+float sampleNoise(vec2 coord)
+{
+//   const float noise_strength = 2.0;
+//   const float noise_strength = 4;
+
+  float noise = texture2D(sampler_terrain_noise, coord).x;
+
+//   noise = clamp((noise - 0.5) * 2, 0, 5);
+
+  noise *= 2;
+
+  return noise;
+}
+
+
+void sampleTypeMap(sampler2D sampler,
+            ivec2 textureSize,
+            vec2 coords,
+            out float types[4],
+            out float weights[4])
+{
+//   float x = coords.x - 0.5;
+//   float y = coords.y - 0.5;
+
+  float x = coords.x - 0.0;
+  float y = coords.y - 0.0;
+
+
+//   float x0 = floor(x + 0);
+// //   float y0 = floor(y - 0.5);
+  float x0 = floor(x);
+  float y0 = floor(y);
+
+  float x1 = x0 + 1.0;
+  float y1 = y0 + 1.0;
+
+  float x0_w = abs(x - x1);
+  float x1_w = 1.0 - x0_w;
+
+  float y0_w = abs(y - y1);
+  float y1_w = 1.0 - y0_w;
+
+  float w00 = x0_w * y0_w;
+  float w01 = x0_w * y1_w;
+  float w10 = x1_w * y0_w;
+  float w11 = x1_w * y1_w;
+
+  ivec2 p00 = ivec2(x0, y0);
+  ivec2 p01 = ivec2(x0, y1);
+  ivec2 p10 = ivec2(x1, y0);
+  ivec2 p11 = ivec2(x1, y1);
+
+//   // tiled
+//   vec4 c00 = texelFetch(sampler, p00 % textureSize, 0);
+//   vec4 c01 = texelFetch(sampler, p01 % textureSize, 0);
+//   vec4 c10 = texelFetch(sampler, p10 % textureSize, 0);
+//   vec4 c11 = texelFetch(sampler, p11 % textureSize, 0);
+
+  // clamped
+  vec4 c00 = texelFetch(sampler, p00, 0);
+  vec4 c01 = texelFetch(sampler, p01, 0);
+  vec4 c10 = texelFetch(sampler, p10, 0);
+  vec4 c11 = texelFetch(sampler, p11, 0);
+
+
+//ARTIFACTS!!!
+//   vec2 p00 = vec2(x0, y0);
+//   vec2 p01 = vec2(x0, y1);
+//   vec2 p10 = vec2(x1, y0);
+//   vec2 p11 = vec2(x1, y1);
+//   vec4 c00 = texture(sampler, p00 / textureSize);
+//   vec4 c01 = texture(sampler, p01 / textureSize);
+//   vec4 c10 = texture(sampler, p10 / textureSize);
+//   vec4 c11 = texture(sampler, p11 / textureSize);
+
+  types[0] = c00.x;
+  types[1] = c01.x;
+  types[2] = c10.x;
+  types[3] = c11.x;
+
+  weights[0] = w00;
+  weights[1] = w01;
+  weights[2] = w10;
+  weights[3] = w11;
+}
+
+
+vec4 sampleTerrain(vec2 pos, float type_normalized)
+{
+  vec2 mapCoords = (pos + vec2(0, 200)) / meters_per_tile;
+  mapCoords.y = 1.0 - mapCoords.y;
+
+  uint index = uint(type_normalized * 255) & 0x1Fu;
+  float scale = texelFetch(sampler_terrain_scale_map, int(index), 0).x;
+
+  return texture(sampler_terrain, vec3(mapCoords * scale, index));
+}
+
+
+vec4 sampleTerrainTextures(vec2 pos)
+{
+  float types[4];
+  float weights[4];
+
+  vec2 typeMapCoords = pos.xy / 200.0;
+
+//   float lod = textureQueryLod(sampler_type_map, typeMapCoords).y;
+//   float lod = mip_map_level(pos.xy / map_size);
+
+  sampleTypeMap(sampler_type_map, typeMapSize, typeMapCoords, types, weights);
+
+  vec4 c00 = sampleTerrain(pos.xy, types[0]);
+  vec4 c01 = sampleTerrain(pos.xy, types[1]);
+  vec4 c10 = sampleTerrain(pos.xy, types[2]);
+  vec4 c11 = sampleTerrain(pos.xy, types[3]);
+
+  return
+    c00 * weights[0] +
+    c01 * weights[1] +
+    c10 * weights[2] +
+    c11 * weights[3];
+}
+
+
+vec4 applyForest(vec4 color, vec2 pos, vec3 view_dir, float dist)
+{
+  vec4 forest_far_simple = getForestFarColorSimple(pos.xy);
+  
+//   forest_far_simple.xyz = vec3(1,0,0);
+#if 1
+  float lod = textureQueryLOD(sampler_terrain_far, pos.xy / map_size).x;
+
+  if (dist > 80000.0 && false)
+  {
+    color.xyz = mix(color.xyz, forest_far_simple.xyz, forest_far_simple.a * 0.8);
+  }
+  else if (dist > 15000.0)
+  {
+    vec4 forest_far = getForestFarColor(pos.xy);
+    color.xyz = mix(color.xyz, forest_far.xyz, forest_far.a * 0.8);
+  }
+  else
+  {
+    vec4 forest_floor = getForestColor(pos.xy, 0);
+    color.xyz = mix(color.xyz, forest_floor.xyz, forest_floor.a);
+
+    if (dist > 5000.0 || !DETAILED_FOREST)
+    {
+      vec2 offset = 3 * (view_dir - vec3(0,0,1)).xy;
+
+//     const float forest_layer_height = 3.0;    
+  //       vec2 offset = abs(1 / view_dir.z) * view_dir.xy * forest_layer_height;
+  //       offset = clamp(offset, vec2(-8), vec2(8));
+
+      const int num_layers = 5;
+
+      for (int i = 1; i < num_layers; i++)
+      {
+        vec2 coords = pos.xy + (float(i) * offset);
+
+        vec4 layer = getForestColor(coords, i);
+
+        color.xyz = mix(color.xyz, layer.xyz, layer.a);
+      }
+    }
+  }
+#else
+  float lod = 1;
+#endif
+
+  color = mix(color, forest_far_simple, clamp(lod, 0, 1) * forest_far_simple.a * 0.8);
+
+  return color;
+}
+
+
+vec4 applyTerrainNoise(vec4 color, vec2 coords, float dist)
+{
+//   const float noise_near_strength = 0.4;
+//   const float noise_far_strength = 0.2;
+//   const float noise_very_far_strength = 0.15;
+
+  const float noise_strength = 1.0;
+  
+  const float noise_near_strength = 0.4 * noise_strength;
+  const float noise_far_strength = 0.4 * noise_strength;
+  const float noise_very_far_strength = 0.4 * noise_strength;
+
+//   color.xyz = vec3(0.5);
+
+  float noise = sampleNoise(coords * 80);
+  float noise_blend = noise_near_strength * (1 - smoothstep(0, 1000, dist));
+
+//   float noise_far = sampleNoise(coords * 10);
+  float noise_far = sampleNoise(coords * 20);
+  float noise_far_blend = noise_far_strength * (1 - smoothstep(500, 2000, dist));
+ 
+  float noise_very_far = sampleNoise(coords * 4);
+  float noise_very_far_blend = noise_very_far_strength * (1 - smoothstep(100, 4000, dist));
+
+  color = mix(color, color * noise_very_far, noise_very_far_blend);
+  color = mix(color, color * noise_far, noise_far_blend);
+  color = mix(color, color * noise, noise_blend);
+
+  return color;
+}
+
+
+vec4 applyFarTexture(vec4 color, vec2 pos, float dist)
+{
+  vec2 mapCoordsFar = pos.xy / map_size;
+  vec4 farColor = texture(sampler_terrain_far, mapCoordsFar);
+  
+//   float lod = mip_map_level(pos.xy / 200);
+  float lod = textureQueryLOD(sampler_terrain_far, mapCoordsFar).x;
+ 
+#if ENABLE_TYPE_MAP
+//   float farBlend = 1 - exp(-pow(3 * (dist / near_distance), 2));
+//   float farBlend = 1 - exp(-pow(3 * (dist / near_distance), 2));
+  
+//   float farBlend = 1 - clamp(dot(view_dir, normal), 0, 1);
+//   farBlend = smoothstep(0.9, 1.0, farBlend);
+
+//   float farBlend = smoothstep(near_distance * 0.5, near_distance, dist);
+
+  float farBlend = clamp(lod, 0, 1);
+
+//   farColor *= 0;
+
+  color = mix(color, farColor, farBlend);
+
+//   if (gl_FragCoord.x > 900)
+//     color = farColor;
+#else
+  color = farColor;
+#endif
+
+  return color;
+}
+
+
+vec4 getTerrainColor(vec3 pos)
+{
+  float dist = distance(cameraPosWorld, pos);
+  vec3 view_dir = normalize(cameraPosWorld - pos);
+
+  vec2 mapCoords = (pos.xy + vec2(0, 200)) / meters_per_tile;
+  mapCoords.y = 1.0 - mapCoords.y;
+
+#if ENABLE_TERRAIN_NORMAL_MAP
+  vec2 normal_map_coord = pos.xy / map_size;
+  vec3 normal = texture2D(sampler_terrain_cdlod_normal_map, normal_map_coord).xyz;
+#else
+//   vec3 normal = passNormal;
+  vec3 normal = vec3(0,0,1);
+#endif
+
+  vec3 light = calcLight(pos, normal); 
+
+  vec2 typeMapCoords = pos.xy / 200.0;
+
+  float shallow_sea_amount = 0;
+  float river_amount = 0;
+
+#if ENABLE_WATER && ENABLE_WATER_TYPE_MAP
+  sampleWaterType(pos.xy, shallow_sea_amount, river_amount);
+#endif
+
+//   shallow_sea_amount = 1;
+//   river_amount = 0;
+
+  vec4 color = vec4(0.7, 0.7 , 0.7 , 1.0);
+
+//   float lod = mip_map_level(pos.xy / 200);
+
+#if ENABLE_TYPE_MAP
+#if ENABLE_FAR_TEXTURE
+//   if (dist <= near_distance)
+//     color = sampleTerrainTextures(pos.xy);
+//   else
+//     color = vec4(0);
+  {
+
+//     if (lod < 1.0)
+      color = sampleTerrainTextures(pos.xy);
+//     else
+//       color = vec4(0);
+  }
+#else
+  color = sampleTerrainTextures(pos.xy);
+#endif
+  color.w = 1;
+#endif
+
+//   color.xyz = vec3(1.0);
+
+#if ENABLE_WATER
+float waterDepth = 0;
+float bank_amount = 0;
+
+  waterDepth = getWaterDepth(pos.xy);
+
+  vec3 shallowWaterColor = texture2D(sampler_shallow_water, mapCoords * 2).xyz;  
+
+  color.xyz = mix(color.xyz, shallowWaterColor, smoothstep(0.55, 0.9, waterDepth));
+
+  vec4 bankColor = texture(sampler_beach, vec3(mapCoords * 5, 2));
+  bank_amount = smoothstep(0.4, 0.45, waterDepth);
+  bank_amount *= (1-shallow_sea_amount);
+//   bank_amount *= 0.8;
+  color.xyz = mix(color.xyz, bankColor.xyz, bank_amount);
+
+//   color.xyz = mix(color.xyz, mix(bankColor.xyz, color.xyz, smoothstep(0.0, 0.05, terrain_height)), 0.9 * (1-shallow_sea_amount));
+//   color.xyz = mix(color.xyz, color.xyz * 0.8, wetness);
+#endif
+
+#if ENABLE_TERRAIN_NOISE
+  color = applyTerrainNoise(color, mapCoords, dist);
+#endif
+
+#if ENABLE_FAR_TEXTURE
+  color = applyFarTexture(color, pos.xy, dist);
+#endif
+
+#if ENABLE_FOREST
+  color = applyForest(color, pos.xy, view_dir, dist);
+#endif
+
+  color.xyz *= light;
+
+#if ENABLE_WATER
+  color = applyWater(color, view_dir, dist, waterDepth, mapCoords, pos.xy, shallow_sea_amount, river_amount, bank_amount);
+#endif
+
+// DEBUG
+//   if (fract(pos.xy / water_map_chunk_size_m).x < 0.002 || fract(pos.xy / water_map_chunk_size_m).y < 0.002)
+//     color.xyz = vec3(1,0,0);
+
+  return color;
+}
