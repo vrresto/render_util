@@ -14,9 +14,9 @@ build:
      - apt-get update && apt-get -y install make libglfw3-dev libglm-dev libsoil-dev
   script: 
     - make
-  #artifacts:
-  #  paths:
-  #    - mybinary
+  artifacts:
+    paths:
+      - build/native/testbed/terrain_test
   # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
   # cache:
   #   paths:
