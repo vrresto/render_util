@@ -4,7 +4,7 @@ BUILD_DIR:= $(BASE_BUILD_DIR)/testbed
 VIEWER_BUILD_DIR:= $(BASE_BUILD_DIR)/viewer
 ENGINE_BUILD_DIR:= $(BASE_BUILD_DIR)/engine
 GL_WRAPPER_BUILD_DIR:= $(BASE_BUILD_DIR)/gl_wrapper
-FASTNOISE_DIR:= ../../FastNoise
+FASTNOISE_DIR:= ../FastNoise
 
 EXECUTABLE_NAME:= terrain_test
 
