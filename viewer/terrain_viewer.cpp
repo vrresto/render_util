@@ -23,6 +23,7 @@
 #include <engine.h>
 #include <engine/water.h>
 #include <engine/shader.h>
+#include <engine/shader_util.h>
 #include <engine/texture_manager.h>
 #include <engine/map.h>
 #include <engine/map_textures.h>
@@ -49,8 +50,7 @@
 
 #include <gl_wrapper/gl_interface.h>
 #include <gl_wrapper/gl_functions.h>
-#include <engine/shader.h>
-#include <engine/shader_util.h>
+
 
 using namespace glm;
 using namespace std;

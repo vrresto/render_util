@@ -15,6 +15,7 @@ INCLUDES+= -I$(BASE_BUILD_DIR)
 
 COMMON_SRCS+= viewer_main.cpp
 COMMON_SRCS+= terrain_viewer.cpp
+COMMON_SRCS+= heightmap_viewer.cpp
 
 ALL_SRCS:= $(COMMON_SRCS)
 

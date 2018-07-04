@@ -16,10 +16,36 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <map_loader_base.h>
-#include <engine/image.h>
+#version 130
 
-#include <memory>
+#define ENABLE_TERRAIN_NORMAL_MAP 1
 
-void runViewer(std::shared_ptr<MapLoaderBase> map_loader, const std::string &map_path);
-void runHeightMapViewer(engine::Image<float>::ConstPtr height_map);
+vec3 calcLight(vec3 pos, vec3 normal);
+void apply_fog();
+
+uniform sampler2D sampler_terrain_cdlod_normal_map;
+
+uniform vec2 map_size;
+
+varying vec3 passObjectPosFlat;
+
+void main()
+{
+  gl_FragColor.xyz = vec3(0.5);
+  gl_FragColor.w = 1;
+
+  vec3 pos = passObjectPosFlat.xyz;
+
+#if ENABLE_TERRAIN_NORMAL_MAP
+  vec2 normal_map_coord = pos.xy / map_size;
+  vec3 normal = texture2D(sampler_terrain_cdlod_normal_map, normal_map_coord).xyz;
+#else
+  vec3 normal = vec3(0,0,1);
+#endif
+
+  vec3 light = calcLight(pos, normal); 
+
+  gl_FragColor.xyz *= light;
+
+  apply_fog();
+}

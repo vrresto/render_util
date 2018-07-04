@@ -17,6 +17,9 @@ build:
   artifacts:
     paths:
       - build/native/testbed/terrain_test
+      - build/native/testbed/simple_test
+      - build/native/atmosphere_map
+      - build/native/curvature_map
   # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
   # cache:
   #   paths:

@@ -19,6 +19,8 @@
 #ifndef ELEVATION_MAP_H
 #define ELEVATION_MAP_H
 
+#include <engine/image.h>
+
 #include <glm/glm.hpp>
 
 #include <vector>

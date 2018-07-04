@@ -25,11 +25,11 @@ COMMON_SRCS+= map_loader.cpp
 COMMON_SRCS+= texture.cpp
 
 TERRAIN_TEST_SRCS+= terrain_test.cpp
-VIEW_HEIGHTMAP_SRCS+= view_heightmap.cpp
+SIMPLE_TEST_SRCS+= simple_test.cpp
 
 ALL_SRCS:= $(COMMON_SRCS)
 ALL_SRCS+= $(TERRAIN_TEST_SRCS)
-ALL_SRCS+= $(VIEW_HEIGHTMAP_SRCS)
+ALL_SRCS+= $(SIMPLE_TEST_SRCS)
 
 ##########################################################################
 
@@ -37,13 +37,12 @@ OBJS:= $(COMMON_SRCS:%.cpp=$(BUILD_DIR)/%.cpp.o)
 DEPS:= $(ALL_SRCS:%.cpp=$(BUILD_DIR)/%.cpp.d)
 
 TERRAIN_TEST_OBJS:= $(TERRAIN_TEST_SRCS:%.cpp=$(BUILD_DIR)/%.cpp.o)
-VIEW_HEIGHTMAP_OBJS:= $(VIEW_HEIGHTMAP_SRCS:%.cpp=$(BUILD_DIR)/%.cpp.o)
+SIMPLE_TEST_OBJS:= $(SIMPLE_TEST_SRCS:%.cpp=$(BUILD_DIR)/%.cpp.o)
 
 .SECONDEXPANSION:
 .PHONY: all clean run libengine maps
 
-all: $(BUILD_DIR)/$(EXECUTABLE_NAME)
-# $(BUILD_DIR)/view_heightmap
+all: $(BUILD_DIR)/$(EXECUTABLE_NAME) $(BUILD_DIR)/simple_test
 
 libengine:
 	make -C ../engine
@@ -64,8 +63,8 @@ include ../rules.mk
 $(BUILD_DIR)/$(EXECUTABLE_NAME): libviewer libengine libgl_wrapper $(OBJS) $(TERRAIN_TEST_OBJS)
 	$(CXX) -o $@  $(LDFLAGS) $(TERRAIN_TEST_OBJS) $(OBJS) -lviewer -lengine -lgl_wrapper -lglfw -lGL  -lSOIL -ltiff
 
-$(BUILD_DIR)/view_heightmap: libengine libgl_wrapper $(OBJS) $(VIEW_HEIGHTMAP_OBJS)
-	$(CXX) -o $@  $(LDFLAGS) $(VIEW_HEIGHTMAP_OBJS) $(OBJS) -lengine -lgl_wrapper -lglfw -lGL  -lSOIL -ltiff
+$(BUILD_DIR)/simple_test: libengine libgl_wrapper $(OBJS) $(SIMPLE_TEST_OBJS)
+	$(CXX) -o $@  $(LDFLAGS) $(SIMPLE_TEST_OBJS) $(OBJS) -lviewer -lengine -lgl_wrapper -lglfw -lGL  -lSOIL -ltiff
 
 
 ##########################################################################
