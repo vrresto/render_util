@@ -20,6 +20,7 @@ build:
       - build/native/testbed/simple_test
       - build/native/atmosphere_map
       - build/native/curvature_map
+      - shaders
   # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
   # cache:
   #   paths:
