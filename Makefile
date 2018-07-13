@@ -2,22 +2,16 @@ PLATFORM= native
 BUILD_DIR:= build/$(PLATFORM)
 
 .SECONDEXPANSION:
-.PHONY: all clean print_vars engine testbed run
+.PHONY: all clean print_vars testbed run
 
 ##########################################################################
 
-all: testbed maps
+all: testbed
 
-engine:
-	make -C engine
-	
 testbed:
 	make -C testbed
-	
-maps:
-	make -C tools
-	
-run: testbed maps
+
+run: testbed
 	$(BUILD_DIR)/testbed/terrain_test
 
 clean:

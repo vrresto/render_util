@@ -1,6 +1,6 @@
 PLATFORM= native
 BASE_BUILD_DIR:= ../build/$(PLATFORM)
-BUILD_DIR:= $(BASE_BUILD_DIR)/engine
+BUILD_DIR:= $(BASE_BUILD_DIR)/render_util
 FASTNOISE_DIR:= ../FastNoise
 
 CXX_native:=g++
@@ -39,7 +39,7 @@ DEPS+= $(BUILD_DIR)/FastNoise.d
 .SECONDEXPANSION:
 .PHONY: all clean gl_wrapper
 
-all: $(BUILD_DIR)/libengine.a
+all: $(BUILD_DIR)/librender_util.a
 
 gl_wrapper:
 	make -C ../gl_wrapper
@@ -47,7 +47,7 @@ gl_wrapper:
 -include $(DEPS)
 include ../rules.mk
 
-$(BUILD_DIR)/libengine.a: gl_wrapper $(OBJS)
+$(BUILD_DIR)/librender_util.a: gl_wrapper $(OBJS)
 	ar -r $@ $(OBJS)
 
 $(BUILD_DIR)/FastNoise.o: $(FASTNOISE_DIR)/FastNoise.cpp | $$(@D)/.dummy

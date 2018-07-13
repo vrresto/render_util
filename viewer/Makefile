@@ -1,7 +1,7 @@
 PLATFORM= native
 BASE_BUILD_DIR:= ../build/$(PLATFORM)
 BUILD_DIR:= $(BASE_BUILD_DIR)/viewer
-ENGINE_BUILD_DIR:= $(BASE_BUILD_DIR)/engine
+RENDER_UTIL_BUILD_DIR:= $(BASE_BUILD_DIR)/render_util
 GL_WRAPPER_BUILD_DIR:= $(BASE_BUILD_DIR)/gl_wrapper
 
 LIB_NAME:= libviewer.a
@@ -26,12 +26,12 @@ DEPS:= $(ALL_SRCS:%.cpp=$(BUILD_DIR)/%.cpp.d)
 
 
 .SECONDEXPANSION:
-.PHONY: all clean run libengine maps
+.PHONY: all clean run librender_util maps
 
 all: $(BUILD_DIR)/$(LIB_NAME)
 
-libengine:
-	make -C ../engine
+librender_util:
+	make -C ../src
 
 libgl_wrapper:
 	make -C ../gl_wrapper
@@ -43,5 +43,5 @@ maps:
 include ../rules.mk
 
 
-$(BUILD_DIR)/$(LIB_NAME): libengine libgl_wrapper $(OBJS)
+$(BUILD_DIR)/$(LIB_NAME): librender_util libgl_wrapper $(OBJS)
 	ar -r $@ $(OBJS)
