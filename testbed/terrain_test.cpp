@@ -18,7 +18,7 @@
 
 #include "map_loader.h"
 #include <viewer.h>
-#include <engine.h>
+#include <render_util.h>
 
 using namespace std;
 

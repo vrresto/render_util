@@ -19,7 +19,7 @@
 #ifndef TIFF_H
 #define TIFF_H
 
-#include <engine/image.h>
+#include <render_util/image.h>
 
 #include <cstdint>
 #include <vector>

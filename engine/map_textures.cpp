@@ -17,13 +17,13 @@
  */
 
 #include <FastNoise.h>
-#include <engine/map_textures.h>
-#include <engine/texture_util.h>
-#include <engine/texunits.h>
-#include <engine/image_loader.h>
-#include <engine/image_resample.h>
-#include <engine/image_util.h>
-#include <engine/image.h>
+#include <render_util/map_textures.h>
+#include <render_util/texture_util.h>
+#include <render_util/texunits.h>
+#include <render_util/image_loader.h>
+#include <render_util/image_resample.h>
+#include <render_util/image_util.h>
+#include <render_util/image.h>
 #include <util.h>
 
 #include <cassert>

@@ -20,16 +20,16 @@
 #include "scene.h"
 #include "camera.h"
 // #include "texture.h"
-#include <engine.h>
-#include <engine/map.h>
-#include <engine/map_textures.h>
-#include <engine/terrain.h>
-#include <engine/terrain_cdlod.h>
-#include <engine/texture_util.h>
-#include <engine/texunits.h>
-#include <engine/image_loader.h>
-// #include <engine/image.h>
-#include <engine/camera.h>
+#include <render_util.h>
+#include <render_util/map.h>
+#include <render_util/map_textures.h>
+#include <render_util/terrain.h>
+#include <render_util/terrain_cdlod.h>
+#include <render_util/texture_util.h>
+#include <render_util/texunits.h>
+#include <render_util/image_loader.h>
+// #include <render_util/image.h>
+#include <render_util/camera.h>
 #include <gl_wrapper/gl_wrapper.h>
 
 #include <glm/glm.hpp>

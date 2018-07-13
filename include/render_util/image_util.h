@@ -19,7 +19,7 @@
 #ifndef ENGINE_IMAGE_UTIL_H
 #define ENGINE_IMAGE_UTIL_H
 
-#include <engine/image.h>
+#include <render_util/image.h>
 
 namespace engine::image
 {

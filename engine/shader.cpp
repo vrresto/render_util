@@ -25,10 +25,10 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <GL/gl.h>
 
-#include <engine.h>
+#include <render_util.h>
 #include <distances.h>
 #include <curvature_map.h>
-#include <engine/shader.h>
+#include <render_util/shader.h>
 #include <gl_wrapper/gl_functions.h>
 
 using namespace gl_wrapper::gl_functions;

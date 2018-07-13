@@ -17,7 +17,7 @@
  */
 
 #include <map_loader_base.h>
-#include <engine/image.h>
+#include <render_util/image.h>
 
 #include <memory>
 

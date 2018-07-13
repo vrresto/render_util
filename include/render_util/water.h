@@ -16,27 +16,34 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TEXTURE_UNITS_H
-#define TEXTURE_UNITS_H
+#ifndef ENGINE_WATER_H
+#define ENGINE_WATER_H
 
-#include <string>
-
-#define DEFINE_TEXUNIT(name) TEXUNIT_##name,
+#include <render_util/shader.h>
 
 namespace engine
 {
 
-  enum
+  class MapTextures;
+
+  class WaterAnimation
   {
-    #include <engine/texunits.priv>
-    TEXUNIT_NUM
+    struct Private;
+    Private *p = 0;
+
+  public:
+    WaterAnimation();
+    ~WaterAnimation();
+
+    void createTextures(MapTextures *map_textures);
+
+    void updateUniforms(ShaderProgramPtr program);
+
+    int getCurrentStep();
+    float getFrameDelta();
+    void update();
   };
 
-  const std::string &getTexUnitName(int texunit);
-  int getTexUnitNumber(const std::string &texunit_name);
-
 }
-
-#undef DEFINE_TEXUNIT
 
 #endif

@@ -19,14 +19,14 @@
 #include "map_loader.h"
 #include "tiff.h"
 #include <FastNoise.h>
-#include <engine/elevation_map.h>
-#include <engine/image_loader.h>
-#include <engine/image_resample.h>
-#include <engine/image_util.h>
-#include <engine/map.h>
-#include <engine/texunits.h>
-#include <engine/texture_util.h>
-#include <engine.h>
+#include <render_util/elevation_map.h>
+#include <render_util/image_loader.h>
+#include <render_util/image_resample.h>
+#include <render_util/image_util.h>
+#include <render_util/map.h>
+#include <render_util/texunits.h>
+#include <render_util/texture_util.h>
+#include <render_util.h>
 
 #include <vector>
 #include <iostream>

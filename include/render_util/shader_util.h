@@ -16,35 +16,21 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_TERRAIN_BASE_H
-#define ENGINE_TERRAIN_BASE_H
+#ifndef ENGINE_SHADER_UTIL_H
+#define ENGINE_SHADER_UTIL_H
 
-#include <engine/shader.h>
+#include <render_util/shader.h>
+#include <render_util/texture_manager.h>
 
 #include <string>
-#include <vector>
-#include <glm/glm.hpp>
 
 namespace engine
 {
-  class ElevationMap;
-  class TextureManager;
-
-  class TerrainBase
-  {
-  public:
-    virtual ~TerrainBase() {}
-
-    virtual const std::string &getName() = 0;
-    virtual void build(const ElevationMap *map) = 0;
-    virtual void draw(ShaderProgramPtr program) = 0;
-    virtual void update(glm::vec3 camera_pos) {}
-    virtual void setTextureManager(TextureManager*) {};
-    virtual void setDrawDistance(float dist) {}
-
-    virtual std::vector<glm::vec3> getNormals() { return std::vector<glm::vec3>(); }
-  };
-
+  ShaderProgramPtr createShaderProgram(const std::string &definition,
+                                       const engine::TextureManager &tex_mgr,
+                                       const std::string &shader_path,
+                                       const std::map<unsigned int, std::string> &attribute_locations = {});
+  ShaderProgramPtr createSkyProgram(const engine::TextureManager &tex_mgr, const std::string &shader_path);
 }
 
 #endif

@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <engine/shader_util.h>
-#include <engine/texunits.h>
+#include <render_util/shader_util.h>
+#include <render_util/texunits.h>
 
 #include <iostream>
 #include <fstream>

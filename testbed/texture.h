@@ -19,7 +19,7 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include <engine/texture_manager.h>
+#include <render_util/texture_manager.h>
 
 engine::TextureManager &getTextureManager();
 

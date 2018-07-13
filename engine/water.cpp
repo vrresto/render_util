@@ -16,11 +16,11 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <engine/water.h>
-#include <engine/image.h>
-#include <engine/image_loader.h>
-#include <engine/map_textures.h>
-#include <engine/texunits.h>
+#include <render_util/water.h>
+#include <render_util/image.h>
+#include <render_util/image_loader.h>
+#include <render_util/map_textures.h>
+#include <render_util/texunits.h>
 
 #include <vector>
 #include <chrono>

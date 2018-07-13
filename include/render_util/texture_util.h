@@ -20,9 +20,9 @@
 #ifndef ENGINE_TEXTURE_UTIL_H
 #define ENGINE_TEXTURE_UTIL_H
 
-#include <engine/image.h>
-#include <engine/texture_manager.h>
-#include <engine.h>
+#include <render_util/image.h>
+#include <render_util/texture_manager.h>
+#include <render_util.h>
 
 #include <vector>
 

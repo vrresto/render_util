@@ -22,14 +22,14 @@
  * by Filip Strugar <http://www.vertexasylum.com/downloads/cdlod/cdlod_latest.pdf>.
  */
 
-#include <engine/terrain_cdlod.h>
-#include <engine/texture_manager.h>
-#include <engine/texunits.h>
-#include <engine/elevation_map.h>
-#include <engine/texture_util.h>
-#include <engine/image.h>
-#include <engine/water_map.h>
-#include <engine.h>
+#include <render_util/terrain_cdlod.h>
+#include <render_util/texture_manager.h>
+#include <render_util/texunits.h>
+#include <render_util/elevation_map.h>
+#include <render_util/texture_util.h>
+#include <render_util/image.h>
+#include <render_util/water_map.h>
+#include <render_util.h>
 
 #include <array>
 #include <vector>

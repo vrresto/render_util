@@ -19,7 +19,7 @@
 #ifndef ELEVATION_MAP_H
 #define ELEVATION_MAP_H
 
-#include <engine/image.h>
+#include <render_util/image.h>
 
 #include <glm/glm.hpp>
 

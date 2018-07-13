@@ -16,26 +16,32 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_MAP_H
-#define ENGINE_MAP_H
+#ifndef TERRAIN_H
+#define TERRAIN_H
 
-// #include <engine/image.h>
-// #include <engine/elevation_map.h>
-#include <engine/map_textures.h>
-#include <engine/terrain_base.h>
+#include <render_util/terrain_base.h>
+#include <render_util/image.h>
 
-// #include <vector>
-#include <memory>
-#include <glm/glm.hpp>
+#include <vector>
 
 namespace engine
 {
-  struct Map
+  class ElevationMap;
+
+  class Terrain : public TerrainBase
   {
-    glm::ivec2 size = glm::ivec2(0);
-    glm::ivec2 type_map_size = glm::ivec2(0);
-    std::shared_ptr<MapTextures> textures;
-    std::shared_ptr<TerrainBase> terrain;
+    struct Private;
+    Private *p = 0;
+
+  public:
+    Terrain();
+    ~Terrain() override;
+
+    const std::string &getName() override;
+    void build(const ElevationMap *map) override;
+    void draw(ShaderProgramPtr program) override;
+
+    std::vector<glm::vec3> getNormals() override;
   };
 
 }

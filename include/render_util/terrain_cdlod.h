@@ -16,32 +16,31 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_WATER_H
-#define ENGINE_WATER_H
+#ifndef ENGINE_TERRAIN_CDLOD_H
+#define ENGINE_TERRAIN_CDLOD_H
 
-#include <engine/shader.h>
+#include <render_util/terrain_base.h>
+#include <render_util/image.h>
 
 namespace engine
 {
+  class ElevationMap;
 
-  class MapTextures;
-
-  class WaterAnimation
+  class TerrainCDLOD : public TerrainBase
   {
     struct Private;
     Private *p = 0;
 
   public:
-    WaterAnimation();
-    ~WaterAnimation();
+    TerrainCDLOD();
+    ~TerrainCDLOD() override;
 
-    void createTextures(MapTextures *map_textures);
-
-    void updateUniforms(ShaderProgramPtr program);
-
-    int getCurrentStep();
-    float getFrameDelta();
-    void update();
+    const std::string &getName() override;
+    void build(const ElevationMap *map) override;
+    void draw(ShaderProgramPtr program) override;
+    void update(glm::vec3 camera_pos) override;
+    void setTextureManager(TextureManager*) override;
+    void setDrawDistance(float dist) override;
   };
 
 }

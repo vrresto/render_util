@@ -16,32 +16,33 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TERRAIN_H
-#define TERRAIN_H
+#ifndef ENGINE_TERRAIN_BASE_H
+#define ENGINE_TERRAIN_BASE_H
 
-#include <engine/terrain_base.h>
-#include <engine/image.h>
+#include <render_util/shader.h>
 
+#include <string>
 #include <vector>
+#include <glm/glm.hpp>
 
 namespace engine
 {
   class ElevationMap;
+  class TextureManager;
 
-  class Terrain : public TerrainBase
+  class TerrainBase
   {
-    struct Private;
-    Private *p = 0;
-
   public:
-    Terrain();
-    ~Terrain() override;
+    virtual ~TerrainBase() {}
 
-    const std::string &getName() override;
-    void build(const ElevationMap *map) override;
-    void draw(ShaderProgramPtr program) override;
+    virtual const std::string &getName() = 0;
+    virtual void build(const ElevationMap *map) = 0;
+    virtual void draw(ShaderProgramPtr program) = 0;
+    virtual void update(glm::vec3 camera_pos) {}
+    virtual void setTextureManager(TextureManager*) {};
+    virtual void setDrawDistance(float dist) {}
 
-    std::vector<glm::vec3> getNormals() override;
+    virtual std::vector<glm::vec3> getNormals() { return std::vector<glm::vec3>(); }
   };
 
 }

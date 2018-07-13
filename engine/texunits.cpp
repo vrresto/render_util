@@ -16,7 +16,7 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <engine/texunits.h>
+#include <render_util/texunits.h>
 #include <util.h>
 
 #include <iostream>
@@ -29,7 +29,7 @@ namespace
   #define DEFINE_TEXUNIT(name) util::makeLowercase(#name),
   string texunit_names[] =
   {
-    #include <engine/texunits.priv>
+    #include <render_util/texunits.priv>
   };
   #undef DEFINE_TEXUNIT
 

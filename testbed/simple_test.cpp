@@ -17,8 +17,8 @@
  */
 
 #include <viewer.h>
-#include <engine.h>
-#include <engine/image_util.h>
+#include <render_util.h>
+#include <render_util/image_util.h>
 #include <FastNoise.h>
 
 using namespace std;

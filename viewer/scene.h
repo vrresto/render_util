@@ -21,7 +21,7 @@
 
 #include "camera.h"
 
-#include <engine/shader.h>
+#include <render_util/shader.h>
 
 class Scene
 {

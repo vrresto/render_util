@@ -20,10 +20,10 @@
 #define ENGINE_MAP_TEXTURES_H
 
 #include <vector>
-#include <engine/texture_manager.h>
-#include <engine/texture_util.h>
-#include <engine/image.h>
-#include <engine/shader.h>
+#include <render_util/texture_manager.h>
+#include <render_util/texture_util.h>
+#include <render_util/image.h>
+#include <render_util/shader.h>
 
 #include <glm/glm.hpp>
 

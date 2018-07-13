@@ -16,21 +16,28 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_SHADER_UTIL_H
-#define ENGINE_SHADER_UTIL_H
+#ifndef ENGINE_MAP_H
+#define ENGINE_MAP_H
 
-#include <engine/shader.h>
-#include <engine/texture_manager.h>
+// #include <render_util/image.h>
+// #include <render_util/elevation_map.h>
+#include <render_util/map_textures.h>
+#include <render_util/terrain_base.h>
 
-#include <string>
+// #include <vector>
+#include <memory>
+#include <glm/glm.hpp>
 
 namespace engine
 {
-  ShaderProgramPtr createShaderProgram(const std::string &definition,
-                                       const engine::TextureManager &tex_mgr,
-                                       const std::string &shader_path,
-                                       const std::map<unsigned int, std::string> &attribute_locations = {});
-  ShaderProgramPtr createSkyProgram(const engine::TextureManager &tex_mgr, const std::string &shader_path);
+  struct Map
+  {
+    glm::ivec2 size = glm::ivec2(0);
+    glm::ivec2 type_map_size = glm::ivec2(0);
+    std::shared_ptr<MapTextures> textures;
+    std::shared_ptr<TerrainBase> terrain;
+  };
+
 }
 
 #endif

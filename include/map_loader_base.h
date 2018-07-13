@@ -19,7 +19,7 @@
 #ifndef MAPLOADER_BASE_H
 #define MAPLOADER_BASE_H
 
-#include <engine/map.h>
+#include <render_util/map.h>
 
 #include <string>
 

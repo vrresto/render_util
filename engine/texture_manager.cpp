@@ -16,7 +16,7 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <engine/texture_manager.h>
+#include <render_util/texture_manager.h>
 
 #include <iostream>
 #include <array>

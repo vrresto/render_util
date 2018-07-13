@@ -20,18 +20,18 @@
 #include "camera.h"
 #include "viewer_main.h"
 #include <viewer.h>
-#include <engine.h>
-#include <engine/shader.h>
-#include <engine/shader_util.h>
-#include <engine/elevation_map.h>
-#include <engine/map.h>
-#include <engine/map_textures.h>
-#include <engine/terrain.h>
-#include <engine/terrain_cdlod.h>
-#include <engine/texture_util.h>
-#include <engine/texunits.h>
-#include <engine/image_loader.h>
-#include <engine/camera.h>
+#include <render_util.h>
+#include <render_util/shader.h>
+#include <render_util/shader_util.h>
+#include <render_util/elevation_map.h>
+#include <render_util/map.h>
+#include <render_util/map_textures.h>
+#include <render_util/terrain.h>
+#include <render_util/terrain_cdlod.h>
+#include <render_util/texture_util.h>
+#include <render_util/texunits.h>
+#include <render_util/image_loader.h>
+#include <render_util/camera.h>
 #include <gl_wrapper/gl_wrapper.h>
 
 #include <glm/glm.hpp>
@@ -54,7 +54,7 @@ using namespace std;
 using namespace gl_wrapper::gl_functions;
 using engine::ShaderProgram;
 
-#include <engine/skybox.h>
+#include <render_util/skybox.h>
 
 
 namespace

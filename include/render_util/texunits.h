@@ -16,33 +16,27 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_TERRAIN_CDLOD_H
-#define ENGINE_TERRAIN_CDLOD_H
+#ifndef TEXTURE_UNITS_H
+#define TEXTURE_UNITS_H
 
-#include <engine/terrain_base.h>
-#include <engine/image.h>
+#include <string>
+
+#define DEFINE_TEXUNIT(name) TEXUNIT_##name,
 
 namespace engine
 {
-  class ElevationMap;
 
-  class TerrainCDLOD : public TerrainBase
+  enum
   {
-    struct Private;
-    Private *p = 0;
-
-  public:
-    TerrainCDLOD();
-    ~TerrainCDLOD() override;
-
-    const std::string &getName() override;
-    void build(const ElevationMap *map) override;
-    void draw(ShaderProgramPtr program) override;
-    void update(glm::vec3 camera_pos) override;
-    void setTextureManager(TextureManager*) override;
-    void setDrawDistance(float dist) override;
+    #include <render_util/texunits.priv>
+    TEXUNIT_NUM
   };
 
+  const std::string &getTexUnitName(int texunit);
+  int getTexUnitNumber(const std::string &texunit_name);
+
 }
+
+#undef DEFINE_TEXUNIT
 
 #endif

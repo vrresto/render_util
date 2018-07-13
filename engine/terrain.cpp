@@ -16,9 +16,9 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <engine/image.h>
-#include <engine/terrain.h>
-#include <engine/elevation_map.h>
+#include <render_util/image.h>
+#include <render_util/terrain.h>
+#include <render_util/elevation_map.h>
 
 #include <iostream>
 #include <vector>

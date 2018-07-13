@@ -17,7 +17,7 @@
  */
 
 #include "tiff.h"
-#include <engine/image_util.h>
+#include <render_util/image_util.h>
 
 #include <iostream>
 #include <cstring>
