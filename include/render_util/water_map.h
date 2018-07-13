@@ -19,7 +19,7 @@
 #ifndef ENGINE_WATER_MAP_H
 #define ENGINE_WATER_MAP_H
 
-namespace engine
+namespace render_util
 {
 
 class WaterMap

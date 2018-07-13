@@ -22,4 +22,4 @@
 #include <memory>
 
 void runViewer(std::shared_ptr<MapLoaderBase> map_loader, const std::string &map_path);
-void runHeightMapViewer(engine::Image<float>::ConstPtr height_map);
+void runHeightMapViewer(render_util::Image<float>::ConstPtr height_map);

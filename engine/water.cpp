@@ -53,13 +53,13 @@ namespace
 
   const string &getWaterTextureDir()
   {
-    static const string dir = engine::getDataPath() + "/water_textures";
+    static const string dir = render_util::getDataPath() + "/water_textures";
     return dir;
   }
 }
 
 
-namespace engine
+namespace render_util
 {
 
 
@@ -189,7 +189,7 @@ float WaterAnimation::getFrameDelta()
 
 
 
-} // namespace engine
+} // namespace render_util
 
 
 void doStuff(void *data)

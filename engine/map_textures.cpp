@@ -44,7 +44,7 @@ using namespace std;
 namespace
 {
 
-using namespace engine;
+using namespace render_util;
 
 const float water_map_chunk_size = 128;
 const float water_map_crop_size = 4.0;
@@ -213,7 +213,7 @@ float sampleShoreWave(float pos)
 
 ImageGreyScale::Ptr createShoreWaveTexture()
 {
-  auto shore_wave = engine::image::create<unsigned char>(0, glm::ivec2(4096, 1));
+  auto shore_wave = render_util::image::create<unsigned char>(0, glm::ivec2(4096, 1));
   assert(shore_wave);
   for (int i = 0; i < shore_wave->w(); i++)
   {
@@ -246,7 +246,7 @@ TexturePtr createTextureArray(const std::vector<ImageRGBA::ConstPtr> &textures)
 {
   std::vector<ImageRGBA::ConstPtr> textures_resampled;
   resampleTextures(textures, textures_resampled);
-  return engine::createTextureArray<ImageRGBA>(textures_resampled);
+  return render_util::createTextureArray<ImageRGBA>(textures_resampled);
 }
 
 
@@ -254,7 +254,7 @@ TexturePtr createTextureArray(const std::vector<ImageRGBA::ConstPtr> &textures)
 
 
 
-struct engine::MapTextures::Private
+struct render_util::MapTextures::Private
 {
   shared_ptr<Material> m_material;
   glm::vec3 water_color = glm::vec3(0);
@@ -263,20 +263,20 @@ struct engine::MapTextures::Private
 };
 
 
-engine::MapTextures::MapTextures(TextureManager &texture_manager) :
+render_util::MapTextures::MapTextures(TextureManager &texture_manager) :
   m_texture_manager(texture_manager), p(new Private)
 {
   p->m_material.reset(new Material(m_texture_manager));
 }
 
 
-engine::MapTextures::~MapTextures()
+render_util::MapTextures::~MapTextures()
 {
   delete p;
 }
 
 
-void engine::MapTextures::bind()
+void render_util::MapTextures::bind()
 {
   //HACK
   setTexture(TEXUNIT_SHORE_WAVE, createShoreWaveTexture());
@@ -290,7 +290,7 @@ void engine::MapTextures::bind()
 }
 
 
-void engine::MapTextures::setUniforms(ShaderProgramPtr program)
+void render_util::MapTextures::setUniforms(ShaderProgramPtr program)
 {
   using namespace glm;
 
@@ -313,7 +313,7 @@ void engine::MapTextures::setUniforms(ShaderProgramPtr program)
 }
 
 
-// void engine::MapTextures::setNormalMaps(const std::vector<ImageRGBA::ConstPtr> &textures)
+// void render_util::MapTextures::setNormalMaps(const std::vector<ImageRGBA::ConstPtr> &textures)
 // {
 //   assert (!m_normal_maps_id);
 //   m_normal_maps_id  = ::createTextureArray(textures);
@@ -321,7 +321,7 @@ void engine::MapTextures::setUniforms(ShaderProgramPtr program)
 // 
 
 
-void engine::MapTextures::setTextures(const std::vector<ImageRGBA::ConstPtr> &textures,
+void render_util::MapTextures::setTextures(const std::vector<ImageRGBA::ConstPtr> &textures,
                                       const std::vector<float> &texture_scale)
 {
   CHECK_GL_ERROR();
@@ -335,7 +335,7 @@ void engine::MapTextures::setTextures(const std::vector<ImageRGBA::ConstPtr> &te
 }
 
 
-void engine::MapTextures::setWaterMap(const std::vector<ImageGreyScale::ConstPtr> &chunks,
+void render_util::MapTextures::setWaterMap(const std::vector<ImageGreyScale::ConstPtr> &chunks,
                                       Image<unsigned int>::ConstPtr table)
 {
   p->water_map_table_size = table->size();
@@ -370,7 +370,7 @@ void engine::MapTextures::setWaterMap(const std::vector<ImageGreyScale::ConstPtr
 }
 
 
-void engine::MapTextures::setTypeMap(ImageGreyScale::ConstPtr type_map)
+void render_util::MapTextures::setTypeMap(ImageGreyScale::ConstPtr type_map)
 {
   p->type_map_size = type_map->size();
   TexturePtr t = createTexture<ImageGreyScale>(type_map, false);
@@ -385,7 +385,7 @@ void engine::MapTextures::setTypeMap(ImageGreyScale::ConstPtr type_map)
 }
 
 
-void engine::MapTextures::setWaterTypeMap(ImageGreyScale::ConstPtr map)
+void render_util::MapTextures::setWaterTypeMap(ImageGreyScale::ConstPtr map)
 {
   TexturePtr t = createTexture<ImageGreyScale>(map, false);
   TextureParameters<int> params;
@@ -396,21 +396,21 @@ void engine::MapTextures::setWaterTypeMap(ImageGreyScale::ConstPtr map)
 }
 
 
-void engine::MapTextures::setBeach(std::vector<ImageRGBA::ConstPtr> textures)
+void render_util::MapTextures::setBeach(std::vector<ImageRGBA::ConstPtr> textures)
 {
   p->m_material->setTexture(TEXUNIT_BEACH, ::createTextureArray(textures));
 }
 
 
-void engine::MapTextures::setWaterColor(const glm::vec3 &color)
+void render_util::MapTextures::setWaterColor(const glm::vec3 &color)
 {
   p->water_color = color;
 }
 
 
-void engine::MapTextures::setForestMap(ImageGreyScale::ConstPtr image)
+void render_util::MapTextures::setForestMap(ImageGreyScale::ConstPtr image)
 {
-  auto texture = engine::createTexture<ImageGreyScale>(image, true);
+  auto texture = render_util::createTexture<ImageGreyScale>(image, true);
 
   TextureParameters<int> params;
 
@@ -426,7 +426,7 @@ void engine::MapTextures::setForestMap(ImageGreyScale::ConstPtr image)
 }
 
 
-void engine::MapTextures::setForestLayers(const std::vector<ImageRGBA::ConstPtr> &images)
+void render_util::MapTextures::setForestLayers(const std::vector<ImageRGBA::ConstPtr> &images)
 {
   TexturePtr texture = createTextureArray<ImageRGBA>(images);
 
@@ -440,7 +440,7 @@ void engine::MapTextures::setForestLayers(const std::vector<ImageRGBA::ConstPtr>
 }
 
 
-void engine::MapTextures::setTexture(unsigned texunit, TexturePtr texture)
+void render_util::MapTextures::setTexture(unsigned texunit, TexturePtr texture)
 {
   TextureParameters<int> params;
   

@@ -38,7 +38,7 @@ public:
     return glm::vec3(0, sun_dir_h.x, sun_dir_h.y);
   }
 
-  virtual void updateUniforms(engine::ShaderProgramPtr program)
+  virtual void updateUniforms(render_util::ShaderProgramPtr program)
   {
     program->setUniform("cameraPosWorld", camera.getPos());
     program->setUniform("projectionMatrixFar", camera.getProjectionMatrixFar());

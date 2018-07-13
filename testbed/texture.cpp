@@ -20,10 +20,10 @@
 
 namespace 
 {
-  engine::TextureManager texture_manager(0);
+  render_util::TextureManager texture_manager(0);
 }
 
-engine::TextureManager &getTextureManager()
+render_util::TextureManager &getTextureManager()
 {
   return texture_manager;
 }

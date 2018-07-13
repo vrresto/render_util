@@ -55,7 +55,7 @@
 using namespace glm;
 using namespace std;
 using namespace gl_wrapper::gl_functions;
-using engine::ShaderProgram;
+using render_util::ShaderProgram;
 
 #include <render_util/skybox.h>
 
@@ -63,28 +63,28 @@ namespace
 {
 
 
-// typedef engine::Terrain Terrain;
-typedef engine::TerrainCDLOD Terrain;
+// typedef render_util::Terrain Terrain;
+typedef render_util::TerrainCDLOD Terrain;
 
-const string resource_path = engine::getResourcePath() + "/build/native/";
-const string shader_path = engine::getResourcePath() + "/shaders";
+const string resource_path = render_util::getResourcePath() + "/build/native/";
+const string shader_path = render_util::getResourcePath() + "/shaders";
 
 const vec4 shore_wave_hz = vec4(0.05, 0.07, 0, 0);
 
-engine::ShaderProgramPtr createSkyProgram(const engine::TextureManager &tex_mgr)
+render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager &tex_mgr)
 {
-  return engine::createSkyProgram(tex_mgr, shader_path);
+  return render_util::createSkyProgram(tex_mgr, shader_path);
 }
 
-engine::ShaderProgramPtr createTerrainProgram(const string &name, const engine::TextureManager &tex_mgr)
+render_util::ShaderProgramPtr createTerrainProgram(const string &name, const render_util::TextureManager &tex_mgr)
 {
-  engine::ShaderProgramPtr terrain_program;
+  render_util::ShaderProgramPtr terrain_program;
 
   CHECK_GL_ERROR();
 
   map<unsigned int, string> attribute_locations = { { 2, "attrib_pos" } };
 
-  terrain_program = engine::createShaderProgram(name, tex_mgr, shader_path, attribute_locations);
+  terrain_program = render_util::createShaderProgram(name, tex_mgr, shader_path, attribute_locations);
 
   CHECK_GL_ERROR();
 
@@ -101,22 +101,22 @@ class TerrainViewerScene : public Scene
   vec2 map_size = vec2(0);
 
   string map_path;
-  shared_ptr<engine::Map> map;
-  engine::WaterAnimation water_animation;
+  shared_ptr<render_util::Map> map;
+  render_util::WaterAnimation water_animation;
 
-  engine::TexturePtr curvature_map;
-  engine::TexturePtr atmosphere_map;
+  render_util::TexturePtr curvature_map;
+  render_util::TexturePtr atmosphere_map;
 
-  engine::ShaderProgramPtr sky_program;
-  engine::ShaderProgramPtr terrain_program;
-  engine::ShaderProgramPtr forest_program;
+  render_util::ShaderProgramPtr sky_program;
+  render_util::ShaderProgramPtr terrain_program;
+  render_util::ShaderProgramPtr forest_program;
 
   shared_ptr<MapLoaderBase> map_loader;
-  engine::TextureManager texture_manager = engine::TextureManager(0);
+  render_util::TextureManager texture_manager = render_util::TextureManager(0);
 
-  void updateUniforms(engine::ShaderProgramPtr program) override;
+  void updateUniforms(render_util::ShaderProgramPtr program) override;
 
-  engine::TextureManager &getTextureManager() { return texture_manager; }
+  render_util::TextureManager &getTextureManager() { return texture_manager; }
 
 
 public:
@@ -134,13 +134,13 @@ void TerrainViewerScene::setup()
   sky_program = createSkyProgram(getTextureManager());
 //   terrain_program = createTerrainProgram("terrain_simple", getTextureManager());
   terrain_program = createTerrainProgram("terrain_cdlod", getTextureManager());
-//   forest_program = engine::createShaderProgram("forest", getTextureManager(), shader_path);
-  forest_program = engine::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
+//   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
+  forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
-  map.reset(new engine::Map);
+  map.reset(new render_util::Map);
   map->terrain.reset(new Terrain);
   map->terrain->setTextureManager(&getTextureManager());
-  map->textures.reset(new engine::MapTextures(getTextureManager()));
+  map->textures.reset(new render_util::MapTextures(getTextureManager()));
 
   water_animation.createTextures(map->textures.get());
 
@@ -150,7 +150,7 @@ void TerrainViewerScene::setup()
     int elevation_map_width = 5000;
     int elevation_map_height = 5000;
     std::vector<float> data(elevation_map_width * elevation_map_height);
-    engine::ElevationMap elevation_map(elevation_map_width, elevation_map_height, data);
+    render_util::ElevationMap elevation_map(elevation_map_width, elevation_map_height, data);
     map->terrain->build(&elevation_map);
   }
 #endif
@@ -159,8 +159,8 @@ void TerrainViewerScene::setup()
 
   cout<<"map size: "<<map_size.x<<","<<map_size.y<<endl;
 
-  curvature_map = engine::createCurvatureTexture(getTextureManager(), resource_path);
-  atmosphere_map = engine::createAmosphereThicknessTexture(getTextureManager(), resource_path);
+  curvature_map = render_util::createCurvatureTexture(getTextureManager(), resource_path);
+  atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), resource_path);
 
   CHECK_GL_ERROR();
 
@@ -174,7 +174,7 @@ void TerrainViewerScene::setup()
   camera.z = 10000;
 }
 
-void TerrainViewerScene::updateUniforms(engine::ShaderProgramPtr program)
+void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
 {
   CHECK_GL_ERROR();
 
@@ -218,7 +218,7 @@ void TerrainViewerScene::render(float frame_delta)
   glUseProgram(sky_program->getId());
   updateUniforms(sky_program);
 
-  engine::drawSkyBox();
+  render_util::drawSkyBox();
 
   glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);

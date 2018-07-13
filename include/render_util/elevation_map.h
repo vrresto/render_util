@@ -26,7 +26,7 @@
 #include <vector>
 #include <cassert>
 
-namespace engine
+namespace render_util
 {
  
   class ElevationMap

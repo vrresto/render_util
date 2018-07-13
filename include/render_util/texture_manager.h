@@ -23,7 +23,7 @@
 #include <map>
 #include <glm/glm.hpp>
 
-namespace engine
+namespace render_util
 {
 
 
@@ -105,6 +105,6 @@ public:
 };
 
 
-} // namespace engine
+} // namespace render_util
 
 #endif

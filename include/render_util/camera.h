@@ -16,12 +16,12 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_CAMERA_H
-#define ENGINE_CAMERA_H
+#ifndef RENDER_UTIL_CAMERA_H
+#define RENDER_UTIL_CAMERA_H
 
 #include <glm/glm.hpp>
 
-namespace engine
+namespace render_util
 {
   class Camera
   {

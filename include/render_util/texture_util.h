@@ -26,7 +26,7 @@
 
 #include <vector>
 
-namespace engine
+namespace render_util
 {
   class ElevationMap;
 
@@ -38,7 +38,7 @@ namespace engine
   TexturePtr createFloatTexture1D(const float *data, size_t size, int num_components);
   TexturePtr createFloatTexture(const float *data, int w, int h, int num_components);
   TexturePtr createUnsignedIntTexture(const unsigned int *data, int w, int h);
-//   unsigned int createTextureArray(const std::vector<engine::ImageRGBA::ConstPtr> &textures, int mipmap_level);
+//   unsigned int createTextureArray(const std::vector<render_util::ImageRGBA::ConstPtr> &textures, int mipmap_level);
   TexturePtr createTextureArray(const std::vector<const unsigned char*> &textures,
                                   int mipmap_levels, int texture_width, int bytes_per_pixel);
 
@@ -70,7 +70,7 @@ namespace engine
 //     return createTexture(image->data(),
 //                          image->w(),
 //                          image->h(),
-//                          engine::Image<T>::BYTES_PER_PIXEL,
+//                          render_util::Image<T>::BYTES_PER_PIXEL,
 //                          mipmaps);
 //   }
   template <typename T>

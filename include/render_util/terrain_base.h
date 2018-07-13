@@ -25,7 +25,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-namespace engine
+namespace render_util
 {
   class ElevationMap;
   class TextureManager;

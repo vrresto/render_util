@@ -20,7 +20,7 @@
 
 using namespace std;
 
-namespace engine::image
+namespace render_util::image
 {
     RGBA getAverageColor(const ImageRGBA *image)
     {

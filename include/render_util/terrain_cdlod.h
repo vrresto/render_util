@@ -22,7 +22,7 @@
 #include <render_util/terrain_base.h>
 #include <render_util/image.h>
 
-namespace engine
+namespace render_util
 {
   class ElevationMap;
 

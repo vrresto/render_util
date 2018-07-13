@@ -106,7 +106,7 @@ GLuint createShader(const string &name, const string &path, GLenum type)
 } // namespace
 
 
-namespace engine
+namespace render_util
 {
 
 ShaderProgram::ShaderProgram( const string &name,
@@ -357,4 +357,4 @@ void ShaderProgram::setUniform(GLint location, const glm::mat4 &value)
   set_uniforms.insert(location);
 }
 
-} // namespace engine
+} // namespace render_util

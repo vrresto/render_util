@@ -29,7 +29,7 @@
 #include <memory>
 #include <glm/glm.hpp>
 
-namespace engine
+namespace render_util
 {
   class ShaderProgram
   {

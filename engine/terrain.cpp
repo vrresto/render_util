@@ -31,7 +31,7 @@
 
 using namespace std;
 using namespace gl_wrapper::gl_functions;
-using namespace engine;
+using namespace render_util;
 
 namespace
 {
@@ -247,7 +247,7 @@ namespace
   
 }
 
-struct engine::Terrain::Private
+struct render_util::Terrain::Private
 {
   GLuint vao_id = 0;
   GLuint vertex_buffer_id = 0;
@@ -360,9 +360,9 @@ struct engine::Terrain::Private
 };
 
 
-engine::Terrain::Terrain() : p(new Private) {}
+render_util::Terrain::Terrain() : p(new Private) {}
 
-engine::Terrain::~Terrain()
+render_util::Terrain::~Terrain()
 {
   delete p;
 }
@@ -372,7 +372,7 @@ std::vector<glm::vec3> Terrain::getNormals()
   return p->normals;
 }
 
-void engine::Terrain::build(const ElevationMap *map)
+void render_util::Terrain::build(const ElevationMap *map)
 {
   p->deleteGLObjects();
   delete p->mesh;
@@ -381,7 +381,7 @@ void engine::Terrain::build(const ElevationMap *map)
   p->build(false);
 }
 
-void engine::Terrain::draw(ShaderProgramPtr program)
+void render_util::Terrain::draw(ShaderProgramPtr program)
 {
   CHECK_GL_ERROR();
   
@@ -401,7 +401,7 @@ void engine::Terrain::draw(ShaderProgramPtr program)
   gl::BindVertexArray(0);
 }
 
-const string &engine::Terrain::getName()
+const string &render_util::Terrain::getName()
 {
   static std::string name = "terrain";
   return name;

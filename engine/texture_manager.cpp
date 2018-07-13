@@ -37,7 +37,7 @@ namespace
   enum { MAX_UNITS = 32 };
 }
 
-namespace engine
+namespace render_util
 {
 
 
@@ -205,4 +205,4 @@ void TextureManager::bind(unsigned int unit, TexturePtr texture)
 }
 
 
-} // namespace engine
+} // namespace render_util

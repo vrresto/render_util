@@ -24,7 +24,7 @@
 #include <cassert>
 #include <SOIL/SOIL.h>
 
-namespace engine
+namespace render_util
 {
   template <typename T>
   T *loadImageFromMemory(const std::vector<char> &data)

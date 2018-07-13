@@ -24,7 +24,7 @@
 class MapLoader : public MapLoaderBase
 {
 public:
-  void loadMap(const std::string &path, engine::Map &map) override;
+  void loadMap(const std::string &path, render_util::Map &map) override;
 };
 
 #endif

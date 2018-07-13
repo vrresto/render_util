@@ -24,7 +24,7 @@
 
 #include <vector>
 
-namespace engine
+namespace render_util
 {
   class ElevationMap;
 

@@ -32,7 +32,7 @@ using namespace std;
 glm::ivec2 max_map_size = glm::ivec2(2 * 8192, 8192);
 // const unsigned max_map_size = 40000;
 
-engine::Image<float>::Ptr loadTiff(const char *filename)
+render_util::Image<float>::Ptr loadTiff(const char *filename)
 {
   TIFF *tif = TIFFOpen(filename, "r");
   if (!tif)
@@ -83,7 +83,7 @@ engine::Image<float>::Ptr loadTiff(const char *filename)
   int image_width = min((int)width, max_map_size.x);
   int image_height = min((int)height, max_map_size.y);
 
-  auto image = engine::image::create<float>(0, glm::ivec2(image_width, image_height));
+  auto image = render_util::image::create<float>(0, glm::ivec2(image_width, image_height));
 
   cout<<"reading tiff data ..."<<endl;
   for (unsigned i = 0; i < image_height; i++)

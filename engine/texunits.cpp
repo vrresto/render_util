@@ -33,12 +33,12 @@ namespace
   };
   #undef DEFINE_TEXUNIT
 
-  static_assert(sizeof(texunit_names) / sizeof(string) == engine::TEXUNIT_NUM);
+  static_assert(sizeof(texunit_names) / sizeof(string) == render_util::TEXUNIT_NUM);
 
 } // namespace
 
 
-namespace engine
+namespace render_util
 {
 
   const string &getTexUnitName(int texunit)

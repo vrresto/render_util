@@ -50,7 +50,7 @@
 using namespace glm;
 using namespace std;
 using namespace gl_wrapper::gl_functions;
-using engine::ShaderProgram;
+using render_util::ShaderProgram;
 using Clock = std::chrono::steady_clock;
 
 

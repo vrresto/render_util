@@ -21,7 +21,7 @@
 
 #include <render_util/image.h>
 
-namespace engine
+namespace render_util
 {
 
 
@@ -257,6 +257,6 @@ upSample(std::shared_ptr<const T> src, int factor)
 }
 
 
-} // namespace engine
+} // namespace render_util
 
 #endif

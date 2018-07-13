@@ -27,7 +27,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-namespace engine
+namespace render_util
 {
 
 
@@ -286,6 +286,6 @@ typedef Image<unsigned char, 3> ImageRGB;
 typedef Image<unsigned char, 4> ImageRGBA;
 
 
-} // namespace engine
+} // namespace render_util
 
 #endif

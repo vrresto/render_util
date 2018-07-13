@@ -29,12 +29,12 @@
 using namespace gl_wrapper::gl_functions;
 using namespace std;
 
-namespace engine
+namespace render_util
 {
 
 
 ShaderProgramPtr createShaderProgram(const std::string &definition,
-                                     const engine::TextureManager &tex_mgr,
+                                     const render_util::TextureManager &tex_mgr,
                                      const std::string &shader_path,
                                      const std::map<unsigned int, std::string> &attribute_locations)
 {
@@ -104,7 +104,7 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
   return program;
 }
 
-ShaderProgramPtr createSkyProgram(const engine::TextureManager &tex_mgr, const string &shader_path)
+ShaderProgramPtr createSkyProgram(const render_util::TextureManager &tex_mgr, const string &shader_path)
 {
   return createShaderProgram("sky", tex_mgr, shader_path);
 }

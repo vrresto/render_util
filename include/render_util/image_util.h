@@ -21,7 +21,7 @@
 
 #include <render_util/image.h>
 
-namespace engine::image
+namespace render_util::image
 {
 
 
@@ -252,6 +252,6 @@ merge(const Array2D<typename T::ConstPtr> &chunks, const glm::ivec2 &chunk_size)
 }
 
 
-} // namespace engine::image
+} // namespace render_util::image
 
 #endif

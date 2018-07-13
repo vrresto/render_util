@@ -24,7 +24,7 @@
 using namespace std;
 using namespace glm;
 
-namespace engine
+namespace render_util
 {
   const std::string &getResourcePath()
   {
@@ -43,7 +43,7 @@ int main()
 {
   FastNoise noise_generator;
 
-  auto heightmap = engine::image::create<float>(0, ivec2(2048));
+  auto heightmap = render_util::image::create<float>(0, ivec2(2048));
 
   for (int y = 0; y < heightmap->w(); y++)
   {

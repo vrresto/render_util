@@ -23,7 +23,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-struct Camera : public engine::Camera
+struct Camera : public render_util::Camera
 {
   float x = 0;
   float y = 0;

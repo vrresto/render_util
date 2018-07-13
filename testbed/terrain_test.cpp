@@ -22,7 +22,7 @@
 
 using namespace std;
 
-namespace engine
+namespace render_util
 {
   const std::string &getResourcePath()
   {

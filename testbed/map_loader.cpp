@@ -33,7 +33,7 @@
 #include <sstream>
 
 using namespace std;
-using namespace engine;
+using namespace render_util;
 
 namespace
 {
@@ -62,7 +62,7 @@ enum
 
 ImageRGBA::Ptr getTexture(const string &name)
 {
-  string path = engine::getDataPath() + "/textures/" + name + ".tga";
+  string path = render_util::getDataPath() + "/textures/" + name + ".tga";
   cout<<path<<endl;
   ImageRGBA::Ptr image(loadImageFromFile<ImageRGBA>(path));
   assert(image);
@@ -233,7 +233,7 @@ ImageRGBA::Ptr loadTexture(unsigned type, float &scale)
   return image;
 };
 
-void loadTextures(ImageGreyScale::Ptr type_map, engine::MapTextures &map_textures)
+void loadTextures(ImageGreyScale::Ptr type_map, render_util::MapTextures &map_textures)
 {
   vector<ImageRGBA::ConstPtr> textures;
   vector<float> scales;
@@ -349,7 +349,7 @@ ImageGreyScale::Ptr createForestMap(ImageGreyScale::ConstPtr type_map)
 
 
 
-void MapLoader::loadMap(const std::string &path, engine::Map &map)
+void MapLoader::loadMap(const std::string &path, render_util::Map &map)
 {
 
   string height_map_path = getDataPath() + "/nz.tiff";
@@ -407,7 +407,7 @@ void MapLoader::loadMap(const std::string &path, engine::Map &map)
   ImageGreyScale::Ptr type_map;
 
   {
-    engine::ElevationMap elevation_map(height_map);
+    render_util::ElevationMap elevation_map(height_map);
 
     map.terrain->build(&elevation_map);
 

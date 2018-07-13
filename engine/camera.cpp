@@ -24,7 +24,7 @@
 
 using namespace glm;
 
-namespace engine
+namespace render_util
 {
 
   struct Camera::Private

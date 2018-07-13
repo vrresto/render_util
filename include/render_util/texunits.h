@@ -23,7 +23,7 @@
 
 #define DEFINE_TEXUNIT(name) TEXUNIT_##name,
 
-namespace engine
+namespace render_util
 {
 
   enum

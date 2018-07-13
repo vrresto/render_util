@@ -24,6 +24,6 @@
 #include <cstdint>
 #include <vector>
 
-engine::Image<float>::Ptr loadTiff(const char *filename);
+render_util::Image<float>::Ptr loadTiff(const char *filename);
 
 #endif

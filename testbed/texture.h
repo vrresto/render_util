@@ -21,6 +21,6 @@
 
 #include <render_util/texture_manager.h>
 
-engine::TextureManager &getTextureManager();
+render_util::TextureManager &getTextureManager();
 
 #endif

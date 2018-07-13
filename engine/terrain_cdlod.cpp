@@ -46,7 +46,7 @@ void doStuff(void *data);
 
 using namespace gl_wrapper::gl_functions;
 using namespace glm;
-using engine::TexturePtr;
+using render_util::TexturePtr;
 using std::cout;
 using std::endl;
 using std::vector;
@@ -90,7 +90,7 @@ enum
 
 struct GridMesh
 {
-  typedef engine::Float3 Vertex;
+  typedef render_util::Float3 Vertex;
 
   const int width = 0;
   const int height = 0;
@@ -311,7 +311,7 @@ float getLodLevelDist(int lod_level)
   return MIN_LOD_DIST * pow(2, lod_level);
 }
 
-float getMaxHeight(const engine::ElevationMap &map, vec2 pos, float size)
+float getMaxHeight(const render_util::ElevationMap &map, vec2 pos, float size)
 {
   return 4000.0;
 }
@@ -329,7 +329,7 @@ constexpr float getNodeScale(int lod_level)
 static_assert(getNodeSize(0) == LEAF_NODE_SIZE);
 static_assert(getNodeScale(0) == METERS_PER_GRID);
 
-Node *createNode(const engine::ElevationMap &map, vec2 pos, int lod_level)
+Node *createNode(const render_util::ElevationMap &map, vec2 pos, int lod_level)
 {
   Node *node = new Node;
   node->pos = pos;
@@ -370,7 +370,7 @@ Node *createNode(const engine::ElevationMap &map, vec2 pos, int lod_level)
 } // namespace
 
 
-namespace engine
+namespace render_util
 {
 
 struct TerrainCDLOD::Private
@@ -837,7 +837,7 @@ void TerrainCDLOD::setTextureManager(TextureManager *m)
   p->texture_manager = m;
 }
 
-const std::string &engine::TerrainCDLOD::getName()
+const std::string &render_util::TerrainCDLOD::getName()
 {
   static std::string name = "terrain_cdlod";
   return name;
@@ -849,4 +849,4 @@ void TerrainCDLOD::setDrawDistance(float dist)
 }
 
 
-} // namespace engine
+} // namespace render_util

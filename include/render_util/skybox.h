@@ -19,7 +19,7 @@
 #ifndef ENGINE_SKYBOX_H
 #define ENGINE_SKYBOX_H
 
-namespace engine
+namespace render_util
 {
 
   inline void drawSkyBox()

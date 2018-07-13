@@ -26,7 +26,7 @@
 class MapLoaderBase
 {
 public:
-  virtual void loadMap(const std::string &path, engine::Map &map) = 0;
+  virtual void loadMap(const std::string &path, render_util::Map &map) = 0;
 };
 
 #endif

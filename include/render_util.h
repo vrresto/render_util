@@ -22,7 +22,7 @@
 #include <string>
 #include <glm/glm.hpp>
 
-namespace engine 
+namespace render_util 
 {
   struct Float3
   {

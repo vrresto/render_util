@@ -36,7 +36,7 @@
 #include <curvature_map.h>
 
 using namespace gl_wrapper::gl_functions;
-using namespace engine;
+using namespace render_util;
 using namespace glm;
 using namespace std;
 
@@ -115,8 +115,8 @@ vec3 calcNormal(vec3 vertices[3])
 
 struct NormalMapCreator
 {
-  engine::ElevationMap elevation_map;
-  engine::Image<Normal>::Ptr normals;
+  render_util::ElevationMap elevation_map;
+  render_util::Image<Normal>::Ptr normals;
   float grid_scale = 1.0;
 
   vec3 getNormal(ivec2 coords) const
@@ -223,7 +223,7 @@ float mapFloatToUnsignedChar(float value)
 
 } // namespace
 
-namespace engine
+namespace render_util
 {
 
 
@@ -500,7 +500,7 @@ unsigned int createUnsignedIntTexture(const unsigned int *data, int w, int h)
 // 
 //   }
 // 
-//   vec3 getTerrainVertex(const engine::ElevationMap &elevation_map, int x, int y)
+//   vec3 getTerrainVertex(const render_util::ElevationMap &elevation_map, int x, int y)
 //   {
 //     const float grid_resolution = 200.0;
 //     
@@ -708,6 +708,6 @@ Image<Normal>::Ptr createNormalMap(const ElevationMap &elevation_map, float grid
 }
 
 
-} // namespace engine
+} // namespace render_util
 
 #endif

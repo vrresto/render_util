@@ -21,7 +21,7 @@
 
 #include <render_util/shader.h>
 
-namespace engine
+namespace render_util
 {
 
   class MapTextures;
