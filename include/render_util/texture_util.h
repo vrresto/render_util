@@ -17,8 +17,8 @@
  */
 
 #if 1
-#ifndef ENGINE_TEXTURE_UTIL_H
-#define ENGINE_TEXTURE_UTIL_H
+#ifndef RENDER_UTIL_TEXTURE_UTIL_H
+#define RENDER_UTIL_TEXTURE_UTIL_H
 
 #include <render_util/image.h>
 #include <render_util/texture_manager.h>

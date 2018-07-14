@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_ENGINE_H
-#define ENGINE_ENGINE_H
+#ifndef RENDER_UTIL_RENDER_UTIL_H
+#define RENDER_UTIL_RENDER_UTIL_H
 
 #include <string>
 #include <glm/glm.hpp>

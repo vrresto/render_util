@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_IMAGE_H
-#define ENGINE_IMAGE_H
+#ifndef RENDER_UTIL_IMAGE_H
+#define RENDER_UTIL_IMAGE_H
 
 #include <functional>
 #include <memory>

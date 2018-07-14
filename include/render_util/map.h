@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_MAP_H
-#define ENGINE_MAP_H
+#ifndef RENDER_UTIL_MAP_H
+#define RENDER_UTIL_MAP_H
 
 // #include <render_util/image.h>
 // #include <render_util/elevation_map.h>

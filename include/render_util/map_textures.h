@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_MAP_TEXTURES_H
-#define ENGINE_MAP_TEXTURES_H
+#ifndef RENDER_UTIL_MAP_TEXTURES_H
+#define RENDER_UTIL_MAP_TEXTURES_H
 
 #include <vector>
 #include <render_util/texture_manager.h>

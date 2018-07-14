@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_TERRAIN_BASE_H
-#define ENGINE_TERRAIN_BASE_H
+#ifndef RENDER_UTIL_TERRAIN_BASE_H
+#define RENDER_UTIL_TERRAIN_BASE_H
 
 #include <render_util/shader.h>
 

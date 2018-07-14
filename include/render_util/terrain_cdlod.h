@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_TERRAIN_CDLOD_H
-#define ENGINE_TERRAIN_CDLOD_H
+#ifndef RENDER_UTIL_TERRAIN_CDLOD_H
+#define RENDER_UTIL_TERRAIN_CDLOD_H
 
 #include <render_util/terrain_base.h>
 #include <render_util/image.h>

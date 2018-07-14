@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_SHADER_H
-#define ENGINE_SHADER_H
+#ifndef RENDER_UTIL_SHADER_H
+#define RENDER_UTIL_SHADER_H
 
 #include <string>
 #include <vector>

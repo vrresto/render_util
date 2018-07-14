@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_SHADER_UTIL_H
-#define ENGINE_SHADER_UTIL_H
+#ifndef RENDER_UTIL_SHADER_UTIL_H
+#define RENDER_UTIL_SHADER_UTIL_H
 
 #include <render_util/shader.h>
 #include <render_util/texture_manager.h>

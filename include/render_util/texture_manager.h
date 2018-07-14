@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_TEXTURE_MANAGER_H
-#define ENGINE_TEXTURE_MANAGER_H
+#ifndef RENDER_UTIL_TEXTURE_MANAGER_H
+#define RENDER_UTIL_TEXTURE_MANAGER_H
 
 #include <memory>
 #include <map>

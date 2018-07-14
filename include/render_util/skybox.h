@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_SKYBOX_H
-#define ENGINE_SKYBOX_H
+#ifndef RENDER_UTIL_SKYBOX_H
+#define RENDER_UTIL_SKYBOX_H
 
 namespace render_util
 {

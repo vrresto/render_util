@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_WATER_H
-#define ENGINE_WATER_H
+#ifndef RENDER_UTIL_WATER_H
+#define RENDER_UTIL_WATER_H
 
 #include <render_util/shader.h>
 

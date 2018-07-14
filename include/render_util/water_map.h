@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ENGINE_WATER_MAP_H
-#define ENGINE_WATER_MAP_H
+#ifndef RENDER_UTIL_WATER_MAP_H
+#define RENDER_UTIL_WATER_MAP_H
 
 namespace render_util
 {
