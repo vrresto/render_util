@@ -26,7 +26,7 @@
 #include <render_util/map.h>
 #include <render_util/texunits.h>
 #include <render_util/texture_util.h>
-#include <render_util.h>
+#include <render_util/render_util.h>
 
 #include <vector>
 #include <iostream>

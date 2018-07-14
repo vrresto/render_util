@@ -20,7 +20,7 @@
 #include "scene.h"
 #include "camera.h"
 // #include "texture.h"
-#include <render_util.h>
+#include <render_util/render_util.h>
 #include <render_util/map.h>
 #include <render_util/map_textures.h>
 #include <render_util/terrain.h>

@@ -19,9 +19,9 @@
 #ifndef MAP_LOADER_H
 #define MAP_LOADER_H
 
-#include <map_loader_base.h>
+#include <render_util/map_loader_base.h>
 
-class MapLoader : public MapLoaderBase
+class MapLoader : public render_util::MapLoaderBase
 {
 public:
   void loadMap(const std::string &path, render_util::Map &map) override;

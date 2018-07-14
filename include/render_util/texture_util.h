@@ -22,7 +22,7 @@
 
 #include <render_util/image.h>
 #include <render_util/texture_manager.h>
-#include <render_util.h>
+#include <render_util/render_util.h>
 
 #include <vector>
 

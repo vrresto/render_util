@@ -19,9 +19,12 @@
 #ifndef DISTANCES_H
 #define DISTANCES_H
 
-const float planet_radius = 6371 * 1000;
-const float atmosphere_visibility = 150.0 * 1000.0;
-const float atmosphere_height = 60.0 * 1000.0;
-const float max_elevation = 20.0 * 1000.0;
+namespace
+{
+    const float planet_radius = 6371 * 1000;
+    const float atmosphere_visibility = 150.0 * 1000.0;
+    const float atmosphere_height = 60.0 * 1000.0;
+    const float max_elevation = 20.0 * 1000.0;
+}
 
 #endif

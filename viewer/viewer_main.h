@@ -26,10 +26,5 @@
 
 void runApplication(std::function<std::shared_ptr<Scene>()> f_create_scene);
 
-// template <typename T>
-// void runApplication()
-// {
-//   runApplication( [] { return std::shared_ptr<Scene>(new T); } );
-// }
 
 #endif

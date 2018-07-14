@@ -16,7 +16,7 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <render_util.h>
+#include <render_util/render_util.h>
 #include <render_util/camera.h>
 
 #include <glm/gtc/matrix_transform.hpp>

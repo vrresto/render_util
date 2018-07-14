@@ -25,7 +25,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <GL/gl.h>
 
-#include <render_util.h>
+#include <render_util/render_util.h>
 #include <distances.h>
 #include <curvature_map.h>
 #include <render_util/shader.h>

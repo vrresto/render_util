@@ -19,8 +19,8 @@
 #include "viewer_main.h"
 #include "scene.h"
 #include "camera.h"
-#include <viewer.h>
-#include <render_util.h>
+#include <render_util/viewer.h>
+#include <render_util/render_util.h>
 #include <render_util/water.h>
 #include <render_util/shader.h>
 #include <render_util/shader_util.h>
@@ -111,7 +111,7 @@ class TerrainViewerScene : public Scene
   render_util::ShaderProgramPtr terrain_program;
   render_util::ShaderProgramPtr forest_program;
 
-  shared_ptr<MapLoaderBase> map_loader;
+  shared_ptr<render_util::MapLoaderBase> map_loader;
   render_util::TextureManager texture_manager = render_util::TextureManager(0);
 
   void updateUniforms(render_util::ShaderProgramPtr program) override;
@@ -120,7 +120,8 @@ class TerrainViewerScene : public Scene
 
 
 public:
-  TerrainViewerScene(shared_ptr<MapLoaderBase> map_loader, const string &map_path) :
+  TerrainViewerScene(shared_ptr<render_util::MapLoaderBase> map_loader,
+                     const string &map_path) :
     map_loader(map_loader), map_path(map_path) {}
   void render(float frame_delta) override;
   void setup() override;
@@ -298,7 +299,7 @@ void TerrainViewerScene::render(float frame_delta)
 
 }
 
-void runViewer(shared_ptr<MapLoaderBase> map_loader, const std::string &map_path)
+void render_util::runViewer(shared_ptr<MapLoaderBase> map_loader, const std::string &map_path)
 {
   auto create_func = [map_loader, map_path]
   {

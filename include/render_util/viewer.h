@@ -16,17 +16,18 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MAPLOADER_BASE_H
-#define MAPLOADER_BASE_H
+#ifndef RENDER_UTIL_VIEWER_H
+#define RENDER_UTIL_VIEWER_H
 
-#include <render_util/map.h>
+#include <render_util/map_loader_base.h>
+#include <render_util/image.h>
 
-#include <string>
+#include <memory>
 
-class MapLoaderBase
+namespace render_util
 {
-public:
-  virtual void loadMap(const std::string &path, render_util::Map &map) = 0;
-};
+    void runViewer(std::shared_ptr<MapLoaderBase> map_loader, const std::string &map_path);
+    void runHeightMapViewer(render_util::Image<float>::ConstPtr height_map);
+}
 
 #endif

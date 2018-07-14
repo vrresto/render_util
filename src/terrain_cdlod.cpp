@@ -29,7 +29,7 @@
 #include <render_util/texture_util.h>
 #include <render_util/image.h>
 #include <render_util/water_map.h>
-#include <render_util.h>
+#include <render_util/render_util.h>
 
 #include <array>
 #include <vector>

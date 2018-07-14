@@ -19,8 +19,8 @@
 #include "scene.h"
 #include "camera.h"
 #include "viewer_main.h"
-#include <viewer.h>
-#include <render_util.h>
+#include <render_util/viewer.h>
+#include <render_util/render_util.h>
 #include <render_util/shader.h>
 #include <render_util/shader_util.h>
 #include <render_util/elevation_map.h>
@@ -170,7 +170,7 @@ void HeightMapViewerScene::render(float frame_delta)
   CHECK_GL_ERROR();
 }
 
-void runHeightMapViewer(render_util::Image<float>::ConstPtr height_map)
+void render_util::runHeightMapViewer(render_util::Image<float>::ConstPtr height_map)
 {
   auto create_func = [height_map]
   {

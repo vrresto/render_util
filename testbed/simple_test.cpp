@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <viewer.h>
-#include <render_util.h>
+#include <render_util/viewer.h>
+#include <render_util/render_util.h>
 #include <render_util/image_util.h>
 #include <FastNoise.h>
 
