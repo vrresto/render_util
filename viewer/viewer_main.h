@@ -24,7 +24,9 @@
 #include <memory>
 #include <functional>
 
-void runApplication(std::function<std::shared_ptr<Scene>()> f_create_scene);
-
+namespace render_util::viewer
+{
+  void runApplication(std::function<std::shared_ptr<Scene>()> f_create_scene);
+}
 
 #endif

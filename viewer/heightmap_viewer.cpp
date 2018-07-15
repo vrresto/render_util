@@ -52,7 +52,9 @@
 using namespace glm;
 using namespace std;
 using namespace gl_wrapper::gl_functions;
+using namespace render_util::viewer;
 using render_util::ShaderProgram;
+
 
 #include <render_util/skybox.h>
 

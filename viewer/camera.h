@@ -23,6 +23,11 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+
+namespace render_util::viewer
+{
+
+
 struct Camera : public render_util::Camera
 {
   float x = 0;
@@ -77,6 +82,9 @@ struct Camera : public render_util::Camera
     setFov(fov);
   }
 };
+
+
+} // namespace render_util::viewer
 
 
 #endif

@@ -23,6 +23,11 @@
 
 #include <render_util/shader.h>
 
+
+namespace render_util::viewer
+{
+
+
 class Scene
 {
 public:
@@ -51,5 +56,9 @@ public:
   virtual void setup() = 0;
   virtual void render(float frame_delta) = 0;
 };
+
+
+} // namespace render_util::viewer
+
 
 #endif

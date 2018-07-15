@@ -50,6 +50,7 @@
 using namespace glm;
 using namespace std;
 using namespace gl_wrapper::gl_functions;
+using namespace render_util::viewer;
 using render_util::ShaderProgram;
 using Clock = std::chrono::steady_clock;
 
@@ -234,16 +235,16 @@ namespace
     return (void*) glfwGetProcAddress(name);
   }
 
+  void errorCallback(int error, const char* description)
+  {
+    fprintf(stderr, "Error: %s\n", description);
+    exit(1);
+  }
+
 } // namespace
 
 
-static void errorCallback(int error, const char* description)
-{
-  fprintf(stderr, "Error: %s\n", description);
-  exit(1);
-}
-
-void runApplication(std::function<std::shared_ptr<Scene>()> f_create_scene)
+void render_util::viewer::runApplication(std::function<std::shared_ptr<Scene>()> f_create_scene)
 {
   glfwSetErrorCallback(errorCallback);
 
