@@ -96,8 +96,8 @@ class HeightMapViewerScene : public Scene
   render_util::TextureManager texture_manager = render_util::TextureManager(0);
   render_util::ShaderProgramPtr m_sky_program;
   render_util::ShaderProgramPtr m_terrain_program;
-  render_util::TexturePtr curvature_map;
-  render_util::TexturePtr atmosphere_map;
+  render_util::TexturePtr m_curvature_map;
+  render_util::TexturePtr m_atmosphere_map;
 
 public:
 	HeightMapViewerScene(render_util::Image<float>::ConstPtr height_map) : m_height_map(height_map) {}
@@ -116,8 +116,8 @@ void HeightMapViewerScene::setup()
   m_sky_program = createSkyProgram(getTextureManager());
   m_terrain_program = createTerrainProgram("terrain_cdlod_simple", getTextureManager());
   
-  curvature_map = render_util::createCurvatureTexture(getTextureManager(), resource_path);
-  atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), resource_path);
+  m_curvature_map = render_util::createCurvatureTexture(getTextureManager(), resource_path);
+  m_atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), resource_path);
 
   render_util::ElevationMap elevation_map(m_height_map);
 
