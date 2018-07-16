@@ -23,7 +23,6 @@ GENERATED_SRC+= gl_inline_forwards.inc
 
 GENERATED:= $(GENERATED_SRC:%=$(BUILD_DIR)/_generated/%)
 
-
 ############################################
 
 .SECONDEXPANSION:
@@ -51,11 +50,6 @@ $(BUILD_DIR)/.dummy:
 	mkdir -p $(@D)
 	touch $@
 	
-# build/main.cpp.wine.o: build/_generated/gl_p_proc
-# build/gl_wrapper/forward.cpp.wine.o: build/_generated/gl_forward build/_generated/gl_forward_table
-# build/gl_wrapper/gl_interface.cpp.wine.o: build/_generated/gl_p_proc_init
-
-
 $(BUILD_DIR)/_generated/gl_%.inc: | $$(@D)/.dummy
 	PYTHONPATH=$(PYTHONPATH) GLAPI_PATH=$(PYTHONPATH) python -B scripts/print_$*.py > $@.tmp
 	mv $@.tmp $@

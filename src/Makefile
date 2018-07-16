@@ -57,8 +57,3 @@ $(BUILD_DIR)/FastNoise.o: $(FASTNOISE_DIR)/FastNoise.cpp | $$(@D)/.dummy
 
 clean:
 	rm -rf $(BUILD_DIR)
-
-print_vars:
-	@echo PLATFORM: $(PLATFORM)
-	@echo deps: $(DEPS)
-	@echo CXX: $(CXX)
