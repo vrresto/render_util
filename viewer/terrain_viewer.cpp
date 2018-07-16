@@ -83,7 +83,7 @@ render_util::ShaderProgramPtr createTerrainProgram(const string &name, const ren
 
   CHECK_GL_ERROR();
 
-  map<unsigned int, string> attribute_locations = { { 2, "attrib_pos" } };
+  map<unsigned int, string> attribute_locations = { { 4, "attrib_pos" } };
 
   terrain_program = render_util::createShaderProgram(name, tex_mgr, shader_path, attribute_locations);
 

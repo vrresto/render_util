@@ -447,8 +447,8 @@ TerrainCDLOD::Private::Private()
 
 #if DRAW_INSTANCED
   gl::BindBuffer(GL_ARRAY_BUFFER, node_pos_buffer_id);
-  gl::VertexAttribPointer(2, 4, GL_FLOAT, false, 0, 0);
-  gl::EnableVertexAttribArray(2);
+  gl::VertexAttribPointer(4, 4, GL_FLOAT, false, 0, 0);
+  gl::EnableVertexAttribArray(4);
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
   CHECK_GL_ERROR();
 #endif
@@ -507,7 +507,7 @@ void TerrainCDLOD::Private::drawInstanced()
   gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
   CHECK_GL_ERROR();
 
-  gl::VertexAttribDivisor(2, 1);
+  gl::VertexAttribDivisor(4, 1);
   CHECK_GL_ERROR();
 
   gl::DrawElementsInstancedARB(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, 0, render_list.getNodeCount());
@@ -719,7 +719,7 @@ void TerrainCDLOD::draw(ShaderProgramPtr program)
 #endif
 
 #if DRAW_INSTANCED
-  gl::VertexAttribDivisor(2, 1);
+  gl::VertexAttribDivisor(4, 1);
   CHECK_GL_ERROR();
 #endif
 
