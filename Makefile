@@ -2,11 +2,14 @@ PLATFORM= native
 BUILD_DIR:= build/$(PLATFORM)
 
 .SECONDEXPANSION:
-.PHONY: all clean print_vars testbed run
+.PHONY: all clean print_vars testbed run tools
 
 ##########################################################################
 
-all: testbed
+all: testbed tools
+
+tools:
+	make -C tools
 
 testbed:
 	make -C testbed
