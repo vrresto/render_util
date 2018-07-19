@@ -27,7 +27,6 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdio>
-#include <SOIL/SOIL.h>
 #include <unistd.h>
 #include "GL/gl.h"
 

@@ -19,61 +19,49 @@
 #ifndef RENDER_UTIL_IMAGE_LOADER_H
 #define RENDER_UTIL_IMAGE_LOADER_H
 
+#include <util.h>
+
 #include <string>
 #include <vector>
 #include <cassert>
-#include <SOIL/SOIL.h>
 
 namespace render_util
 {
+  bool loadImageFromMemory(const std::vector<char> &data_in,
+                           int num_channels,
+                           std::vector<unsigned char> &data_out,
+                           int &width,
+                           int &height);
+
   template <typename T>
   T *loadImageFromMemory(const std::vector<char> &data)
   {
-    int width, height, channels;
-    unsigned char *image_data =  
-        SOIL_load_image_from_memory(
-          (const unsigned char*)data.data(),
-          data.size(),
-          &width, &height, &channels, T::BYTES_PER_PIXEL);
-
-    assert(image_data);
-
-    const int size = width * height * T::BYTES_PER_PIXEL;
-
-    T *image = new T(width, height, size, image_data);
-
-    SOIL_free_image_data(image_data);
-
-    return image;
+    std::vector<unsigned char> image_data;
+    int width = 0, height = 0;
+    if (loadImageFromMemory(data, T::BYTES_PER_PIXEL, image_data, width, height))
+    {
+      return new T(width, height, image_data.size(), image_data.data());
+    }
+    else
+    {
+      return 0;
+    }
   }
   
   template <typename T>
   T *loadImageFromFile(const std::string &file_path)
   {
-    int width, height, channels;
-    unsigned char *image_data =  
-        SOIL_load_image(file_path.c_str(), &width, &height, &channels, T::BYTES_PER_PIXEL);
-
-    if (!image_data)
+    std::vector<char> data;
+    if (util::readFile(file_path, data))
+      return loadImageFromMemory<T>(data);
+    else
       return 0;
-
-    const int size = width * height * T::BYTES_PER_PIXEL;
-
-    T *image = new T(width, height, size, image_data);
-
-    SOIL_free_image_data(image_data);
-
-    return image;
   }
 
   template <typename T>
   void saveImageToFile(const std::string &file_path, const T *image)
   {
-    int res = SOIL_save_image(file_path.c_str(),
-                    SOIL_SAVE_TYPE_TGA, image->w(), image->h(), T::BYTES_PER_PIXEL,
-                    image->data());
-    assert(res);
-//     assert(0);
+    assert(0);
   }
 
 

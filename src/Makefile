@@ -10,6 +10,7 @@ CXX:=$(CXX_$(PLATFORM))
 
 include ../cflags.mk
 
+INCLUDES+= -I../stb
 INCLUDES+= -I../include
 INCLUDES+= -I$(FASTNOISE_DIR)
 INCLUDES+= -I$(BASE_BUILD_DIR)
@@ -26,7 +27,7 @@ SRCS+= shader.cpp
 SRCS+= shader_util.cpp
 SRCS+= map_textures.cpp
 SRCS+= water.cpp
-
+SRCS+= image_loader.cpp
 
 OBJS+= $(SRCS:%.cpp=$(BUILD_DIR)/%.cpp.o)
 DEPS+= $(SRCS:%.cpp=$(BUILD_DIR)/%.cpp.d)

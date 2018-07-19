@@ -29,7 +29,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <GL/gl.h>
-#include <SOIL/SOIL.h>
 
 #include <gl_wrapper/gl_functions.h>
 #include <atmosphere_map.h>

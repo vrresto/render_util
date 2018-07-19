@@ -58,7 +58,7 @@ include ../rules.mk
 
 
 $(BUILD_DIR)/$(EXECUTABLE_NAME): libviewer librender_util libgl_wrapper $(OBJS) $(TERRAIN_TEST_OBJS)
-	$(CXX) -o $@  $(LDFLAGS) $(TERRAIN_TEST_OBJS) $(OBJS) -lviewer -lrender_util -lgl_wrapper -lglfw -lGL  -lSOIL -ltiff
+	$(CXX) -o $@  $(LDFLAGS) $(TERRAIN_TEST_OBJS) $(OBJS) -lviewer -lrender_util -lgl_wrapper -lglfw -lGL -ltiff
 
 $(BUILD_DIR)/simple_test: librender_util libgl_wrapper $(OBJS) $(SIMPLE_TEST_OBJS)
-	$(CXX) -o $@  $(LDFLAGS) $(SIMPLE_TEST_OBJS) $(OBJS) -lviewer -lrender_util -lgl_wrapper -lglfw -lGL  -lSOIL -ltiff
+	$(CXX) -o $@  $(LDFLAGS) $(SIMPLE_TEST_OBJS) $(OBJS) -lviewer -lrender_util -lgl_wrapper -lglfw -lGL -ltiff
