@@ -19,3 +19,6 @@ run: all
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+cleanall:
+	rm -rf build

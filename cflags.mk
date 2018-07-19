@@ -1,12 +1,11 @@
 CXX_native:= g++
-CXX_wine:= wineg++
+CXX_wine:= wineg++ -m32
 CXX:= $(CXX_$(PLATFORM))
 
 CFLAGS+= -O2
 # CFLAGS+= -Os
 # CFLAGS+= -fdata-sections -ffunction-sections
 CFLAGS+= -fno-strict-aliasing
-# CFLAGS+= -m32 
 CFLAGS+= -g 
 CFLAGS+= -pipe
 CFLAGS+= -Wreturn-type -Werror -Wmissing-field-initializers
