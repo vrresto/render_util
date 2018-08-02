@@ -3,11 +3,6 @@ BASE_BUILD_DIR:= ../build/$(PLATFORM)
 BUILD_DIR:= $(BASE_BUILD_DIR)/render_util
 FASTNOISE_DIR:= ../FastNoise
 
-CXX_native:=g++
-CXX_wine:=wineg++
-
-CXX:=$(CXX_$(PLATFORM))
-
 include ../cflags.mk
 
 INCLUDES+= -I../stb

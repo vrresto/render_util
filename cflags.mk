@@ -1,6 +1,6 @@
-CXX_native:= g++
-CXX_wine:= wineg++ -m32
-CXX:= $(CXX_$(PLATFORM))
+CXX_native ?= g++
+CXX_wine ?= wineg++ -m32
+CXX ?= $(CXX_$(PLATFORM))
 
 CFLAGS+= -O2
 # CFLAGS+= -Os

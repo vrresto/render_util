@@ -289,7 +289,10 @@ void render_util::viewer::runApplication(std::function<std::shared_ptr<Scene>()>
   glDepthFunc(GL_LEQUAL);
 
   glfwShowWindow(window);
+
+#if GLFW_VERSION_MINOR >= 2
   glfwMaximizeWindow(window);
+#endif
 
   Clock::time_point last_frame_time = Clock::now();
   Clock::time_point last_stats_time = Clock::now();
