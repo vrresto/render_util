@@ -10,16 +10,17 @@ build:
   stage: build
   # instead of calling g++ directly you can also use some build toolkit like make
   # install the necessary build tools when needed
-  before_script: 
-     - apt-get update && apt-get -y install make libglfw3-dev libglm-dev libsoil-dev
-  script: 
-    - make
+  before_script:
+     - apt-get update && apt-get -y install make libglfw3-dev libglm-dev cmake
+  script:
+    - mkdir build
+    - cd build && cmake .. && make
   artifacts:
     paths:
-      - build/native/testbed/terrain_test
-      - build/native/testbed/simple_test
-      - build/native/atmosphere_map
-      - build/native/curvature_map
+      - build/testbed/terrain_test
+      - build/testbed/simple_test
+      - build/atmosphere_map
+      - build/curvature_map
       - shaders
   # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
   # cache:
