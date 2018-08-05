@@ -73,7 +73,7 @@ namespace
     cout.width(10);
     cout<<distance<<suffix;
   }
-  
+
   void printStats(int frame_delta_ms)
   {
     float fps = 1000.0 / frame_delta_ms;
@@ -89,7 +89,7 @@ namespace
     cout.precision(3);
 
     cout<<"fps: "<<fps<< "   |   ";
-    
+
     cout<<"pos: ";
     printDistance(g_scene->camera.x/1000, " ");
     printDistance(g_scene->camera.y/1000, " ");
@@ -102,7 +102,7 @@ namespace
 
     cout.flush();
   }
-  
+
   void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
   {
     if (action == GLFW_PRESS) {
@@ -178,7 +178,7 @@ namespace
     }
 
   }
- 
+
   void processInput(GLFWwindow *window, float frame_delta)
   {
 //     const dvec2 viewport_size = g_scene->camera.getViewportSize();
@@ -198,9 +198,9 @@ namespace
         g_scene->camera.pitch += rotation.y;
       }
     }
-    
+
     float move_speed = camera_move_speed;
-    
+
 //     if (glfwGetKey(window, GLFW_MOD_SHIFT) == GLFW_PRESS) {
 //       move_speed /= 5;
 //     }
@@ -223,10 +223,10 @@ namespace
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
       g_scene->camera.yaw -= camera_rotation_speed * frame_delta;
     }
-    
+
 //     vec4 direction = g_scene->camera.getDirection();
 //     cout<<direction.x<<" "<<direction.y<<" "<<direction.z<<endl;
-    
+
     g_scene->camera.updateTransform();
   }
 
@@ -281,12 +281,12 @@ void render_util::viewer::runApplication(std::function<std::shared_ptr<Scene>()>
 
   CHECK_GL_ERROR();
 
-//   glDepthMask(GL_TRUE);
-//   glEnable (GL_DEPTH_TEST);
-//   glFrontFace(GL_CCW);
-  glCullFace(GL_BACK);
-  glEnable(GL_CULL_FACE);
-  glDepthFunc(GL_LEQUAL);
+//   gl::DepthMask(GL_TRUE);
+//   gl::Enable (GL_DEPTH_TEST);
+//   gl::FrontFace(GL_CCW);
+  gl::CullFace(GL_BACK);
+  gl::Enable(GL_CULL_FACE);
+  gl::DepthFunc(GL_LEQUAL);
 
   glfwShowWindow(window);
 
@@ -326,24 +326,24 @@ void render_util::viewer::runApplication(std::function<std::shared_ptr<Scene>()>
 
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
-    glViewport(0, 0, width, height);
-    glDepthMask(GL_TRUE);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    gl::Viewport(0, 0, width, height);
+    gl::DepthMask(GL_TRUE);
+    gl::Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     g_scene->camera.setViewportSize(width, height);
     g_scene->camera.applyFov();
 
     g_scene->render((float)frame_delta.count() / 1000.0);
-    
+
     CHECK_GL_ERROR();
 
     glfwSwapBuffers(window);
-    
+
     CHECK_GL_ERROR();
   }
 
   cout<<endl;
-  
+
   CHECK_GL_ERROR();
 
   g_scene.reset();

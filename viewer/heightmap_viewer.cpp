@@ -115,7 +115,7 @@ void HeightMapViewerScene::setup()
 
   m_sky_program = createSkyProgram(getTextureManager());
   m_terrain_program = createTerrainProgram("terrain_cdlod_simple", getTextureManager());
-  
+
   m_curvature_map = render_util::createCurvatureTexture(getTextureManager(), resource_path);
   m_atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), resource_path);
 
@@ -147,25 +147,25 @@ void HeightMapViewerScene::render(float frame_delta)
 {
   CHECK_GL_ERROR();
 
-  glEnable(GL_CULL_FACE);
+  gl::Enable(GL_CULL_FACE);
 
-  glDisable(GL_DEPTH_TEST);
-  glFrontFace(GL_CW);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  glUseProgram(m_sky_program->getId());
+  gl::Disable(GL_DEPTH_TEST);
+  gl::FrontFace(GL_CW);
+  gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  gl::UseProgram(m_sky_program->getId());
   updateUniforms(m_sky_program);
   render_util::drawSkyBox();
 
 
-  glFrontFace(GL_CCW);
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_TRUE);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  gl::FrontFace(GL_CCW);
+  gl::Enable(GL_DEPTH_TEST);
+  gl::DepthMask(GL_TRUE);
+  gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   m_terrain->update(camera.getPos());
 
   updateUniforms(m_terrain_program);
-  glUseProgram(m_terrain_program->getId());
+  gl::UseProgram(m_terrain_program->getId());
 
   m_terrain->draw(m_terrain_program);
 

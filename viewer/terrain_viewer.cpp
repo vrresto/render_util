@@ -170,7 +170,7 @@ void TerrainViewerScene::setup()
   CHECK_GL_ERROR();
 
   CHECK_GL_ERROR();
-  
+
   camera.x = map_size.x / 2;
   camera.y = map_size.y / 2;
   camera.z = 10000;
@@ -187,7 +187,7 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
   water_animation.updateUniforms(program);
 
   CHECK_GL_ERROR();
-  
+
   map->textures->setUniforms(program);
   program->setUniform("shore_wave_scroll", shore_wave_pos);
   program->setUniform("terrain_height_offset", 0);
@@ -198,7 +198,7 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
 
 void TerrainViewerScene::render(float frame_delta)
 {
-  glEnable(GL_CULL_FACE);
+  gl::Enable(GL_CULL_FACE);
 
   if (!pause_animations)
   {
@@ -206,55 +206,55 @@ void TerrainViewerScene::render(float frame_delta)
     shore_wave_pos.y = shore_wave_pos.y + (frame_delta * shore_wave_hz.y);
     water_animation.update();
   }
-  
+
 //   camera.setZFar(2300000.0);
 //   camera.applyFov();
 
   CHECK_GL_ERROR();
 
-  glDisable(GL_DEPTH_TEST);
+  gl::Disable(GL_DEPTH_TEST);
 
-//     glDepthMask(GL_FALSE);
-  glFrontFace(GL_CW);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  glUseProgram(sky_program->getId());
+//     gl::DepthMask(GL_FALSE);
+  gl::FrontFace(GL_CW);
+  gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  gl::UseProgram(sky_program->getId());
   updateUniforms(sky_program);
 
   render_util::drawSkyBox();
 
-  glDisable(GL_DEPTH_TEST);
-  glDepthMask(GL_TRUE);
-  glFrontFace(GL_CCW);
-//     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  gl::Disable(GL_DEPTH_TEST);
+  gl::DepthMask(GL_TRUE);
+  gl::FrontFace(GL_CCW);
+//     gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-//     glUseProgram(getTerrainNoMapProgram()->getId());
+//     gl::UseProgram(getTerrainNoMapProgram()->getId());
 //     updateUniforms(getTerrainNoMapProgram());
 
 //     terrain_far->draw();
 
-//     glEnable(GL_DEPTH_TEST);
-//     glDepthMask(GL_TRUE);
+//     gl::Enable(GL_DEPTH_TEST);
+//     gl::DepthMask(GL_TRUE);
 //   terrain_color = mix(vec4(0.0, 0.6, 0.0, 1.0), vec4(vec3(0.8), 1.0), 0.5);
 //     terrain_color = vec4(0,0,0,0);
 //     terrain_color = vec4(1,1,1,1);
 
 
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_TRUE);
+  gl::Enable(GL_DEPTH_TEST);
+  gl::DepthMask(GL_TRUE);
 
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-//   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+//   gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 //     terrain_color = vec4(0,0,0,0);
 //     terrain_color = vec4(1,1,1,1);
 
   map->terrain->setDrawDistance(0);
   map->terrain->update(camera.getPos());
-  
-  glUseProgram(terrain_program->getId());
+
+  gl::UseProgram(terrain_program->getId());
   updateUniforms(terrain_program);
   CHECK_GL_ERROR();
-  
+
   map->terrain->draw(terrain_program);
   CHECK_GL_ERROR();
 
@@ -267,20 +267,20 @@ void TerrainViewerScene::render(float frame_delta)
 
   map->terrain->setDrawDistance(5000.f);
   map->terrain->update(camera.getPos());
-  
-  glUseProgram(forest_program->getId());
+
+  gl::UseProgram(forest_program->getId());
   updateUniforms(forest_program);
   forest_program->setUniformi("forest_layer", 0);
   forest_program->setUniform("terrain_height_offset", 0);
   CHECK_GL_ERROR();
 
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glDisable(GL_CULL_FACE);
+  gl::Enable(GL_BLEND);
+  gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  gl::Disable(GL_CULL_FACE);
 
 //   map->terrain->draw(forest_program);
   CHECK_GL_ERROR();
-  
+
   for (int i = 1; i < forest_layers; i++)
   {
     forest_program->setUniformi("forest_layer", i);
@@ -293,9 +293,9 @@ void TerrainViewerScene::render(float frame_delta)
       CHECK_GL_ERROR();
     }
   }
-  
-  glEnable(GL_CULL_FACE);
-  glDisable(GL_BLEND);
+
+  gl::Enable(GL_CULL_FACE);
+  gl::Disable(GL_BLEND);
 #endif
 
 }
