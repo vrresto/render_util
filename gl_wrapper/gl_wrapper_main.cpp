@@ -30,11 +30,11 @@ namespace
 namespace gl_wrapper
 {
 
-  void setCurrent_GL_interface(const GL_Interface *interface)
+  void setCurrent_GL_interface(const GL_Interface *iface)
   {
-    current_gl_interface = interface;
+    current_gl_interface = iface;
   }
-  
+
   const GL_Interface *current_GL_Interface()
   {
     assert(current_gl_interface);
