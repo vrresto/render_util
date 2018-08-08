@@ -29,7 +29,7 @@ using namespace std;
 using namespace glm;
 
 namespace {
-  
+
 //   const long double PI = 3.1415926535897932384626433832795L;
 //   const long double PI = std::acos((long double)-1.0);
 
@@ -38,16 +38,16 @@ namespace {
 //   const long double circumference = 2.0 * PI * planet_radius;
 //   const double atmosphereHeight = 140.0 * 1000.0;
   const long double circumference = planet_circumference;
-  
+
 //   const float max_distance = 1500.0 * 1000.0;
   const float max_distance = curvature_map_max_distance;
 //   const float max_distance = circumference / 4.0;
-  
+
   const int map_width = curvature_map_width;
   const int map_height = curvature_map_height;
   const int size = curvature_map_size;
   const int size_bytes = curvature_map_size_bytes;
-  
+
   struct float2 {
     GLfloat x = 0;
     GLfloat y = 0;
@@ -77,14 +77,14 @@ namespace {
 //   dvec2 rotate(dvec2 v, Complex128 a) {
 //     long double c = std::cos(a);
 //     long double s = std::sin(a);
-//     
+//
 //     long double x = v.x;
 //     long double y = v.y;
-// 
+//
 //     dvec2 res;
-//     res.x = x * c - y * s; 
+//     res.x = x * c - y * s;
 //     res.y = x * s + y * c;
-// 
+//
 //     return res;
 //   }
 
@@ -103,14 +103,14 @@ namespace {
 //   highp_vec2 rotate(highp_vec2 v, long double a) {
 //     long double c = std::cos(a);
 //     long double s = std::sin(a);
-//     
+//
 //     long double x = v.x;
 //     long double y = v.y;
-// 
+//
 //     highp_vec2 res;
-//     res.x = x * c - y * s; 
+//     res.x = x * c - y * s;
 //     res.y = x * s + y * c;
-// 
+//
 //     return res;
 //   }
 
@@ -129,8 +129,8 @@ namespace {
 
     pos.y += planet_radius;
 
-    
-   
+
+
     if (pos.x == 0.0) {
       assert(pos.y > 0.0);
 //       return pos;
@@ -139,9 +139,9 @@ namespace {
 
 //     double new_y = sqrt(pos.y*pos.y - pos.x*pos.x);
 //     return dvec2(pos.x, new_y);
-    
+
     long double horizontalDist = pos.x;
-    
+
 //     Complex128 angle = ((long double)2.0 * PI * horizontalDist) / circumference;
 
     long double angle = ((long double)2.0 * PI * horizontalDist) / circumference;
@@ -149,23 +149,23 @@ namespace {
     long double new_pos_x;
     long double new_pos_y;
     rotate(0, pos.y, -angle, new_pos_x, new_pos_y);
-    
+
 //     cout<<pos.x / (new_pos_y - planet_radius)<<endl;
 //     cout<<(pos.y-planet_radius)/-new_pos_y+planet_radius<<endl;
-    
-    
+
+
 //     return dvec2(pos.x / new_pos_x, pos.x / (new_pos_y - planet_radius));
 //     return dvec2(pos.x / new_pos_x, (new_pos_y - planet_radius) / (long double)next_x);
-    
+
     dvec2 new_pos(new_pos_x, new_pos_y);
 //       highp_vec2 new_pos = rotate(highp_vec2(0, pos.y), -angle);
-    
+
     assert(new_pos == new_pos);
 
     assert(new_pos != dvec2(0,0));
 
 //     cout<<new_pos.x<<':'<<new_pos.y<<endl;
-    
+
 //     long double pos_x = pos.x;
 
 //     if (!lessOrEqual(new_pos_x, pos_x, error_margin)) {
@@ -179,15 +179,15 @@ namespace {
 //       cout<<pos.x<<" "<<new_pos_x<<endl;
 //       cout<<pos.y-planet_radius<<" "<<new_pos_y-planet_radius<<endl;
 //     }
-    
+
 //     assert(lessOrEqual(new_pos.x, pos.x, error_margind));
 //     assert(lessOrEqual(new_pos.y, pos.y, error_margind));
 
-    
+
 //     double base_height_diff = planet_radius - dist_height.y;
-    
+
 //     horizontalDist = dist_height.x;
-    
+
 //     assert(horizontalDist == horizontalDist);
 //     assert(base_height_diff == base_height_diff);
 //     assert(rot_z == rot_z);
@@ -202,7 +202,7 @@ namespace {
 //       return pos / (new_pos - dvec2(0, planet_radius));
 //       return (pos - dvec2(0.0, planet_radius)) / (new_pos*dvec2(1,-1) - dvec2(0.0, planet_radius));
 //       return (new_pos - dvec2(0, planet_radius)) / (pos - dvec2(0, planet_radius));
-    
+
 //       return new_pos;
 
 #else
@@ -229,10 +229,10 @@ namespace {
 //         glm::dvec2 pos(x_coord, 0);
 
         assert(pos == pos);
-        
+
 //         cout<<"x:"<<pos.x<<endl;
 //         cout<<"y:"<<pos.y<<endl;
-        
+
 
         dvec2 diff = calcDiff(pos, next_x_coord);
 //         dvec2 diff = calcDiff(pos, pos.x);
@@ -241,19 +241,19 @@ namespace {
 
 //         cout<<"x:"<<diff.x<<endl;
 //         cout<<"y:"<<diff.y<<endl;
-        
+
 //         assert(diff.y <= 0);
 //         assert(diff.x <= 0);
 
 //         map[x][y].x = diff.x;
 //         map[x][y].x = diff.0;
-        
+
         map[y][x].x = diff.x;
 //         map[y][x].x = 0;
-        
+
         map[y][x].y = diff.y;
-        
-        
+
+
 //         map[x][y].y = -100000;
       }
 
@@ -262,16 +262,19 @@ namespace {
 
 }
 
-int main (int argc, char **argv) {
+int main (int argc, char **argv)
+{
   assert(argc == 2);
+
   if (argc != 2)
     return 1;
+
   const char *output_path = argv[1];
-  
+
   cout.precision(10);
 
   calcCurvatureValues();
-  
+
   ofstream out(output_path);
 
   if (!out.good()) {
@@ -280,7 +283,7 @@ int main (int argc, char **argv) {
   }
 
   out.write((const char*) map, size_bytes);
-  
+
   if (!out.good()) {
     cerr<<"error during writong to output file "<<output_path<<endl;
     return 1;

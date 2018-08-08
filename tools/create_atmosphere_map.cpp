@@ -21,7 +21,7 @@
  *
  * "Real-Time Rendering of Planets with Atmospheres" by Tobias Schafhitzel, Martin Falk,  Thomas Ertl
  * <https://www.researchgate.net/publication/230708134_Real-Time_Rendering_of_Planets_with_Atmospheres>
- * 
+ *
  * "Precomputed Atmospheric Scattering" by Eric Bruneton, and Fabrice Neyret
  * <https://hal.inria.fr/inria-00288758/en>
  */
@@ -40,14 +40,16 @@
 
 using namespace std;
 
-namespace {
+namespace
+{
 
-  enum {
+  enum
+  {
     NUM_THREADS = 4
   };
 
   typedef unique_lock<mutex> Lock;
-  
+
 //   void printFloat128(const _Float128 &value)
 //   {
 //     char buffer[1000];
@@ -81,7 +83,7 @@ namespace {
 
   double getMaxAtmosphereDistanceAtHeight(double height)
   {
-    return getDistanceToHorizon(planet_radius + height) + 
+    return getDistanceToHorizon(planet_radius + height) +
            getDistanceToHorizon(planet_radius + atmosphere_height);
   }
 
@@ -108,7 +110,7 @@ namespace {
       p = 2.488 * pow((t + 273.1) / 216.6, -11.388);
     }
 
-    double density = p / (0.2869 * (t + 273.1)); 
+    double density = p / (0.2869 * (t + 273.1));
 
     return density;
   }
@@ -116,7 +118,7 @@ namespace {
   const double max_air_density = calcAtmosphereDensityAtHeight(0);
 
   const double fog_layer_top = 400.0;
-  
+
   double calcFogDensityAtHeight(double height)
   {
     return 0;
@@ -130,14 +132,14 @@ namespace {
 
 //     {
 //       unique_lock lock(start_cond_mutex);
-//       
+//
 //       assert(!isnan(height));
-//       
+//
 //       if (height < 0.00)
 //       {
 //         cout<<height<<endl;
 //       }
-//       
+//
 //       assert(height >= 0);
 //     }
 
@@ -150,7 +152,7 @@ namespace {
     assert(density <= max_air_density);
 
     double relative_density = density / max_air_density;
-    
+
     if (!(relative_density <= 1.0))
     {
       cout<<"height: "<<height<<endl;
@@ -161,10 +163,10 @@ namespace {
 
     assert(relative_density >= 0.0);
     assert(relative_density <= 1.0);
-    
+
 //     relative_density = 0;
 //     relative_density += 100 * calcFogDensityAtHeight(height);
-    
+
     return relative_density;
 #else
     if (height < 20000.0)
@@ -201,7 +203,7 @@ namespace {
       const glm::dvec2 pos = camera_pos + (view_dir * sample_dist);
       const double height = pos.y;
 #endif
-      
+
       assert(!isnan(height));
 
 
@@ -247,16 +249,16 @@ namespace {
       float p = Ur * H;
 
       float r = sqrt(pow(p, 2) + Rg*Rg);
-      
+
 //       cout<<"r(km): "<<r/1000.0<<endl;
 
       const double camera_height = r - planet_radius;
 //       const double camera_height = y * camera_height_step;
       const double max_atmosphere_distance_at_camera_height = getMaxAtmosphereDistanceAtHeight(camera_height);
       const double min_atmosphere_distance_at_camera_height = atmosphere_height - camera_height;
-      
+
 //       cout<<"camera_height(km): "<<camera_height/1000.0<<endl;
-      
+
       assert(camera_height >= 0.0);
 
       for (int x = 0; x < map_size.x; x++)
@@ -267,8 +269,8 @@ namespace {
 
         assert(!isnan(x_normalized));
         assert(!isnan(max_atmosphere_distance_at_camera_height));
-        
-        
+
+
         const double min_mu = min_atmosphere_distance_at_camera_height / max_atmosphere_distance_at_camera_height;
         const double max_mu = 1.0;
 
@@ -277,7 +279,7 @@ namespace {
         mu *= max_atmosphere_distance_at_camera_height;
 
         double atmosphere_distance_in_view_direction = mu;
-        
+
 //         if (!(atmosphere_distance_in_view_direction+1 >= min_atmosphere_distance_at_camera_height)) {
 //           unique_lock lock(start_cond_mutex);
 //           cout<<"atmosphere_distance_in_view_direction: "<<atmosphere_distance_in_view_direction<<endl;
@@ -290,7 +292,7 @@ namespace {
         // clamping
         atmosphere_distance_in_view_direction =
           max(min_atmosphere_distance_at_camera_height, atmosphere_distance_in_view_direction);
-        
+
         assert(atmosphere_distance_in_view_direction >= min_atmosphere_distance_at_camera_height);
         assert(atmosphere_distance_in_view_direction <= max_atmosphere_distance_at_camera_height);
 
@@ -299,22 +301,22 @@ namespace {
         if (1)
         {
 //           const double x_normalized = 0.99;
-          
-          
+
+
           assert(!isnan(atmosphere_distance_in_view_direction));
-          
+
           if (atmosphere_distance_in_view_direction <= 0.0) {
             atmosphere_distance_in_view_direction = 0.001;
           }
-          
-          
+
+
           assert(atmosphere_distance_in_view_direction > 0.0);
-          
+
           const long double a = atmosphere_distance_in_view_direction;
           const long double b = planet_radius + camera_height;
           const long double c = planet_radius + atmosphere_height;
-          
-          
+
+
           assert(a > 0.0);
           assert(b > 0.0);
           assert(c > 0.0);
@@ -327,12 +329,12 @@ namespace {
           {
             long double z = ((a*a + b*b) - c*c);
             long double n = (((long double)2.0)*a*b);
-            
+
 //             cout<<"z:"<<(long double)z<<endl;
 //             cout<<"n:"<<(long double)n<<endl;
-            
+
             cos_view_dir =  z / n;
-            
+
 //             unique_lock lock(start_cond_mutex);
 //             cout<<"z: "; printFloat128(z); cout<<endl;
 //             cout<<"n: "; printFloat128(n); cout<<endl;
@@ -340,15 +342,15 @@ namespace {
 
 //           {
 //             char buffer[1000];
-//             
+//
 //             strfromf128(buffer, sizeof(buffer), "%.5f", cos_view_dir);
-//             
+//
 //             unique_lock lock(start_cond_mutex);
 // //             cout<<"cos_view_dir: "<<buffer<<endl;
 // //             cout<<cos_view_dir<<endl;
 //           }
-          
-          
+
+
           assert(cos_view_dir >= -1.0);
           assert(cos_view_dir <= 1.0);
 
@@ -356,7 +358,7 @@ namespace {
 //           const double view_dir_x = glm::sqrt(1.0 - view_dir_y * view_dir_y);
           const double view_dir_x = cos_view_dir;
           const double view_dir_y = glm::sqrt(1.0 - view_dir_x*view_dir_x);
-          
+
           assert(!isnan(view_dir_x));
           assert(!isnan(view_dir_y));
 
@@ -402,10 +404,13 @@ namespace {
 
 }
 
-int main (int argc, char **argv) {
+int main (int argc, char **argv)
+{
   assert(argc == 2);
+
   if (argc != 2)
     return 1;
+
   const char *output_path = argv[1];
 
   int batch_size = map_num_rows / NUM_THREADS;
@@ -448,7 +453,7 @@ int main (int argc, char **argv) {
       Lock lock(start_cond_mutex);
       progress = total_progress;
     }
-    
+
     float progress_percent_new = progress * 100 / (float)(map_num_elements);
 
     if (progress_percent_new != progress_percent) {
@@ -469,7 +474,7 @@ int main (int argc, char **argv) {
   }
 
   out.write((const char*) map, atmosphere_map_size_bytes);
-  
+
   if (!out.good()) {
     cerr<<"error during writong to output file "<<output_path<<endl;
     return 1;
