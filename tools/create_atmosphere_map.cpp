@@ -27,15 +27,16 @@
  */
 
 #if 1
+
+#include <distances.h>
+#include <atmosphere_map.h>
+
 #include <iostream>
 #include <fstream>
 #include <thread>
 #include <condition_variable>
 #include <mutex>
 #include <GL/gl.h>
-
-#include <distances.h>
-#include <atmosphere_map.h>
 
 using namespace std;
 
@@ -402,6 +403,7 @@ namespace {
 }
 
 int main (int argc, char **argv) {
+  assert(argc == 2);
   if (argc != 2)
     return 1;
   const char *output_path = argv[1];

@@ -16,13 +16,14 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+
+#include "curvature_map.h"
+#include <distances.h>
+
 #include <iostream>
 #include <fstream>
 #include <cmath>
 #include <GL/gl.h>
-
-#include <distances.h>
-#include "curvature_map.h"
 
 using namespace std;
 using namespace glm;
@@ -262,6 +263,7 @@ namespace {
 }
 
 int main (int argc, char **argv) {
+  assert(argc == 2);
   if (argc != 2)
     return 1;
   const char *output_path = argv[1];
