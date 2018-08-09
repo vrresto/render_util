@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 project(render_util)
 
+if(NOT renderutil_data_dir)
+  set(renderutil_data_dir "data")
+endif(NOT renderutil_data_dir)
+
 set(MESA_PATH ${PROJECT_SOURCE_DIR}/mesa)
 
 include(cflags.cmake)

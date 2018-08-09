@@ -18,5 +18,5 @@ foreach(map_name atmosphere_map curvature_map)
 endforeach(map_name)
 
 install(FILES ${generated_output}
-  DESTINATION ${il2ge_data_dir}
+  DESTINATION ${renderutil_data_dir}
 )
