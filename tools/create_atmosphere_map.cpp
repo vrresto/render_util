@@ -26,29 +26,18 @@
  * <https://hal.inria.fr/inria-00288758/en>
  */
 
-#if 1
 
+#include "dispatcher.h"
 #include <distances.h>
 #include <atmosphere_map.h>
 
 #include <iostream>
 #include <fstream>
-#include <thread>
-#include <condition_variable>
-#include <mutex>
-#include <GL/gl.h>
 
 using namespace std;
 
 namespace
 {
-
-  enum
-  {
-    NUM_THREADS = 4
-  };
-
-  typedef unique_lock<mutex> Lock;
 
 //   void printFloat128(const _Float128 &value)
 //   {
@@ -66,11 +55,6 @@ namespace
   const int map_num_elements = ATMOSPHERE_MAP_NUM_ELEMENTS;
 
   AtmosphereMapElementType map[map_num_elements];
-
-  condition_variable start_cond;
-  mutex start_cond_mutex;
-  int num_ready_threads = 0;
-  int total_progress = 0;
 
 
   double getDistanceToHorizon(double r)
@@ -235,50 +219,48 @@ namespace
     return index;
   }
 
-  void calcAtmosphereDensityValuesRange(int start_row, int end_row, int thread_id)
+  void calcAtmosphereDensityValues(int y)
   {
     const double camera_height_step = atmosphere_height / (double) map_size.y;
     const double view_dir_step = 1.0 / (double) map_size.x;
 
-    for (int y = start_row; y < end_row; y++)
-    {
-      float Rg = planet_radius;
-      float Rt = planet_radius + atmosphere_height;
-      float H = pow(Rt*Rt - Rg*Rg, 0.5);
-      float Ur = (float)y / (float)map_size.y;
-      float p = Ur * H;
+    float Rg = planet_radius;
+    float Rt = planet_radius + atmosphere_height;
+    float H = pow(Rt*Rt - Rg*Rg, 0.5);
+    float Ur = (float)y / (float)map_size.y;
+    float p = Ur * H;
 
-      float r = sqrt(pow(p, 2) + Rg*Rg);
+    float r = sqrt(pow(p, 2) + Rg*Rg);
 
 //       cout<<"r(km): "<<r/1000.0<<endl;
 
-      const double camera_height = r - planet_radius;
+    const double camera_height = r - planet_radius;
 //       const double camera_height = y * camera_height_step;
-      const double max_atmosphere_distance_at_camera_height = getMaxAtmosphereDistanceAtHeight(camera_height);
-      const double min_atmosphere_distance_at_camera_height = atmosphere_height - camera_height;
+    const double max_atmosphere_distance_at_camera_height = getMaxAtmosphereDistanceAtHeight(camera_height);
+    const double min_atmosphere_distance_at_camera_height = atmosphere_height - camera_height;
 
 //       cout<<"camera_height(km): "<<camera_height/1000.0<<endl;
 
-      assert(camera_height >= 0.0);
+    assert(camera_height >= 0.0);
 
-      for (int x = 0; x < map_size.x; x++)
-      {
-        GLfloat thickness = -1;
+    for (int x = 0; x < map_size.x; x++)
+    {
+      float thickness = -1;
 
-        const double x_normalized = x * view_dir_step;
+      const double x_normalized = x * view_dir_step;
 
-        assert(!isnan(x_normalized));
-        assert(!isnan(max_atmosphere_distance_at_camera_height));
+      assert(!isnan(x_normalized));
+      assert(!isnan(max_atmosphere_distance_at_camera_height));
 
 
-        const double min_mu = min_atmosphere_distance_at_camera_height / max_atmosphere_distance_at_camera_height;
-        const double max_mu = 1.0;
+      const double min_mu = min_atmosphere_distance_at_camera_height / max_atmosphere_distance_at_camera_height;
+      const double max_mu = 1.0;
 
-        double mu = (x_normalized * (max_mu - min_mu)) + min_mu;
+      double mu = (x_normalized * (max_mu - min_mu)) + min_mu;
 
-        mu *= max_atmosphere_distance_at_camera_height;
+      mu *= max_atmosphere_distance_at_camera_height;
 
-        double atmosphere_distance_in_view_direction = mu;
+      double atmosphere_distance_in_view_direction = mu;
 
 //         if (!(atmosphere_distance_in_view_direction+1 >= min_atmosphere_distance_at_camera_height)) {
 //           unique_lock lock(start_cond_mutex);
@@ -287,58 +269,58 @@ namespace
 //           exit(1);
 //         }
 
-        assert(atmosphere_distance_in_view_direction+1 >= min_atmosphere_distance_at_camera_height);
+      assert(atmosphere_distance_in_view_direction+1 >= min_atmosphere_distance_at_camera_height);
 
-        // clamping
-        atmosphere_distance_in_view_direction =
-          max(min_atmosphere_distance_at_camera_height, atmosphere_distance_in_view_direction);
+      // clamping
+      atmosphere_distance_in_view_direction =
+        max(min_atmosphere_distance_at_camera_height, atmosphere_distance_in_view_direction);
 
-        assert(atmosphere_distance_in_view_direction >= min_atmosphere_distance_at_camera_height);
-        assert(atmosphere_distance_in_view_direction <= max_atmosphere_distance_at_camera_height);
+      assert(atmosphere_distance_in_view_direction >= min_atmosphere_distance_at_camera_height);
+      assert(atmosphere_distance_in_view_direction <= max_atmosphere_distance_at_camera_height);
 
 
 //         if (x != 0 && atmosphere_distance_in_view_direction >= min_atmosphere_distance_at_camera_height)
-        if (1)
-        {
+      if (1)
+      {
 //           const double x_normalized = 0.99;
 
 
-          assert(!isnan(atmosphere_distance_in_view_direction));
+        assert(!isnan(atmosphere_distance_in_view_direction));
 
-          if (atmosphere_distance_in_view_direction <= 0.0) {
-            atmosphere_distance_in_view_direction = 0.001;
-          }
-
-
-          assert(atmosphere_distance_in_view_direction > 0.0);
-
-          const long double a = atmosphere_distance_in_view_direction;
-          const long double b = planet_radius + camera_height;
-          const long double c = planet_radius + atmosphere_height;
+        if (atmosphere_distance_in_view_direction <= 0.0) {
+          atmosphere_distance_in_view_direction = 0.001;
+        }
 
 
-          assert(a > 0.0);
-          assert(b > 0.0);
-          assert(c > 0.0);
+        assert(atmosphere_distance_in_view_direction > 0.0);
+
+        const long double a = atmosphere_distance_in_view_direction;
+        const long double b = planet_radius + camera_height;
+        const long double c = planet_radius + atmosphere_height;
+
+
+        assert(a > 0.0);
+        assert(b > 0.0);
+        assert(c > 0.0);
 
 //           cout<<"a:"<<(long double)a<<endl;
 //           cout<<"b:"<<(long double)b<<endl;
 //           cout<<"c:"<<(long double)c<<endl;
 //           const long double cos_view_dir = ((a*a + b*b) - c*c) / (((long double)2.0)*a*b);
-          long double cos_view_dir = 0;
-          {
-            long double z = ((a*a + b*b) - c*c);
-            long double n = (((long double)2.0)*a*b);
+        long double cos_view_dir = 0;
+        {
+          long double z = ((a*a + b*b) - c*c);
+          long double n = (((long double)2.0)*a*b);
 
 //             cout<<"z:"<<(long double)z<<endl;
 //             cout<<"n:"<<(long double)n<<endl;
 
-            cos_view_dir =  z / n;
+          cos_view_dir =  z / n;
 
 //             unique_lock lock(start_cond_mutex);
 //             cout<<"z: "; printFloat128(z); cout<<endl;
 //             cout<<"n: "; printFloat128(n); cout<<endl;
-          }
+        }
 
 //           {
 //             char buffer[1000];
@@ -351,58 +333,37 @@ namespace
 //           }
 
 
-          assert(cos_view_dir >= -1.0);
-          assert(cos_view_dir <= 1.0);
+        assert(cos_view_dir >= -1.0);
+        assert(cos_view_dir <= 1.0);
 
 //           const double view_dir_y = x_normalized * 2 - 1.0;
 //           const double view_dir_x = glm::sqrt(1.0 - view_dir_y * view_dir_y);
-          const double view_dir_x = cos_view_dir;
-          const double view_dir_y = glm::sqrt(1.0 - view_dir_x*view_dir_x);
+        const double view_dir_x = cos_view_dir;
+        const double view_dir_y = glm::sqrt(1.0 - view_dir_x*view_dir_x);
 
-          assert(!isnan(view_dir_x));
-          assert(!isnan(view_dir_y));
+        assert(!isnan(view_dir_x));
+        assert(!isnan(view_dir_y));
 
 //           const glm::dvec2 view_dir(view_dir_x, view_dir_y);
-          const glm::dvec2 view_dir(view_dir_y, -view_dir_x);
+        const glm::dvec2 view_dir(view_dir_y, -view_dir_x);
 
-          thickness = calcAtmosphereThickness(camera_height, view_dir);
+        thickness = calcAtmosphereThickness(camera_height, view_dir);
 //           thickness = calcAtmosphereThickness(0, glm::normalize(glm::vec2(1.0)));
 //           thickness = cos_view_dir;
-        }
-        else {
-//           thickness = -1.0 - x_normalized;
-          thickness = -1.0;
-        }
-
-        map[getMapIndex(x,y)] = thickness;
-
-        {
-          Lock lock(start_cond_mutex);
-          total_progress++;
-        }
-
       }
-    }
-  }
+      else {
+//           thickness = -1.0 - x_normalized;
+        thickness = -1.0;
+      }
 
-  void threadMain(int thread_id, int start_row, int end_row)
-  {
-    {
-      Lock lock(start_cond_mutex);
-      num_ready_threads++;
-      start_cond.wait(lock);
-      cout<<"thread "<<thread_id<<" start."<<endl;
+      map[getMapIndex(x,y)] = thickness;
+
     }
 
-    calcAtmosphereDensityValuesRange(start_row, end_row, thread_id);
-
-    {
-      Lock lock(start_cond_mutex);
-      cout<<"thread "<<thread_id<<" end."<<endl;
-    }
   }
 
 }
+
 
 int main (int argc, char **argv)
 {
@@ -413,58 +374,9 @@ int main (int argc, char **argv)
 
   const char *output_path = argv[1];
 
-  int batch_size = map_num_rows / NUM_THREADS;
-  assert(map_num_rows % NUM_THREADS == 0);
+  Dispatcher dispatcher(calcAtmosphereDensityValues);
 
-  cout<<"batch_size: "<<batch_size<<endl;
-
-  thread threads[NUM_THREADS];
-
-  for (int i = 0; i < NUM_THREADS; i++) {
-    cout<<"creating thread "<<i<<endl;
-
-    int start_row = i * batch_size;
-    int end_row = start_row + batch_size;
-
-    assert(start_row < map_num_rows);
-    assert(end_row <= map_num_rows);
-
-    threads[i] = thread(threadMain, i, start_row, end_row);
-  }
-
-  while (1) {
-    Lock lock(start_cond_mutex);
-    if (num_ready_threads == NUM_THREADS)
-      break;
-  }
-
-  start_cond.notify_all();
-
-  int progress = 0;
-  float progress_percent = 0;
-
-  cout.precision(2);
-  cout<<fixed;
-
-  while (progress < map_num_elements) {
-    this_thread::sleep_for(chrono::seconds(1));
-
-    {
-      Lock lock(start_cond_mutex);
-      progress = total_progress;
-    }
-
-    float progress_percent_new = progress * 100 / (float)(map_num_elements);
-
-    if (progress_percent_new != progress_percent) {
-      progress_percent = progress_percent_new;
-      cout<<"progress: "<<progress_percent<<" %"<<endl;
-    }
-  }
-
-  for (int i = 0; i < NUM_THREADS; i++) {
-    threads[i].join();
-  }
+  dispatcher.dispatch(map_num_rows);
 
   ofstream out(output_path);
 
@@ -476,10 +388,9 @@ int main (int argc, char **argv)
   out.write((const char*) map, atmosphere_map_size_bytes);
 
   if (!out.good()) {
-    cerr<<"error during writong to output file "<<output_path<<endl;
+    cerr<<"error during writing to output file "<<output_path<<endl;
     return 1;
   }
 
   return 0;
 }
-#endif

@@ -1,6 +1,11 @@
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
 
-link_libraries(pthread)
+if(no_std_thread)
+  add_definitions(-DNO_STD_THREAD)
+else(no_std_thread)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+  link_libraries(pthread)
+endif(no_std_thread)
 
 add_executable(create_curvature_map create_curvature_map.cpp)
 add_executable(create_atmosphere_map create_atmosphere_map.cpp)
