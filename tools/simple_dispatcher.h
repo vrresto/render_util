@@ -16,28 +16,45 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef GL_INTERFACE_H
-#define GL_INTERFACE_H
+#ifndef SIMPLE_DISPATCHER_H
+#define SIMPLE_DISPATCHER_H
 
-#include <GL/gl.h>
-#include <GL/glext.h>
+#include <iostream>
+#include <functional>
 
-#ifndef GLAPIENTRY
-  #define GLAPIENTRY __stdcall
-#endif
-
-namespace gl_wrapper
+class SimpleDispatcher
 {
+public:
+  typedef std::function<void(int)> WorkFunction;
 
-  struct GL_Interface
+private:
+  WorkFunction do_work;
+
+public:
+  SimpleDispatcher(WorkFunction f) : do_work(f) {}
+
+  void dispatch(int num_items)
   {
-    typedef void* GetProcAddressFunc(const char *name);
+    float progress_percent = 0;
 
-    GL_Interface(GetProcAddressFunc *getProcAddress);
+    std::cout.precision(2);
+    std::cout << std::fixed;
 
-    #include <gl_wrapper/_generated/gl_p_proc.inc>
-  };
+    for (int i = 0; i < num_items; i++)
+    {
+      do_work(i);
+      int progress = i;
 
-}
+      float progress_percent_new = progress * 100 / (float)(num_items);
+
+      if (progress_percent_new != progress_percent)
+      {
+        progress_percent = progress_percent_new;
+        std::cout<<"progress: "<<progress_percent<<" %"<<std::endl;
+      }
+    }
+  }
+
+};
 
 #endif
