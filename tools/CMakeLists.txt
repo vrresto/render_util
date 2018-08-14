@@ -1,5 +1,3 @@
-set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
-
 if(no_std_thread)
   add_definitions(-DNO_STD_THREAD)
 else(no_std_thread)
