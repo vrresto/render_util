@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <sstream>
 #include <cstdio>
 #include <cmath>
 #include <cassert>
@@ -31,9 +32,29 @@ namespace util
 
 constexpr const long double PI = acosl((long double)-1.0);
 
+
 inline bool isPrefix(const std::string &prefix, const std::string &s)
 {
   return s.compare(0, prefix.size(), prefix) == 0;
+}
+
+
+inline std::vector<std::string> tokenize(std::string in)
+{
+  std::istringstream stream(in);
+  std::vector<std::string> out;
+
+  while (stream.good())
+  {
+    std::string token;
+    stream >> token;
+    if (!token.empty() && stream.good())
+    {
+      out.push_back(token);
+    }
+  }
+
+  return out;
 }
 
 
@@ -62,7 +83,7 @@ inline bool readFile(const std::string &path, std::vector<char> &content)
     file.read(content.data(), size);
     assert(file.good());
     success = true;
-  } 
+  }
   else
   {
       printf("Failed to open %s\n", path.c_str());
