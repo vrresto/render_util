@@ -556,7 +556,7 @@ TexturePtr createAmosphereThicknessTexture(TextureManager &texture_manager,
   AtmosphereMapElementType *atmosphere_map = 
     new AtmosphereMapElementType[atmosphere_map_num_elements];
 
-  ifstream in(resource_path + "atmosphere_map");
+  ifstream in(resource_path + "/atmosphere_map");
   assert(in.good());
 
   in.read((char*) atmosphere_map, atmosphere_map_size_bytes);
@@ -587,7 +587,7 @@ TexturePtr createCurvatureTexture(TextureManager &texture_manager,
 {
   static char curvature_map[curvature_map_size_bytes];
 
-  string path = resource_path + "curvature_map";
+  string path = resource_path + "/curvature_map";
   ifstream in(path);
   if (!in.good())
   {
