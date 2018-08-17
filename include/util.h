@@ -69,6 +69,24 @@ inline std::string makeLowercase(const std::string &input)
 }
 
 
+inline std::string basename(std::string path, bool remove_extension = false)
+{
+  size_t pos = path.find_last_of("/\\");
+  if (pos != std::string::npos)
+  {
+    if (pos < path.size())
+      path = path.substr(pos + 1);
+    else
+      path = {};
+  }
+
+  if (remove_extension)
+    path = path.substr(0, path.find_last_of('.'));
+
+  return path;
+}
+
+
 inline bool readFile(const std::string &path, std::vector<char> &content)
 {
   bool success = false;
