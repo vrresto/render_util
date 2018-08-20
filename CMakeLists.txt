@@ -8,7 +8,19 @@ if(NOT renderutil_data_dir)
   set(renderutil_data_dir "data")
 endif(NOT renderutil_data_dir)
 
-set(MESA_PATH ${PROJECT_SOURCE_DIR}/mesa)
+
+if(mesa_path)
+  set(MESA_PATH ${mesa_path})
+else(mesa_path)
+  ExternalProject_Add(mesa
+    URL "https://mesa.freedesktop.org/archive/mesa-18.1.6.tar.xz"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+  )
+  ExternalProject_Get_Property(mesa SOURCE_DIR)
+  set(MESA_PATH ${SOURCE_DIR})
+endif(mesa_path)
 
 include(cflags.cmake)
 
