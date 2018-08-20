@@ -25,6 +25,12 @@ if(platform_mingw)
   include_directories(${PROJECT_BINARY_DIR}/glm-install/include)
 endif(platform_mingw)
 
+if(no_std_thread)
+  add_definitions(-DNO_STD_THREAD)
+else(no_std_thread)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+  link_libraries(pthread)
+endif(no_std_thread)
 
 add_subdirectory(gl_wrapper)
 add_subdirectory(src)

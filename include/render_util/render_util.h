@@ -22,7 +22,7 @@
 #include <string>
 #include <glm/glm.hpp>
 
-namespace render_util 
+namespace render_util
 {
   struct Float3
   {
@@ -41,6 +41,9 @@ namespace render_util
 
   const std::string &getResourcePath();
   const std::string &getDataPath();
+
+  bool createAtmosphereMap(const char *output_path);
+  bool createCurvatureMap(const char *output_path);
 }
 
 #endif

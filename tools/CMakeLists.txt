@@ -1,12 +1,8 @@
-if(no_std_thread)
-  add_definitions(-DNO_STD_THREAD)
-else(no_std_thread)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-  link_libraries(pthread)
-endif(no_std_thread)
-
 add_executable(create_curvature_map create_curvature_map.cpp)
 add_executable(create_atmosphere_map create_atmosphere_map.cpp)
+
+target_link_libraries(create_curvature_map render_util)
+target_link_libraries(create_atmosphere_map render_util)
 
 foreach(map_name atmosphere_map curvature_map)
   set(output ${CMAKE_CURRENT_BINARY_DIR}/${map_name})

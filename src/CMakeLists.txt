@@ -10,6 +10,8 @@ set(CXX_SRCS
   map_textures.cpp
   water.cpp
   image_loader.cpp
+  atmosphere_map.cpp
+  curvature_map.cpp
   ${PROJECT_SOURCE_DIR}/FastNoise/FastNoise.cpp
 )
 
