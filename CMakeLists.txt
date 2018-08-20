@@ -20,12 +20,12 @@ include_directories(
 if(platform_mingw)
   ExternalProject_Add(glm
     URL "https://github.com/g-truc/glm/archive/0.9.9.0.tar.gz"
-    CMAKE_ARGS
-      -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/glm-install
-      -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-      -DCMAKE_CXX_COMPILER_WORKS=1
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
   )
-  include_directories(${PROJECT_BINARY_DIR}/glm-install/include)
+  ExternalProject_Get_Property(glm SOURCE_DIR)
+  include_directories(${SOURCE_DIR})
 endif(platform_mingw)
 
 if(no_std_thread)
