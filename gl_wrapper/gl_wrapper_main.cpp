@@ -22,25 +22,8 @@
 #include <cassert>
 #include <GL/gl.h>
 
-namespace
-{
-  const gl_wrapper::GL_Interface *current_gl_interface = 0;
-}
-
 namespace gl_wrapper
 {
-
-  void setCurrent_GL_interface(const GL_Interface *iface)
-  {
-    current_gl_interface = iface;
-  }
-
-  const GL_Interface *current_GL_Interface()
-  {
-    assert(current_gl_interface);
-    return current_gl_interface;
-  }
-
   const char *getGLErrorString(unsigned int code)
   {
     switch (code)

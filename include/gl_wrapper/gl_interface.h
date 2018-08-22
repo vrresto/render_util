@@ -36,6 +36,12 @@ namespace gl_wrapper
     GL_Interface(GetProcAddressFunc *getProcAddress);
 
     #include <gl_wrapper/_generated/gl_p_proc.inc>
+
+    static GL_Interface *getCurrent() { return s_current; }
+    static void setCurrent(GL_Interface *iface);
+
+  private:
+    static GL_Interface *s_current;
   };
 
 }

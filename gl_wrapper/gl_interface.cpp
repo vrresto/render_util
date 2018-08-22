@@ -25,10 +25,16 @@
 
 namespace gl_wrapper
 {
+  GL_Interface *GL_Interface::s_current = 0;
 
   GL_Interface::GL_Interface(GetProcAddressFunc *getProcAddress)
   {
     #include "gl_wrapper/_generated/gl_p_proc_init.inc"
+  }
+
+  void GL_Interface::setCurrent(GL_Interface *iface)
+  {
+    s_current = iface;
   }
 
 }

@@ -28,12 +28,12 @@ def main():
       ep_params = func.entry_point_parameters[ep]
       ep_name = "gl" + ep
       print "inline " + func.return_type + " " + ep + "(" + gl_XML.create_parameter_string(ep_params, 1)  + ") {"
-      print "  assert(current_GL_Interface()->" + ep_name + ");"
+      print "  assert(GL_Interface::getCurrent()->" + ep_name + ");"
       if func.return_type != "void":
         return_statement = "  return "
       else:
         return_statement = "  "
-      print return_statement + "current_GL_Interface()->" + ep_name + "(" + get_called_parameter_string(func, ep) + ");"
+      print return_statement + "GL_Interface::getCurrent()->" + ep_name + "(" + get_called_parameter_string(func, ep) + ");"
       print "}"
 
 if __name__ == '__main__':

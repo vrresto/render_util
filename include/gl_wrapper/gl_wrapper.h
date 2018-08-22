@@ -21,11 +21,6 @@
 
 namespace gl_wrapper
 {
-  struct GL_Interface;
-
-  const GL_Interface *current_GL_Interface();
-  void setCurrent_GL_interface(const GL_Interface*);
-
   const char *getGLErrorString(unsigned int code);
 }
 
