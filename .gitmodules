@@ -1,6 +1,6 @@
 [submodule "FastNoise"]
-	path = FastNoise
+	path = _modules/FastNoise
 	url = https://github.com/Auburns/FastNoise.git
 [submodule "stb"]
-	path = stb
+	path = _modules/stb
 	url = https://github.com/nothings/stb.git

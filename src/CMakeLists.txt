@@ -12,7 +12,7 @@ set(CXX_SRCS
   image_loader.cpp
   atmosphere_map.cpp
   curvature_map.cpp
-  ${PROJECT_SOURCE_DIR}/FastNoise/FastNoise.cpp
+  ${PROJECT_SOURCE_DIR}/_modules/FastNoise/FastNoise.cpp
 )
 
 add_library(render_util ${CXX_SRCS})
@@ -20,6 +20,6 @@ add_library(render_util ${CXX_SRCS})
 target_link_libraries(render_util gl_wrapper)
 
 target_include_directories(render_util PUBLIC
-  ${PROJECT_SOURCE_DIR}/FastNoise
-  ${PROJECT_SOURCE_DIR}/stb
+  ${PROJECT_SOURCE_DIR}/_modules/FastNoise
+  ${PROJECT_SOURCE_DIR}/_modules/stb
 )
