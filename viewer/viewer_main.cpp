@@ -272,7 +272,7 @@ void render_util::viewer::runApplication(std::function<std::shared_ptr<Scene>()>
   glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
   gl_wrapper::GL_Interface *gl_interface = new gl_wrapper::GL_Interface(&getGLProcAddress);
-  gl_wrapper::setCurrent_GL_interface(gl_interface);
+  gl_wrapper::GL_Interface::setCurrent(gl_interface);
 
   g_scene = f_create_scene();
   assert(g_scene);
