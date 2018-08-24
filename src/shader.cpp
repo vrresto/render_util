@@ -287,7 +287,9 @@ void ShaderProgram::assertUniformsAreSet()
   {
     char name[1024];
     int name_length = 0;
-    gl::GetActiveUniform(id, i, sizeof(name), &name_length, nullptr, nullptr, name);
+    int size = 0;
+    GLenum type = 0;
+    gl::GetActiveUniform(id, i, sizeof(name), &name_length, &size, &type, name);
     string name_str(name, name_length);
     int loc = getUniformLocation(name_str);
     if (loc != -1)
