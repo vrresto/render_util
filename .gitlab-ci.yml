@@ -12,7 +12,7 @@ build:
   # install the necessary build tools when needed
   before_script:
      - apt-get update
-     - apt-get -y --no-install-recommends install g++ make cmake python libglfw3-dev
+     - apt-get -y --no-install-recommends install g++ make cmake python libglm-dev libglfw3-dev libtiff5-dev
   script:
     - mkdir build
     - cd build && cmake .. && make
