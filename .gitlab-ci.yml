@@ -13,8 +13,9 @@ build:
   before_script:
      - apt-get update && apt-get -y install make libglfw3-dev libglm-dev cmake
   script:
-    - mkdir build
-    - cd build && cmake .. && make
+    - find
+#    - mkdir build
+#    - cd build && cmake .. && make
   artifacts:
     paths:
       - build/testbed/terrain_test
