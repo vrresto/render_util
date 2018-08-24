@@ -21,7 +21,7 @@
 #include <render_util/texture_util.h>
 #include <render_util/texunits.h>
 #include <render_util/elevation_map.h>
-#if 1
+
 #include <fstream>
 #include <memory>
 #include <iostream>
@@ -226,7 +226,7 @@ namespace render_util
 {
 
 
-#if 1
+
 TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_pixel, bool mipmaps)
 {
   assert(data);
@@ -295,9 +295,8 @@ TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_
 
   return texture;
 }
-#endif
 
-#if 1
+
 TexturePtr createTextureArray(const std::vector<const unsigned char*> &textures,
                                 int mipmap_levels, int texture_width, int bytes_per_pixel)
 {
@@ -323,9 +322,8 @@ TexturePtr createTextureArray(const std::vector<const unsigned char*> &textures,
 
   return texture;
 }
-#endif
 
-#if 1
+
 TexturePtr createFloatTexture1D(const float *data, size_t size, int num_components)
 {
   TexturePtr texture = Texture::create(GL_TEXTURE_1D);
@@ -423,7 +421,7 @@ TexturePtr createFloatTexture(const float *data, int w, int h, int num_component
 
   return texture;
 }
-#endif
+
 
 #if 0
 unsigned int createUnsignedIntTexture(const unsigned int *data, int w, int h)
@@ -549,7 +547,7 @@ unsigned int createUnsignedIntTexture(const unsigned int *data, int w, int h)
 //   return ImageGreyScale::Ptr(image);
 // }
 
-#if 1
+
 TexturePtr createAmosphereThicknessTexture(TextureManager &texture_manager,
                                       std::string resource_path)
 {
@@ -610,9 +608,8 @@ TexturePtr createCurvatureTexture(TextureManager &texture_manager,
   
   return texture;
 }
-#endif
 
-#if 1
+
 ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
                             const vector<ImageRGBA::ConstPtr> &textures,
                             int type_map_meters_per_pixel,
@@ -670,7 +667,7 @@ ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
 
   return texture;
 }
-#endif
+
 
 // ImageRGBA::Ptr createNormalMap(ImageGreyScale::ConstPtr bump_map, float bump_height_scale)
 // {
@@ -693,6 +690,7 @@ ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
 //   return createNormalMapFromElevationMap(&elevation_map);
 // }
 
+
 Image<Normal>::Ptr createNormalMap(const ElevationMap &elevation_map, float grid_scale)
 {
   NormalMapCreator c;
@@ -705,5 +703,3 @@ Image<Normal>::Ptr createNormalMap(const ElevationMap &elevation_map, float grid
 
 
 } // namespace render_util
-
-#endif
