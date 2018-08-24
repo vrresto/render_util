@@ -19,6 +19,7 @@ foreach(name ${GENERATED_SRCS})
       COMMAND PYTHONPATH=${PYTHONPATH} GLAPI_PATH=${PYTHONPATH}
         python -B ${CMAKE_CURRENT_SOURCE_DIR}/scripts/print_${name}.py > ${output}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scripts/*
+      DEPENDS mesa
   )
   set(generated_output ${generated_output} ${output})
 endforeach(name)
