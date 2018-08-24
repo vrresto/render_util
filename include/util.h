@@ -21,6 +21,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <cstdio>
@@ -89,9 +90,11 @@ inline std::string basename(std::string path, bool remove_extension = false)
 
 inline bool readFile(const std::string &path, std::vector<char> &content)
 {
+  using namespace std;
+
   bool success = false;
 
-  std::ifstream file(path);
+  std::ifstream file(path, ios_base::binary);
   if (file.good())
   {
     file.seekg (0, file.end);
@@ -99,15 +102,46 @@ inline bool readFile(const std::string &path, std::vector<char> &content)
     file.seekg (0, file.beg);
     content.resize(size);
     file.read(content.data(), size);
-    assert(file.good());
-    success = true;
+
+    if (file.good())
+      success = true;
+    else
+      fprintf(stderr, "Failed to read %s\n", path.c_str());
   }
   else
   {
-      printf("Failed to open %s\n", path.c_str());
+      fprintf(stderr, "Failed to open %s\n", path.c_str());
   }
 
   return success;
+}
+
+
+inline bool writeFile(const std::string &path, const char *data, size_t data_size)
+{
+  using namespace std;
+
+  std::ofstream out(path, ios_base::binary | ios_base::trunc);
+  if (!out.good()) {
+    cerr<<"can't open output file "<<path<<endl;
+    return false;
+  }
+
+  assert(out.tellp() == 0);
+
+  out.write(data, data_size);
+
+  size_t size = out.tellp();
+  cout<<"data_size:"<<data_size<<endl;
+  cout<<"size:"<<size<<endl;
+  assert(data_size == size);
+
+  if (!out.good()) {
+    cerr<<"error during writing to output file "<<path<<endl;
+    return false;
+  }
+
+  return true;
 }
 
 

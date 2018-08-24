@@ -556,7 +556,7 @@ TexturePtr createAmosphereThicknessTexture(TextureManager &texture_manager,
   AtmosphereMapElementType *atmosphere_map = 
     new AtmosphereMapElementType[atmosphere_map_num_elements];
 
-  ifstream in(resource_path + "/atmosphere_map");
+  ifstream in(resource_path + "/atmosphere_map", ios_base::binary);
   assert(in.good());
 
   in.read((char*) atmosphere_map, atmosphere_map_size_bytes);
@@ -585,20 +585,17 @@ TexturePtr createAmosphereThicknessTexture(TextureManager &texture_manager,
 TexturePtr createCurvatureTexture(TextureManager &texture_manager,
                             std::string resource_path)
 {
-  static char curvature_map[curvature_map_size_bytes];
-
-  string path = resource_path + "/curvature_map";
-  ifstream in(path);
-  if (!in.good())
+  vector<char> curvature_map;
+  if (!util::readFile(resource_path + "/curvature_map", curvature_map))
   {
-    cout<<"failed to open "<<path<<endl;
+    assert(0);
   }
-  assert(in.good());
+  assert(curvature_map.size() == curvature_map_size_bytes);
 
-  in.read((char*) curvature_map, curvature_map_size_bytes);
-  assert(in.good());
-
-  TexturePtr texture = createFloatTexture((const float*)curvature_map, curvature_map_width, curvature_map_height, 2);
+  TexturePtr texture = createFloatTexture((const float*)curvature_map.data(),
+                                          curvature_map_width,
+                                          curvature_map_height,
+                                          2);
 
   TextureParameters<int> params;
   params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
