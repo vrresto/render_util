@@ -2,7 +2,7 @@
 # use the official gcc image, based on debian
 # can use verions as well, like gcc:5.2
 # see https://hub.docker.com/_/gcc/
-image: gcc
+image: debian:buster-slim
 
 build:
   variables:
@@ -11,11 +11,11 @@ build:
   # instead of calling g++ directly you can also use some build toolkit like make
   # install the necessary build tools when needed
   before_script:
-     - apt-get update && apt-get -y install make libglfw3-dev libglm-dev cmake
+     - apt-get update
+     - apt-get -y --no-install-recommends install g++ make cmake python libglfw3-dev
   script:
-    - find
-#    - mkdir build
-#    - cd build && cmake .. && make
+    - mkdir build
+    - cd build && cmake .. && make
   artifacts:
     paths:
       - build/testbed/terrain_test
