@@ -31,8 +31,8 @@
 
 #define ENABLE_WAVES 1
 // #define ENABLE_WAVE_FOAM 1
-// #define ENABLE_WATER_MAP 1
-#define ENABLE_SHORE_WAVES 1
+#define ENABLE_WATER_MAP 1
+// #define ENABLE_SHORE_WAVES 1
 
 // const float water_map_chunk_size_m = 1600;
 const float water_map_chunk_size_m = 1600 * 4;
