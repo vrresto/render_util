@@ -28,6 +28,7 @@ def main():
       ep_params = func.entry_point_parameters[ep]
       ep_name = "gl" + ep
       print "inline " + func.return_type + " " + ep + "(" + gl_XML.create_parameter_string(ep_params, 1)  + ") {"
+      print "  assert(GL_Interface::getCurrent());"
       print "  assert(GL_Interface::getCurrent()->" + ep_name + ");"
       if func.return_type != "void":
         return_statement = "  return "
