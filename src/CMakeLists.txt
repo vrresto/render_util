@@ -15,7 +15,7 @@ set(CXX_SRCS
 
 add_library(render_util ${CXX_SRCS})
 
-target_link_libraries(render_util gl_wrapper)
+target_link_libraries(render_util render_util_tools gl_wrapper)
 
 target_include_directories(render_util PUBLIC
   ${PROJECT_SOURCE_DIR}/_modules/FastNoise
