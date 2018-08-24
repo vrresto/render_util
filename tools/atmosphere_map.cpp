@@ -28,6 +28,7 @@
 
 #include <dispatcher.h>
 #include <distances.h>
+#include <util.h>
 #include <atmosphere_map.h>
 #include <render_util/render_util.h>
 
@@ -372,18 +373,6 @@ bool render_util::createAtmosphereMap(const char *output_path)
   dispatcher.dispatch(map_num_rows);
 
   ofstream out(output_path);
-
-  if (!out.good()) {
-    cerr<<"can't open output file "<<output_path<<endl;
-    return false;
-  }
-
-  out.write((const char*) map, atmosphere_map_size_bytes);
-
-  if (!out.good()) {
-    cerr<<"error during writing to output file "<<output_path<<endl;
-    return false;
-  }
-
-  return true;
+  
+  return util::writeFile(output_path, (const char*) map, sizeof(map));
 }

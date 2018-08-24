@@ -1,8 +1,13 @@
+add_library(render_util_tools
+  atmosphere_map.cpp
+  curvature_map.cpp
+)
+
 add_executable(create_curvature_map create_curvature_map.cpp)
 add_executable(create_atmosphere_map create_atmosphere_map.cpp)
 
-target_link_libraries(create_curvature_map render_util)
-target_link_libraries(create_atmosphere_map render_util)
+target_link_libraries(create_curvature_map render_util_tools)
+target_link_libraries(create_atmosphere_map render_util_tools)
 
 foreach(map_name atmosphere_map curvature_map)
   set(output ${CMAKE_CURRENT_BINARY_DIR}/${map_name})

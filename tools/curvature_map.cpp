@@ -19,6 +19,7 @@
 
 #include <curvature_map.h>
 #include <distances.h>
+#include <util.h>
 #include <render_util/render_util.h>
 
 
@@ -270,20 +271,6 @@ bool render_util::createCurvatureMap(const char *output_path)
   cout.precision(10);
 
   calcCurvatureValues();
-
-  ofstream out(output_path);
-
-  if (!out.good()) {
-    cerr<<"can't open output file "<<output_path<<endl;
-    return 1;
-  }
-
-  out.write((const char*) map, size_bytes);
-
-  if (!out.good()) {
-    cerr<<"error during writong to output file "<<output_path<<endl;
-    return false;
-  }
-
-  return true;
+  
+  return util::writeFile(output_path, (const char*) map, sizeof(map));
 }
