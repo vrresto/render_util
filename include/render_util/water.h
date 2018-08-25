@@ -20,6 +20,7 @@
 #define RENDER_UTIL_WATER_H
 
 #include <render_util/shader.h>
+#include <render_util/image.h>
 
 namespace render_util
 {
@@ -35,7 +36,9 @@ namespace render_util
     WaterAnimation();
     ~WaterAnimation();
 
-    void createTextures(MapTextures *map_textures);
+    void createTextures(MapTextures *map_textures,
+                        const std::vector<ImageRGBA::ConstPtr> &normal_maps,
+                        const std::vector<ImageGreyScale::ConstPtr> &foam_masks);
 
     void updateUniforms(ShaderProgramPtr program);
 
