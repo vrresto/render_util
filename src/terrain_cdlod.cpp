@@ -580,7 +580,7 @@ void TerrainCDLOD::build(const ElevationMap *map)
   p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP, p->normal_map_texture);
 
   cout<<"TerrainCDLOD: creating nodes ..."<<endl;
-  p->root_node = createNode(*map, p->root_node_pos, MAX_LOD);
+  p->root_node = p->createNode(*map, p->root_node_pos, MAX_LOD);
   cout<<"TerrainCDLOD: creating nodes done."<<endl;
 
   assert(!p->height_map_texture);
