@@ -23,6 +23,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <cassert>
 
 namespace render_util
@@ -34,28 +35,28 @@ namespace render_util
                            int &height);
 
   template <typename T>
-  T *loadImageFromMemory(const std::vector<char> &data)
+  std::shared_ptr<T> loadImageFromMemory(const std::vector<char> &data)
   {
     std::vector<unsigned char> image_data;
     int width = 0, height = 0;
     if (loadImageFromMemory(data, T::BYTES_PER_PIXEL, image_data, width, height))
     {
-      return new T(width, height, image_data.size(), image_data.data());
+      return std::make_shared<T>(width, height, image_data.size(), image_data.data());
     }
     else
     {
-      return 0;
+      return {};
     }
   }
   
   template <typename T>
-  T *loadImageFromFile(const std::string &file_path)
+  std::shared_ptr<T> loadImageFromFile(const std::string &file_path)
   {
     std::vector<char> data;
     if (util::readFile(file_path, data))
       return loadImageFromMemory<T>(data);
     else
-      return 0;
+      return {};
   }
 
   template <typename T>
