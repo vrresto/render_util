@@ -30,6 +30,7 @@
 #include <render_util/image.h>
 #include <render_util/water_map.h>
 #include <render_util/render_util.h>
+#include <block_allocator.h>
 
 #include <array>
 #include <vector>
@@ -223,17 +224,14 @@ struct Node
   float max_height = 0;
   BoundingBox bounding_box;
 
-  ~Node()
-  {
-    for (auto child : children)
-      delete child;
-  }
-
   bool isInRange(const vec3 &camera_pos, float radius)
   {
     return bounding_box.getShortestDistance(camera_pos) <= radius;
   }
 };
+
+
+typedef util::BlockAllocator<Node, 1000> NodeAllocator;
 
 
 struct RenderBatch
@@ -335,43 +333,6 @@ constexpr float getNodeScale(int lod_level)
 static_assert(getNodeSize(0) == LEAF_NODE_SIZE);
 static_assert(getNodeScale(0) == METERS_PER_GRID);
 
-Node *createNode(const render_util::ElevationMap &map, vec2 pos, int lod_level)
-{
-  Node *node = new Node;
-  node->pos = pos;
- 
-  float node_size = getNodeSize(lod_level);
-
-  node->size = node_size;
-
-  if (lod_level == 0)
-  {
-    node->max_height = getMaxHeight(map, node->pos, node_size);
-  }
-  else
-  {
-    float child_node_size = node_size / 2;
-    assert(child_node_size == getNodeSize(lod_level-1));
-
-    node->children[0] = createNode(map, node->pos + vec2(0, child_node_size), lod_level-1);
-    node->children[1] = createNode(map, node->pos + vec2(child_node_size, child_node_size), lod_level-1); 
-    node->children[2] = createNode(map, node->pos + vec2(0, 0), lod_level-1);
-    node->children[3] = createNode(map, node->pos + vec2(child_node_size, 0), lod_level-1);
-
-    for (Node *child : node->children)
-    {
-      node->max_height = max(node->max_height, child->max_height);
-    }
-  }
-
-  node->bounding_box.origin = vec3(node->pos, 0);
-  node->bounding_box.extent.x = node_size;
-  node->bounding_box.extent.y = node_size;
-  node->bounding_box.extent.z = node->max_height;
-
-  return node;
-}
-
 
 } // namespace
 
@@ -382,6 +343,8 @@ namespace render_util
 struct TerrainCDLOD::Private
 {
   TextureManager *texture_manager = 0;
+
+  NodeAllocator node_allocator;
 
   RenderList render_list;
   Node *root_node = 0;
@@ -407,6 +370,7 @@ struct TerrainCDLOD::Private
   void processNode(Node *node, int lod_level, const vec3 &camera_pos);
   void selectNode(Node *node, int lod_level);
   void drawInstanced();
+  Node *createNode(const render_util::ElevationMap &map, vec2 pos, int lod_level);
 };
 
 TerrainCDLOD::Private::~Private()
@@ -417,8 +381,9 @@ TerrainCDLOD::Private::~Private()
 
   gl::DeleteBuffers(NUM_TEST_BUFFERS, test_buffer_id);
 
-  delete root_node;
   root_node = 0;
+  node_allocator.clear();
+
 //   gl::DeleteBuffers(1, &normal_buffer_id);
 }
 
@@ -470,6 +435,43 @@ TerrainCDLOD::Private::Private()
               mesh.triangle_data_indexed.data(), GL_STATIC_DRAW);
   gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   CHECK_GL_ERROR();
+}
+
+Node *TerrainCDLOD::Private::createNode(const render_util::ElevationMap &map, vec2 pos, int lod_level)
+{
+  Node *node = node_allocator.alloc();
+  node->pos = pos;
+
+  float node_size = getNodeSize(lod_level);
+
+  node->size = node_size;
+
+  if (lod_level == 0)
+  {
+    node->max_height = getMaxHeight(map, node->pos, node_size);
+  }
+  else
+  {
+    float child_node_size = node_size / 2;
+    assert(child_node_size == getNodeSize(lod_level-1));
+
+    node->children[0] = createNode(map, node->pos + vec2(0, child_node_size), lod_level-1);
+    node->children[1] = createNode(map, node->pos + vec2(child_node_size, child_node_size), lod_level-1);
+    node->children[2] = createNode(map, node->pos + vec2(0, 0), lod_level-1);
+    node->children[3] = createNode(map, node->pos + vec2(child_node_size, 0), lod_level-1);
+
+    for (Node *child : node->children)
+    {
+      node->max_height = max(node->max_height, child->max_height);
+    }
+  }
+
+  node->bounding_box.origin = vec3(node->pos, 0);
+  node->bounding_box.extent.x = node_size;
+  node->bounding_box.extent.y = node_size;
+  node->bounding_box.extent.z = node->max_height;
+
+  return node;
 }
 
 void TerrainCDLOD::Private::selectNode(Node *node, int lod_level)
