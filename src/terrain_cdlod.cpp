@@ -223,6 +223,12 @@ struct Node
   float max_height = 0;
   BoundingBox bounding_box;
 
+  ~Node()
+  {
+    for (auto child : children)
+      delete child;
+  }
+
   bool isInRange(const vec3 &camera_pos, float radius)
   {
     return bounding_box.getShortestDistance(camera_pos) <= radius;
@@ -411,6 +417,8 @@ TerrainCDLOD::Private::~Private()
 
   gl::DeleteBuffers(NUM_TEST_BUFFERS, test_buffer_id);
 
+  delete root_node;
+  root_node = 0;
 //   gl::DeleteBuffers(1, &normal_buffer_id);
 }
 
