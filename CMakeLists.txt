@@ -54,3 +54,7 @@ if(NOT platform_mingw)
   add_subdirectory(viewer)
   add_subdirectory(testbed)
 endif(NOT platform_mingw)
+
+if(platform_mingw)
+  add_dependencies(render_util_tools glm)
+endif(platform_mingw)
