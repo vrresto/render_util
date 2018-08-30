@@ -58,3 +58,24 @@ endif(NOT platform_mingw)
 if(platform_mingw)
   add_dependencies(render_util_tools glm)
 endif(platform_mingw)
+
+
+install(FILES LICENSE
+  DESTINATION ${renderutil_data_dir}
+  RENAME LICENSE.txt
+)
+
+install(FILES _modules/FastNoise/LICENSE
+  DESTINATION ${renderutil_data_dir}
+  RENAME LICENSE_FastNoise.txt
+)
+
+install(FILES _modules/FastNoise/README.md
+  DESTINATION ${renderutil_data_dir}
+  RENAME README_FastNoise.md
+)
+
+install(FILES _modules/stb/README.md
+  DESTINATION ${renderutil_data_dir}
+  RENAME README_stb.md
+)
