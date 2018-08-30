@@ -33,7 +33,7 @@ if(NOT no_tools)
   endforeach(map_name)
 
   install(FILES ${generated_output}
-    DESTINATION ${renderutil_data_dir}
+    DESTINATION ${renderutil_cache_dir}
   )
 
 endif(NOT no_tools)
