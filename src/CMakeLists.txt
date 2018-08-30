@@ -10,6 +10,7 @@ set(CXX_SRCS
   map_textures.cpp
   water.cpp
   image_loader.cpp
+  util.cpp
   ${PROJECT_SOURCE_DIR}/_modules/FastNoise/FastNoise.cpp
 )
 
