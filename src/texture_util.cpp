@@ -575,7 +575,7 @@ TexturePtr createAmosphereThicknessTexture(TextureManager &texture_manager,
 
   CHECK_GL_ERROR();
 
-  delete atmosphere_map;
+  delete[] atmosphere_map;
 
   return texture;
 }
