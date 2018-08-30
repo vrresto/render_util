@@ -25,7 +25,7 @@
 bool util::mkdir(const char *name)
 {
   auto res = _mkdir(name);
-  return res == 0 || res == EEXIST;
+  return res == 0 || (res == -1 && errno == EEXIST);
 }
 
 #endif
