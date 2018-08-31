@@ -244,7 +244,7 @@ namespace
 } // namespace
 
 
-void render_util::viewer::runApplication(std::function<std::shared_ptr<Scene>()> f_create_scene)
+void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
 {
   glfwSetErrorCallback(errorCallback);
 

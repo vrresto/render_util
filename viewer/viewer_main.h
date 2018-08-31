@@ -20,13 +20,11 @@
 #define VIEWER_MAIN_H
 
 #include "scene.h"
-
-#include <memory>
-#include <functional>
+#include <factory.h>
 
 namespace render_util::viewer
 {
-  void runApplication(std::function<std::shared_ptr<Scene>()> f_create_scene);
+  void runApplication(util::Factory<Scene> scene_factory);
 }
 
 #endif

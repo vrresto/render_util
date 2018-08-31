@@ -21,13 +21,22 @@
 
 #include <render_util/map_loader_base.h>
 #include <render_util/image.h>
+#include <render_util/terrain_base.h>
+#include <render_util/shader.h>
+#include <render_util/texture_manager.h>
+#include <factory.h>
 
-#include <memory>
-
-namespace render_util
+namespace render_util::viewer
 {
-    void runViewer(std::shared_ptr<MapLoaderBase> map_loader, const std::string &map_path);
-    void runHeightMapViewer(render_util::Image<float>::ConstPtr height_map);
+  using ShaderProgramFactory = util::Factory<ShaderProgram, const render_util::TextureManager&>;
+  using TerrainFactory = util::Factory<TerrainBase>;
+
+  void runViewer(std::shared_ptr<MapLoaderBase> map_loader, const std::string &map_path);
+
+  void runHeightMapViewer(
+    Image<float>::ConstPtr height_map,
+    TerrainFactory terrain_factory,
+    ShaderProgramFactory terrain_program_factory);
 }
 
 #endif

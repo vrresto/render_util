@@ -300,7 +300,7 @@ void TerrainViewerScene::render(float frame_delta)
 
 }
 
-void render_util::runViewer(shared_ptr<MapLoaderBase> map_loader, const std::string &map_path)
+void render_util::viewer::runViewer(shared_ptr<MapLoaderBase> map_loader, const std::string &map_path)
 {
   auto create_func = [map_loader, map_path]
   {

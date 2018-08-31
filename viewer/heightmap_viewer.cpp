@@ -26,8 +26,6 @@
 #include <render_util/elevation_map.h>
 #include <render_util/map.h>
 #include <render_util/map_textures.h>
-#include <render_util/terrain.h>
-#include <render_util/terrain_cdlod.h>
 #include <render_util/texture_util.h>
 #include <render_util/texunits.h>
 #include <render_util/image_loader.h>
@@ -54,6 +52,8 @@ using namespace std;
 using namespace gl_wrapper::gl_functions;
 using namespace render_util::viewer;
 using render_util::ShaderProgram;
+using render_util::TerrainBase;
+using render_util::viewer::ShaderProgramFactory;;
 
 
 #include <render_util/skybox.h>
@@ -70,21 +70,6 @@ render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager
   return render_util::createSkyProgram(tex_mgr, shader_path);
 }
 
-render_util::ShaderProgramPtr createTerrainProgram(const string &name, const render_util::TextureManager &tex_mgr)
-{
-  render_util::ShaderProgramPtr program;
-
-  CHECK_GL_ERROR();
-
-  map<unsigned int, string> attribute_locations = { { 4, "attrib_pos" } };
-
-  program = render_util::createShaderProgram(name, tex_mgr, shader_path, attribute_locations);
-
-  CHECK_GL_ERROR();
-
-  return program;
-}
-
 
 } // namespace
 
@@ -98,9 +83,18 @@ class HeightMapViewerScene : public Scene
   render_util::ShaderProgramPtr m_terrain_program;
   render_util::TexturePtr m_curvature_map;
   render_util::TexturePtr m_atmosphere_map;
+  util::Factory<TerrainBase> m_terrain_factory;
+  ShaderProgramFactory m_terrain_program_factory;
 
 public:
-	HeightMapViewerScene(render_util::Image<float>::ConstPtr height_map) : m_height_map(height_map) {}
+	HeightMapViewerScene(render_util::Image<float>::ConstPtr height_map,
+                       util::Factory<TerrainBase> terrain_factory,
+                       ShaderProgramFactory terrain_program_factory) :
+    m_height_map(height_map),
+    m_terrain_factory(terrain_factory),
+    m_terrain_program_factory(terrain_program_factory)
+  {
+  }
 
   void setup() override;
   void render(float frame_delta) override;
@@ -111,17 +105,25 @@ public:
 
 void HeightMapViewerScene::setup()
 {
+  assert(m_height_map);
+
   getTextureManager().setActive(true);
 
   m_sky_program = createSkyProgram(getTextureManager());
-  m_terrain_program = createTerrainProgram("terrain_cdlod_simple", getTextureManager());
+  m_terrain_program = m_terrain_program_factory(getTextureManager());
+
+  assert(m_sky_program);
+  assert(m_terrain_program);
 
   m_curvature_map = render_util::createCurvatureTexture(getTextureManager(), resource_path);
   m_atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), resource_path);
 
+  assert(m_curvature_map);
+  assert(m_atmosphere_map);
+
   render_util::ElevationMap elevation_map(m_height_map);
 
-  m_terrain = make_shared<render_util::TerrainCDLOD>();
+  m_terrain = m_terrain_factory();
   m_terrain->setTextureManager(&getTextureManager());
   m_terrain->build(&elevation_map);
 
@@ -172,11 +174,13 @@ void HeightMapViewerScene::render(float frame_delta)
   CHECK_GL_ERROR();
 }
 
-void render_util::runHeightMapViewer(render_util::Image<float>::ConstPtr height_map)
+void render_util::viewer::runHeightMapViewer(render_util::Image<float>::ConstPtr height_map,
+  util::Factory<TerrainBase> terrain_factory,
+  ShaderProgramFactory terrain_program_factory)
 {
-  auto create_func = [height_map]
+  auto create_func = [height_map, terrain_factory, terrain_program_factory]
   {
-    return make_shared<HeightMapViewerScene>(height_map);
+    return make_shared<HeightMapViewerScene>(height_map, terrain_factory, terrain_program_factory);
   };
 
   runApplication(create_func);

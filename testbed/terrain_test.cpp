@@ -40,5 +40,5 @@ namespace render_util
 int main()
 {
   auto loader = make_shared<MapLoader>();
-  runViewer(loader, "");
+  render_util::viewer::runViewer(loader, "");
 }

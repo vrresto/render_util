@@ -1,3 +1,8 @@
+add_definitions(
+  -DRENDER_UTIL_SHADER_DIR="${PROJECT_SOURCE_DIR}/shaders"
+  -DRENDER_UTIL_RESOURCE_DIR="${PROJECT_BINARY_DIR}/tools"
+)
+
 set(terrain_test_SRCS
   tiff.cpp
   map_loader.cpp
