@@ -62,8 +62,8 @@ using render_util::viewer::ShaderProgramFactory;;
 namespace
 {
 
-const string resource_path = render_util::getResourcePath() + "/build/native/";
-const string shader_path = render_util::getResourcePath() + "/shaders";
+const string resource_path = RENDER_UTIL_RESOURCE_DIR;
+const string shader_path = RENDER_UTIL_SHADER_DIR;
 
 render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager &tex_mgr)
 {
