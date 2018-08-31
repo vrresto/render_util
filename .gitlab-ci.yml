@@ -16,13 +16,13 @@ build:
   script:
     - mkdir build
     - cd build && cmake .. && make
-  artifacts:
-    paths:
-      - build/testbed/terrain_test
-      - build/testbed/simple_test
-      - build/atmosphere_map
-      - build/curvature_map
-      - shaders
+#  artifacts:
+#    paths:
+#      - build/testbed/terrain_test
+#      - build/testbed/simple_test
+#      - build/atmosphere_map
+#      - build/curvature_map
+#      - shaders
   # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
   # cache:
   #   paths:
