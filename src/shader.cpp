@@ -160,7 +160,8 @@ ShaderProgram::~ShaderProgram()
     gl::DeleteShader(shader);
   }
 
-  gl::DeleteShader(id);
+  gl::DeleteProgram(id);
+
 }
 
 void ShaderProgram::link()
