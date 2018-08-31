@@ -6,7 +6,11 @@ project(render_util)
 
 if(NOT renderutil_data_dir)
   set(renderutil_data_dir "data")
-endif(NOT renderutil_data_dir)
+endif()
+
+if(NOT renderutil_cache_dir)
+  set(renderutil_cache_dir "cache")
+endif()
 
 
 if(mesa_path)

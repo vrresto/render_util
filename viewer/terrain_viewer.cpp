@@ -144,7 +144,7 @@ void TerrainViewerScene::setup()
   map->terrain->setTextureManager(&getTextureManager());
   map->textures.reset(new render_util::MapTextures(getTextureManager()));
 
-  water_animation.createTextures(map->textures.get());
+//   water_animation.createTextures(map->textures.get());
 
   map_loader->loadMap(map_path, *map);
 #if 0
