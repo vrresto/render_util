@@ -37,18 +37,20 @@ namespace render_util
   template <typename T>
   std::shared_ptr<T> loadImageFromMemory(const std::vector<char> &data)
   {
+    static_assert(sizeof(typename T::ComponentType) == sizeof(unsigned char));
+
     std::vector<unsigned char> image_data;
     int width = 0, height = 0;
     if (loadImageFromMemory(data, T::BYTES_PER_PIXEL, image_data, width, height))
     {
-      return std::make_shared<T>(width, height, image_data.size(), image_data.data());
+      return std::make_shared<T>(width, height, std::move(image_data));
     }
     else
     {
       return {};
     }
   }
-  
+
   template <typename T>
   std::shared_ptr<T> loadImageFromFile(const std::string &file_path)
   {

@@ -168,7 +168,14 @@ public:
       }
     }
   }
-  
+
+  Image(int width, int height, std::vector<unsigned char> &&data) :
+    _w(width),
+    _h(height),
+    _data(data)
+  {
+    assert(_data.size() == sizeBytes());
+  }
 
   Image(glm::ivec2 size) {
     _w = size.x;
