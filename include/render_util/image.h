@@ -172,7 +172,7 @@ public:
   Image(int width, int height, std::vector<unsigned char> &&data) :
     _w(width),
     _h(height),
-    _data(data)
+    _data(std::move(data))
   {
     assert(_data.size() == sizeBytes());
   }
