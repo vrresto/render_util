@@ -22,6 +22,9 @@
 #include <iostream>
 
 #define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_TGA
+#define STBI_NO_STDIO
+
 #include "stb_image.h"
 
 bool render_util::loadImageFromMemory(const std::vector<char> &data_in,
