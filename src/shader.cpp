@@ -151,6 +151,7 @@ ShaderProgram::ShaderProgram(const char *name_vert, const char *name_frag, const
 ShaderProgram::~ShaderProgram()
 {
   cout<<"~ShaderProgram()"<<endl;
+  CHECK_GL_ERROR();
 
   assert(id);
 
@@ -158,10 +159,12 @@ ShaderProgram::~ShaderProgram()
   {
     gl::DetachShader(id, shader);
     gl::DeleteShader(shader);
+    CHECK_GL_ERROR();
   }
 
   gl::DeleteProgram(id);
 
+  CHECK_GL_ERROR();
 }
 
 void ShaderProgram::link()

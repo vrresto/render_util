@@ -346,6 +346,8 @@ struct TerrainCDLOD::Private
 
 TerrainCDLOD::Private::~Private()
 {
+  CHECK_GL_ERROR();
+
   gl::DeleteVertexArrays(1, &vao_id);
   gl::DeleteBuffers(1, &vertex_buffer_id);
   gl::DeleteBuffers(1, &index_buffer_id);
@@ -356,6 +358,8 @@ TerrainCDLOD::Private::~Private()
   node_allocator.clear();
 
 //   gl::DeleteBuffers(1, &normal_buffer_id);
+
+  CHECK_GL_ERROR();
 }
 
 TerrainCDLOD::Private::Private()
@@ -679,6 +683,8 @@ void TerrainCDLOD::draw(ShaderProgramPtr program)
   program->assertUniformsAreSet();
 
   p->drawInstanced();
+
+  CHECK_GL_ERROR();
   return;
 #endif
 
