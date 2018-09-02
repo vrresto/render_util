@@ -98,7 +98,7 @@ namespace render_util
 
     std::vector<std::string> vertex_shaders;
     std::vector<std::string> fragment_shaders;
-    
+
     std::vector<unsigned int> shader_objects;
 
     const std::map<unsigned int, std::string> attribute_locations;
@@ -118,7 +118,7 @@ namespace render_util
     void setUniform(int location, const glm::ivec2&);
     void setUniform(int location, const glm::mat4&);
   };
-  
+
   typedef std::shared_ptr<ShaderProgram> ShaderProgramPtr;
 }
 

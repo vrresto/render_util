@@ -39,7 +39,6 @@ void main(void)
 //   resetDebugColor();
 
   gl_FragColor = getTerrainColor(passObjectPosFlat.xyz);
-  
 //   gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
 
   apply_fog();

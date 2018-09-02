@@ -65,7 +65,7 @@ enum
 //   MAX_LOD = 10,
 //   LEAF_NODE_SIZE = 1600,
 //   MIN_LOD_DIST = 30000,
-  
+
   METERS_PER_GRID = 200,
   MAX_LOD = 10,
   LEAF_NODE_SIZE = 6400,
@@ -78,15 +78,6 @@ enum
 
   MESH_GRID_SIZE = LEAF_NODE_SIZE / METERS_PER_GRID
 };
-
-
-// vec3 calcNormal(vec3 vertices[3])
-// {
-//   vec3 a = vertices[0] - vertices[1];
-//   vec3 b = vertices[0] - vertices[2];
-// 
-//   return normalize(cross(a,b));
-// }
 
 
 struct GridMesh
@@ -175,7 +166,7 @@ struct GridMesh
     cout<<"vertices_size: "<<vertices_size<<" MB"<<endl;
     cout<<"terrain data size total: "<<data_size<<" MB"<<endl;
   }
-  
+
 };
 
 
@@ -240,7 +231,7 @@ struct RenderBatch
 // #else
   size_t getSize() { return positions.size(); }
 // #endif
-  
+
 
   void clear()
   {
@@ -375,7 +366,7 @@ TerrainCDLOD::Private::Private()
   num_indices = mesh.triangle_data_indexed.size();
 
   gl::GenBuffers(NUM_TEST_BUFFERS, test_buffer_id);
-  
+
 #if DRAW_INSTANCED
   gl::GenBuffers(1, &node_pos_buffer_id);
   assert(node_pos_buffer_id > 0);
@@ -529,7 +520,6 @@ void TerrainCDLOD::build(const ElevationMap *map)
 
   {
     assert(!p->normal_map_texture);
-    
 
 //     NormalMapCreator nm_creator;
 //     nm_creator.grid_scale = 200;
@@ -589,7 +579,7 @@ void TerrainCDLOD::build(const ElevationMap *map)
   params.apply(p->height_map_texture);
 
   CHECK_GL_ERROR();
-  
+
 //   {
 //     TexturePtr node_pos_texture = Texture::create(GL_TEXTURE_1D);
 //     TextureParameters<int> params;
@@ -601,7 +591,7 @@ void TerrainCDLOD::build(const ElevationMap *map)
 //     p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_NODE_POS, node_pos_texture);
 //     CHECK_GL_ERROR();
 //   }
-  
+
   cout<<"TerrainCDLOD: done buildding terrain."<<endl;
 }
 
@@ -683,7 +673,6 @@ void TerrainCDLOD::update(const Camera &camera)
 
 void TerrainCDLOD::draw(ShaderProgramPtr program)
 {
-  
 #if DRAW_INSTANCED
   program->setUniform("cdlod_grid_size", vec2(MESH_GRID_SIZE));
   CHECK_GL_ERROR();
@@ -719,7 +708,7 @@ void TerrainCDLOD::draw(ShaderProgramPtr program)
 #endif
 
   int draw_count = 0;
-  
+
   program->setUniform("cdlod_grid_size", vec2(MESH_GRID_SIZE));
 
   for (int i = MAX_LOD; i >= 0; i--)
@@ -729,11 +718,11 @@ void TerrainCDLOD::draw(ShaderProgramPtr program)
 //     p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_NODE_POS, batch->texture, GL_TEXTURE_1D);
 
     int scale = getNodeScale(i);
-    
+
 //     int scale = getNodeScale(5); //FIXME
-    
+
 //     program->setUniform("cdlod_node_pos", vec2(i * 100000));
-    
+
     program->setUniform("cdlod_node_scale", scale);
 
     float lod_distance = getLodLevelDist(i);
@@ -757,18 +746,18 @@ void TerrainCDLOD::draw(ShaderProgramPtr program)
 //           (const float*)batch->positions.data()
 //           );
 //       CHECK_GL_ERROR();
-      
+
 //       gl::BufferData(GL_ARRAY_BUFFER,
 //                      sizeof(RenderBatch::NodePos) * batch->positions.size(),
 //                      batch->positions.data(),
 //                      GL_STREAM_DRAW);
-      
-     
+
+
       const int buffer_elements = 1000;
       const int buffer_size = sizeof(RenderBatch::NodePos) * buffer_elements;
-      
+
       assert(batch->getSize() <= buffer_elements);
-      
+
       gl::BufferData(GL_ARRAY_BUFFER,
                      buffer_size,
                      0,
@@ -793,9 +782,9 @@ void TerrainCDLOD::draw(ShaderProgramPtr program)
 
       program->assertUniformsAreSet();
       CHECK_GL_ERROR();
-      
+
 //       unsigned int num_instances = min(batch->getSize(), 10u);
-      
+
 //       gl::DrawElements(GL_TRIANGLES, p->num_indices, GL_UNSIGNED_INT, 0);
       gl::DrawElementsInstancedARB(GL_TRIANGLES, p->num_indices, GL_UNSIGNED_INT, 0, batch->getSize());
 //       gl::DrawElementsInstancedARB(GL_TRIANGLES, p->num_indices, GL_UNSIGNED_INT, 0, num_instances);
@@ -818,11 +807,11 @@ void TerrainCDLOD::draw(ShaderProgramPtr program)
 //   cout<<"draw_count: "<<draw_count<<endl;
 
   CHECK_GL_ERROR();
-  
+
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
   gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   gl::BindVertexArray(0);
-  
+
 //   gl::ActiveTexture(active_unit_save);
 //   CHECK_GL_ERROR();
 }

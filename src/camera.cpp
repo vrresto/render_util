@@ -83,7 +83,7 @@ namespace render_util
 
     vec3 pos;
     ivec2 viewport_size;
-    
+
     float m_z_far = 2300000;
 
     std::vector<Plane> frustum_planes;
@@ -91,7 +91,7 @@ namespace render_util
     void calcFrustumPlanes(float fov);
     vec3 view2World(vec3 p) const;
   };
-  
+
 
   vec3 Camera::Private::view2World(vec3 p) const
   {
@@ -133,7 +133,7 @@ namespace render_util
   const mat4 &Camera::getProjectionMatrixFar() const { return p->projection_far; }
   const mat4 &Camera::getWorld2ViewMatrix() const { return p->world_to_view; }
   const mat4 &Camera::getView2WorldMatrix() const { return p->view_to_world; }
-  const vec3 &Camera::getPos() const { return p->pos; } 
+  const vec3 &Camera::getPos() const { return p->pos; }
   const ivec2 &Camera::getViewportSize() const { return p->viewport_size; }
 
   void Camera::setZFar(float value)
@@ -155,7 +155,7 @@ namespace render_util
 //     const float z_far = 300000;
 //     const float z_far = 2300000;
     
-    float z_far = p->m_z_far;
+    const float z_far = p->m_z_far;
 
     
 //     const float z_near = 100.2f;
@@ -169,7 +169,8 @@ namespace render_util
     const float aspect = (float)p->viewport_size.x / (float)p->viewport_size.y;
 
     const float right = p->z_near * tan(radians(fov)/2.f);
-    float top = right / aspect;
+    const float top = right / aspect;
+
     p->projection_far = frustum(-right, right, -top, top, p->z_near, z_far);
     
   //   cout<<"fov: "<<arg<0>()<<" "<<arg<1>()<<" "<<arg<2>()<<endl;
@@ -180,7 +181,7 @@ namespace render_util
 
   void Camera::setTransform(float x, float y, float z, float yaw, float pitch, float roll)
   {
-    vec3 pos (x, y, z);
+    vec3 pos(x,y,z);
     p->pos = pos;
 
     mat4 world_to_y_up(1);
