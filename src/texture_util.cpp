@@ -597,7 +597,7 @@ TexturePtr createCurvatureTexture(TextureManager &texture_manager,
   texture_manager.bind(TEXUNIT_CURVATURE_MAP, texture);
 
   CHECK_GL_ERROR();
-  
+
   return texture;
 }
 
