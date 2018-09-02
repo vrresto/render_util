@@ -33,6 +33,30 @@ using namespace std;
 using namespace gl_wrapper::gl_functions;
 using namespace render_util;
 
+
+namespace render_util
+{
+  class ElevationMap;
+
+  class Terrain : public TerrainBase
+  {
+    struct Private;
+    Private *p = 0;
+
+  public:
+    Terrain();
+    ~Terrain() override;
+
+    const std::string &getName() override;
+    void build(const ElevationMap *map) override;
+    void draw(ShaderProgramPtr program) override;
+
+    std::vector<glm::vec3> getNormals() override;
+  };
+
+}
+
+
 namespace
 {
 

@@ -26,7 +26,6 @@
 
 #include <gl_wrapper/gl_functions.h>
 
-using Terrain = render_util::TerrainCDLOD;
 using namespace std;
 using namespace glm;
 
@@ -35,6 +34,9 @@ namespace
 
 
 const string shader_path = RENDER_UTIL_SHADER_DIR;
+
+
+auto getTerrainFactory() { return render_util::g_terrain_cdlod_factory; }
 
 
 render_util::ShaderProgramPtr createTerrainProgram(const render_util::TextureManager &tex_mgr)
@@ -99,5 +101,5 @@ int main()
     return createTerrainProgram(tex_mgr);
   };
 
-  render_util::viewer::runHeightMapViewer(heightmap, util::makeFactory<Terrain>(), terrain_program_factory);
+  render_util::viewer::runHeightMapViewer(heightmap, getTerrainFactory(), terrain_program_factory);
 }

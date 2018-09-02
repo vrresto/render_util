@@ -52,6 +52,30 @@ using std::cout;
 using std::endl;
 using std::vector;
 
+
+namespace render_util
+{
+  class ElevationMap;
+
+  class TerrainCDLOD : public TerrainBase
+  {
+    struct Private;
+    Private *p = 0;
+
+  public:
+    TerrainCDLOD();
+    ~TerrainCDLOD() override;
+
+    const std::string &getName() override;
+    void build(const ElevationMap *map) override;
+    void draw(ShaderProgramPtr program) override;
+    void update(const Camera &camera) override;
+    void setTextureManager(TextureManager*) override;
+    void setDrawDistance(float dist) override;
+  };
+}
+
+
 namespace
 {
 
@@ -837,6 +861,9 @@ void TerrainCDLOD::setDrawDistance(float dist)
 {
   p->draw_distance = dist;
 }
+
+
+const util::Factory<TerrainBase> g_terrain_cdlod_factory = util::makeFactory<TerrainCDLOD>();
 
 
 } // namespace render_util

@@ -64,13 +64,13 @@ namespace
 {
 
 
-// typedef render_util::Terrain Terrain;
-typedef render_util::TerrainCDLOD Terrain;
-
 const string resource_path = render_util::getResourcePath() + "/build/native/";
 const string shader_path = render_util::getResourcePath() + "/shaders";
 
 const vec4 shore_wave_hz = vec4(0.05, 0.07, 0, 0);
+
+auto getTerrainFactory() { return render_util::g_terrain_cdlod_factory; }
+
 
 render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager &tex_mgr)
 {
@@ -140,7 +140,7 @@ void TerrainViewerScene::setup()
   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
   map.reset(new render_util::Map);
-  map->terrain.reset(new Terrain);
+  map->terrain = getTerrainFactory()();
   map->terrain->setTextureManager(&getTextureManager());
   map->textures.reset(new render_util::MapTextures(getTextureManager()));
 

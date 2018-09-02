@@ -16,34 +16,15 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TERRAIN_H
-#define TERRAIN_H
+#ifndef RENDER_UTIL_TERRAIN_H
+#define RENDER_UTIL_TERRAIN_H
 
 #include <render_util/terrain_base.h>
-#include <render_util/image.h>
-
-#include <vector>
+#include <factory.h>
 
 namespace render_util
 {
-  class ElevationMap;
-
-  class Terrain : public TerrainBase
-  {
-    struct Private;
-    Private *p = 0;
-
-  public:
-    Terrain();
-    ~Terrain() override;
-
-    const std::string &getName() override;
-    void build(const ElevationMap *map) override;
-    void draw(ShaderProgramPtr program) override;
-
-    std::vector<glm::vec3> getNormals() override;
-  };
-
+  extern const util::Factory<TerrainBase> g_terrain_factory;
 }
 
 #endif

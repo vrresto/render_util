@@ -20,29 +20,11 @@
 #define RENDER_UTIL_TERRAIN_CDLOD_H
 
 #include <render_util/terrain_base.h>
-#include <render_util/image.h>
+#include <factory.h>
 
 namespace render_util
 {
-  class ElevationMap;
-
-  class TerrainCDLOD : public TerrainBase
-  {
-    struct Private;
-    Private *p = 0;
-
-  public:
-    TerrainCDLOD();
-    ~TerrainCDLOD() override;
-
-    const std::string &getName() override;
-    void build(const ElevationMap *map) override;
-    void draw(ShaderProgramPtr program) override;
-    void update(const Camera &camera) override;
-    void setTextureManager(TextureManager*) override;
-    void setDrawDistance(float dist) override;
-  };
-
+  extern const util::Factory<TerrainBase> g_terrain_cdlod_factory;
 }
 
 #endif
