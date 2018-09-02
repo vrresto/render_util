@@ -38,7 +38,7 @@ namespace render_util
     const std::string &getName() override;
     void build(const ElevationMap *map) override;
     void draw(ShaderProgramPtr program) override;
-    void update(glm::vec3 camera_pos) override;
+    void update(const Camera &camera) override;
     void setTextureManager(TextureManager*) override;
     void setDrawDistance(float dist) override;
   };

@@ -249,7 +249,7 @@ void TerrainViewerScene::render(float frame_delta)
 //     terrain_color = vec4(1,1,1,1);
 
   map->terrain->setDrawDistance(0);
-  map->terrain->update(camera.getPos());
+  map->terrain->update(camera);
 
   gl::UseProgram(terrain_program->getId());
   updateUniforms(terrain_program);
@@ -266,7 +266,7 @@ void TerrainViewerScene::render(float frame_delta)
   const float forest_layer_height = 2.5;
 
   map->terrain->setDrawDistance(5000.f);
-  map->terrain->update(camera.getPos());
+  map->terrain->update(camera);
 
   gl::UseProgram(forest_program->getId());
   updateUniforms(forest_program);

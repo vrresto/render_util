@@ -19,6 +19,8 @@
 #ifndef RENDER_UTIL_CAMERA_H
 #define RENDER_UTIL_CAMERA_H
 
+#include <render_util/render_util.h>
+
 #include <glm/glm.hpp>
 
 namespace render_util
@@ -40,6 +42,7 @@ namespace render_util
     void setViewportSize(int width, int height);
     void setFov(float fov);
     void setZFar(float value);
+    bool cull(const Box &box) const;
   };
 
 }

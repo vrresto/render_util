@@ -164,7 +164,7 @@ void HeightMapViewerScene::render(float frame_delta)
   gl::DepthMask(GL_TRUE);
   gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-  m_terrain->update(camera.getPos());
+  m_terrain->update(camera);
 
   updateUniforms(m_terrain_program);
   gl::UseProgram(m_terrain_program->getId());

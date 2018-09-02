@@ -20,6 +20,7 @@
 #define RENDER_UTIL_TERRAIN_BASE_H
 
 #include <render_util/shader.h>
+#include <render_util/camera.h>
 
 #include <string>
 #include <vector>
@@ -38,7 +39,7 @@ namespace render_util
     virtual const std::string &getName() = 0;
     virtual void build(const ElevationMap *map) = 0;
     virtual void draw(ShaderProgramPtr program) = 0;
-    virtual void update(glm::vec3 camera_pos) {}
+    virtual void update(const Camera &camera) {}
     virtual void setTextureManager(TextureManager*) {};
     virtual void setDrawDistance(float dist) {}
 

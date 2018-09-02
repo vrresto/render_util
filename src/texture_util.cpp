@@ -104,14 +104,6 @@ void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
 }
 
 
-vec3 calcNormal(vec3 vertices[3])
-{
-  vec3 a = vertices[0] - vertices[1];
-  vec3 b = vertices[0] - vertices[2];
-
-  return normalize(cross(a,b));
-}
-
 struct NormalMapCreator
 {
   render_util::ElevationMap elevation_map;

@@ -347,7 +347,7 @@ struct TerrainCDLOD::Private
 
   Private();
   ~Private();
-  void processNode(Node *node, int lod_level, const vec3 &camera_pos);
+  void processNode(Node *node, int lod_level, const Camera &camera);
   void selectNode(Node *node, int lod_level);
   void drawInstanced();
   Node *createNode(const render_util::ElevationMap &map, vec2 pos, int lod_level);
@@ -458,8 +458,14 @@ void TerrainCDLOD::Private::selectNode(Node *node, int lod_level)
   render_list.getBatch(lod_level)->addNode(node);
 }
 
-void TerrainCDLOD::Private::processNode(Node *node, int lod_level, const vec3 &camera_pos)
+
+void TerrainCDLOD::Private::processNode(Node *node, int lod_level, const Camera &camera)
 {
+  auto camera_pos = camera.getPos();
+
+  if (camera.cull(node->bounding_box))
+    return;
+
   if (lod_level == 0)
   {
     if (draw_distance > 0.0  && !node->isInRange(camera_pos, draw_distance))
@@ -474,7 +480,7 @@ void TerrainCDLOD::Private::processNode(Node *node, int lod_level, const vec3 &c
       // select children
       for (Node *child : node->children)
       {
-        processNode(child, lod_level-1, camera_pos);
+        processNode(child, lod_level-1, camera);
       }
     }
     else
@@ -599,7 +605,7 @@ void TerrainCDLOD::build(const ElevationMap *map)
   cout<<"TerrainCDLOD: done buildding terrain."<<endl;
 }
 
-void TerrainCDLOD::update(glm::vec3 camera_pos)
+void TerrainCDLOD::update(const Camera &camera)
 {
   assert(p->root_node);
 
@@ -608,7 +614,7 @@ void TerrainCDLOD::update(glm::vec3 camera_pos)
 
   p->render_list.clear();
 
-  p->processNode(p->root_node, MAX_LOD, camera_pos);
+  p->processNode(p->root_node, MAX_LOD, camera);
 
 #if 0
   for (int i = 0; i < NUM_TEST_BUFFERS; i++)

@@ -320,7 +320,7 @@ struct render_util::Terrain::Private
     gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 
-    for (Normal &n : mesh->normals)
+    for (auto &n : mesh->normals)
       normals.push_back(glm::vec3(n.x, n.y, n.z));
 
     delete mesh;

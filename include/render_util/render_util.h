@@ -75,6 +75,15 @@ namespace render_util
   };
 
 
+  inline glm::vec3 calcNormal(glm::vec3 vertices[3])
+  {
+    glm::vec3 a = vertices[0] - vertices[1];
+    glm::vec3 b = vertices[0] - vertices[2];
+
+    return glm::normalize(glm::cross(a,b));
+  }
+
+
   const std::string &getResourcePath();
   const std::string &getDataPath();
 
