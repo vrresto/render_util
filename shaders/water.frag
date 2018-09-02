@@ -30,6 +30,7 @@
 #version 130
 
 #define ENABLE_WAVES 1
+#define ENABLE_WAVE_INTERPOLATION 1
 // #define ENABLE_WAVE_FOAM 1
 #define ENABLE_WATER_MAP 1
 // #define ENABLE_SHORE_WAVES 1
@@ -277,11 +278,15 @@ vec3 blendNormal(vec3 n1, vec3 n2, float dist, float vis, float strength)
 
 vec3 sampleWaterNormalMap(float scale, vec2 coord)
 {
+#if ENABLE_WAVE_INTERPOLATION
   vec3 texA = texture(sampler_water_normal_map, vec3(coord * scale, getWaterAnimationPos(0))).xyz;
   vec3 texB = texture(sampler_water_normal_map, vec3(coord * scale, getWaterAnimationPos(1))).xyz;
   vec3 texC = texture(sampler_water_normal_map, vec3(coord * scale, getWaterAnimationPos(2))).xyz;
 
   return interpolateWaterAnimationFrames(texA, texB, texC) * 2 - 1;
+#else
+  return texture(sampler_water_normal_map, vec3(coord * scale, getWaterAnimationPos(0))).xyz * 2 - 1;
+#endif
 }
 
 
