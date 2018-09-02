@@ -20,6 +20,7 @@
 #define RENDER_UTIL_RENDER_UTIL_H
 
 #include <string>
+#include <array>
 #include <glm/glm.hpp>
 
 namespace render_util
@@ -38,6 +39,41 @@ namespace render_util
   };
 
   typedef Float3 Normal;
+
+
+  class Box
+  {
+    glm::vec3 m_origin;
+    glm::vec3 m_extent;
+    std::array<glm::vec3, 8> m_corner_points;
+
+    void updateCornerPoints()
+    {
+      auto it = m_corner_points.begin();
+
+      *(it++) = m_origin + (m_extent * glm::vec3(0, 0, 0));
+      *(it++) = m_origin + (m_extent * glm::vec3(0, 0, 1));
+      *(it++) = m_origin + (m_extent * glm::vec3(0, 1, 0));
+      *(it++) = m_origin + (m_extent * glm::vec3(0, 1, 1));
+      *(it++) = m_origin + (m_extent * glm::vec3(1, 0, 0));
+      *(it++) = m_origin + (m_extent * glm::vec3(1, 0, 1));
+      *(it++) = m_origin + (m_extent * glm::vec3(1, 1, 0));
+      *(it++) = m_origin + (m_extent * glm::vec3(1, 1, 1));
+
+      assert(it == m_corner_points.end());
+    }
+
+  public:
+    const std::array<glm::vec3, 8> &getCornerPoints() const { return m_corner_points; }
+
+    void set(const glm::vec3 &origin, const glm::vec3 &extent)
+    {
+      m_origin = origin;
+      m_extent = extent;
+      updateCornerPoints();
+    }
+  };
+
 
   const std::string &getResourcePath();
   const std::string &getDataPath();

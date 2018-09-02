@@ -179,38 +179,18 @@ struct GridMesh
 };
 
 
-struct BoundingBox
+struct BoundingBox : public render_util::Box
 {
-  vec3 origin;
-  vec3 extent;
-
-  void getCornerPoints(vector<vec3> &points)
+  float getShortestDistance(vec3 pos) const
   {
-    points.push_back(origin + (extent * vec3(0, 0, 0)));
-    points.push_back(origin + (extent * vec3(0, 0, 1)));
-    points.push_back(origin + (extent * vec3(0, 1, 0)));
-    points.push_back(origin + (extent * vec3(0, 1, 1)));
-    points.push_back(origin + (extent * vec3(1, 0, 0)));
-    points.push_back(origin + (extent * vec3(1, 0, 1)));
-    points.push_back(origin + (extent * vec3(1, 1, 0)));
-    points.push_back(origin + (extent * vec3(1, 1, 1)));
-  }
-
-  float getShortestDistance(vec3 pos)
-  {
-    vector<vec3> corner_points;
-    getCornerPoints(corner_points);
-
     float d = 0;
-
-    for (vec3 &point : corner_points)
+    for (auto &point : getCornerPoints())
     {
       if (d)
         d = min(d, distance(point, pos));
       else
         d = distance(point, pos);
     }
-
     return d;
   }
 };
@@ -466,10 +446,9 @@ Node *TerrainCDLOD::Private::createNode(const render_util::ElevationMap &map, ve
     }
   }
 
-  node->bounding_box.origin = vec3(node->pos, 0);
-  node->bounding_box.extent.x = node_size;
-  node->bounding_box.extent.y = node_size;
-  node->bounding_box.extent.z = node->max_height;
+  auto bb_origin = vec3(node->pos, 0);
+  auto bb_extent = vec3(node_size, node_size, node->max_height);
+  node->bounding_box.set(bb_origin, bb_extent);
 
   return node;
 }
