@@ -301,7 +301,7 @@ void ShaderProgram::assertUniformsAreSet()
       if (set_uniforms.find(loc) == set_uniforms.end())
       {
         num_unset++;
-        cout<<"error: unset uniform: "<<name_str<<endl;
+        cout<<"error: " << this->name << ": unset uniform: "<<name_str<<endl;
       }
     }
   }
