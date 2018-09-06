@@ -10,8 +10,15 @@ set(CXX_SRCS
   map_textures.cpp
   water.cpp
   image_loader.cpp
+  image_writer.cpp
   util.cpp
   ${PROJECT_SOURCE_DIR}/_modules/FastNoise/FastNoise.cpp
+)
+
+set_source_files_properties(
+  image_writer.cpp
+  PROPERTIES
+    COMPILE_FLAGS "-Wno-missing-declarations"
 )
 
 add_library(render_util ${CXX_SRCS})

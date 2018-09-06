@@ -28,11 +28,20 @@
 
 namespace render_util
 {
+
+
   bool loadImageFromMemory(const std::vector<char> &data_in,
                            int num_channels,
                            std::vector<unsigned char> &data_out,
                            int &width,
                            int &height);
+
+  bool saveImage(const std::string &file_path,
+                 int num_channels,
+                 int width,
+                 int height,
+                 const unsigned char* image_data,
+                 size_t image_data_size);
 
   template <typename T>
   std::shared_ptr<T> loadImageFromMemory(const std::vector<char> &data)
@@ -64,7 +73,12 @@ namespace render_util
   template <typename T>
   void saveImageToFile(const std::string &file_path, const T *image)
   {
-    assert(0);
+    saveImage(file_path,
+              T::BYTES_PER_PIXEL,
+              image->w(),
+              image->h(),
+              image->getData(),
+              image->dataSize());
   }
 
 
