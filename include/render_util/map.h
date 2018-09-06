@@ -23,6 +23,7 @@
 // #include <render_util/elevation_map.h>
 #include <render_util/map_textures.h>
 #include <render_util/terrain_base.h>
+#include <render_util/water.h>
 
 // #include <vector>
 #include <memory>
@@ -36,6 +37,7 @@ namespace render_util
     glm::ivec2 type_map_size = glm::ivec2(0);
     std::shared_ptr<MapTextures> textures;
     std::shared_ptr<TerrainBase> terrain;
+    std::shared_ptr<WaterAnimation> water_animation;
   };
 
 }

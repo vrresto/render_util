@@ -56,7 +56,7 @@ using namespace glm;
 using namespace std;
 using namespace gl_wrapper::gl_functions;
 using namespace render_util::viewer;
-using render_util::ShaderProgram;
+using namespace render_util;
 
 #include <render_util/skybox.h>
 
@@ -64,8 +64,8 @@ namespace
 {
 
 
-const string resource_path = render_util::getResourcePath() + "/build/native/";
-const string shader_path = render_util::getResourcePath() + "/shaders";
+const string cache_path = RENDER_UTIL_CACHE_DIR;
+const string shader_path = RENDER_UTIL_SHADER_DIR;
 
 const vec4 shore_wave_hz = vec4(0.05, 0.07, 0, 0);
 
@@ -103,7 +103,6 @@ class TerrainViewerScene : public Scene
 
   string map_path;
   shared_ptr<render_util::Map> map;
-  render_util::WaterAnimation water_animation;
 
   render_util::TexturePtr curvature_map;
   render_util::TexturePtr atmosphere_map;
@@ -139,12 +138,11 @@ void TerrainViewerScene::setup()
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
-  map.reset(new render_util::Map);
+  map = make_shared<Map>();
   map->terrain = getTerrainFactory()();
   map->terrain->setTextureManager(&getTextureManager());
-  map->textures.reset(new render_util::MapTextures(getTextureManager()));
-
-//   water_animation.createTextures(map->textures.get());
+  map->textures = make_shared<MapTextures>(getTextureManager());
+  map->water_animation = make_shared<WaterAnimation>();
 
   map_loader->loadMap(map_path, *map);
 #if 0
@@ -161,8 +159,8 @@ void TerrainViewerScene::setup()
 
   cout<<"map size: "<<map_size.x<<","<<map_size.y<<endl;
 
-  curvature_map = render_util::createCurvatureTexture(getTextureManager(), resource_path);
-  atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), resource_path);
+  curvature_map = render_util::createCurvatureTexture(getTextureManager(), cache_path);
+  atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), cache_path);
 
   CHECK_GL_ERROR();
 
@@ -184,7 +182,7 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
 
   CHECK_GL_ERROR();
 
-  water_animation.updateUniforms(program);
+  map->water_animation->updateUniforms(program);
 
   CHECK_GL_ERROR();
 
@@ -204,7 +202,7 @@ void TerrainViewerScene::render(float frame_delta)
   {
     shore_wave_pos.x = shore_wave_pos.x + (frame_delta * shore_wave_hz.x);
     shore_wave_pos.y = shore_wave_pos.y + (frame_delta * shore_wave_hz.y);
-    water_animation.update();
+    map->water_animation->update();
   }
 
 //   camera.setZFar(2300000.0);

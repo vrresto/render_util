@@ -62,7 +62,7 @@ using render_util::viewer::ShaderProgramFactory;;
 namespace
 {
 
-const string resource_path = RENDER_UTIL_RESOURCE_DIR;
+const string cache_path = RENDER_UTIL_CACHE_DIR;
 const string shader_path = RENDER_UTIL_SHADER_DIR;
 
 render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager &tex_mgr)
@@ -115,8 +115,8 @@ void HeightMapViewerScene::setup()
   assert(m_sky_program);
   assert(m_terrain_program);
 
-  m_curvature_map = render_util::createCurvatureTexture(getTextureManager(), resource_path);
-  m_atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), resource_path);
+  m_curvature_map = render_util::createCurvatureTexture(getTextureManager(), cache_path);
+  m_atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), cache_path);
 
   assert(m_curvature_map);
   assert(m_atmosphere_map);
