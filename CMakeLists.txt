@@ -87,26 +87,26 @@ install(FILES LICENSE
 
 install(FILES _modules/FastNoise/LICENSE
   DESTINATION ${renderutil_base_dir}
-  RENAME LICENSE_FastNoise.txt
+  RENAME FastNoise_LICENSE.txt
 )
 
 install(FILES _modules/FastNoise/README.md
   DESTINATION ${renderutil_base_dir}
-  RENAME README_FastNoise.md
+  RENAME FastNoise_README.md
 )
 
 install(FILES _modules/stb/README.md
   DESTINATION ${renderutil_base_dir}
-  RENAME README_stb.md
+  RENAME stb_README.md
 )
 
 if(glfw_source_dir)
   install(FILES ${glfw_source_dir}/COPYING.txt
     DESTINATION ${renderutil_base_dir}
-    RENAME COPYING_GLFW.txt
+    RENAME GLFW_COPYING.txt
   )
   install(FILES ${glfw_source_dir}/README.md
     DESTINATION ${renderutil_base_dir}
-    RENAME README_GLFW.md
+    RENAME GLFW_README.md
   )
 endif()
