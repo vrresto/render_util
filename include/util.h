@@ -70,6 +70,20 @@ inline std::string makeLowercase(const std::string &input)
 }
 
 
+inline std::string getDirFromPath(const std::string &path)
+{
+  std::string dir;
+  size_t pos = path.find_last_of("/\\");
+  if (pos != std::string::npos)
+  {
+    if (pos < path.size() && pos > 0)
+      dir = path.substr(0, pos);
+  }
+
+  return dir;
+}
+
+
 inline std::string basename(std::string path, bool remove_extension = false)
 {
   size_t pos = path.find_last_of("/\\");
