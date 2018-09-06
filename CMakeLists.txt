@@ -50,6 +50,8 @@ if(platform_mingw)
     CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=CMake/i686-w64-mingw32.cmake -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
     INSTALL_COMMAND ""
   )
+  ExternalProject_Get_Property(glfw_source SOURCE_DIR)
+  set(glfw_source_dir ${SOURCE_DIR})
 
 endif(platform_mingw)
 
@@ -97,3 +99,14 @@ install(FILES _modules/stb/README.md
   DESTINATION ${renderutil_base_dir}
   RENAME README_stb.md
 )
+
+if(glfw_source_dir)
+  install(FILES ${glfw_source_dir}/COPYING.txt
+    DESTINATION ${renderutil_base_dir}
+    RENAME COPYING_GLFW.txt
+  )
+  install(FILES ${glfw_source_dir}/README.md
+    DESTINATION ${renderutil_base_dir}
+    RENAME README_GLFW.md
+  )
+endif()
