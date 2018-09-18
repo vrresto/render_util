@@ -27,13 +27,12 @@
 #include <render_util/texture_manager.h>
 #include <render_util/map.h>
 #include <render_util/map_textures.h>
-#include <render_util/terrain.h>
-#include <render_util/terrain_cdlod.h>
 #include <render_util/texture_util.h>
 #include <render_util/texunits.h>
 #include <render_util/image_loader.h>
 #include <render_util/elevation_map.h>
 #include <render_util/camera.h>
+#include <render_util/terrain_util.h>
 #include <gl_wrapper/gl_wrapper.h>
 
 #include <glm/glm.hpp>
@@ -63,33 +62,16 @@ using namespace render_util;
 namespace
 {
 
+const bool g_terrain_use_lod = true;
 
 const string cache_path = RENDER_UTIL_CACHE_DIR;
 const string shader_path = RENDER_UTIL_SHADER_DIR;
 
 const vec4 shore_wave_hz = vec4(0.05, 0.07, 0, 0);
 
-auto getTerrainFactory() { return render_util::g_terrain_cdlod_factory; }
-
-
 render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager &tex_mgr)
 {
   return render_util::createSkyProgram(tex_mgr, shader_path);
-}
-
-render_util::ShaderProgramPtr createTerrainProgram(const string &name, const render_util::TextureManager &tex_mgr)
-{
-  render_util::ShaderProgramPtr terrain_program;
-
-  CHECK_GL_ERROR();
-
-  map<unsigned int, string> attribute_locations = { { 4, "attrib_pos" } };
-
-  terrain_program = render_util::createShaderProgram(name, tex_mgr, shader_path, attribute_locations);
-
-  CHECK_GL_ERROR();
-
-  return terrain_program;
 }
 
 
@@ -108,8 +90,7 @@ class TerrainViewerScene : public Scene
   render_util::TexturePtr atmosphere_map;
 
   render_util::ShaderProgramPtr sky_program;
-  render_util::ShaderProgramPtr terrain_program;
-  render_util::ShaderProgramPtr forest_program;
+//   render_util::ShaderProgramPtr forest_program;
 
   shared_ptr<render_util::MapLoaderBase> map_loader;
   render_util::TextureManager texture_manager = render_util::TextureManager(0);
@@ -118,6 +99,7 @@ class TerrainViewerScene : public Scene
 
   render_util::TextureManager &getTextureManager() { return texture_manager; }
 
+  render_util::TerrainRenderer terrain_renderer;
 
 public:
   TerrainViewerScene(shared_ptr<render_util::MapLoaderBase> map_loader,
@@ -134,13 +116,13 @@ void TerrainViewerScene::setup()
 
   sky_program = createSkyProgram(getTextureManager());
 //   terrain_program = createTerrainProgram("terrain_simple", getTextureManager());
-  terrain_program = createTerrainProgram("terrain_cdlod", getTextureManager());
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
-  forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
+//   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
+
+  terrain_renderer = createTerrainRenderer(getTextureManager(), g_terrain_use_lod, shader_path);
 
   map = make_shared<Map>();
-  map->terrain = getTerrainFactory()();
-  map->terrain->setTextureManager(&getTextureManager());
+  map->terrain = terrain_renderer.m_terrain;
   map->textures = make_shared<MapTextures>(getTextureManager());
   map->water_animation = make_shared<WaterAnimation>();
 
@@ -151,7 +133,7 @@ void TerrainViewerScene::setup()
     int elevation_map_height = 5000;
     std::vector<float> data(elevation_map_width * elevation_map_height);
     render_util::ElevationMap elevation_map(elevation_map_width, elevation_map_height, data);
-    map->terrain->build(&elevation_map);
+    terrain_renderer.m_terrain->build(&elevation_map);
   }
 #endif
 
@@ -246,14 +228,14 @@ void TerrainViewerScene::render(float frame_delta)
 //     terrain_color = vec4(0,0,0,0);
 //     terrain_color = vec4(1,1,1,1);
 
-  map->terrain->setDrawDistance(0);
-  map->terrain->update(camera);
+  terrain_renderer.m_terrain->setDrawDistance(0);
+  terrain_renderer.m_terrain->update(camera);
 
-  gl::UseProgram(terrain_program->getId());
-  updateUniforms(terrain_program);
+  gl::UseProgram(terrain_renderer.m_program->getId());
+  updateUniforms(terrain_renderer.m_program);
   CHECK_GL_ERROR();
 
-  map->terrain->draw(terrain_program);
+  terrain_renderer.m_terrain->draw(terrain_renderer.m_program);
   CHECK_GL_ERROR();
 
 
@@ -263,8 +245,8 @@ void TerrainViewerScene::render(float frame_delta)
   const int forest_layer_repetitions = 1;
   const float forest_layer_height = 2.5;
 
-  map->terrain->setDrawDistance(5000.f);
-  map->terrain->update(camera);
+  terrain_renderer.m_terrain->setDrawDistance(5000.f);
+  terrain_renderer.m_terrain->update(camera);
 
   gl::UseProgram(forest_program->getId());
   updateUniforms(forest_program);
@@ -276,7 +258,7 @@ void TerrainViewerScene::render(float frame_delta)
   gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   gl::Disable(GL_CULL_FACE);
 
-//   map->terrain->draw(forest_program);
+//   terrain_renderer.m_terrain->draw(forest_program);
   CHECK_GL_ERROR();
 
   for (int i = 1; i < forest_layers; i++)
@@ -287,7 +269,7 @@ void TerrainViewerScene::render(float frame_delta)
     {
       float height = i * forest_layer_height + y * (forest_layer_height / forest_layer_repetitions);
       forest_program->setUniform("terrain_height_offset", height);
-      map->terrain->draw(forest_program);
+      terrain_renderer.m_terrain->draw(forest_program);
       CHECK_GL_ERROR();
     }
   }
