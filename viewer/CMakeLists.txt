@@ -5,11 +5,6 @@ if(platform_mingw)
   set(glfw_lib_dir ${BINARY_DIR}/src)
 endif()
 
-# add_definitions(
-#   -DRENDER_UTIL_SHADER_DIR="${PROJECT_SOURCE_DIR}/shaders"
-#   -DRENDER_UTIL_RESOURCE_DIR="${PROJECT_BINARY_DIR}/tools"
-# )
-
 set(CXX_SRCS
   viewer_main.cpp
   terrain_viewer.cpp
@@ -18,15 +13,12 @@ set(CXX_SRCS
 
 add_library(viewer ${CXX_SRCS})
 
+target_link_libraries(viewer render_util)
+
 if(platform_mingw)
   target_link_libraries(viewer -L${glfw_lib_dir})
-endif()
-
-target_link_libraries(viewer
-  render_util
-  glfw3
-)
-
-if(platform_mingw)
+  target_link_libraries(viewer glfw3)
   target_link_libraries(viewer gdi32)
+else()
+  target_link_libraries(viewer glfw)
 endif()

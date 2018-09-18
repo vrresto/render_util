@@ -80,6 +80,10 @@ if(platform_mingw)
 endif(platform_mingw)
 
 
+if(NOT renderutil_base_dir)
+  set(renderutil_base_dir "render_util")
+endif()
+
 install(FILES LICENSE
   DESTINATION ${renderutil_base_dir}
   RENAME LICENSE.txt
