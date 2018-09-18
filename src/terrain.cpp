@@ -430,3 +430,5 @@ const string &render_util::Terrain::getName()
   static std::string name = "terrain";
   return name;
 }
+
+const util::Factory<TerrainBase> render_util::g_terrain_factory = util::makeFactory<Terrain>();
