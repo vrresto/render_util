@@ -28,15 +28,9 @@
 
 namespace render_util::viewer
 {
-  using ShaderProgramFactory = util::Factory<ShaderProgram, const render_util::TextureManager&>;
-  using TerrainFactory = util::Factory<TerrainBase>;
-
   void runViewer(std::shared_ptr<MapLoaderBase> map_loader, const std::string &map_path);
 
-  void runHeightMapViewer(
-    Image<float>::ConstPtr height_map,
-    TerrainFactory terrain_factory,
-    ShaderProgramFactory terrain_program_factory);
+  void runHeightMapViewer(Image<float>::ConstPtr height_map);
 }
 
 #endif

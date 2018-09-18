@@ -35,7 +35,10 @@ struct TerrainRenderer
   std::shared_ptr<TerrainBase> m_terrain;
 };
 
-TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr, bool use_lod, const std::string &shader_path);
+TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr,
+                                      bool use_lod,
+                                      const std::string &shader_path,
+                                      const std::string &shader_program_name = {});
 
 
 } // namespace render_util

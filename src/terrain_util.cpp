@@ -31,9 +31,15 @@ namespace
 {
 
 
-ShaderProgramPtr createTerrainProgram(const TextureManager &tex_mgr, bool cdlod, const string &shader_path)
+ShaderProgramPtr createTerrainProgram(const TextureManager &tex_mgr, bool cdlod, const string &shader_path,
+                                      const string &shader_program_name)
 {
-  const string name = cdlod ? "terrain_cdlod" : "terrain";
+  string name = shader_program_name;
+  if (name.empty())
+    name = "terrain";
+
+  if (cdlod)
+    name += "_cdlod";
 
   ShaderProgramPtr terrain_program;
 
@@ -58,11 +64,12 @@ namespace render_util
 {
 
 
-TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr, bool use_lod, const string &shader_path)
+TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr, bool use_lod, const string &shader_path,
+                                      const string &shader_program_name)
 {
   TerrainRenderer r;
 
-  r.m_program = createTerrainProgram(tex_mgr, use_lod, shader_path);
+  r.m_program = createTerrainProgram(tex_mgr, use_lod, shader_path, shader_program_name);
   if (use_lod)
     r.m_terrain = g_terrain_cdlod_factory();
   else

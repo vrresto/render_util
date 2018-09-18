@@ -29,7 +29,7 @@ namespace render_util
     static string path = ".";
     return path;
   }
-  
+
   const std::string &getDataPath()
   {
     static string path = "../../ge_data";

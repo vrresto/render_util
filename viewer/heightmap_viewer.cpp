@@ -30,6 +30,7 @@
 #include <render_util/texunits.h>
 #include <render_util/image_loader.h>
 #include <render_util/camera.h>
+#include <render_util/terrain_util.h>
 #include <gl_wrapper/gl_wrapper.h>
 
 #include <glm/glm.hpp>
@@ -53,7 +54,6 @@ using namespace gl_wrapper::gl_functions;
 using namespace render_util::viewer;
 using render_util::ShaderProgram;
 using render_util::TerrainBase;
-using render_util::viewer::ShaderProgramFactory;;
 
 
 #include <render_util/skybox.h>
@@ -65,9 +65,51 @@ namespace
 const string cache_path = RENDER_UTIL_CACHE_DIR;
 const string shader_path = RENDER_UTIL_SHADER_DIR;
 
+
 render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager &tex_mgr)
 {
   return render_util::createSkyProgram(tex_mgr, shader_path);
+}
+
+
+struct Terrain : public render_util::TerrainRenderer
+{
+  Terrain() {}
+  Terrain(const render_util::TerrainRenderer &other)
+  {
+    *static_cast<render_util::TerrainRenderer*>(this) = other;
+  }
+
+  void draw(const Camera &camera)
+  {
+    gl::FrontFace(GL_CCW);
+    gl::Enable(GL_DEPTH_TEST);
+    gl::DepthMask(GL_TRUE);
+    gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    m_terrain->update(camera);
+
+    gl::UseProgram(m_program->getId());
+
+    m_terrain->draw(m_program);
+
+    gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    CHECK_GL_ERROR();
+  }
+};
+
+
+Terrain createTerrain(render_util::TextureManager &tex_mgr,
+                      bool use_lod,
+                      const render_util::ElevationMap &elevation_map,
+                      glm::vec3 color)
+{
+  Terrain t = render_util::createTerrainRenderer(tex_mgr, use_lod,
+                                                 shader_path, "terrain_simple");
+  t.m_terrain->build(&elevation_map);
+  t.m_program->setUniform("terrain_color", color);
+  return t;
 }
 
 
@@ -76,23 +118,19 @@ render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager
 
 class HeightMapViewerScene : public Scene
 {
-  shared_ptr<render_util::TerrainBase> m_terrain;
 	render_util::Image<float>::ConstPtr m_height_map;
   render_util::TextureManager texture_manager = render_util::TextureManager(0);
   render_util::ShaderProgramPtr m_sky_program;
-  render_util::ShaderProgramPtr m_terrain_program;
   render_util::TexturePtr m_curvature_map;
   render_util::TexturePtr m_atmosphere_map;
-  util::Factory<TerrainBase> m_terrain_factory;
-  ShaderProgramFactory m_terrain_program_factory;
+
+  Terrain m_terrain;
+  Terrain m_terrain_cdlod;
+
 
 public:
-	HeightMapViewerScene(render_util::Image<float>::ConstPtr height_map,
-                       util::Factory<TerrainBase> terrain_factory,
-                       ShaderProgramFactory terrain_program_factory) :
-    m_height_map(height_map),
-    m_terrain_factory(terrain_factory),
-    m_terrain_program_factory(terrain_program_factory)
+	HeightMapViewerScene(render_util::Image<float>::ConstPtr height_map) :
+    m_height_map(height_map)
   {
   }
 
@@ -110,10 +148,7 @@ void HeightMapViewerScene::setup()
   getTextureManager().setActive(true);
 
   m_sky_program = createSkyProgram(getTextureManager());
-  m_terrain_program = m_terrain_program_factory(getTextureManager());
-
   assert(m_sky_program);
-  assert(m_terrain_program);
 
   m_curvature_map = render_util::createCurvatureTexture(getTextureManager(), cache_path);
   m_atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), cache_path);
@@ -123,9 +158,9 @@ void HeightMapViewerScene::setup()
 
   render_util::ElevationMap elevation_map(m_height_map);
 
-  m_terrain = m_terrain_factory();
-  m_terrain->setTextureManager(&getTextureManager());
-  m_terrain->build(&elevation_map);
+
+  m_terrain = createTerrain(getTextureManager(), false, elevation_map, glm::vec3(1,0,0));
+  m_terrain_cdlod = createTerrain(getTextureManager(), true, elevation_map, glm::vec3(0,1,0));
 
   camera.z = 10000;
   sun_azimuth = 20;
@@ -158,29 +193,18 @@ void HeightMapViewerScene::render(float frame_delta)
   updateUniforms(m_sky_program);
   render_util::drawSkyBox();
 
+  updateUniforms(m_terrain.m_program);
+  m_terrain.draw(camera);
 
-  gl::FrontFace(GL_CCW);
-  gl::Enable(GL_DEPTH_TEST);
-  gl::DepthMask(GL_TRUE);
-  gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-  m_terrain->update(camera);
-
-  updateUniforms(m_terrain_program);
-  gl::UseProgram(m_terrain_program->getId());
-
-  m_terrain->draw(m_terrain_program);
-
-  CHECK_GL_ERROR();
+  updateUniforms(m_terrain_cdlod.m_program);
+  m_terrain_cdlod.draw(camera);
 }
 
-void render_util::viewer::runHeightMapViewer(render_util::Image<float>::ConstPtr height_map,
-  util::Factory<TerrainBase> terrain_factory,
-  ShaderProgramFactory terrain_program_factory)
+void render_util::viewer::runHeightMapViewer(render_util::Image<float>::ConstPtr height_map)
 {
-  auto create_func = [height_map, terrain_factory, terrain_program_factory]
+  auto create_func = [height_map]
   {
-    return make_shared<HeightMapViewerScene>(height_map, terrain_factory, terrain_program_factory);
+    return make_shared<HeightMapViewerScene>(height_map);
   };
 
   runApplication(create_func);

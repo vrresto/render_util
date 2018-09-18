@@ -1,10 +1,6 @@
 vert terrain
-frag terrain
+frag terrain_simple
 frag atmosphere
-frag water
-frag noise
-frag forest_util
-frag terrain_util
 frag main
 texunit curvature_map
 texunit atmosphere_thickness_map
