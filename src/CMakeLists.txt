@@ -12,6 +12,7 @@ set(CXX_SRCS
   image_loader.cpp
   image_writer.cpp
   util.cpp
+  terrain_util.cpp
   ${PROJECT_SOURCE_DIR}/_modules/FastNoise/FastNoise.cpp
 )
 
