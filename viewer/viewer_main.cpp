@@ -358,10 +358,11 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
 
   g_scene.reset();
   g_context.reset();
-  gl_wrapper::GL_Interface::setCurrent(nullptr);
   gl::Finish();
 
   CHECK_GL_ERROR();
+
+  gl_wrapper::GL_Interface::setCurrent(nullptr);
 
   glfwMakeContextCurrent(0);
 
