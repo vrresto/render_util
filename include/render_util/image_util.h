@@ -87,6 +87,7 @@ create(const T &color, glm::ivec2 size)
 }
 
 
+// T_dst is the component type
 template<class T_dst, class T_src>
 std::shared_ptr<Image<T_dst, T_src::NUM_COMPONENTS>>
 convert(std::shared_ptr<const T_src> src)
@@ -111,7 +112,9 @@ template<class T_dst, class T_src>
 std::shared_ptr<Image<T_dst, T_src::NUM_COMPONENTS>>
 convert(std::shared_ptr<T_src> src)
 {
-  return convert<T_dst, T_src>(std::shared_ptr<T_src>(src));
+  std::shared_ptr<const T_src> src_const = src;
+
+  return convert<T_dst, T_src>(src_const);
 }
 
 template <typename T>
