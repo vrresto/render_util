@@ -245,7 +245,9 @@ void resampleTextures(const std::vector<ImageRGBA::ConstPtr> &textures,
 TexturePtr createTextureArray(const std::vector<ImageRGBA::ConstPtr> &textures)
 {
   std::vector<ImageRGBA::ConstPtr> textures_resampled;
+  cout << "resampling textures ..." << endl;
   resampleTextures(textures, textures_resampled);
+  cout << "resampling textures ... done." << endl;
   return render_util::createTextureArray<ImageRGBA>(textures_resampled);
 }
 
