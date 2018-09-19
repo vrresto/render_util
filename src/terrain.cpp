@@ -19,6 +19,7 @@
 #include <render_util/image.h>
 #include <render_util/terrain.h>
 #include <render_util/elevation_map.h>
+#include <render_util/gl_context.h>
 
 #include <iostream>
 #include <vector>
@@ -49,7 +50,7 @@ namespace render_util
 
     const std::string &getName() override;
     void build(const ElevationMap *map) override;
-    void draw(ShaderProgramPtr program) override;
+    void draw() override;
 
     std::vector<glm::vec3> getNormals() override;
   };
@@ -405,10 +406,13 @@ void render_util::Terrain::build(const ElevationMap *map)
   p->build(false);
 }
 
-void render_util::Terrain::draw(ShaderProgramPtr program)
+void render_util::Terrain::draw()
 {
   CHECK_GL_ERROR();
-  
+
+  auto program = getCurrentGLContext()->getCurrentProgram();
+  assert(program);
+
   program->assertUniformsAreSet();
 
   gl::BindVertexArray(p->vao_id);

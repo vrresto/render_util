@@ -28,7 +28,7 @@
 #include <render_util/texture_util.h>
 #include <render_util/texunits.h>
 #include <render_util/image_loader.h>
-// #include <render_util/image.h>
+#include <render_util/gl_context.h>
 #include <render_util/camera.h>
 #include <gl_wrapper/gl_wrapper.h>
 
@@ -51,6 +51,7 @@ using namespace glm;
 using namespace std;
 using namespace gl_wrapper::gl_functions;
 using namespace render_util::viewer;
+using namespace render_util;
 using render_util::ShaderProgram;
 using Clock = std::chrono::steady_clock;
 
@@ -63,6 +64,7 @@ namespace
   const float camera_rotation_speed = 45.0;
   const double mouse_rotation_speed = 0.2;
 
+  std::shared_ptr<GLContext> g_context;
   std::shared_ptr<Scene> g_scene;
 
   float camera_move_speed = camera_move_speed_default;
@@ -244,6 +246,12 @@ namespace
 } // namespace
 
 
+shared_ptr<GLContext> render_util::getCurrentGLContext()
+{
+  return g_context;
+}
+
+
 void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
 {
   glfwSetErrorCallback(errorCallback);
@@ -273,6 +281,8 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
 
   gl_wrapper::GL_Interface *gl_interface = new gl_wrapper::GL_Interface(&getGLProcAddress);
   gl_wrapper::GL_Interface::setCurrent(gl_interface);
+
+  g_context = make_shared<GLContext>();
 
   g_scene = f_create_scene();
   assert(g_scene);
@@ -347,6 +357,8 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
   CHECK_GL_ERROR();
 
   g_scene.reset();
+  g_context.reset();
+  gl_wrapper::GL_Interface::setCurrent(nullptr);
   gl::Finish();
 
   CHECK_GL_ERROR();

@@ -59,6 +59,7 @@ using namespace render_util;
 
 #include <render_util/skybox.h>
 
+
 namespace
 {
 
@@ -76,6 +77,7 @@ render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager
 
 
 } // namespace
+
 
 
 class TerrainViewerScene : public Scene
@@ -117,7 +119,6 @@ void TerrainViewerScene::setup()
 //   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
   map = make_shared<Map>();
-  map->terrain = m_terrain.m_terrain;
   map->textures = make_shared<MapTextures>(getTextureManager());
   map->water_animation = make_shared<WaterAnimation>();
 
@@ -188,9 +189,6 @@ void TerrainViewerScene::render(float frame_delta)
     map->water_animation->update();
   }
 
-//   camera.setZFar(2300000.0);
-//   camera.applyFov();
-
   CHECK_GL_ERROR();
 
   gl::Disable(GL_DEPTH_TEST);
@@ -198,7 +196,7 @@ void TerrainViewerScene::render(float frame_delta)
 //     gl::DepthMask(GL_FALSE);
   gl::FrontFace(GL_CW);
   gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  gl::UseProgram(sky_program->getId());
+  getCurrentGLContext()->setCurrentProgram(sky_program);
   updateUniforms(sky_program);
 
   render_util::drawSkyBox();
@@ -206,19 +204,6 @@ void TerrainViewerScene::render(float frame_delta)
   gl::Disable(GL_DEPTH_TEST);
   gl::DepthMask(GL_TRUE);
   gl::FrontFace(GL_CCW);
-//     gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-//     gl::UseProgram(getTerrainNoMapProgram()->getId());
-//     updateUniforms(getTerrainNoMapProgram());
-
-//     terrain_far->draw();
-
-//     gl::Enable(GL_DEPTH_TEST);
-//     gl::DepthMask(GL_TRUE);
-//   terrain_color = mix(vec4(0.0, 0.6, 0.0, 1.0), vec4(vec3(0.8), 1.0), 0.5);
-//     terrain_color = vec4(0,0,0,0);
-//     terrain_color = vec4(1,1,1,1);
-
 
   gl::Enable(GL_DEPTH_TEST);
   gl::DepthMask(GL_TRUE);
@@ -238,7 +223,7 @@ void TerrainViewerScene::render(float frame_delta)
   terrain_renderer.m_terrain->setDrawDistance(5000.f);
   terrain_renderer.m_terrain->update(camera);
 
-  gl::UseProgram(forest_program->getId());
+  getCurrentGLContext()->setCurrentProgram(forest_program);
   updateUniforms(forest_program);
   forest_program->setUniformi("forest_layer", 0);
   forest_program->setUniform("terrain_height_offset", 0);

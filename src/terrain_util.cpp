@@ -64,20 +64,24 @@ namespace render_util
 {
 
 
+TerrainRenderer::TerrainRenderer(std::shared_ptr<TerrainBase> terrain, ShaderProgramPtr program) :
+  m_terrain(terrain),
+  m_program(program)
+{
+}
+
+
 TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr, bool use_lod, const string &shader_path,
                                       const string &shader_program_name)
 {
-  TerrainRenderer r;
+  auto program = createTerrainProgram(tex_mgr, use_lod, shader_path, shader_program_name);
 
-  r.m_program = createTerrainProgram(tex_mgr, use_lod, shader_path, shader_program_name);
-  if (use_lod)
-    r.m_terrain = g_terrain_cdlod_factory();
-  else
-    r.m_terrain = g_terrain_factory();
+  auto terrain = use_lod ?
+    g_terrain_cdlod_factory() :
+    g_terrain_factory();
+  terrain->setTextureManager(&tex_mgr);
 
-  r.m_terrain->setTextureManager(&tex_mgr);
-
-  return r;
+  return TerrainRenderer(terrain, program);
 }
 
 

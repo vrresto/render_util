@@ -16,36 +16,17 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef RENDER_UTIL_TERRAIN_BASE_H
-#define RENDER_UTIL_TERRAIN_BASE_H
+#include <render_util/gl_context.h>
+#include <gl_wrapper/gl_functions.h>
 
-#include <render_util/shader.h>
-#include <render_util/camera.h>
+using namespace gl_wrapper::gl_functions;
 
-#include <string>
-#include <vector>
-#include <glm/glm.hpp>
-
-namespace render_util
+void render_util::GLContext::setCurrentProgram(ShaderProgramPtr program)
 {
-  class ElevationMap;
-  class TextureManager;
-
-  class TerrainBase
-  {
-  public:
-    virtual ~TerrainBase() {}
-
-    virtual const std::string &getName() = 0;
-    virtual void build(const ElevationMap *map) = 0;
-    virtual void draw() = 0;
-    virtual void update(const Camera &camera) {}
-    virtual void setTextureManager(TextureManager*) {};
-    virtual void setDrawDistance(float dist) {}
-
-    virtual std::vector<glm::vec3> getNormals() { return std::vector<glm::vec3>(); }
-  };
-
+  assert(program->isValid());
+  m_current_program = program;
+  if (m_current_program)
+    gl::UseProgram(m_current_program->getId());
+  else
+    gl::UseProgram(0);
 }
-
-#endif

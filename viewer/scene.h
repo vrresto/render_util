@@ -23,6 +23,7 @@
 
 #include <render_util/shader.h>
 #include <render_util/terrain_util.h>
+#include <render_util/gl_context.h>
 #include <gl_wrapper/gl_functions.h>
 
 
@@ -30,6 +31,7 @@ namespace render_util::viewer
 {
 
 using namespace gl_wrapper::gl_functions;
+
 
 struct Terrain : public render_util::TerrainRenderer
 {
@@ -46,12 +48,12 @@ struct Terrain : public render_util::TerrainRenderer
     gl::DepthMask(GL_TRUE);
     gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    m_terrain->setDrawDistance(0);
-    m_terrain->update(camera);
+    getTerrain()->setDrawDistance(0);
+    getTerrain()->update(camera);
 
-    gl::UseProgram(m_program->getId());
+    render_util::getCurrentGLContext()->setCurrentProgram(getProgram());
 
-    m_terrain->draw(m_program);
+    getTerrain()->draw();
 
     gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -67,8 +69,8 @@ inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
 {
   Terrain t = render_util::createTerrainRenderer(tex_mgr, use_lod,
                                                  RENDER_UTIL_SHADER_DIR, "terrain_simple");
-  t.m_terrain->build(&elevation_map);
-  t.m_program->setUniform("terrain_color", color);
+  t.getTerrain()->build(&elevation_map);
+  t.getProgram()->setUniform("terrain_color", color);
   return t;
 }
 
@@ -112,10 +114,10 @@ public:
 
   void drawTerrain()
   {
-    updateUniforms(m_terrain.m_program);
+    updateUniforms(m_terrain.getProgram());
     m_terrain.draw(camera);
 
-    updateUniforms(m_terrain_cdlod.m_program);
+    updateUniforms(m_terrain_cdlod.getProgram());
     m_terrain_cdlod.draw(camera);
   }
 

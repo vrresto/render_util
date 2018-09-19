@@ -30,6 +30,7 @@
 #include <render_util/image.h>
 #include <render_util/water_map.h>
 #include <render_util/render_util.h>
+#include <render_util/gl_context.h>
 #include <block_allocator.h>
 
 #include <array>
@@ -68,7 +69,7 @@ namespace render_util
 
     const std::string &getName() override;
     void build(const ElevationMap *map) override;
-    void draw(ShaderProgramPtr program) override;
+    void draw() override;
     void update(const Camera &camera) override;
     void setTextureManager(TextureManager*) override;
     void setDrawDistance(float dist) override;
@@ -699,8 +700,11 @@ void TerrainCDLOD::update(const Camera &camera)
 #endif
 }
 
-void TerrainCDLOD::draw(ShaderProgramPtr program)
+void TerrainCDLOD::draw()
 {
+  auto program = getCurrentGLContext()->getCurrentProgram();
+  assert(program);
+
 #if DRAW_INSTANCED
   program->setUniform("cdlod_grid_size", vec2(MESH_GRID_SIZE));
   CHECK_GL_ERROR();

@@ -16,39 +16,28 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef RENDER_UTIL_TERRAIN_UTIL_H
-#define RENDER_UTIL_TERRAIN_UTIL_H
+#ifndef RENDER_UTIL_GL_CONTEXT_H
+#define RENDER_UTIL_GL_CONTEXT_H
 
 #include <render_util/shader.h>
-#include <render_util/terrain_base.h>
-#include <render_util/texture_manager.h>
-
-#include <string>
 
 namespace render_util
 {
 
 
-class TerrainRenderer
+class GLContext
 {
-  std::shared_ptr<TerrainBase> m_terrain;
-  ShaderProgramPtr m_program;
+  ShaderProgramPtr m_current_program;
 
 public:
-  TerrainRenderer() {}
-  TerrainRenderer(std::shared_ptr<TerrainBase>, ShaderProgramPtr);
-  std::shared_ptr<TerrainBase> getTerrain() { return m_terrain; }
-  ShaderProgramPtr getProgram() { return m_program; }
-
+  ShaderProgramPtr getCurrentProgram() { return m_current_program; }
+  void setCurrentProgram(ShaderProgramPtr);
 };
 
-TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr,
-                                      bool use_lod,
-                                      const std::string &shader_path,
-                                      const std::string &shader_program_name = {});
+
+std::shared_ptr<GLContext> getCurrentGLContext();
 
 
-} // namespace render_util
-
+}
 
 #endif

@@ -146,7 +146,7 @@ void HeightMapViewerScene::render(float frame_delta)
   gl::Disable(GL_DEPTH_TEST);
   gl::FrontFace(GL_CW);
   gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  gl::UseProgram(m_sky_program->getId());
+  render_util::getCurrentGLContext()->setCurrentProgram(m_sky_program);
   updateUniforms(m_sky_program);
   render_util::drawSkyBox();
   drawTerrain();
