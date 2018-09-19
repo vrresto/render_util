@@ -23,10 +23,15 @@ using namespace gl_wrapper::gl_functions;
 
 void render_util::GLContext::setCurrentProgram(ShaderProgramPtr program)
 {
-  assert(program->isValid());
   m_current_program = program;
+
   if (m_current_program)
+  {
+    assert(m_current_program->isValid());
     gl::UseProgram(m_current_program->getId());
+  }
   else
+  {
     gl::UseProgram(0);
+  }
 }
