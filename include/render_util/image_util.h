@@ -25,7 +25,9 @@ namespace render_util::image
 {
 
 
+
 RGBA getAverageColor(const ImageRGBA *image);
+
 
 template <typename T>
 typename T::Ptr
@@ -113,7 +115,6 @@ std::shared_ptr<Image<T_dst, T_src::NUM_COMPONENTS>>
 convert(std::shared_ptr<T_src> src)
 {
   std::shared_ptr<const T_src> src_const = src;
-
   return convert<T_dst, T_src>(src_const);
 }
 
@@ -196,6 +197,7 @@ subImage(const T *src, int x_src, int y_src, int w, int h)
 
   return dst;
 }
+
 
 template <typename T>
 void

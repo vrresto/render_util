@@ -95,9 +95,8 @@ namespace render_util
       int meters_per_tile);
 
   ImageGreyScale::Ptr createTerrainLightMap(const ElevationMap&);
-  
-  Image<Normal>::Ptr createNormalMap(const ElevationMap &elevation_map, float grid_scale);
 
+  Image<Normal>::Ptr createNormalMap(const ElevationMap &elevation_map, float grid_scale);
 }
 
 #endif
