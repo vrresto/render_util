@@ -83,7 +83,6 @@ class TerrainViewerScene : public Scene
   vec4 shore_wave_pos = vec4(0);
   vec2 map_size = vec2(0);
 
-  string map_path;
   shared_ptr<render_util::Map> map;
 
   render_util::TexturePtr curvature_map;
@@ -93,18 +92,15 @@ class TerrainViewerScene : public Scene
 //   render_util::ShaderProgramPtr forest_program;
 
   shared_ptr<render_util::MapLoaderBase> map_loader;
-  render_util::TextureManager texture_manager = render_util::TextureManager(0);
 
   void updateUniforms(render_util::ShaderProgramPtr program) override;
 
-  render_util::TextureManager &getTextureManager() { return texture_manager; }
-
-  render_util::TerrainRenderer terrain_renderer;
-
 public:
-  TerrainViewerScene(shared_ptr<render_util::MapLoaderBase> map_loader,
-                     const string &map_path) :
-    map_loader(map_loader), map_path(map_path) {}
+  TerrainViewerScene(shared_ptr<render_util::MapLoaderBase> map_loader) :
+    map_loader(map_loader)
+  {
+    cout<<"TerrainViewerScene()"<<endl;
+  }
   void render(float frame_delta) override;
   void setup() override;
 };
@@ -112,21 +108,26 @@ public:
 
 void TerrainViewerScene::setup()
 {
+  cout<<"void TerrainViewerScene::setup()"<<endl;
+
   getTextureManager().setActive(true);
 
   sky_program = createSkyProgram(getTextureManager());
-//   terrain_program = createTerrainProgram("terrain_simple", getTextureManager());
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
 //   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
-  terrain_renderer = createTerrainRenderer(getTextureManager(), g_terrain_use_lod, shader_path);
-
   map = make_shared<Map>();
-  map->terrain = terrain_renderer.m_terrain;
+  map->terrain = m_terrain.m_terrain;
   map->textures = make_shared<MapTextures>(getTextureManager());
   map->water_animation = make_shared<WaterAnimation>();
 
-  map_loader->loadMap(map_path, *map);
+  ElevationMap elevation_map;
+
+  map_loader->loadMap(*map, false, &elevation_map);
+
+  assert(!map->water_animation->isEmpty());
+
+  createTerrain(elevation_map);
 #if 0
   {
     int elevation_map_width = 5000;
@@ -223,19 +224,8 @@ void TerrainViewerScene::render(float frame_delta)
   gl::DepthMask(GL_TRUE);
 
   gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-//   gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-//     terrain_color = vec4(0,0,0,0);
-//     terrain_color = vec4(1,1,1,1);
-
-  terrain_renderer.m_terrain->setDrawDistance(0);
-  terrain_renderer.m_terrain->update(camera);
-
-  gl::UseProgram(terrain_renderer.m_program->getId());
-  updateUniforms(terrain_renderer.m_program);
-  CHECK_GL_ERROR();
-
-  terrain_renderer.m_terrain->draw(terrain_renderer.m_program);
+  drawTerrain();
   CHECK_GL_ERROR();
 
 
@@ -280,11 +270,16 @@ void TerrainViewerScene::render(float frame_delta)
 
 }
 
-void render_util::viewer::runViewer(shared_ptr<MapLoaderBase> map_loader, const std::string &map_path)
+void render_util::viewer::runViewer(shared_ptr<MapLoaderBase> map_loader)
 {
-  auto create_func = [map_loader, map_path]
+  cout<<"render_util::viewer::runViewer: map loader: "<<map_loader.get()<<endl;
+
+  auto create_func = [map_loader]
   {
-    return make_shared<TerrainViewerScene>(map_loader, map_path);
+    cout<<"create_func: map loader: "<<map_loader.get()<<endl;
+    auto scene = make_shared<TerrainViewerScene>(map_loader);
+    cout<<"create_func: scene: "<<scene.get()<<endl;
+    return scene;
   };
 
   runApplication(create_func);

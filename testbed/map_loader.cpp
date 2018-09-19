@@ -70,6 +70,64 @@ ImageRGBA::Ptr getTexture(const string &name)
 }
 
 
+bool readWaterAnimation(const string &filename, vector<char> &data)
+{
+  auto path = getDataPath() + "/water_textures/" + filename;
+  return util::readFile(path, data);
+}
+
+
+void createWaterNormalMaps(render_util::WaterAnimation *water_animation,
+                           render_util::MapTextures *map_textures)
+{
+  enum { MAX_ANIMATION_STEPS = 32 };
+
+  printf("loading water textures...\n");
+
+
+  vector<ImageRGBA::ConstPtr> normal_maps;
+  vector<ImageGreyScale::ConstPtr> foam_masks;
+
+  int i = 0;
+  while (i < MAX_ANIMATION_STEPS)
+  {
+
+    char base_name[100];
+//
+    snprintf(base_name, sizeof(base_name), "WaterNoise%.2dDot3", i);
+    auto filename = string(base_name) + ".tga";
+    cout << "loading " << filename << endl;
+    vector<char> data;
+    if (!readWaterAnimation(filename, data))
+    {
+      break;
+    }
+    auto normal_map = render_util::loadImageFromMemory<ImageRGBA>(data);
+    assert(normal_map);
+//     dump(normal_map, base_name, loader->getDumpDir());
+    normal_maps.push_back(normal_map);
+
+    snprintf(base_name, sizeof(base_name), "WaterNoiseFoam%.2d", i);
+    filename = string(base_name) + ".tga";
+    cout << "loading " << filename << endl;;
+    if (!readWaterAnimation(filename, data))
+    {
+      break;
+    }
+    auto foam_mask = render_util::loadImageFromMemory<ImageGreyScale>(data);
+    assert(foam_mask);
+//     dump(foam_mask, base_name, loader->getDumpDir());
+    foam_masks.push_back(foam_mask);
+
+    i++;
+  }
+
+  assert(normal_maps.size() == foam_masks.size());
+
+  water_animation->createTextures(map_textures, normal_maps, foam_masks);
+}
+
+
 ImageGreyScale::Ptr generateTypeMap(const ElevationMap &elevation_map)
 {
   FastNoise noise_generator;
@@ -349,7 +407,9 @@ ImageGreyScale::Ptr createForestMap(ImageGreyScale::ConstPtr type_map)
 
 
 
-void MapLoader::loadMap(const std::string &path, render_util::Map &map)
+void MapLoader::loadMap(render_util::Map &map,
+                        bool load_terrain,
+                        render_util::ElevationMap *elevation_map_out)
 {
 
   string height_map_path = getDataPath() + "/nz.tiff";
@@ -406,12 +466,20 @@ void MapLoader::loadMap(const std::string &path, render_util::Map &map)
   
   ImageGreyScale::Ptr type_map;
 
+
   {
     render_util::ElevationMap elevation_map(height_map);
 
-    map.terrain->build(&elevation_map);
+    if (load_terrain)
+    {
+      assert(map.terrain);
+      map.terrain->build(&elevation_map);
+    }
 
     type_map = generateTypeMap(elevation_map);
+
+    if (elevation_map_out)
+      *elevation_map_out = elevation_map;
   }
 
 //   saveImageToFile("../type_map.tga", type_map.get());
@@ -423,6 +491,8 @@ void MapLoader::loadMap(const std::string &path, render_util::Map &map)
   ImageGreyScale::ConstPtr water_map = createWaterMapSimple(type_map);
 
   loadTextures(type_map, *map.textures);
+
+  createWaterNormalMaps(map.water_animation.get(), map.textures.get());
 
   map.textures->setTypeMap(type_map);
   map.textures->setTexture(TEXUNIT_WATER_MAP_SIMPLE, water_map);

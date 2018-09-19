@@ -19,6 +19,7 @@
 #include <render_util/viewer.h>
 #include <render_util/render_util.h>
 #include <render_util/image_util.h>
+#include <render_util/image_loader.h>
 #include <util.h>
 #include <FastNoise.h>
 
@@ -26,6 +27,8 @@
 
 using namespace std;
 using namespace glm;
+using namespace render_util;
+
 
 namespace render_util
 {
@@ -43,21 +46,38 @@ namespace render_util
 }
 
 
-int main()
+int main(int argc, char **argv)
 {
-  FastNoise noise_generator;
+  Image<float>::Ptr heightmap;
 
-  auto heightmap = render_util::image::create<float>(0, ivec2(2048));
-
-  for (int y = 0; y < heightmap->w(); y++)
+  if (argc == 2)
   {
-    for (int x = 0; x < heightmap->h(); x++)
-    {
+    auto hm = loadImageFromFile<ImageGreyScale>(argv[1]);
+    assert(hm);
+    auto hm_float = heightmap = image::convert<float>(hm);
 
-      float height = noise_generator.GetValueFractal(x * 1, y * 1) * 5000;
-      height += (noise_generator.GetValueFractal(x * 10, y * 10) + 10) * 300;
-//       float height = 1000;
-      heightmap->at(x,y) = height;
+    heightmap = render_util::image::create<float>(0, ivec2(2048));
+
+    image::blit(hm_float.get(), heightmap.get(), glm::ivec2(0));
+
+    heightmap->forEach( [] (float &pixel) { pixel *= 10; } );
+  }
+  else
+  {
+    FastNoise noise_generator;
+
+    heightmap = render_util::image::create<float>(0, ivec2(2048));
+
+    for (int y = 0; y < heightmap->w(); y++)
+    {
+      for (int x = 0; x < heightmap->h(); x++)
+      {
+
+        float height = noise_generator.GetValueFractal(x * 1, y * 1) * 5000;
+        height += (noise_generator.GetValueFractal(x * 10, y * 10) + 10) * 300;
+  //       float height = 1000;
+        heightmap->at(x,y) = height;
+      }
     }
   }
 

@@ -25,11 +25,14 @@
 
 namespace render_util
 {
-    class MapLoaderBase
-    {
-    public:
-    virtual void loadMap(const std::string &path, render_util::Map &map) = 0;
-    };
+  class MapLoaderBase
+  {
+  public:
+    virtual ~MapLoaderBase() {}
+    virtual void loadMap(render_util::Map &map,
+                         bool load_terrain = true,
+                         render_util::ElevationMap *elevation_map = nullptr) = 0;
+  };
 }
 
 #endif

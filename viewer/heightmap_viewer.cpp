@@ -72,60 +72,15 @@ render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager
 }
 
 
-struct Terrain : public render_util::TerrainRenderer
-{
-  Terrain() {}
-  Terrain(const render_util::TerrainRenderer &other)
-  {
-    *static_cast<render_util::TerrainRenderer*>(this) = other;
-  }
-
-  void draw(const Camera &camera)
-  {
-    gl::FrontFace(GL_CCW);
-    gl::Enable(GL_DEPTH_TEST);
-    gl::DepthMask(GL_TRUE);
-    gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    m_terrain->update(camera);
-
-    gl::UseProgram(m_program->getId());
-
-    m_terrain->draw(m_program);
-
-    gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    CHECK_GL_ERROR();
-  }
-};
-
-
-Terrain createTerrain(render_util::TextureManager &tex_mgr,
-                      bool use_lod,
-                      const render_util::ElevationMap &elevation_map,
-                      glm::vec3 color)
-{
-  Terrain t = render_util::createTerrainRenderer(tex_mgr, use_lod,
-                                                 shader_path, "terrain_simple");
-  t.m_terrain->build(&elevation_map);
-  t.m_program->setUniform("terrain_color", color);
-  return t;
-}
-
-
 } // namespace
 
 
 class HeightMapViewerScene : public Scene
 {
 	render_util::Image<float>::ConstPtr m_height_map;
-  render_util::TextureManager texture_manager = render_util::TextureManager(0);
   render_util::ShaderProgramPtr m_sky_program;
   render_util::TexturePtr m_curvature_map;
   render_util::TexturePtr m_atmosphere_map;
-
-  Terrain m_terrain;
-  Terrain m_terrain_cdlod;
 
 
 public:
@@ -137,12 +92,12 @@ public:
   void setup() override;
   void render(float frame_delta) override;
   void updateUniforms(render_util::ShaderProgramPtr program) override;
-
-  render_util::TextureManager &getTextureManager() { return texture_manager; }
 };
 
 void HeightMapViewerScene::setup()
 {
+  cout<<"HeightMapViewerScene::setup()"<<endl;
+
   assert(m_height_map);
 
   getTextureManager().setActive(true);
@@ -158,9 +113,11 @@ void HeightMapViewerScene::setup()
 
   render_util::ElevationMap elevation_map(m_height_map);
 
+  cout<<"calling createTerrain()"<<endl;
 
-  m_terrain = createTerrain(getTextureManager(), false, elevation_map, glm::vec3(1,0,0));
-  m_terrain_cdlod = createTerrain(getTextureManager(), true, elevation_map, glm::vec3(0,1,0));
+  createTerrain(elevation_map);
+
+  cout<<"createTerrain() returned"<<endl;
 
   camera.z = 10000;
   sun_azimuth = 20;
@@ -192,12 +149,7 @@ void HeightMapViewerScene::render(float frame_delta)
   gl::UseProgram(m_sky_program->getId());
   updateUniforms(m_sky_program);
   render_util::drawSkyBox();
-
-  updateUniforms(m_terrain.m_program);
-  m_terrain.draw(camera);
-
-  updateUniforms(m_terrain_cdlod.m_program);
-  m_terrain_cdlod.draw(camera);
+  drawTerrain();
 }
 
 void render_util::viewer::runHeightMapViewer(render_util::Image<float>::ConstPtr height_map)

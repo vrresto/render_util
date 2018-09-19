@@ -45,6 +45,7 @@ namespace render_util
     int getCurrentStep();
     float getFrameDelta();
     void update();
+    bool isEmpty();
   };
 
 }

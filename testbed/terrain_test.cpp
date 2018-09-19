@@ -32,7 +32,7 @@ namespace render_util
 
   const std::string &getDataPath()
   {
-    static string path = "../../ge_data";
+    static string path = "ge_data";
     return path;
   }
 }
@@ -40,5 +40,5 @@ namespace render_util
 int main()
 {
   auto loader = make_shared<MapLoader>();
-  render_util::viewer::runViewer(loader, "");
+  render_util::viewer::runViewer(loader);
 }

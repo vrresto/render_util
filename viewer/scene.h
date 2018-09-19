@@ -22,19 +22,69 @@
 #include "camera.h"
 
 #include <render_util/shader.h>
+#include <render_util/terrain_util.h>
+#include <gl_wrapper/gl_functions.h>
 
 
 namespace render_util::viewer
 {
 
+using namespace gl_wrapper::gl_functions;
+
+struct Terrain : public render_util::TerrainRenderer
+{
+  Terrain() {}
+  Terrain(const render_util::TerrainRenderer &other)
+  {
+    *static_cast<render_util::TerrainRenderer*>(this) = other;
+  }
+
+  void draw(const Camera &camera)
+  {
+    gl::FrontFace(GL_CCW);
+    gl::Enable(GL_DEPTH_TEST);
+    gl::DepthMask(GL_TRUE);
+    gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    m_terrain->setDrawDistance(0);
+    m_terrain->update(camera);
+
+    gl::UseProgram(m_program->getId());
+
+    m_terrain->draw(m_program);
+
+    gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    CHECK_GL_ERROR();
+  }
+};
+
+
+inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
+                      bool use_lod,
+                      const render_util::ElevationMap &elevation_map,
+                      glm::vec3 color)
+{
+  Terrain t = render_util::createTerrainRenderer(tex_mgr, use_lod,
+                                                 RENDER_UTIL_SHADER_DIR, "terrain_simple");
+  t.m_terrain->build(&elevation_map);
+  t.m_program->setUniform("terrain_color", color);
+  return t;
+}
+
 
 class Scene
 {
+  render_util::TextureManager texture_manager = render_util::TextureManager(0);
+
 public:
   Camera camera;
   float sun_azimuth = 90.0;
   bool toggle_lod_morph = false;
   bool pause_animations = false;
+
+  Terrain m_terrain;
+  Terrain m_terrain_cdlod;
 
   glm::vec3 getSunDir()
   {
@@ -42,6 +92,34 @@ public:
 
     return glm::vec3(0, sun_dir_h.x, sun_dir_h.y);
   }
+
+  void createTerrain(const render_util::ElevationMap &elevation_map)
+  {
+    m_terrain =
+      render_util::viewer::createTerrain(getTextureManager(), false,
+                                         elevation_map, glm::vec3(1,0,0));
+    m_terrain_cdlod =
+      render_util::viewer::createTerrain(getTextureManager(), true,
+                                         elevation_map, glm::vec3(0,1,0));
+  }
+
+
+//   void updateTerrain()
+//   {
+//     m_terrain.update(camera);
+//     m_terrain_cdlod.update(camera);
+//   }
+
+  void drawTerrain()
+  {
+    updateUniforms(m_terrain.m_program);
+    m_terrain.draw(camera);
+
+    updateUniforms(m_terrain_cdlod.m_program);
+    m_terrain_cdlod.draw(camera);
+  }
+
+  render_util::TextureManager &getTextureManager() { return texture_manager; }
 
   virtual void updateUniforms(render_util::ShaderProgramPtr program)
   {

@@ -24,7 +24,9 @@
 class MapLoader : public render_util::MapLoaderBase
 {
 public:
-  void loadMap(const std::string &path, render_util::Map &map) override;
+  void loadMap(render_util::Map &map,
+               bool load_terrain,
+               render_util::ElevationMap *elevation_map) override;
 };
 
 #endif

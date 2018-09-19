@@ -28,7 +28,7 @@
 
 namespace render_util::viewer
 {
-  void runViewer(std::shared_ptr<MapLoaderBase> map_loader, const std::string &map_path);
+  void runViewer(std::shared_ptr<MapLoaderBase> map_loader);
 
   void runHeightMapViewer(Image<float>::ConstPtr height_map);
 }

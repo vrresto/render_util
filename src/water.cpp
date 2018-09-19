@@ -136,5 +136,10 @@ float WaterAnimation::getFrameDelta()
   return p->getFrameDelta();
 }
 
+bool WaterAnimation::isEmpty()
+{
+  return !p->num_animation_steps;
+}
+
 
 } // namespace render_util

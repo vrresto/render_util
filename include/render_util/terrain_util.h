@@ -33,6 +33,8 @@ struct TerrainRenderer
 {
   ShaderProgramPtr m_program;
   std::shared_ptr<TerrainBase> m_terrain;
+
+  void draw() { m_terrain->draw(m_program); }
 };
 
 TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr,
