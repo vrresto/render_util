@@ -45,6 +45,7 @@ uniform mat4 world2ViewMatrix;
 uniform mat4 view2WorldMatrix;
 uniform bool toggle_lod_morph;
 uniform vec2 cdlod_grid_size;
+uniform float cdlod_min_dist;
 
 #if !DRAW_INSTANCED
 uniform vec2 cdlod_node_pos;
@@ -55,6 +56,7 @@ uniform float cdlod_lod_distance;
 // uniform ivec2 typeMapSize;
 uniform vec2 map_size;
 uniform vec2 height_map_size_m;
+uniform vec2 height_map_size_px;
 
 varying vec3 passObjectPosFlat;
 varying vec3 passObjectPos;
@@ -113,6 +115,8 @@ void main(void)
 
   float lod_morph = smoothstep(cdlod_lod_distance * 0.7, cdlod_lod_distance, distance(pos, vec3(cameraPosWorld.xy, z_dist)));
 
+  float approx_dist = distance(pos, vec3(cameraPosWorld.xy, z_dist));
+
   pos.xy = morphVertex(grid_pos, pos.xy, lod_morph);
 
 #if DRAW_INSTANCED
@@ -126,7 +130,13 @@ void main(void)
   vec2 height_map_coord = (pos.xy + vec2(0, 200)) / height_map_size_m;
   height_map_coord.y = 1.0 - height_map_coord.y;
 
-  pos.z = texture2D(sampler_terrain_cdlod_height_map, height_map_coord).x;
+  ivec2 height_map_coord_px = ivec2(height_map_size_px * height_map_coord);
+
+  float hm_smoothed = texture2D(sampler_terrain_cdlod_height_map, height_map_coord).x;
+  float hm_raw = texelFetch(sampler_terrain_cdlod_height_map, height_map_coord_px, 0).x;
+
+  pos.z = mix(hm_raw, hm_smoothed,
+    smoothstep(cdlod_min_dist / 4.0, cdlod_min_dist / 2.0, approx_dist));
 
   pos.z += terrain_height_offset;
 
