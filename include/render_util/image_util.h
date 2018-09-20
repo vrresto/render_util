@@ -25,6 +25,14 @@ namespace render_util::image
 {
 
 
+enum CornerType
+{
+  TOP_LEFT,
+  TOP_RIGHT,
+  BOTTOM_LEFT,
+  BOTTOM_RIGHT
+};
+
 
 RGBA getAverageColor(const ImageRGBA *image);
 
@@ -225,6 +233,46 @@ blit(const T *src, T *dst, glm::ivec2 pos)
     }
   }
 }
+
+
+template <typename T>
+std::shared_ptr<typename T::element_type>
+extend(T src,
+       const glm::ivec2 &new_size,
+       const typename T::element_type::PixelType &color,
+       CornerType corner)
+{
+  using ImageType = typename T::element_type;
+
+  assert(new_size.x > src->w());
+  assert(new_size.y > src->h());
+
+  auto dst = std::make_shared<ImageType>(new_size);
+  fill<ImageType>(dst, color);
+
+  glm::ivec2 blit_coord(0);
+
+  switch (corner)
+  {
+    case TOP_LEFT:
+      blit_coord.y = dst->h() - src->h();
+      break;
+    case TOP_RIGHT:
+      blit_coord.x = dst->w() - src->w();
+      blit_coord.y = dst->h() - src->h();
+      break;
+    case BOTTOM_LEFT:
+      blit_coord.y = dst->h() - src->h();
+      break;
+    case BOTTOM_RIGHT:
+      break;
+  }
+
+  blit(src.get(), dst.get(), blit_coord);
+
+  return dst;
+}
+
 
 template <typename T>
 typename T::Ptr

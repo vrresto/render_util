@@ -362,7 +362,7 @@ TexturePtr createFloatTexture1D(const float *data, size_t size, int num_componen
   return texture;
 }
 
-TexturePtr createFloatTexture(const float *data, int w, int h, int num_components)
+TexturePtr createFloatTexture(const float *data, int w, int h, int num_components, bool mipmaps)
 {
   CHECK_GL_ERROR();
 
@@ -408,6 +408,9 @@ TexturePtr createFloatTexture(const float *data, int w, int h, int num_component
                 format,
                 GL_FLOAT,
                 data);
+
+  if (mipmaps)
+    gl::GenerateMipmap(texture->getTarget());
 
   CHECK_GL_ERROR();
 

@@ -94,6 +94,23 @@ struct Pixel
   const T &operator[] (size_t index) const { return components[index]; }
 };
 
+template <typename T>
+struct Pixel<T, 1>
+{
+  enum { NUM_COMPONENTS = 1 };
+
+  T components[NUM_COMPONENTS];
+
+  Pixel(T value)
+  {
+    components[0] = value;
+  }
+
+  T &operator[] (size_t index) { return components[index]; }
+  const T &operator[] (size_t index) const { return components[index]; }
+};
+
+
 typedef Pixel<unsigned char, 3>  RGB;
 typedef Pixel<unsigned char, 4>  RGBA;
 

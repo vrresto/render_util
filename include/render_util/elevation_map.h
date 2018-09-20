@@ -79,6 +79,13 @@ namespace render_util
     int getHeight() const { return size.y; }
     glm::ivec2 getSize() const { return size; }
     const float *getData() const { return data.data(); }
+
+    Image<float>::Ptr toImage() const
+    {
+      auto data_size = data.size() * sizeof(float);
+      return std::make_shared<Image<float>>(size.x, size.y, data_size,
+                                            reinterpret_cast<const unsigned char*>(data.data()));
+    }
   };
 
 

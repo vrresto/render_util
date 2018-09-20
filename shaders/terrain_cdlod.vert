@@ -54,6 +54,7 @@ uniform float cdlod_lod_distance;
 
 // uniform ivec2 typeMapSize;
 uniform vec2 map_size;
+uniform vec2 height_map_size_m;
 
 varying vec3 passObjectPosFlat;
 varying vec3 passObjectPos;
@@ -122,7 +123,7 @@ void main(void)
   pos.xy += cdlod_node_pos;
 #endif
 
-  vec2 height_map_coord = pos.xy / map_size;
+  vec2 height_map_coord = (pos.xy + vec2(0, 200)) / height_map_size_m;
   height_map_coord.y = 1.0 - height_map_coord.y;
 
   pos.z = texture2D(sampler_terrain_cdlod_height_map, height_map_coord).x;

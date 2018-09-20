@@ -28,6 +28,7 @@
 #include <render_util/elevation_map.h>
 #include <render_util/texture_util.h>
 #include <render_util/image.h>
+#include <render_util/image_util.h>
 #include <render_util/water_map.h>
 #include <render_util/render_util.h>
 #include <render_util/gl_context.h>
@@ -37,6 +38,7 @@
 #include <vector>
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/round.hpp>
 
 #include <GL/gl.h>
 #include <gl_wrapper/gl_functions.h>
@@ -359,6 +361,8 @@ struct TerrainCDLOD::Private
   TexturePtr height_map_texture;
   TexturePtr normal_map_texture;
 
+  vec2 height_map_size_m = vec2(0);
+
   GLuint test_buffer_id[NUM_TEST_BUFFERS] = { 0 };
 
   Private();
@@ -589,20 +593,27 @@ void TerrainCDLOD::build(const ElevationMap *map)
 
   assert(!p->height_map_texture);
   cout<<"TerrainCDLOD: creating height map texture ..."<<endl;
-  p->height_map_texture = createFloatTexture(map->getData(), map->getWidth(), map->getHeight(), 1);
+
+  auto hm_image = map->toImage();
+  auto new_size = glm::ceilPowerOfTwo(hm_image->size());
+
+  if (new_size != hm_image->size())
+    hm_image = image::extend(hm_image, new_size, 0.f, image::TOP_LEFT);
+
+  p->height_map_texture = createFloatTexture(hm_image, true);
+
   assert(p->height_map_texture);
   cout<<"TerrainCDLOD: creating height map texture done."<<endl;
   p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP, p->height_map_texture);
   CHECK_GL_ERROR();
 
-  {
-    TemporaryTextureBinding tmp(p->height_map_texture);
-    gl::GenerateMipmap(p->height_map_texture->getTarget());
-  }
+  p->height_map_size_m = hm_image->size() * 200;
 
   TextureParameters<int> params;
+
   params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  params.set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  params.set(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
   params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
   params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
   params.apply(p->height_map_texture);
@@ -707,6 +718,7 @@ void TerrainCDLOD::draw()
 
 #if DRAW_INSTANCED
   program->setUniform("cdlod_grid_size", vec2(MESH_GRID_SIZE));
+  program->setUniform("height_map_size_m", p->height_map_size_m);
   CHECK_GL_ERROR();
   program->assertUniformsAreSet();
 
@@ -744,6 +756,7 @@ void TerrainCDLOD::draw()
   int draw_count = 0;
 
   program->setUniform("cdlod_grid_size", vec2(MESH_GRID_SIZE));
+  program->setUniform("height_map_size_m", p->height_map_size_m);
 
   for (int i = MAX_LOD; i >= 0; i--)
   {

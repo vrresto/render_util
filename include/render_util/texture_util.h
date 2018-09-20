@@ -25,6 +25,7 @@
 #include <render_util/render_util.h>
 
 #include <vector>
+#include <type_traits>
 
 namespace render_util
 {
@@ -36,7 +37,7 @@ namespace render_util
 
   TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_pixel, bool mipmaps);
   TexturePtr createFloatTexture1D(const float *data, size_t size, int num_components);
-  TexturePtr createFloatTexture(const float *data, int w, int h, int num_components);
+  TexturePtr createFloatTexture(const float *data, int w, int h, int num_components, bool mipmaps = false);
   TexturePtr createUnsignedIntTexture(const unsigned int *data, int w, int h);
 //   unsigned int createTextureArray(const std::vector<render_util::ImageRGBA::ConstPtr> &textures, int mipmap_level);
   TexturePtr createTextureArray(const std::vector<const unsigned char*> &textures,
@@ -45,6 +46,8 @@ namespace render_util
   template <typename T>
   TexturePtr createTextureArray(const std::vector<typename T::ConstPtr> &textures, int mipmap_levels = 0)
   {
+    static_assert(std::is_same<typename T::ComponentType, unsigned char>::value);
+
     assert(!textures.empty());
 
     assert(textures[0]);
@@ -76,12 +79,25 @@ namespace render_util
   template <typename T>
   TexturePtr createTexture(typename T::ConstPtr image, bool mipmaps = true)
   {
+    static_assert(std::is_same<typename T::ComponentType, unsigned char>::value);
     return createTexture(image->data(),
                          image->w(),
                          image->h(),
                          T::BYTES_PER_PIXEL,
                          mipmaps);
   }
+
+  template <typename T>
+  TexturePtr createFloatTexture(T image, bool mipmaps)
+  {
+    static_assert(std::is_same<typename T::element_type::ComponentType, float>::value);
+    return createFloatTexture(reinterpret_cast<const float*>(image->getData()),
+                              image->w(),
+                              image->h(),
+                              T::element_type::NUM_COMPONENTS,
+                              mipmaps);
+  }
+
 
   TexturePtr createAmosphereThicknessTexture(TextureManager &texture_manager, std::string resource_path);
   TexturePtr createCurvatureTexture(TextureManager &texture_manager, std::string resource_path);
