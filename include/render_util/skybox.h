@@ -27,7 +27,7 @@ namespace render_util
     const int x = 0;
     const int y = 0;
     const int z = 0;
-    const int size = 100000;
+    const int size = 10000;
 
     // top
     gl::Begin(GL_POLYGON);
