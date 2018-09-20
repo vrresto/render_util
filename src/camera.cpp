@@ -63,7 +63,6 @@ struct Plane
     }
     return true;
   }
-
 };
 
 
@@ -75,8 +74,6 @@ namespace render_util
 
   struct Camera::Private
   {
-    const float z_near = 1.2;
-
     mat4 world_to_view;
     mat4 view_to_world;
     mat4 projection_far;
@@ -84,13 +81,52 @@ namespace render_util
     vec3 pos;
     ivec2 viewport_size;
 
+    float m_z_near = 1.2;
     float m_z_far = 2300000;
+    float m_fov = 90;
 
     std::vector<Plane> frustum_planes;
 
-    void calcFrustumPlanes(float fov);
+    Private();
+    void calcFrustumPlanes();
+    void refreshProjection();
     vec3 view2World(vec3 p) const;
   };
+
+
+  Camera::Private::Private()
+  {
+    refreshProjection();
+  }
+
+
+  void Camera::Private::refreshProjection()
+  {
+//     const float z_near = 1.2f;
+//     const float z_far = 44800.2f;
+
+//     const float z_far = 44800.2f;
+//     const float z_far = 300000;
+//     const float z_far = 2300000;
+
+
+//     const float z_near = 100.2f;
+//     const float z_far = 448000.2f;
+
+  //   const float z_far = 48000.2f;
+//     const float z_near = 100.2f;
+//     const float z_far = 3500.0 * 1000.0;
+//     const float z_far = 35000.0 * 1000.0;
+
+    const float aspect = (float)viewport_size.x / (float)viewport_size.y;
+
+    const float right = m_z_near * tan(radians(m_fov)/2.f);
+    const float top = right / aspect;
+
+    projection_far = frustum(-right, right, -top, top, m_z_near, m_z_far);
+
+    calcFrustumPlanes();
+  }
 
 
   vec3 Camera::Private::view2World(vec3 p) const
@@ -100,21 +136,21 @@ namespace render_util
   }
 
 
-  void Camera::Private::calcFrustumPlanes(float fov)
+  void Camera::Private::calcFrustumPlanes()
   {
     frustum_planes.clear();
 
     const float aspect = (float)viewport_size.x / (float)viewport_size.y;
 
-    float right = z_near * tan(radians(fov)/2.f);
+    float right = m_z_near * tan(radians(m_fov)/2.f);
     float left = -right;
     float top = right / aspect;
     float bottom = -top;
 
-    vec3 top_left = view2World(vec3(left, top, z_near));
-    vec3 bottom_left = view2World(vec3(left, bottom, z_near));
-    vec3 top_right = view2World(vec3(right, top, z_near));
-    vec3 bottom_right = view2World(vec3(right, bottom, z_near));
+    vec3 top_left = view2World(vec3(left, top, m_z_near));
+    vec3 bottom_left = view2World(vec3(left, bottom, m_z_near));
+    vec3 top_right = view2World(vec3(right, top, m_z_near));
+    vec3 bottom_right = view2World(vec3(right, bottom, m_z_near));
 
     Plane left_plane(top_left, bottom_left, pos, true);
     Plane right_plane(top_right, bottom_right, pos, false);
@@ -130,54 +166,42 @@ namespace render_util
 
   Camera::Camera() : p(new Private) {}
 
+
   const mat4 &Camera::getProjectionMatrixFar() const { return p->projection_far; }
   const mat4 &Camera::getWorld2ViewMatrix() const { return p->world_to_view; }
   const mat4 &Camera::getView2WorldMatrix() const { return p->view_to_world; }
   const vec3 &Camera::getPos() const { return p->pos; }
   const ivec2 &Camera::getViewportSize() const { return p->viewport_size; }
 
-  void Camera::setZFar(float value)
-  {
-    p->m_z_far = value;
-  }
 
   void Camera::setViewportSize(int width, int height) {
     p->viewport_size.x = width;
     p->viewport_size.y = height;
+    p->refreshProjection();
   }
+
 
   void Camera::setFov(float fov)
   {
-//     const float z_near = 1.2f;
-//     const float z_far = 44800.2f;
-    
-//     const float z_far = 44800.2f;
-//     const float z_far = 300000;
-//     const float z_far = 2300000;
-    
-    const float z_far = p->m_z_far;
-
-    
-//     const float z_near = 100.2f;
-//     const float z_far = 448000.2f;
-  
-  //   const float z_far = 48000.2f;
-//     const float z_near = 100.2f;
-//     const float z_far = 3500.0 * 1000.0;
-//     const float z_far = 35000.0 * 1000.0;
-    
-    const float aspect = (float)p->viewport_size.x / (float)p->viewport_size.y;
-
-    const float right = p->z_near * tan(radians(fov)/2.f);
-    const float top = right / aspect;
-
-    p->projection_far = frustum(-right, right, -top, top, p->z_near, z_far);
-    
-  //   cout<<"fov: "<<arg<0>()<<" "<<arg<1>()<<" "<<arg<2>()<<endl;
-  //   cout<<"right: "<<right<<"top: "<<top<<endl;
-
-    p->calcFrustumPlanes(fov);
+    p->m_fov = fov;
+    p->refreshProjection();
   }
+
+
+  float Camera::getFov() const
+  {
+    return p->m_fov;
+  }
+
+
+  void Camera::setProjection(float fov, float z_near, float z_far)
+  {
+    p->m_fov = fov;
+    p->m_z_near = z_near;
+    p->m_z_far = z_far;
+    p->refreshProjection();
+  }
+
 
   void Camera::setTransform(float x, float y, float z, float yaw, float pitch, float roll)
   {
@@ -206,8 +230,6 @@ namespace render_util
       world_to_view_trans;
 
     p->view_to_world = affineInverse(p->world_to_view);
-
-
   }
 
 

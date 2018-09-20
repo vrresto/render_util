@@ -121,10 +121,10 @@ namespace
       glfwSetWindowShouldClose(window, true);
     }
     else if (key == GLFW_KEY_F2 && action == GLFW_PRESS) {
-      g_scene->camera.fov += 10;
+      g_scene->camera.setFov(g_scene->camera.getFov() + 10);
     }
     else if (key == GLFW_KEY_F3 && action == GLFW_PRESS) {
-      g_scene->camera.fov -= 10;
+      g_scene->camera.setFov(g_scene->camera.getFov() - 10);
     }
     else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
       g_scene->camera.x = 0;
@@ -341,7 +341,6 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
     gl::Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     g_scene->camera.setViewportSize(width, height);
-    g_scene->camera.applyFov();
 
     g_scene->render((float)frame_delta.count() / 1000.0);
 

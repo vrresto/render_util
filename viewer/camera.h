@@ -35,7 +35,6 @@ struct Camera : public render_util::Camera
   float z = 0;
   float yaw = 0;
   float pitch = 0;
-  float fov = 60;
 
   Camera() {
     updateTransform();
@@ -78,9 +77,6 @@ struct Camera : public render_util::Camera
     setTransform(x, y, z, yaw, pitch, 0);
   }
 
-  void applyFov() {
-    setFov(fov);
-  }
 };
 
 

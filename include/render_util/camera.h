@@ -37,12 +37,13 @@ namespace render_util
     const glm::mat4 &getProjectionMatrixFar() const;
     const glm::vec3 &getPos() const;
     const glm::ivec2 &getViewportSize() const;
+    bool cull(const Box &box) const;
+    float getFov() const;
 
     void setTransform(float x, float y, float z, float yaw, float pitch, float roll);
     void setViewportSize(int width, int height);
     void setFov(float fov);
-    void setZFar(float value);
-    bool cull(const Box &box) const;
+    void setProjection(float fov, float z_near, float z_far);
   };
 
 }
