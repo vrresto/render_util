@@ -40,14 +40,27 @@ struct Plane
   vec3 point;
   vec3 normal;
 
-  Plane(const vec3 &p1, const vec3 &p2, const vec3 &p3, bool flip)
+  Plane(const vec3 &p1, const vec3 &p2, const vec3 &p3, bool flip_)
   {
     vec3 points[3] { p1, p2, p3 };
     point = p3;
     normal = render_util::calcNormal(points);
-    if (flip)
-      normal *= -1;
+    if (flip_)
+      flip();
   }
+
+
+  void flip()
+  {
+    normal *= -1;
+  }
+
+
+  void move(float dist)
+  {
+    point += normal * dist;
+  }
+
 
   float distance(const vec3 &pos)
   {
@@ -88,6 +101,7 @@ namespace render_util
     std::vector<Plane> frustum_planes;
 
     Private();
+    Private(const Private &other);
     void calcFrustumPlanes();
     void refreshProjection();
     vec3 view2World(vec3 p) const;
@@ -99,6 +113,10 @@ namespace render_util
     refreshProjection();
   }
 
+  Camera::Private::Private(const Private &other)
+  {
+    *this = other;
+  }
 
   void Camera::Private::refreshProjection()
   {
@@ -157,14 +175,24 @@ namespace render_util
     Plane top_plane(top_left, top_right, pos, false);
     Plane bottom_plane(bottom_left, bottom_right, pos, true);
 
+    Plane near_plane(bottom_left, bottom_right, top_right, true);
+
+    Plane far_plane = near_plane;
+    far_plane.move(m_z_far - m_z_near);
+    far_plane.flip();
+
     frustum_planes.push_back(left_plane);
     frustum_planes.push_back(right_plane);
     frustum_planes.push_back(top_plane);
     frustum_planes.push_back(bottom_plane);
+    frustum_planes.push_back(near_plane);
+    frustum_planes.push_back(far_plane);
   }
 
 
   Camera::Camera() : p(new Private) {}
+
+  Camera::Camera(const Camera &other) : p(new Private(*other.p)) {}
 
 
   const mat4 &Camera::getProjectionMatrixFar() const { return p->projection_far; }
@@ -191,6 +219,18 @@ namespace render_util
   float Camera::getFov() const
   {
     return p->m_fov;
+  }
+
+
+  float Camera::getZNear() const
+  {
+    return p->m_z_near;
+  }
+
+
+  float Camera::getZFar() const
+  {
+    return p->m_z_far;
   }
 
 

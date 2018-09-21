@@ -32,6 +32,7 @@ namespace render_util
 
   public:
     Camera();
+    Camera(const Camera &other);
     const glm::mat4 &getView2WorldMatrix() const;
     const glm::mat4 &getWorld2ViewMatrix() const;
     const glm::mat4 &getProjectionMatrixFar() const;
@@ -39,6 +40,8 @@ namespace render_util
     const glm::ivec2 &getViewportSize() const;
     bool cull(const Box &box) const;
     float getFov() const;
+    float getZNear() const;
+    float getZFar() const;
 
     void setTransform(float x, float y, float z, float yaw, float pitch, float roll);
     void setViewportSize(int width, int height);
