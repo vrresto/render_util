@@ -244,11 +244,30 @@ void ShaderProgram::create()
   for (auto shader : shader_objects)
   {
     gl::AttachShader(id, shader);
+
+    gl::Finish();
+    GLenum error = gl::GetError();
+    if (error != GL_NO_ERROR)
+    {
+      cerr<<"glAttachShader() failed for program "<<name<<endl;
+      cerr<<"gl error: "<<gl_wrapper::getGLErrorString(error)<<endl;
+      abort();
+    }
   }
 
   for (auto it : attribute_locations)
   {
     gl::BindAttribLocation(id, it.first, it.second.c_str());
+
+    gl::Finish();
+    GLenum error = gl::GetError();
+    if (error != GL_NO_ERROR)
+    {
+      cerr<<"gl::BindAttribLocation() failed for program "<<name<<endl;
+      cerr<<"index: "<<it.first<<", name: "<<it.second<<endl;
+      cerr<<"gl error: "<<gl_wrapper::getGLErrorString(error)<<endl;
+      abort();
+    }
   }
 
   link();
