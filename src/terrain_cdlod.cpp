@@ -596,8 +596,6 @@ void TerrainCDLOD::build(const ElevationMap *map)
   }
   CHECK_GL_ERROR();
 
-  p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP, p->normal_map_texture);
-
   cout<<"TerrainCDLOD: creating nodes ..."<<endl;
   p->root_node = p->createNode(*map, p->root_node_pos, MAX_LOD);
   cout<<"TerrainCDLOD: creating nodes done."<<endl;
@@ -615,7 +613,6 @@ void TerrainCDLOD::build(const ElevationMap *map)
 
   assert(p->height_map_texture);
   cout<<"TerrainCDLOD: creating height map texture done."<<endl;
-  p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP, p->height_map_texture);
   CHECK_GL_ERROR();
 
   p->height_map_size_px = hm_image->size();
@@ -724,6 +721,9 @@ void TerrainCDLOD::draw()
 {
   auto program = getCurrentGLContext()->getCurrentProgram();
   assert(program);
+
+  p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP, p->normal_map_texture);
+  p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP, p->height_map_texture);
 
 #if DRAW_INSTANCED
   p->setUniforms(program);
