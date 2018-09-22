@@ -140,7 +140,6 @@ namespace render_util
 
     const float right = m_z_near * tan(radians(m_fov)/2.f);
     const float top = right / aspect;
-
     projection_far = frustum(-right, right, -top, top, m_z_near, m_z_far);
 
     calcFrustumPlanes();
