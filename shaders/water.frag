@@ -55,6 +55,8 @@ void sampleTypeMap(sampler2D sampler,
 vec2 rotate(vec2 v, float a);
 float perlin(vec2 p, float dim);
 
+uniform bool enable_waves = false;
+
 uniform sampler2DArray sampler_beach;
 uniform sampler2DArray sampler_foam_mask;
 uniform sampler2DArray sampler_water_normal_map;
@@ -294,7 +296,7 @@ vec3 getWaterNormal(float dist, vec2 coord, float waterDepth)
 {
   vec3 normal = vec3(0,0,1);
 #if ENABLE_WAVES
-  if (dist < 30000)
+  if (enable_waves && dist < 30000)
   {
     const float bigWaveStrength = 0.01;
     const float mediumWaveStrength = 0.2;
@@ -302,7 +304,6 @@ vec3 getWaterNormal(float dist, vec2 coord, float waterDepth)
 
     normal = blendNormal(normal, sampleWaterNormalMap(2, coord), dist, 30000, mediumWaveStrength);
     normal = blendNormal(normal, sampleWaterNormalMap(12, coord), dist, 15000, smallWaveStrength);
-
 
     normal = normalize(normal);
 

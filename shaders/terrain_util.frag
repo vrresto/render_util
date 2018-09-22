@@ -49,6 +49,9 @@ vec4 applyWater(vec4 color,
 const float meters_per_tile = 1600;
 const float near_distance = 80000;
 
+uniform bool draw_near_forest = false;
+uniform bool enable_terrain_noise = false;
+
 uniform sampler2D sampler_terrain_cdlod_normal_map;
 uniform sampler2DArray sampler_terrain;
 uniform sampler1D sampler_terrain_scale_map;
@@ -57,7 +60,6 @@ uniform sampler2D sampler_terrain_noise;
 uniform sampler2D sampler_terrain_far;
 uniform sampler2D sampler_shallow_water;
 uniform sampler2DArray sampler_beach;
-
 
 uniform ivec2 typeMapSize;
 uniform vec2 map_size;
@@ -190,7 +192,10 @@ vec4 sampleTerrainTextures(vec2 pos)
 vec4 applyForest(vec4 color, vec2 pos, vec3 view_dir, float dist)
 {
   vec4 forest_far_simple = getForestFarColorSimple(pos.xy);
-  
+
+  if (!draw_near_forest)
+    return mix(color, forest_far_simple, forest_far_simple.a * 0.8);
+
 //   forest_far_simple.xyz = vec3(1,0,0);
 #if 1
   float lod = textureQueryLOD(sampler_terrain_far, pos.xy / map_size).x;
@@ -380,7 +385,8 @@ float bank_amount = 0;
 #endif
 
 #if ENABLE_TERRAIN_NOISE
-  color = applyTerrainNoise(color, mapCoords, dist);
+  if (enable_terrain_noise)
+    color = applyTerrainNoise(color, mapCoords, dist);
 #endif
 
 #if ENABLE_FAR_TEXTURE
