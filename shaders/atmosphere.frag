@@ -28,6 +28,8 @@
 
 #version 130
 
+#define ENABLE_FOG 1
+
 float getMaxAtmosphereThickness(vec2 cameraPos, vec2 viewDir);
 float getMaxAtmosphereThickness(vec3 cameraPos, vec3 viewDir);
 
@@ -459,7 +461,10 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
 
 void apply_fog()
 {
-//   return;
+
+#if !ENABLE_FOG
+  return;
+#endif
 
   debugColor = vec3(0);
 
