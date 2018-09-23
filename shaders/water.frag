@@ -39,8 +39,7 @@
 const float water_map_chunk_size_m = 1600 * 4;
 const vec2 water_map_table_shift = vec2(0, 200);
 const float SPEC_HARDNESS = 256.0;
-// const float sea_roughness = 0.5;
-const float sea_roughness = 0.8;
+const float sea_roughness = 0.5;
 const float PI = 3.14159265359;
 const float ior_water = 1.333;
 const float schlick_r0_water = pow(ior_water - 1, 2) / pow(ior_water + 1, 2);
@@ -98,7 +97,7 @@ float fresnelSchlick(vec3 incoming, vec3 normal, float r0)
 {
   float cos_angle = dot(normal, incoming);
   float r = r0 + (1 - r0) * pow(1 - cos_angle, 5);
-  return r;
+  return clamp(r, 0, 1);
 }
 
 
@@ -304,6 +303,7 @@ vec3 getWaterNormal(float dist, vec2 coord, float waterDepth)
 
     normal = blendNormal(normal, sampleWaterNormalMap(2, coord), dist, 30000, mediumWaveStrength);
     normal = blendNormal(normal, sampleWaterNormalMap(12, coord), dist, 15000, smallWaveStrength);
+    normal = blendNormal(normal, sampleWaterNormalMap(30, coord), dist, 5000, 0.8);
 
     normal = normalize(normal);
 
