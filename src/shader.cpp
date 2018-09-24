@@ -194,23 +194,31 @@ void ShaderProgram::link()
 
 void ShaderProgram::create()
 {
-  CHECK_GL_ERROR();
+  gl::Finish();
+  GLenum error = gl::GetError();
+  if (error != GL_NO_ERROR)
+  {
+    cerr<<"gl error: "<<gl_wrapper::getGLErrorString(error)<<endl;
+    abort();
+  }
   
   GLint current_program_save;
   gl::GetIntegerv(GL_CURRENT_PROGRAM, &current_program_save);
 
-//     gl::Finish();
-  
-//   cout<<"creating shader: "<<name_vert<<", "<<name_frag<<endl;
+  gl::Finish();
+  GLenum error = gl::GetError();
+  if (error != GL_NO_ERROR)
+  {
+    cerr<<"gl error: "<<gl_wrapper::getGLErrorString(error)<<endl;
+    abort();
+  }
 
-//   id = createProgram(name_vert, name_frag, path, is_valid);
-  
   is_valid = false;
 
   id = gl::CreateProgram();
+  assert(id != 0);
 
-//   vector<unsigned int> shaders;
-  
+  cerr<<name<<"num fragment shaders: "<<fragment_shaders.size()<<endl;
   for (auto name : fragment_shaders)
   {
     GLuint shader = createShader(name, path, GL_FRAGMENT_SHADER);
@@ -225,6 +233,7 @@ void ShaderProgram::create()
     }
   }
 
+  cerr<<name<<"num vertex shaders: "<<vertex_shaders.size()<<endl;
   for (auto name : vertex_shaders)
   {
     GLuint shader = createShader(name, path, GL_VERTEX_SHADER);
@@ -239,7 +248,13 @@ void ShaderProgram::create()
     }
   }
 
-  CHECK_GL_ERROR();
+  gl::Finish();
+  GLenum error = gl::GetError();
+  if (error != GL_NO_ERROR)
+  {
+    cerr<<"gl error: "<<gl_wrapper::getGLErrorString(error)<<endl;
+    abort();
+  }
 
   for (auto shader : shader_objects)
   {
