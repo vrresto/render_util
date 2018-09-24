@@ -206,7 +206,7 @@ void ShaderProgram::create()
   gl::GetIntegerv(GL_CURRENT_PROGRAM, &current_program_save);
 
   gl::Finish();
-  GLenum error = gl::GetError();
+  error = gl::GetError();
   if (error != GL_NO_ERROR)
   {
     cerr<<"gl error: "<<gl_wrapper::getGLErrorString(error)<<endl;
@@ -249,7 +249,7 @@ void ShaderProgram::create()
   }
 
   gl::Finish();
-  GLenum error = gl::GetError();
+  error = gl::GetError();
   if (error != GL_NO_ERROR)
   {
     cerr<<"gl error: "<<gl_wrapper::getGLErrorString(error)<<endl;
@@ -288,7 +288,7 @@ void ShaderProgram::create()
   link();
 
   gl::Finish();
-  GLenum error = gl::GetError();
+  error = gl::GetError();
   assert(error == GL_NO_ERROR || error == GL_INVALID_VALUE);
   assert(gl::GetError() == GL_NO_ERROR);
 
