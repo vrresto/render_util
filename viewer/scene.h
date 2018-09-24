@@ -64,12 +64,12 @@ struct Terrain : public render_util::TerrainRenderer
 
 inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
                       bool use_lod,
-                      const render_util::ElevationMap &elevation_map,
+                      const render_util::ElevationMap::ConstPtr elevation_map,
                       glm::vec3 color)
 {
   Terrain t = render_util::createTerrainRenderer(tex_mgr, use_lod,
                                                  RENDER_UTIL_SHADER_DIR, "terrain_simple");
-  t.getTerrain()->build(&elevation_map);
+  t.getTerrain()->build(elevation_map);
   t.getProgram()->setUniform("terrain_color", color);
   return t;
 }
@@ -95,7 +95,7 @@ public:
     return glm::vec3(0, sun_dir_h.x, sun_dir_h.y);
   }
 
-  void createTerrain(const render_util::ElevationMap &elevation_map)
+  void createTerrain(const render_util::ElevationMap::ConstPtr elevation_map)
   {
     m_terrain =
       render_util::viewer::createTerrain(getTextureManager(), false,

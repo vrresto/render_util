@@ -58,8 +58,6 @@ using std::vector;
 
 namespace render_util
 {
-  class ElevationMap;
-
   class TerrainCDLOD : public TerrainBase
   {
     struct Private;
@@ -70,7 +68,7 @@ namespace render_util
     ~TerrainCDLOD() override;
 
     const std::string &getName() override;
-    void build(const ElevationMap *map) override;
+    void build(ElevationMap::ConstPtr map) override;
     void draw() override;
     void update(const Camera &camera) override;
     void setTextureManager(TextureManager*) override;
@@ -555,7 +553,7 @@ TerrainCDLOD::~TerrainCDLOD()
   delete p;
 }
 
-void TerrainCDLOD::build(const ElevationMap *map)
+void TerrainCDLOD::build(ElevationMap::ConstPtr map)
 {
   assert(p->texture_manager);
   assert(!p->root_node);
@@ -575,7 +573,7 @@ void TerrainCDLOD::build(const ElevationMap *map)
 //     cout<<"TerrainCDLOD: creating normal map  texture ..."<<endl;
 
     cout<<"TerrainCDLOD: creating normal map ..."<<endl;
-    Image<Normal>::Ptr normal_map = createNormalMap(*map, HEIGHT_MAP_METERS_PER_GRID);
+    Image<Normal>::Ptr normal_map = createNormalMap(map, HEIGHT_MAP_METERS_PER_GRID);
     cout<<"TerrainCDLOD: creating normal map done."<<endl;
 
     p->normal_map_texture =
@@ -603,7 +601,7 @@ void TerrainCDLOD::build(const ElevationMap *map)
   assert(!p->height_map_texture);
   cout<<"TerrainCDLOD: creating height map texture ..."<<endl;
 
-  auto hm_image = map->toImage();
+  auto hm_image = map;
   auto new_size = glm::ceilPowerOfTwo(hm_image->size());
 
   if (new_size != hm_image->size())

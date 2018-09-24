@@ -77,7 +77,7 @@ render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager
 
 class HeightMapViewerScene : public Scene
 {
-	render_util::Image<float>::ConstPtr m_height_map;
+  render_util::Image<float>::ConstPtr m_height_map;
   render_util::ShaderProgramPtr m_sky_program;
   render_util::TexturePtr m_curvature_map;
   render_util::TexturePtr m_atmosphere_map;
@@ -111,11 +111,9 @@ void HeightMapViewerScene::setup()
   assert(m_curvature_map);
   assert(m_atmosphere_map);
 
-  render_util::ElevationMap elevation_map(m_height_map);
-
   cout<<"calling createTerrain()"<<endl;
 
-  createTerrain(elevation_map);
+  createTerrain(m_height_map);
 
   cout<<"createTerrain() returned"<<endl;
 

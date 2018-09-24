@@ -18,6 +18,7 @@
 
 #include <render_util/image_resample.h>
 #include <render_util/image_loader.h>
+#include <render_util/image_util.h>
 #include <render_util/texture_util.h>
 #include <render_util/texunits.h>
 #include <render_util/elevation_map.h>
@@ -106,7 +107,7 @@ void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
 
 struct NormalMapCreator
 {
-  render_util::ElevationMap elevation_map;
+  render_util::ElevationMap::ConstPtr elevation_map;
   render_util::Image<Normal>::Ptr normals;
   float grid_scale = 1.0;
 
@@ -134,17 +135,17 @@ struct NormalMapCreator
     vec3 v;
     v.x = coords.x * grid_scale;
     v.y = coords.y * grid_scale;
-    v.z = elevation_map.getElevation(coords.x, coords.y);
+    v.z = elevation_map->get(coords.x, coords.y);
     return v;
   }
 
   void calcNormals()
   {
-    normals.reset(new Image<Normal>(elevation_map.getSize()));
+    normals.reset(new Image<Normal>(elevation_map->getSize()));
 
-    for (int y = 0; y < elevation_map.getHeight()-1; y++)
+    for (int y = 0; y < elevation_map->getHeight()-1; y++)
     {
-      for (int x = 0; x < elevation_map.getWidth()-1; x++)
+      for (int x = 0; x < elevation_map->getWidth()-1; x++)
       {
         vec2 triangle0[3] =
         {
@@ -496,7 +497,7 @@ unsigned int createUnsignedIntTexture(const unsigned int *data, int w, int h)
 //   {
 //     const float grid_resolution = 200.0;
 //     
-//     return vec3(x * grid_resolution, y * grid_resolution, elevation_map.getElevation(x, y));
+//     return vec3(x * grid_resolution, y * grid_resolution, elevation_map->get(x, y));
 //   }
 // }
 
@@ -686,7 +687,7 @@ ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
 // }
 
 
-Image<Normal>::Ptr createNormalMap(const ElevationMap &elevation_map, float grid_scale)
+Image<Normal>::Ptr createNormalMap(ElevationMap::ConstPtr elevation_map, float grid_scale)
 {
   NormalMapCreator c;
   c.grid_scale = grid_scale;

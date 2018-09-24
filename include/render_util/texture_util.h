@@ -23,15 +23,13 @@
 #include <render_util/image.h>
 #include <render_util/texture_manager.h>
 #include <render_util/render_util.h>
+#include <render_util/elevation_map.h>
 
 #include <vector>
 #include <type_traits>
 
 namespace render_util
 {
-  class ElevationMap;
-
-
   //FIXME use ImageRGB
   ImageRGBA::Ptr createNormalMap(ImageGreyScale::ConstPtr bump_map, float bump_height_scale);
 
@@ -112,7 +110,7 @@ namespace render_util
 
   ImageGreyScale::Ptr createTerrainLightMap(const ElevationMap&);
 
-  Image<Normal>::Ptr createNormalMap(const ElevationMap &elevation_map, float grid_scale);
+  Image<Normal>::Ptr createNormalMap(ElevationMap::ConstPtr elevation_map, float grid_scale);
 }
 
 #endif

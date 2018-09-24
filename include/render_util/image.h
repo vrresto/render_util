@@ -298,10 +298,17 @@ public:
 
   int w() const { return _w; }
   int h() const { return _h; }
+  int getWidth() const {
+    return w();
+  }
+  int getHeight() const {
+    return h();
+  }
   const unsigned char *getData() const { return _data.data(); }
   const unsigned char *data() const { return getData(); }
   unsigned dataSize() const { return _data.size(); }
   glm::ivec2 size() const { return glm::ivec2(_w, _h); }
+  glm::ivec2 getSize() const { return size(); }
 };
 
 

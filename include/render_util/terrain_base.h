@@ -21,6 +21,7 @@
 
 #include <render_util/shader.h>
 #include <render_util/camera.h>
+#include <render_util/elevation_map.h>
 
 #include <string>
 #include <vector>
@@ -28,7 +29,6 @@
 
 namespace render_util
 {
-  class ElevationMap;
   class TextureManager;
 
   class TerrainBase
@@ -37,7 +37,7 @@ namespace render_util
     virtual ~TerrainBase() {}
 
     virtual const std::string &getName() = 0;
-    virtual void build(const ElevationMap *map) = 0;
+    virtual void build(ElevationMap::ConstPtr map) = 0;
     virtual void draw() = 0;
     virtual void update(const Camera &camera) {}
     virtual void setTextureManager(TextureManager*) {};

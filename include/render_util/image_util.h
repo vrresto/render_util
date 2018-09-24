@@ -242,7 +242,7 @@ extend(T src,
        const typename T::element_type::PixelType &color,
        CornerType corner)
 {
-  using ImageType = typename T::element_type;
+  using ImageType = typename std::remove_const<typename T::element_type>::type;
 
   assert(new_size.x > src->w());
   assert(new_size.y > src->h());

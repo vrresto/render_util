@@ -122,7 +122,7 @@ void TerrainViewerScene::setup()
   map->textures = make_shared<MapTextures>(getTextureManager());
   map->water_animation = make_shared<WaterAnimation>();
 
-  ElevationMap elevation_map;
+  ElevationMap::Ptr elevation_map;
 
   map_loader->loadMap(*map, false, &elevation_map);
 

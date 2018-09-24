@@ -37,8 +37,6 @@ using namespace render_util;
 
 namespace render_util
 {
-  class ElevationMap;
-
   class Terrain : public TerrainBase
   {
     struct Private;
@@ -49,7 +47,7 @@ namespace render_util
     ~Terrain() override;
 
     const std::string &getName() override;
-    void build(const ElevationMap *map) override;
+    void build(ElevationMap::ConstPtr map) override;
     void draw() override;
 
     std::vector<glm::vec3> getNormals() override;
@@ -89,7 +87,7 @@ namespace
     std::vector<Normal> normals;
 //     std::vector<Vertex> triangle_data;
     std::vector<GLuint> triangle_data_indexed;
-    ElevationMap elevation_map;
+    ElevationMap::ConstPtr elevation_map;
 
     float elevation_scale = 1.0;
     float elevation_offset = 0.0;
@@ -132,8 +130,8 @@ namespace
 
       int divisor = pow(2, lod_level);
 
-      width = elevation_map.getWidth() * tile_factor;
-      height = elevation_map.getHeight() * tile_factor;
+      width = elevation_map->getWidth() * tile_factor;
+      height = elevation_map->getHeight() * tile_factor;
       
       width = width / divisor;
       height = height / divisor;
@@ -149,7 +147,7 @@ namespace
 
       for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-          float elevation = elevation_map.getElevation(x * divisor, y * divisor);
+          float elevation = elevation_map->get(x * divisor, y * divisor);
           elevation *= elevation_scale;
           elevation += elevation_offset;
           vertices[getVertexIndex(x, y)] =
@@ -397,12 +395,12 @@ std::vector<glm::vec3> Terrain::getNormals()
   return p->normals;
 }
 
-void render_util::Terrain::build(const ElevationMap *map)
+void render_util::Terrain::build(ElevationMap::ConstPtr map)
 {
   p->deleteGLObjects();
   delete p->mesh;
   p->mesh = new TerrainMesh;
-  p->mesh->elevation_map = *map;
+  p->mesh->elevation_map = map;
   p->build(false);
 }
 
