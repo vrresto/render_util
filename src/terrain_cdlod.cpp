@@ -330,6 +330,57 @@ static_assert(getNodeSize(0) == LEAF_NODE_SIZE);
 static_assert(getNodeScale(0) == METERS_PER_GRID);
 
 
+TexturePtr createNormalMapTexture(render_util::ElevationMap::ConstPtr map)
+{
+  using namespace render_util;
+
+  cout<<"TerrainCDLOD: creating normal map ..."<<endl;
+  auto normal_map = createNormalMap(map, HEIGHT_MAP_METERS_PER_GRID);
+  cout<<"TerrainCDLOD: creating normal map done."<<endl;
+
+  auto normal_map_texture =
+    createFloatTexture(reinterpret_cast<const float*>(normal_map->getData()),
+                      map->getWidth(),
+                      map->getHeight(),
+                      3);
+  cout<<"TerrainCDLOD: creating normal map  texture done."<<endl;
+
+  TextureParameters<int> params;
+  params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+  params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+  params.apply(normal_map_texture);
+
+  TextureParameters<glm::vec4> params_vec4;
+  params_vec4.set(GL_TEXTURE_BORDER_COLOR, glm::vec4(0,0,1,0));
+  params_vec4.apply(normal_map_texture);
+
+  return normal_map_texture;
+}
+
+
+TexturePtr createHeightMapTexture(render_util::ElevationMap::ConstPtr hm_image)
+{
+  using namespace render_util;
+
+  cout<<"TerrainCDLOD: creating height map texture ..."<<endl;
+
+  auto height_map_texture = createFloatTexture(hm_image, true);
+  assert(height_map_texture);
+  CHECK_GL_ERROR();
+
+  TextureParameters<int> params;
+  params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  params.set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+  params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+  params.apply(height_map_texture);
+
+  CHECK_GL_ERROR();
+
+  return height_map_texture;
+}
+
+
 } // namespace
 
 
@@ -548,10 +599,12 @@ void TerrainCDLOD::Private::drawInstanced()
 
 TerrainCDLOD::TerrainCDLOD() : p(new Private) {}
 
+
 TerrainCDLOD::~TerrainCDLOD()
 {
   delete p;
 }
+
 
 void TerrainCDLOD::build(ElevationMap::ConstPtr map)
 {
@@ -560,38 +613,9 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map)
 
   CHECK_GL_ERROR();
 
-  {
-    assert(!p->normal_map_texture);
+  assert(!p->normal_map_texture);
+  p->normal_map_texture = createNormalMapTexture(map);
 
-//     NormalMapCreator nm_creator;
-//     nm_creator.grid_scale = 200;
-//     nm_creator.elevation_map = *map;
-//     nm_creator.normals.reset(new Image<Normal>(map->getSize()));
-//     cout<<"TerrainCDLOD: creating normal map ..."<<endl;
-//     nm_creator.calcNormals();
-//     cout<<"TerrainCDLOD: creating normal map done."<<endl;
-//     cout<<"TerrainCDLOD: creating normal map  texture ..."<<endl;
-
-    cout<<"TerrainCDLOD: creating normal map ..."<<endl;
-    Image<Normal>::Ptr normal_map = createNormalMap(map, HEIGHT_MAP_METERS_PER_GRID);
-    cout<<"TerrainCDLOD: creating normal map done."<<endl;
-
-    p->normal_map_texture =
-      createFloatTexture(reinterpret_cast<const float*>(normal_map->getData()),
-                        map->getWidth(),
-                        map->getHeight(),
-                        3);
-    cout<<"TerrainCDLOD: creating normal map  texture done."<<endl;
-
-    TextureParameters<int> params;
-    params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    params.apply(p->normal_map_texture);
-
-    TextureParameters<glm::vec4> params_vec4;
-    params_vec4.set(GL_TEXTURE_BORDER_COLOR, glm::vec4(0,0,1,0));
-    params_vec4.apply(p->normal_map_texture);
-  }
   CHECK_GL_ERROR();
 
   cout<<"TerrainCDLOD: creating nodes ..."<<endl;
@@ -607,34 +631,9 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map)
   if (new_size != hm_image->size())
     hm_image = image::extend(hm_image, new_size, 0.f, image::TOP_LEFT);
 
-  p->height_map_texture = createFloatTexture(hm_image, true);
-
-  assert(p->height_map_texture);
-  cout<<"TerrainCDLOD: creating height map texture done."<<endl;
-  CHECK_GL_ERROR();
-
   p->height_map_size_px = hm_image->size();
 
-  TextureParameters<int> params;
-  params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  params.set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-  params.apply(p->height_map_texture);
-
-  CHECK_GL_ERROR();
-
-//   {
-//     TexturePtr node_pos_texture = Texture::create(GL_TEXTURE_1D);
-//     TextureParameters<int> params;
-//     params.set(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//     params.set(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//     params.apply(node_pos_texture);
-//     CHECK_GL_ERROR();
-// 
-//     p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_NODE_POS, node_pos_texture);
-//     CHECK_GL_ERROR();
-//   }
+  p->height_map_texture = createHeightMapTexture(hm_image);
 
   cout<<"TerrainCDLOD: done buildding terrain."<<endl;
 }
