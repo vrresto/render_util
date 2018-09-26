@@ -233,7 +233,7 @@ void ShaderProgram::create()
     }
   }
 
-  cerr<<name<<"num vertex shaders: "<<vertex_shaders.size()<<endl;
+  cerr<<name<<": num vertex shaders: "<<vertex_shaders.size()<<endl;
   for (auto name : vertex_shaders)
   {
     GLuint shader = createShader(name, path, GL_VERTEX_SHADER);

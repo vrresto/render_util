@@ -46,7 +46,7 @@ void applyTextureParameter(unsigned int name, int value, unsigned int target)
   gl::TexParameteri(target, name, value);
 }
 
-// 
+
 void applyTextureParameter(unsigned int name, const glm::vec4 &value, unsigned int target)
 {
   gl::TexParameterfv(target, name, glm::value_ptr(value));

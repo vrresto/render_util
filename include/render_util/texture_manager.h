@@ -64,7 +64,7 @@ public:
 void applyTextureParameter(unsigned int name, int value, unsigned int target);
 void applyTextureParameter(unsigned int name, unsigned int value, unsigned int target);
 void applyTextureParameter(unsigned int name, float value, unsigned int target);
-void applyTextureParameter(unsigned int name,  const glm::vec4 &value, unsigned int target);
+void applyTextureParameter(unsigned int name, const glm::vec4 &value, unsigned int target);
 
 
 template <typename T>
