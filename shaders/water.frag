@@ -39,7 +39,7 @@
 const float water_map_chunk_size_m = 1600 * 4;
 const vec2 water_map_table_shift = vec2(0, 200);
 const float SPEC_HARDNESS = 256.0;
-const float sea_roughness = 0.5;
+const float sea_roughness = 0.2;
 const float PI = 3.14159265359;
 const float ior_water = 1.333;
 const float schlick_r0_water = pow(ior_water - 1, 2) / pow(ior_water + 1, 2);
