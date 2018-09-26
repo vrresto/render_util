@@ -42,6 +42,11 @@ namespace render_util
     virtual void update(const Camera &camera) {}
     virtual void setTextureManager(TextureManager*) {};
     virtual void setDrawDistance(float dist) {}
+    virtual void build(ElevationMap::ConstPtr map,
+                       ElevationMap::ConstPtr base_map)
+    {
+      assert(0);
+    }
 
     virtual std::vector<glm::vec3> getNormals() { return std::vector<glm::vec3>(); }
   };

@@ -27,6 +27,7 @@
 #extension GL_ARB_draw_instanced : require
 
 #define DRAW_INSTANCED 1
+#define ENABLE_BASE_MAP 0
 
 #if DRAW_INSTANCED
 attribute vec4 attrib_pos;
@@ -66,6 +67,7 @@ varying vec3 passNormal;
 
 uniform float terrain_height_offset = 0.0;
 
+
 vec2 getDiff(float dist, float height)
 {
   float u = dist / curvature_map_max_distance;
@@ -73,6 +75,41 @@ vec2 getDiff(float dist, float height)
 
 //   return texture2D(sampler_curvature_map, vec2(u,v)).xy;
   return texture(sampler_curvature_map, vec2(u,v)).xy;
+}
+
+
+float sampleMap(sampler2D sampler, vec2 world_coord, vec2 map_size_world)
+{
+  vec2 coord = world_coord.xy / map_size;
+  coord.y = 1.0 - coord.y;
+  return texture2D(sampler, coord).x;
+}
+
+
+float getHeight(vec2 world_coord)
+{
+  vec2 height_map_coord = (world_coord + vec2(0, 200)) / height_map_size_m;
+  height_map_coord.y = 1.0 - height_map_coord.y;
+
+  ivec2 height_map_coord_px = ivec2(height_map_size_px * height_map_coord);
+
+  float hm_smoothed = texture2D(sampler_terrain_cdlod_height_map, height_map_coord).x;
+  float hm_raw = texelFetch(sampler_terrain_cdlod_height_map, height_map_coord_px, 0).x;
+
+  float detail = mix(hm_raw, hm_smoothed,
+    smoothstep(cdlod_min_dist / 4.0, cdlod_min_dist / 2.0, approx_dist));
+
+#if ENABLE_BASE_MAP
+  float base = sampleMap(sampler_terrain_cdlod_height_base,
+      world_coord, base_map_size);
+
+  float detail_blend = sampleMap(sampler_terrain_cdlod_detail,
+      world_coord, base_map_size);
+
+  return mix(base, detail, detail_blend);
+#else
+  return detail;
+#endif
 }
 
 
@@ -127,16 +164,7 @@ void main(void)
   pos.xy += cdlod_node_pos;
 #endif
 
-  vec2 height_map_coord = (pos.xy + vec2(0, 200)) / height_map_size_m;
-  height_map_coord.y = 1.0 - height_map_coord.y;
-
-  ivec2 height_map_coord_px = ivec2(height_map_size_px * height_map_coord);
-
-  float hm_smoothed = texture2D(sampler_terrain_cdlod_height_map, height_map_coord).x;
-  float hm_raw = texelFetch(sampler_terrain_cdlod_height_map, height_map_coord_px, 0).x;
-
-  pos.z = mix(hm_raw, hm_smoothed,
-    smoothstep(cdlod_min_dist / 4.0, cdlod_min_dist / 2.0, approx_dist));
+  pos.z = getHeight(pos.xy);
 
   pos.z += terrain_height_offset;
 

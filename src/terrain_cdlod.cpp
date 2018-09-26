@@ -69,6 +69,8 @@ namespace render_util
 
     const std::string &getName() override;
     void build(ElevationMap::ConstPtr map) override;
+    void build(ElevationMap::ConstPtr map,
+        ElevationMap::ConstPtr base_map) override;
     void draw() override;
     void update(const Camera &camera) override;
     void setTextureManager(TextureManager*) override;
@@ -409,8 +411,11 @@ struct TerrainCDLOD::Private
 
   TexturePtr height_map_texture;
   TexturePtr normal_map_texture;
-
   vec2 height_map_size_px = vec2(0);
+
+  TexturePtr height_map_base_texture;
+  TexturePtr normal_map_base_texture;
+  vec2 height_map_base_size_px = vec2(0);
 
   GLuint test_buffer_id[NUM_TEST_BUFFERS] = { 0 };
 
@@ -606,6 +611,19 @@ TerrainCDLOD::~TerrainCDLOD()
 }
 
 
+void TerrainCDLOD::build(ElevationMap::ConstPtr map,
+                         ElevationMap::ConstPtr base_map)
+{
+  build(map);
+
+  p->height_map_base_size_px = base_map->size();
+  p->height_map_base_texture = createHeightMapTexture(base_map);
+  p->normal_map_base_texture = createNormalMapTexture(base_map);
+
+  cout<<"TerrainCDLOD: done buildding terrain."<<endl;
+}
+
+
 void TerrainCDLOD::build(ElevationMap::ConstPtr map)
 {
   assert(p->texture_manager);
@@ -721,6 +739,9 @@ void TerrainCDLOD::draw()
 
   p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP, p->normal_map_texture);
   p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP, p->height_map_texture);
+
+  p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, p->normal_map_base_texture);
+  p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, p->height_map_base_texture);
 
 #if DRAW_INSTANCED
   p->setUniforms(program);
