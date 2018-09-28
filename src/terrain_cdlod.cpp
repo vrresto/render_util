@@ -88,6 +88,8 @@ enum
 {
   HEIGHT_MAP_METERS_PER_GRID = 200,
 
+  HEIGHT_MAP_BASE_METERS_PER_GRID = 400,
+
 //   METERS_PER_GRID = 200,
 //   MAX_LOD = 10,
 //   LEAF_NODE_SIZE = 1600,
@@ -332,12 +334,12 @@ static_assert(getNodeSize(0) == LEAF_NODE_SIZE);
 static_assert(getNodeScale(0) == METERS_PER_GRID);
 
 
-TexturePtr createNormalMapTexture(render_util::ElevationMap::ConstPtr map)
+TexturePtr createNormalMapTexture(render_util::ElevationMap::ConstPtr map, int meters_per_grid)
 {
   using namespace render_util;
 
   cout<<"TerrainCDLOD: creating normal map ..."<<endl;
-  auto normal_map = createNormalMap(map, HEIGHT_MAP_METERS_PER_GRID);
+  auto normal_map = createNormalMap(map, meters_per_grid);
   cout<<"TerrainCDLOD: creating normal map done."<<endl;
 
   auto normal_map_texture =
@@ -499,10 +501,14 @@ TerrainCDLOD::Private::Private()
 
 void TerrainCDLOD::Private::setUniforms(ShaderProgramPtr program)
 {
-  program->setUniform("cdlod_grid_size", vec2(MESH_GRID_SIZE));
-  program->setUniform("height_map_size_m", height_map_size_px * 200.f);
-  program->setUniform("height_map_size_px", height_map_size_px);
   program->setUniform("cdlod_min_dist", MIN_LOD_DIST);
+  program->setUniform("cdlod_grid_size", vec2(MESH_GRID_SIZE));
+
+  program->setUniform("height_map_size_m", height_map_size_px * (float)HEIGHT_MAP_METERS_PER_GRID);
+  program->setUniform("height_map_size_px", height_map_size_px);
+
+  program->setUniform("height_map_base_size_m", height_map_base_size_px * (float)HEIGHT_MAP_BASE_METERS_PER_GRID);
+  program->setUniform("height_map_base_origin", vec2(-1000.0 * 1000.0));
 }
 
 
@@ -625,7 +631,7 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map,
   {
     p->height_map_base_size_px = base_map->size();
     p->height_map_base_texture = createHeightMapTexture(base_map);
-    p->normal_map_base_texture = createNormalMapTexture(base_map);
+    p->normal_map_base_texture = createNormalMapTexture(base_map, HEIGHT_MAP_BASE_METERS_PER_GRID);
   }
 
   cout<<"TerrainCDLOD: done buildding terrain."<<endl;
@@ -640,7 +646,7 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map)
   CHECK_GL_ERROR();
 
   assert(!p->normal_map_texture);
-  p->normal_map_texture = createNormalMapTexture(map);
+  p->normal_map_texture = createNormalMapTexture(map, HEIGHT_MAP_METERS_PER_GRID);
 
   CHECK_GL_ERROR();
 
