@@ -585,6 +585,9 @@ void TerrainCDLOD::Private::processNode(Node *node, int lod_level, const Camera 
 
 void TerrainCDLOD::Private::drawInstanced()
 {
+  if (render_list.getNodeCount() == 0)
+    return;
+
   gl::BindVertexArray(vao_id);
   CHECK_GL_ERROR();
 
@@ -593,6 +596,8 @@ void TerrainCDLOD::Private::drawInstanced()
 
   gl::VertexAttribDivisor(4, 1);
   CHECK_GL_ERROR();
+
+  assert(render_list.getNodeCount() > 0);
 
   gl::DrawElementsInstancedARB(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, 0, render_list.getNodeCount());
   CHECK_GL_ERROR();
