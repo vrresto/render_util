@@ -146,10 +146,12 @@ flipX(typename T::ConstPtr src)
 
 
 template <typename T>
-typename T::Ptr
-flipY(typename T::ConstPtr src)
+typename T::element_type::Ptr
+flipY(T src)
 {
-  typename T::Ptr dst(new T(src->size()));
+  using ImageType = typename std::remove_const<typename T::element_type>::type;
+
+  auto dst = std::make_shared<ImageType>(src->size());
 
   for (int y = 0; y < src->h(); y++)
   {
