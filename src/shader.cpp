@@ -74,9 +74,7 @@ string preProcessShader(const vector<char> &in, const ShaderParameters &params)
         {
           assert(!parsed.empty());
 
-          stringstream value_str;
-          value_str << params.get(parsed);
-          out += value_str.str();
+          out += std::to_string(params.get(parsed));
 
           parsed.clear();
 

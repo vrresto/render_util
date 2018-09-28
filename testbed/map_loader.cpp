@@ -30,7 +30,6 @@
 
 #include <vector>
 #include <iostream>
-#include <sstream>
 
 using namespace std;
 using namespace render_util;
@@ -373,8 +372,7 @@ vector<ImageRGBA::ConstPtr> getForestLayers()
   {
     cout<<"getForestTexture() - layer "<<i<<endl;
 
-    stringstream name;
-    name<<"forest"<<i;
+    auto name = string("forest") + to_string(i);
 
     ImageRGBA::Ptr texture = getTexture(name.str());
     if (!texture)
