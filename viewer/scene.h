@@ -46,7 +46,7 @@ struct Terrain : public render_util::TerrainRenderer
     gl::FrontFace(GL_CCW);
     gl::Enable(GL_DEPTH_TEST);
     gl::DepthMask(GL_TRUE);
-    gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//     gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     getTerrain()->setDrawDistance(0);
     getTerrain()->update(camera);
@@ -55,7 +55,7 @@ struct Terrain : public render_util::TerrainRenderer
 
     getTerrain()->draw();
 
-    gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+//     gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     CHECK_GL_ERROR();
   }
@@ -65,12 +65,19 @@ struct Terrain : public render_util::TerrainRenderer
 inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
                       bool use_lod,
                       const render_util::ElevationMap::ConstPtr elevation_map,
+                      const render_util::ElevationMap::ConstPtr elevation_map_base,
                       glm::vec3 color)
 {
   Terrain t = render_util::createTerrainRenderer(tex_mgr, use_lod,
-                                                 RENDER_UTIL_SHADER_DIR, "terrain_simple");
-  t.getTerrain()->build(elevation_map);
+                                                 RENDER_UTIL_SHADER_DIR, "terrain");
+
+  t.getTerrain()->build(elevation_map, elevation_map_base);
+
   t.getProgram()->setUniform("terrain_color", color);
+  t.getProgram()->setUniform("draw_near_forest", true);
+  t.getProgram()->setUniform("enable_waves", true);
+  t.getProgram()->setUniform("enable_terrain_noise", true);
+
   return t;
 }
 
@@ -80,6 +87,8 @@ class Scene
   render_util::TextureManager texture_manager = render_util::TextureManager(0);
 
 public:
+  const bool m_use_base_map = false;
+
   Camera camera;
   float sun_azimuth = 90.0;
   bool toggle_lod_morph = false;
@@ -95,14 +104,16 @@ public:
     return glm::vec3(0, sun_dir_h.x, sun_dir_h.y);
   }
 
-  void createTerrain(const render_util::ElevationMap::ConstPtr elevation_map)
+  void createTerrain(const render_util::ElevationMap::ConstPtr elevation_map,
+                     const render_util::ElevationMap::ConstPtr elevation_map_base = {})
   {
-    m_terrain =
-      render_util::viewer::createTerrain(getTextureManager(), false,
-                                         elevation_map, glm::vec3(1,0,0));
+//     m_terrain =
+//       render_util::viewer::createTerrain(getTextureManager(), false,
+//                                          elevation_map, glm::vec3(1,0,0));
     m_terrain_cdlod =
       render_util::viewer::createTerrain(getTextureManager(), true,
-                                         elevation_map, glm::vec3(0,1,0));
+                                         elevation_map, elevation_map_base,
+                                         glm::vec3(0,1,0));
   }
 
 
@@ -114,8 +125,8 @@ public:
 
   void drawTerrain()
   {
-    updateUniforms(m_terrain.getProgram());
-    m_terrain.draw(camera);
+//     updateUniforms(m_terrain.getProgram());
+//     m_terrain.draw(camera);
 
     updateUniforms(m_terrain_cdlod.getProgram());
     m_terrain_cdlod.draw(camera);
@@ -131,6 +142,7 @@ public:
     program->setUniform("view2WorldMatrix", camera.getView2WorldMatrix());
     program->setUniform("sunDir", getSunDir());
     program->setUniform("toggle_lod_morph", toggle_lod_morph);
+    program->setUniform("enable_base_terrain", m_use_base_map);
   }
 
   virtual void setup() = 0;

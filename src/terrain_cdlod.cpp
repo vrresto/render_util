@@ -616,9 +616,12 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map,
 {
   build(map);
 
-  p->height_map_base_size_px = base_map->size();
-  p->height_map_base_texture = createHeightMapTexture(base_map);
-  p->normal_map_base_texture = createNormalMapTexture(base_map);
+  if (base_map)
+  {
+    p->height_map_base_size_px = base_map->size();
+    p->height_map_base_texture = createHeightMapTexture(base_map);
+    p->normal_map_base_texture = createNormalMapTexture(base_map);
+  }
 
   cout<<"TerrainCDLOD: done buildding terrain."<<endl;
 }
@@ -740,8 +743,10 @@ void TerrainCDLOD::draw()
   p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP, p->normal_map_texture);
   p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP, p->height_map_texture);
 
-  p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, p->normal_map_base_texture);
-  p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, p->height_map_base_texture);
+  if (p->normal_map_base_texture)
+    p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, p->normal_map_base_texture);
+  if (p->height_map_base_texture)
+    p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, p->height_map_base_texture);
 
 #if DRAW_INSTANCED
   p->setUniforms(program);

@@ -44,6 +44,8 @@ const float PI = 3.14159265359;
 const float ior_water = 1.333;
 const float schlick_r0_water = pow(ior_water - 1, 2) / pow(ior_water + 1, 2);
 
+
+float getDetailMapBlend(vec2 pos);
 vec3 calcWaterLight(vec3 normal);
 vec3 calcLight(vec3 pos, vec3 normal);
 void sampleTypeMap(sampler2D sampler,
@@ -55,6 +57,7 @@ vec2 rotate(vec2 v, float a);
 float perlin(vec2 p, float dim);
 
 uniform bool enable_waves = false;
+uniform bool enable_base_terrain = false;
 
 uniform sampler2DArray sampler_beach;
 uniform sampler2DArray sampler_foam_mask;
@@ -467,7 +470,16 @@ float getWaterDepth(vec2 pos)
 //   if (mirror_water_map_coords.y)
 //     waterMapCoords.y = 1.0 - waterMapCoords.y;
 
-  return 1 - texture(sampler_water_map, vec3(waterMapCoords, water_map_index)).x;
+  float depth = 1 - texture(sampler_water_map, vec3(waterMapCoords, water_map_index)).x;
+
+  if (enable_base_terrain)
+  {
+    float detail_map_blend = getDetailMapBlend(pos);
+    detail_map_blend = smoothstep(0.7, 1.0, detail_map_blend);
+    depth *= detail_map_blend;
+  }
+
+  return depth;
 #else
   return texture2D(sampler_water_map_simple, pos.xy / map_size).x;
 #endif

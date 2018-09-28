@@ -19,6 +19,8 @@
 #version 130
 
 
+float genericNoise(vec2 coord);
+
 void sampleTypeMap(sampler2D sampler,
             ivec2 textureSize,
             vec2 coords,
@@ -27,6 +29,7 @@ void sampleTypeMap(sampler2D sampler,
 
 
 uniform vec3 sunDir;
+uniform vec2 map_size;
 
 // uniform ivec2 typeMapSize;
 
@@ -124,4 +127,37 @@ vec3 calcWaterLight(vec3 normal)
 //   light *= 1.2;
   
   return light;
+}
+
+float getDetailMapBlend(vec2 pos)
+{
+  float blend_dist = 18000.0;
+
+  float threshold_noise = clamp(genericNoise(pos * 0.0008), -1, 1);
+  float threshold_noise_coarse = clamp(genericNoise(pos * 0.00005), -1, 1);
+
+  float threshold = 0.5;
+
+  threshold -= 0.5 * threshold_noise_coarse;
+  threshold += 0.1 * threshold_noise;
+
+  threshold = clamp(threshold, 0.1, 0.9);
+
+  float detail_blend_x =
+    smoothstep(0.0, blend_dist, pos.x) -
+    smoothstep(map_size.x - blend_dist, map_size.x, pos.x);
+
+  float detail_blend_y =
+    smoothstep(0.0, blend_dist, pos.y) -
+    smoothstep(map_size.y - blend_dist, map_size.y, pos.y);
+
+  float detail_blend = detail_blend_x * detail_blend_y;
+
+
+  detail_blend = smoothstep(threshold, threshold + 0.4, detail_blend);
+
+
+//   detail_blend *= smoothstep(0.5, 0.6, detail_blend);
+
+  return detail_blend;
 }

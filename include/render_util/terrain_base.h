@@ -45,7 +45,10 @@ namespace render_util
     virtual void build(ElevationMap::ConstPtr map,
                        ElevationMap::ConstPtr base_map)
     {
-      assert(0);
+      if (!base_map)
+        build(map);
+      else
+        assert(0);
     }
 
     virtual std::vector<glm::vec3> getNormals() { return std::vector<glm::vec3>(); }

@@ -123,12 +123,22 @@ void TerrainViewerScene::setup()
   map->water_animation = make_shared<WaterAnimation>();
 
   ElevationMap::Ptr elevation_map;
+  ElevationMap::Ptr elevation_map_base;
 
-  map_loader->loadMap(*map, false, &elevation_map);
+  if (m_use_base_map)
+    map_loader->loadMap(*map, false, &elevation_map, &elevation_map_base);
+  else
+    map_loader->loadMap(*map, false, &elevation_map);
+
+  assert(elevation_map);
+  if(m_use_base_map)
+  {
+    assert(elevation_map_base);
+  }
 
   assert(!map->water_animation->isEmpty());
 
-  createTerrain(elevation_map);
+  createTerrain(elevation_map, elevation_map_base);
 #if 0
   {
     int elevation_map_width = 5000;

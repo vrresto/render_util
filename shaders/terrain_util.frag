@@ -30,6 +30,8 @@
 #define ENABLE_TYPE_MAP 1
 
 
+float getDetailMapBlend(vec2 pos);
+float genericNoise(vec2 coord);
 vec3 calcLight(vec3 pos, vec3 normal);
 vec4 getForestFarColor(vec2 pos);
 vec4 getForestFarColorSimple(vec2 pos);
@@ -49,13 +51,19 @@ vec4 applyWater(vec4 color,
 const float meters_per_tile = 1600;
 const float near_distance = 80000;
 
+uniform bool enable_base_terrain = false;
 uniform bool draw_near_forest = false;
 uniform bool enable_terrain_noise = false;
 
 uniform sampler2D sampler_terrain_cdlod_normal_map;
+uniform sampler2D sampler_terrain_cdlod_normal_map_base;
+uniform vec2 height_map_base_size_m;
+uniform vec2 height_map_base_origin;
+
 uniform sampler2DArray sampler_terrain;
 uniform sampler1D sampler_terrain_scale_map;
 uniform sampler2D sampler_type_map;
+uniform sampler2D sampler_type_map_base;
 uniform sampler2D sampler_terrain_noise;
 uniform sampler2D sampler_terrain_far;
 uniform sampler2D sampler_shallow_water;
@@ -64,6 +72,9 @@ uniform sampler2DArray sampler_beach;
 uniform ivec2 typeMapSize;
 uniform vec2 map_size;
 uniform vec3 cameraPosWorld;
+
+const ivec2 type_map_base_size_px = ivec2(4096);
+const ivec2 type_map_base_meters_per_pixel = ivec2(400);
 
 float sampleNoise(vec2 coord)
 {
@@ -180,6 +191,41 @@ vec4 sampleTerrainTextures(vec2 pos)
   vec4 c01 = sampleTerrain(pos.xy, types[1]);
   vec4 c10 = sampleTerrain(pos.xy, types[2]);
   vec4 c11 = sampleTerrain(pos.xy, types[3]);
+
+  return
+    c00 * weights[0] +
+    c01 * weights[1] +
+    c10 * weights[2] +
+    c11 * weights[3];
+}
+
+
+vec4 sampleBaseTerrain(vec2 pos, float type_normalized)
+{
+  vec2 mapCoords = pos / meters_per_tile;
+  mapCoords.y = 1.0 - mapCoords.y;
+
+  uint index = uint(type_normalized * 255);
+//   float scale = texelFetch(sampler_terrain_scale_map, int(index), 0).x;
+  float scale = 1.0;
+
+  return texture(sampler_terrain, vec3(mapCoords * scale, index));
+}
+
+
+vec4 sampleBaseTerrainTextures(vec2 pos)
+{
+  float types[4];
+  float weights[4];
+
+  vec2 typeMapCoords = (pos.xy - height_map_base_origin) / type_map_base_meters_per_pixel;
+
+  sampleTypeMap(sampler_type_map_base, type_map_base_size_px, typeMapCoords, types, weights);
+
+  vec4 c00 = sampleBaseTerrain(pos.xy, types[0]);
+  vec4 c01 = sampleBaseTerrain(pos.xy, types[1]);
+  vec4 c10 = sampleBaseTerrain(pos.xy, types[2]);
+  vec4 c11 = sampleBaseTerrain(pos.xy, types[3]);
 
   return
     c00 * weights[0] +
@@ -317,17 +363,31 @@ vec4 getTerrainColor(vec3 pos)
   vec2 mapCoords = (pos.xy + vec2(0, 200)) / meters_per_tile;
   mapCoords.y = 1.0 - mapCoords.y;
 
+
+  float detail_blend = 1.0;
+
+  if (enable_base_terrain)
+    detail_blend = getDetailMapBlend(pos.xy);
+
 #if ENABLE_TERRAIN_NORMAL_MAP
-  vec2 normal_map_coord = pos.xy / map_size;
+  vec2 normal_map_coord = fract((pos.xy + vec2(0, 200)) / map_size);
+  normal_map_coord.y = 1.0 - normal_map_coord.y;
   vec3 normal = texture2D(sampler_terrain_cdlod_normal_map, normal_map_coord).xyz;
+
+  if (enable_base_terrain)
+  {
+    vec2 normal_map_coord_base = fract((pos.xy - height_map_base_origin) / height_map_base_size_m);
+    normal_map_coord_base.y = 1.0 - normal_map_coord_base.y;
+    vec3 normal_base = texture2D(sampler_terrain_cdlod_normal_map_base, normal_map_coord_base).xyz;
+
+    normal = mix(normal_base, normal, detail_blend);
+  }
 #else
 //   vec3 normal = passNormal;
   vec3 normal = vec3(0,0,1);
 #endif
 
   vec3 light = calcLight(pos, normal); 
-
-  vec2 typeMapCoords = pos.xy / 200.0;
 
   float shallow_sea_amount = 0;
   float river_amount = 0;
@@ -358,6 +418,8 @@ vec4 getTerrainColor(vec3 pos)
   }
 #else
   color = sampleTerrainTextures(pos.xy);
+  if (enable_base_terrain)
+    color = mix(sampleBaseTerrainTextures(pos.xy), color, detail_blend);
 #endif
   color.w = 1;
 #endif

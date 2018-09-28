@@ -26,15 +26,19 @@
 
 #extension GL_ARB_draw_instanced : require
 
+
 #define DRAW_INSTANCED 1
-#define ENABLE_BASE_MAP 0
+#define ENABLE_BASE_MAP 1
 
 #if DRAW_INSTANCED
 attribute vec4 attrib_pos;
 #endif
 
+uniform bool enable_base_terrain = false;
+
 uniform sampler2D sampler_curvature_map;
 uniform sampler2D sampler_terrain_cdlod_height_map;
+uniform sampler2D sampler_terrain_cdlod_height_map_base;
 
 uniform float max_elevation;
 uniform float curvature_map_max_distance;
@@ -56,8 +60,12 @@ uniform float cdlod_lod_distance;
 
 // uniform ivec2 typeMapSize;
 uniform vec2 map_size;
+
 uniform vec2 height_map_size_m;
 uniform vec2 height_map_size_px;
+
+uniform vec2 height_map_base_size_m;
+uniform vec2 height_map_base_origin = vec2(0);
 
 varying vec3 passObjectPosFlat;
 varying vec3 passObjectPos;
@@ -67,6 +75,9 @@ varying vec3 passNormal;
 
 uniform float terrain_height_offset = 0.0;
 
+
+float genericNoise(vec2 coord);
+float getDetailMapBlend(vec2 pos);
 
 vec2 getDiff(float dist, float height)
 {
@@ -78,15 +89,15 @@ vec2 getDiff(float dist, float height)
 }
 
 
-float sampleMap(sampler2D sampler, vec2 world_coord, vec2 map_size_world)
+float sampleMap(sampler2D sampler, vec2 world_coord, vec2 map_size_world, vec2 map_origin)
 {
-  vec2 coord = world_coord.xy / map_size;
+  vec2 coord = fract((world_coord.xy - map_origin) / map_size_world);
   coord.y = 1.0 - coord.y;
   return texture2D(sampler, coord).x;
 }
 
 
-float getHeight(vec2 world_coord)
+float getHeight(vec2 world_coord, float approx_dist)
 {
   vec2 height_map_coord = (world_coord + vec2(0, 200)) / height_map_size_m;
   height_map_coord.y = 1.0 - height_map_coord.y;
@@ -100,13 +111,18 @@ float getHeight(vec2 world_coord)
     smoothstep(cdlod_min_dist / 4.0, cdlod_min_dist / 2.0, approx_dist));
 
 #if ENABLE_BASE_MAP
-  float base = sampleMap(sampler_terrain_cdlod_height_base,
-      world_coord, base_map_size);
+  if (enable_base_terrain)
+  {
+    float base = sampleMap(sampler_terrain_cdlod_height_map_base,
+        world_coord, height_map_base_size_m, height_map_base_origin);
+    float detail_blend = getDetailMapBlend(world_coord);
 
-  float detail_blend = sampleMap(sampler_terrain_cdlod_detail,
-      world_coord, base_map_size);
-
-  return mix(base, detail, detail_blend);
+    return mix(base, detail, detail_blend);
+  }
+  else
+  {
+    return detail;
+  }
 #else
   return detail;
 #endif
@@ -164,7 +180,7 @@ void main(void)
   pos.xy += cdlod_node_pos;
 #endif
 
-  pos.z = getHeight(pos.xy);
+  pos.z = getHeight(pos.xy, approx_dist);
 
   pos.z += terrain_height_offset;
 

@@ -31,7 +31,8 @@ namespace render_util
     virtual ~MapLoaderBase() {}
     virtual void loadMap(render_util::Map &map,
                          bool load_terrain = true,
-                         render_util::ElevationMap::Ptr *elevation_map = nullptr) = 0;
+                         render_util::ElevationMap::Ptr *elevation_map = nullptr,
+                         render_util::ElevationMap::Ptr *elevation_map_base = nullptr) = 0;
   };
 }
 
