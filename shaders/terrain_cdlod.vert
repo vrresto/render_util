@@ -28,13 +28,12 @@
 
 
 #define DRAW_INSTANCED 1
-#define ENABLE_BASE_MAP 1
+#define ENABLE_BASE_MAP @enable_base_map@
 
 #if DRAW_INSTANCED
 attribute vec4 attrib_pos;
 #endif
 
-uniform bool enable_base_terrain = false;
 
 uniform sampler2D sampler_curvature_map;
 uniform sampler2D sampler_terrain_cdlod_height_map;
@@ -111,18 +110,11 @@ float getHeight(vec2 world_coord, float approx_dist)
     smoothstep(cdlod_min_dist / 4.0, cdlod_min_dist / 2.0, approx_dist));
 
 #if ENABLE_BASE_MAP
-  if (enable_base_terrain)
-  {
-    float base = sampleMap(sampler_terrain_cdlod_height_map_base,
-        world_coord, height_map_base_size_m, height_map_base_origin);
-    float detail_blend = getDetailMapBlend(world_coord);
+  float base = sampleMap(sampler_terrain_cdlod_height_map_base,
+      world_coord, height_map_base_size_m, height_map_base_origin);
+  float detail_blend = getDetailMapBlend(world_coord);
 
-    return mix(base, detail, detail_blend);
-  }
-  else
-  {
-    return detail;
-  }
+  return mix(base, detail, detail_blend);
 #else
   return detail;
 #endif

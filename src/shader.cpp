@@ -34,26 +34,91 @@
 using namespace gl_wrapper::gl_functions;
 using namespace std;
 using namespace glm;
+using namespace render_util;
 
 namespace
 {
 
-string readShaderFile(string file_path)
+
+string preProcessShader(const vector<char> &in, const ShaderParameters &params)
 {
-  string content;
-  ifstream file(file_path);
-  if (file.good()) {
-    stringstream ss;
-    ss << file.rdbuf();
-    content = ss.str();
-  } 
-  else {
-      printf("Failed to open %s\n", file_path.c_str());
+  string out;
+
+  enum State
+  {
+    NONE,
+    PARSE
+  };
+
+  State state = NONE;
+
+  string parsed;
+
+  for (char c : in)
+  {
+    switch (state)
+    {
+      case NONE:
+        assert(parsed.empty());
+        if (c == '@')
+        {
+          state = PARSE;
+        }
+        else
+        {
+          out.push_back(c);
+        }
+        break;
+      case PARSE:
+        if (c == '@')
+        {
+          assert(!parsed.empty());
+
+          stringstream value_str;
+          value_str << params.get(parsed);
+          out += value_str.str();
+
+          parsed.clear();
+
+          state = NONE;
+        }
+        else
+        {
+          parsed.push_back(c);
+        }
+        break;
+    }
   }
+
+  assert(state == NONE);
+
+  return move(out);
+}
+
+
+string readShaderFile(string file_path, const ShaderParameters &params)
+{
+
+  string content;
+
+  vector<char> data;
+  if (util::readFile(file_path, data))
+  {
+    content = preProcessShader(data, params);
+  }
+  else
+  {
+    printf("Failed to read %s\n", file_path.c_str());
+  }
+
   return content;
 }
 
-GLuint createShader(const string &name, const string &path, GLenum type)
+
+GLuint createShader(const string &name,
+                    const string &path,
+                    GLenum type,
+                    const ShaderParameters &params)
 {
   string filename = name;
   if (type == GL_FRAGMENT_SHADER)
@@ -66,7 +131,7 @@ GLuint createShader(const string &name, const string &path, GLenum type)
 //     string header = readShaderFile("common.glsl");
 //     assert(!header.empty());
 
-  string source = readShaderFile(path + '/' + filename);
+  string source = readShaderFile(path + '/' + filename, params);
   if (source.empty()) {
     return 0;
   }
@@ -109,13 +174,36 @@ GLuint createShader(const string &name, const string &path, GLenum type)
 namespace render_util
 {
 
+int ShaderParameters::get(const std::string &name) const
+{
+  auto it = m_map.find(name);
+  if (it != m_map.end())
+  {
+    return it->second;
+  }
+  else
+  {
+    cerr << "unset parameter: " << name << endl;
+    abort();
+  }
+}
+
+
+void ShaderParameters::set(const std::string &name, int value)
+{
+  m_map[name] = value;
+}
+
+
 ShaderProgram::ShaderProgram( const string &name,
                               const std::vector<std::string> &vertex_shaders,
                               const std::vector<std::string> &fragment_shaders,
                               const std::string &path,
                               bool must_be_valid,
-                              const std::map<unsigned int, std::string> &attribute_locations)
-  : name(name),
+                              const std::map<unsigned int, std::string> &attribute_locations,
+                              const ShaderParameters &parameters)
+  : m_parameters(parameters),
+    name(name),
     vertex_shaders(vertex_shaders),
     fragment_shaders(fragment_shaders),
     path(path),
@@ -221,7 +309,7 @@ void ShaderProgram::create()
   cerr<<name<<"num fragment shaders: "<<fragment_shaders.size()<<endl;
   for (auto name : fragment_shaders)
   {
-    GLuint shader = createShader(name, path, GL_FRAGMENT_SHADER);
+    GLuint shader = createShader(name, path, GL_FRAGMENT_SHADER, m_parameters);
     if (!shader)
     {
       cerr<<"failed to create shader: "<<name<<endl;
@@ -236,7 +324,7 @@ void ShaderProgram::create()
   cerr<<name<<": num vertex shaders: "<<vertex_shaders.size()<<endl;
   for (auto name : vertex_shaders)
   {
-    GLuint shader = createShader(name, path, GL_VERTEX_SHADER);
+    GLuint shader = createShader(name, path, GL_VERTEX_SHADER, m_parameters);
     if (!shader)
     {
       cerr<<"failed to create shader: "<<name<<endl;

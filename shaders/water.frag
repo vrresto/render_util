@@ -34,6 +34,7 @@
 // #define ENABLE_WAVE_FOAM 1
 #define ENABLE_WATER_MAP 1
 // #define ENABLE_SHORE_WAVES 1
+#define ENABLE_BASE_MAP @enable_base_map@
 
 // const float water_map_chunk_size_m = 1600;
 const float water_map_chunk_size_m = 1600 * 4;
@@ -57,7 +58,6 @@ vec2 rotate(vec2 v, float a);
 float perlin(vec2 p, float dim);
 
 uniform bool enable_waves = false;
-uniform bool enable_base_terrain = false;
 
 uniform sampler2DArray sampler_beach;
 uniform sampler2DArray sampler_foam_mask;
@@ -472,12 +472,13 @@ float getWaterDepth(vec2 pos)
 
   float depth = 1 - texture(sampler_water_map, vec3(waterMapCoords, water_map_index)).x;
 
-  if (enable_base_terrain)
+#if ENABLE_BASE_MAP
   {
     float detail_map_blend = getDetailMapBlend(pos);
     detail_map_blend = smoothstep(0.7, 1.0, detail_map_blend);
     depth *= detail_map_blend;
   }
+#endif
 
   return depth;
 #else

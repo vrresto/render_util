@@ -31,6 +31,16 @@
 
 namespace render_util
 {
+
+  class ShaderParameters
+  {
+    std::unordered_map<std::string, int> m_map;
+  public:
+    int get(const std::string &name) const;
+    void set(const std::string &name, int value);
+  };
+
+
   class ShaderProgram
   {
   public:
@@ -39,7 +49,8 @@ namespace render_util
                   const std::vector<std::string> &fragment_shaders,
                   const std::string &path,
                   bool must_be_valid = true,
-                  const std::map<unsigned int, std::string> &attribute_locations = {});
+                  const std::map<unsigned int, std::string> &attribute_locations = {},
+                  const ShaderParameters &parameters = {});
 
     ShaderProgram(const char *name, const std::string &path, bool must_be_valid = true);
     ShaderProgram(const char *name_vert, const char *name_frag, const std::string &path, bool must_be_valid = true);
@@ -92,6 +103,8 @@ namespace render_util
     bool isValid() { return is_valid; }
 
   private:
+    const ShaderParameters m_parameters = {};
+
     unsigned int id = 0;
     std::string name;
     std::string path;

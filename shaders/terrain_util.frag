@@ -20,8 +20,9 @@
 
 #extension GL_ARB_texture_query_lod : require
 
+#define ENABLE_BASE_MAP @enable_base_map@
 #define ENABLE_TERRAIN_NOISE 1
-#define ENABLE_FAR_TEXTURE 1
+#define ENABLE_FAR_TEXTURE !@enable_base_map@
 #define ENABLE_WATER 1
 #define ENABLE_WATER_TYPE_MAP 1
 #define ENABLE_FOREST 1
@@ -51,7 +52,6 @@ vec4 applyWater(vec4 color,
 const float meters_per_tile = 1600;
 const float near_distance = 80000;
 
-uniform bool enable_base_terrain = false;
 uniform bool draw_near_forest = false;
 uniform bool enable_terrain_noise = false;
 
@@ -366,15 +366,16 @@ vec4 getTerrainColor(vec3 pos)
 
   float detail_blend = 1.0;
 
-  if (enable_base_terrain)
+#if ENABLE_BASE_MAP
     detail_blend = getDetailMapBlend(pos.xy);
+#endif
 
 #if ENABLE_TERRAIN_NORMAL_MAP
   vec2 normal_map_coord = fract((pos.xy + vec2(0, 200)) / map_size);
   normal_map_coord.y = 1.0 - normal_map_coord.y;
   vec3 normal = texture2D(sampler_terrain_cdlod_normal_map, normal_map_coord).xyz;
 
-  if (enable_base_terrain)
+#if ENABLE_BASE_MAP
   {
     vec2 normal_map_coord_base = fract((pos.xy - height_map_base_origin) / height_map_base_size_m);
     normal_map_coord_base.y = 1.0 - normal_map_coord_base.y;
@@ -382,6 +383,8 @@ vec4 getTerrainColor(vec3 pos)
 
     normal = mix(normal_base, normal, detail_blend);
   }
+#endif
+
 #else
 //   vec3 normal = passNormal;
   vec3 normal = vec3(0,0,1);
@@ -418,8 +421,11 @@ vec4 getTerrainColor(vec3 pos)
   }
 #else
   color = sampleTerrainTextures(pos.xy);
-  if (enable_base_terrain)
-    color = mix(sampleBaseTerrainTextures(pos.xy), color, detail_blend);
+
+#if ENABLE_BASE_MAP
+  color = mix(sampleBaseTerrainTextures(pos.xy), color, detail_blend);
+#endif
+
 #endif
   color.w = 1;
 #endif

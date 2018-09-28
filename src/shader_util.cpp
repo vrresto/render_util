@@ -36,7 +36,8 @@ namespace render_util
 ShaderProgramPtr createShaderProgram(const std::string &definition,
                                      const render_util::TextureManager &tex_mgr,
                                      const std::string &shader_path,
-                                     const std::map<unsigned int, std::string> &attribute_locations)
+                                     const std::map<unsigned int, std::string> &attribute_locations,
+                                     const ShaderParameters &params)
 {
   cout<<"creating shader program: "<<definition<<endl;
 
@@ -89,7 +90,7 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
 
   assert(!fragment_shaders.empty());
 
-  ShaderProgramPtr program = make_shared<ShaderProgram>(definition, vertex_shaders, fragment_shaders, shader_path, true, attribute_locations);
+  ShaderProgramPtr program = make_shared<ShaderProgram>(definition, vertex_shaders, fragment_shaders, shader_path, true, attribute_locations, params);
 
   for (auto name : texunits)
   {

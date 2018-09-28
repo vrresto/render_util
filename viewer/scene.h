@@ -66,10 +66,13 @@ inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
                       bool use_lod,
                       const render_util::ElevationMap::ConstPtr elevation_map,
                       const render_util::ElevationMap::ConstPtr elevation_map_base,
-                      glm::vec3 color)
+                      glm::vec3 color,
+                      bool use_base_map)
 {
-  Terrain t = render_util::createTerrainRenderer(tex_mgr, use_lod,
-                                                 RENDER_UTIL_SHADER_DIR, "terrain");
+  Terrain t = render_util::createTerrainRenderer(tex_mgr,
+    use_lod,
+    RENDER_UTIL_SHADER_DIR, "terrain",
+    use_base_map);
 
   t.getTerrain()->build(elevation_map, elevation_map_base);
 
@@ -113,7 +116,8 @@ public:
     m_terrain_cdlod =
       render_util::viewer::createTerrain(getTextureManager(), true,
                                          elevation_map, elevation_map_base,
-                                         glm::vec3(0,1,0));
+                                         glm::vec3(0,1,0),
+                                         m_use_base_map);
   }
 
 
@@ -142,7 +146,6 @@ public:
     program->setUniform("view2WorldMatrix", camera.getView2WorldMatrix());
     program->setUniform("sunDir", getSunDir());
     program->setUniform("toggle_lod_morph", toggle_lod_morph);
-    program->setUniform("enable_base_terrain", m_use_base_map);
   }
 
   virtual void setup() = 0;
