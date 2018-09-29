@@ -38,18 +38,22 @@ RGBA getAverageColor(const ImageRGBA *image);
 
 
 template <typename T>
-typename T::Ptr
-clone(typename T::Ptr image)
+struct TypeFromPtr
 {
-  return typename T::Ptr(new T(image->w(), image->h(), image->dataSize(), image->getData()));
-}
+  using Type = typename std::remove_const<typename T::element_type>::type;
+  using Ptr = typename Type::Ptr;
+  using ConstPtr = typename Type::ConstPtr;
+};
 
 
 template <typename T>
-typename T::Ptr
-clone(typename T::ConstPtr image)
+typename TypeFromPtr<T>::Ptr
+clone(T image)
 {
-  return typename T::Ptr(new T(image->w(), image->h(), image->dataSize(), image->getData()));
+  return std::make_shared<typename TypeFromPtr<T>::Type>(image->w(),
+                                                         image->h(),
+                                                         image->dataSize(),
+                                                         image->getData());
 }
 
 
