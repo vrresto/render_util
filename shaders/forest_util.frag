@@ -18,18 +18,44 @@
 
 #version 130
 
+#define ENABLE_BASE_MAP @enable_base_map@
+
 float genericNoise(vec2 coord);
+float getDetailMapBlend(vec2 pos);
 
 uniform ivec2 typeMapSize;
 
 uniform sampler2D sampler_forest_map;
+#if ENABLE_BASE_MAP
+  uniform sampler2D sampler_forest_map_base;
+  uniform vec2 height_map_base_size_m;
+  uniform vec2 height_map_base_origin;
+#endif
 uniform sampler2D sampler_forest_far;
 uniform sampler2DArray sampler_forest_layers;
 
 
-float getForestAlpha(vec2 typeMapCoords)
+
+float sampleForestAlpha(vec2 typeMapCoords, vec2 pos)
 {
   float forest_alpha = texture2D(sampler_forest_map, (typeMapCoords + vec2(0.5)) / typeMapSize).x;
+
+  #if ENABLE_BASE_MAP
+  {
+    vec2 coords = (pos - height_map_base_origin) / height_map_base_size_m;
+    float forest_alpha_base =
+      texture2D(sampler_forest_map_base, coords).x;
+    forest_alpha = mix(forest_alpha_base, forest_alpha, getDetailMapBlend(pos));
+  }
+  #endif
+
+  return forest_alpha;
+}
+
+float getForestAlpha(vec2 typeMapCoords, vec2 pos)
+{
+
+  float forest_alpha = sampleForestAlpha(typeMapCoords, pos);
 
   float forest_noise = genericNoise(typeMapCoords * 1.0);
 //   forest_noise += 0.5 * genericNoise(typeMapCoords * 2);
@@ -52,7 +78,7 @@ vec4 getForestFarColor(vec2 pos)
   vec2 typeMapCoords = pos.xy / 200.0;
   vec2 forestCoords = pos.xy / 200;
 
-  float alpha = getForestAlpha(typeMapCoords);
+  float alpha = getForestAlpha(typeMapCoords, pos);
 
   vec4 forest = texture(sampler_forest_far, forestCoords);
 
@@ -67,7 +93,7 @@ vec4 getForestFarColorSimple(vec2 pos)
   vec2 typeMapCoords = pos.xy / 200.0;
   vec2 forestCoords = pos.xy / 200;
 
-  float alpha = texture2D(sampler_forest_map, (typeMapCoords + vec2(0.5)) / typeMapSize).x;
+  float alpha = sampleForestAlpha(typeMapCoords, pos);
 
   vec4 forest = texture(sampler_forest_far, forestCoords);
 
@@ -83,7 +109,7 @@ vec4 getForestColor(vec2 pos, int layer)
 
   vec2 forestCoords = pos.xy / 200;
 
-  float forest_alpha = getForestAlpha(typeMapCoords);
+  float forest_alpha = getForestAlpha(typeMapCoords, pos);
 
 //   float forest_alpha = texture2D(sampler_forest_map, (typeMapCoords + vec2(0.5)) / typeMapSize).x;
 // 

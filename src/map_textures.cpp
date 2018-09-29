@@ -453,8 +453,16 @@ void render_util::MapTextures::setTexture(unsigned texunit, TexturePtr texture)
       params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
       params.set(GL_TEXTURE_LOD_BIAS, 1.0);
       break;
+    case TEXUNIT_FOREST_MAP:
+    case TEXUNIT_FOREST_MAP_BASE:
+      params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+      params.set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+      params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+      // params.set(GL_TEXTURE_LOD_BIAS, 10.0);
+      break;
   }
-  
+
   params.apply(texture);
 
   p->m_material->setTexture(texunit, texture);
