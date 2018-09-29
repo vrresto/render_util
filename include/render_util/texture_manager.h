@@ -96,12 +96,13 @@ class TextureManager
   Private *p = 0;
 
 public:
-  TextureManager(unsigned int lowest_unit);
+  TextureManager(unsigned int lowest_unit, unsigned int highest_unit = 0);
   ~TextureManager();
 
   void setActive(bool);
   void bind(unsigned int unit, TexturePtr texture);
   int getTexUnitNum(unsigned int unit) const;
+  int getHighestUnit();
 };
 
 

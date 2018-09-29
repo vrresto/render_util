@@ -26,6 +26,8 @@
 namespace render_util
 {
 
+  enum { MAX_GL_TEXUNITS = 32 }; //FIXME
+
   enum
   {
     #include <render_util/texunits.priv>
