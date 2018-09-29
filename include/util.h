@@ -102,7 +102,7 @@ inline std::string basename(std::string path, bool remove_extension = false)
 }
 
 
-inline bool readFile(const std::string &path, std::vector<char> &content)
+inline bool readFile(const std::string &path, std::vector<char> &content, bool quiet = false)
 {
   using namespace std;
 
@@ -119,10 +119,10 @@ inline bool readFile(const std::string &path, std::vector<char> &content)
 
     if (file.good())
       success = true;
-    else
+    else if (!quiet)
       fprintf(stderr, "Failed to read %s\n", path.c_str());
   }
-  else
+  else if (!quiet)
   {
       fprintf(stderr, "Failed to open %s\n", path.c_str());
   }

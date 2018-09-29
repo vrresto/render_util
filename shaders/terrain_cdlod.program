@@ -1,12 +1,13 @@
 vert terrain_cdlod
 vert noise
-vert main
+vert util
 frag terrain
 frag atmosphere
 frag noise
 frag forest_util
 frag terrain_util
 frag water
+frag util
 frag main
 texunit terrain_cdlod_height_map
 texunit terrain_cdlod_normal_map

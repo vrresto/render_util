@@ -94,22 +94,45 @@ string preProcessShader(const vector<char> &in, const ShaderParameters &params)
 }
 
 
-string readShaderFile(string file_path, const ShaderParameters &params)
+string readShaderFile(const string &name,
+                     const string &path,
+                     GLenum type,
+                     const ShaderParameters &params,
+                     string &filename)
 {
-
-  string content;
-
-  vector<char> data;
-  if (util::readFile(file_path, data))
+  string ext;
+  string type_str;
+  if (type == GL_FRAGMENT_SHADER)
   {
-    content = preProcessShader(data, params);
+    ext = ".frag";
+    type_str = "fragment";
+  }
+  else if (type == GL_VERTEX_SHADER)
+  {
+    ext = ".vert";
+    type_str = "vertex";
   }
   else
+    abort();
+
+  vector<char> data;
+
+  vector<string> paths;
+  paths.push_back(path + '/' + name + ext);
+  paths.push_back(path + '/' + name + ".glsl");
+
+  for (auto p : paths)
   {
-    printf("Failed to read %s\n", file_path.c_str());
+    if (util::readFile(p, data, true))
+    {
+      filename = p;
+      return preProcessShader(data, params);
+    }
   }
 
-  return content;
+  cerr << "Failed to read " << type_str << " shader file: " << name << endl;
+
+  return {};
 }
 
 
@@ -118,25 +141,15 @@ GLuint createShader(const string &name,
                     GLenum type,
                     const ShaderParameters &params)
 {
-  string filename = name;
-  if (type == GL_FRAGMENT_SHADER)
-    filename += ".frag";
-  else if (type == GL_VERTEX_SHADER)
-    filename += ".vert";
-  else
-    abort();
-
-//     string header = readShaderFile("common.glsl");
-//     assert(!header.empty());
-
-  string source = readShaderFile(path + '/' + filename, params);
+  string filename;
+  string source = readShaderFile(name, path, type, params, filename);
   if (source.empty()) {
     return 0;
   }
 
   GLuint id = gl::CreateShader(type);
   assert(id);
-  
+
 //     const int num_sources = 2;
 
   const GLchar *sources[1] = { source.c_str() };
