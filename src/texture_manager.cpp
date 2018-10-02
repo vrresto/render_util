@@ -186,6 +186,12 @@ TextureManager::~TextureManager()
 }
 
 
+int TextureManager::getLowestUnit()
+{
+  return p->lowest_unit;
+}
+
+
 int TextureManager::getHighestUnit()
 {
   return p->highest_unit;
