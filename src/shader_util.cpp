@@ -44,7 +44,7 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
   vector<string> vertex_shaders;
   vector<string> fragment_shaders;
   vector<string> texunits;
-  
+
   {
     string path = shader_path + '/' + definition + ".program";
     ifstream in(path);
@@ -53,7 +53,7 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
       cout<<"failed to open "<<path<<endl;
     }
     assert(in.good());
-    
+
     while (in.good())
     {
       string line;
