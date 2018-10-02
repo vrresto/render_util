@@ -86,28 +86,23 @@ enum { NUM_TEST_BUFFERS = 4 };
 
 enum
 {
-  HEIGHT_MAP_METERS_PER_GRID = 200,
-
-  HEIGHT_MAP_BASE_METERS_PER_GRID = 400,
-
-//   METERS_PER_GRID = 200,
-//   MAX_LOD = 10,
-//   LEAF_NODE_SIZE = 1600,
-//   MIN_LOD_DIST = 30000,
-
-  METERS_PER_GRID = 200,
-  MAX_LOD = 10,
-  LEAF_NODE_SIZE = 6400,
+  LOD_LEVELS = 6,
+  MESH_GRID_SIZE = 128,
   MIN_LOD_DIST = 40000,
 
-//   METERS_PER_GRID = 100,
-//   MAX_LOD = 12,
-//   LEAF_NODE_SIZE = 3200,
-//   LEAF_NODE_SIZE = 6400,
+  HEIGHT_MAP_METERS_PER_GRID = 200,
+  HEIGHT_MAP_BASE_METERS_PER_GRID = 400,
+  METERS_PER_GRID = 200,
 
-  MESH_GRID_SIZE = LEAF_NODE_SIZE / METERS_PER_GRID
+  LEAF_NODE_SIZE = MESH_GRID_SIZE * METERS_PER_GRID,
+
+  MAX_LOD = LOD_LEVELS,
 };
 
+constexpr size_t getNumLeafNodes()
+{
+  return pow(4, (size_t)LOD_LEVELS);
+}
 
 struct GridMesh
 {
@@ -634,6 +629,8 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map,
     p->normal_map_base_texture = createNormalMapTexture(base_map, HEIGHT_MAP_BASE_METERS_PER_GRID);
   }
 
+  cout<<"TerrainCDLOD: terrain size: "<<getNodeSize(MAX_LOD) / 1000.0<<" km"<<endl;
+  cout<<"TerrainCDLOD: leaf nodes: "<<getNumLeafNodes()<<endl;
   cout<<"TerrainCDLOD: done buildding terrain."<<endl;
 }
 
@@ -670,6 +667,7 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map)
   cout<<"TerrainCDLOD: done buildding terrain."<<endl;
 }
 
+
 void TerrainCDLOD::update(const Camera &camera)
 {
   assert(p->root_node);
@@ -705,7 +703,7 @@ void TerrainCDLOD::update(const Camera &camera)
 
 #if DRAW_INSTANCED
 
-  const int buffer_elements = 20000;
+  const int buffer_elements = getNumLeafNodes();
   const int buffer_size = sizeof(RenderBatch::NodePos) * buffer_elements;
 
   unsigned int buffer_pos = 0;
