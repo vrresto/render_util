@@ -369,7 +369,7 @@ void ShaderProgram::create()
   link();
 
   gl::Finish();
-  error = gl::GetError();
+  auto error = gl::GetError();
   assert(error == GL_NO_ERROR || error == GL_INVALID_VALUE);
   assert(gl::GetError() == GL_NO_ERROR);
 
