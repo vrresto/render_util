@@ -293,24 +293,12 @@ void ShaderProgram::link()
 
 void ShaderProgram::create()
 {
-  gl::Finish();
-  GLenum error = gl::GetError();
-  if (error != GL_NO_ERROR)
-  {
-    cerr<<"gl error: "<<gl_wrapper::getGLErrorString(error)<<endl;
-    abort();
-  }
-  
+  FORCE_CHECK_GL_ERROR();
+
   GLint current_program_save;
   gl::GetIntegerv(GL_CURRENT_PROGRAM, &current_program_save);
 
-  gl::Finish();
-  error = gl::GetError();
-  if (error != GL_NO_ERROR)
-  {
-    cerr<<"gl error: "<<gl_wrapper::getGLErrorString(error)<<endl;
-    abort();
-  }
+  FORCE_CHECK_GL_ERROR();
 
   is_valid = false;
 
@@ -347,13 +335,7 @@ void ShaderProgram::create()
     }
   }
 
-  gl::Finish();
-  error = gl::GetError();
-  if (error != GL_NO_ERROR)
-  {
-    cerr<<"gl error: "<<gl_wrapper::getGLErrorString(error)<<endl;
-    abort();
-  }
+  FORCE_CHECK_GL_ERROR();
 
   for (auto shader : shader_objects)
   {
@@ -400,7 +382,7 @@ void ShaderProgram::create()
     setUniform("curvature_map_max_distance", curvature_map_max_distance);
   }
 
-  CHECK_GL_ERROR();
+  FORCE_CHECK_GL_ERROR();
 }
 
 GLuint ShaderProgram::getId()
