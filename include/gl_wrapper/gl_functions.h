@@ -25,30 +25,26 @@
 #include <gl_wrapper/gl_interface.h>
 #include <gl_wrapper/gl_wrapper.h>
 
-namespace gl_wrapper
+namespace gl_wrapper::gl_functions::gl
 {
-  namespace gl_functions
-  {
-    namespace gl
-    {
-      #include <gl_wrapper/_generated/gl_inline_forwards.inc>
-    }
-  }
+  #include <gl_wrapper/_generated/gl_inline_forwards.inc>
 }
 
-#if 0
-#define CHECK_GL_ERROR() \
+#define FORCE_CHECK_GL_ERROR() \
 { \
   gl_wrapper::gl_functions::gl::Finish(); \
-  unsigned int err = gl_wrapper::gl_functions::gl::GetError(); \
+  auto err = gl_wrapper::gl_functions::gl::GetError(); \
   if (err != GL_NO_ERROR) \
   { \
     printf("gl error: %s\n", gl_wrapper::getGLErrorString(err)); \
   } \
   assert(err == GL_NO_ERROR); \
 }
+
+#if 0
+  #define CHECK_GL_ERROR() FORCE_CHECK_GL_ERROR()
 #else
-#define CHECK_GL_ERROR() {}
+  #define CHECK_GL_ERROR() {}
 #endif
 
 #endif
