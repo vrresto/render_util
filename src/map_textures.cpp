@@ -414,7 +414,8 @@ void render_util::MapTextures::setForestMap(ImageGreyScale::ConstPtr image)
 
 void render_util::MapTextures::setForestLayers(const std::vector<ImageRGBA::ConstPtr> &images)
 {
-  TexturePtr texture = createTextureArray<ImageRGBA>(images);
+  auto resampled = resampleImages(images, getMaxWidth(images));
+  TexturePtr texture = createTextureArray<ImageRGBA>(resampled);
 
   TextureParameters<int> params;
   params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
