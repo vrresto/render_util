@@ -25,8 +25,9 @@ class MapLoader : public render_util::MapLoaderBase
 {
 public:
   void loadMap(render_util::Map &map,
-               bool load_terrain,
-               render_util::ElevationMap *elevation_map) override;
+               bool load_terrain = true,
+               render_util::ElevationMap::Ptr *elevation_map = nullptr,
+               render_util::ElevationMap::Ptr *elevation_map_base = nullptr) override;
 };
 
 #endif

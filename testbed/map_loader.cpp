@@ -127,20 +127,20 @@ void createWaterNormalMaps(render_util::WaterAnimation *water_animation,
 }
 
 
-ImageGreyScale::Ptr generateTypeMap(const ElevationMap &elevation_map)
+ImageGreyScale::Ptr generateTypeMap(ElevationMap::ConstPtr elevation_map)
 {
   FastNoise noise_generator;
 //   noise_generator.SetFrequency(0.4);
 
   Image<Normal>::Ptr normal_map = createNormalMap(elevation_map, 200);
-  ImageGreyScale::Ptr type_map = image::create<unsigned char>(0, elevation_map.getSize());
+  ImageGreyScale::Ptr type_map = image::create<unsigned char>(0, elevation_map->getSize());
 
   for (int y = 0; y < type_map->h(); y++)
   {
     for (int x = 0; x < type_map->w(); x++)
     {
       unsigned type = 0;
-      float height = elevation_map.getElevation(x,y);
+      float height = elevation_map->get(x,y);
       float noise = noise_generator.GetSimplex(x * 10, y * 10);
 
       if (height <= sea_level)
@@ -176,7 +176,7 @@ ImageGreyScale::Ptr generateTypeMap(const ElevationMap &elevation_map)
   {
     for (int x = 0; x < type_map->w(); x++)
     {
-      float height = elevation_map.getElevation(x,y);
+      float height = elevation_map->get(x,y);
       const Normal &normal = normal_map->at(x,y);
       unsigned type = type_map->at(x,y);
 
@@ -374,7 +374,7 @@ vector<ImageRGBA::ConstPtr> getForestLayers()
 
     auto name = string("forest") + to_string(i);
 
-    ImageRGBA::Ptr texture = getTexture(name.str());
+    ImageRGBA::Ptr texture = getTexture(name);
     if (!texture)
       continue;
 
@@ -386,7 +386,7 @@ vector<ImageRGBA::ConstPtr> getForestLayers()
 
 ImageGreyScale::Ptr createForestMap(ImageGreyScale::ConstPtr type_map)
 {
-  auto map = image::clone<ImageGreyScale>(type_map);
+  auto map = image::clone(type_map);
 
   map->forEach([] (unsigned char &pixel)
   { 
@@ -407,7 +407,8 @@ ImageGreyScale::Ptr createForestMap(ImageGreyScale::ConstPtr type_map)
 
 void MapLoader::loadMap(render_util::Map &map,
                         bool load_terrain,
-                        render_util::ElevationMap *elevation_map_out)
+                        render_util::ElevationMap::Ptr *elevation_map_out,
+                        render_util::ElevationMap::Ptr *elevation_map_base_out)
 {
 
   string height_map_path = getDataPath() + "/nz.tiff";
@@ -466,18 +467,16 @@ void MapLoader::loadMap(render_util::Map &map,
 
 
   {
-    render_util::ElevationMap elevation_map(height_map);
-
     if (load_terrain)
     {
       assert(map.terrain);
-      map.terrain->build(&elevation_map);
+      map.terrain->build(height_map);
     }
 
-    type_map = generateTypeMap(elevation_map);
+    type_map = generateTypeMap(height_map);
 
     if (elevation_map_out)
-      *elevation_map_out = elevation_map;
+      *elevation_map_out = height_map;
   }
 
 //   saveImageToFile("../type_map.tga", type_map.get());
