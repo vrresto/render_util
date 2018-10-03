@@ -20,6 +20,7 @@
 #define RENDER_UTIL_IMAGE_RESAMPLE_H
 
 #include <render_util/image.h>
+#include <render_util/image_util.h>
 
 namespace render_util
 {
@@ -254,6 +255,37 @@ upSample(std::shared_ptr<const T> src, int factor)
   }
 
   return dst;
+}
+
+
+template <typename T>
+int getMaxWidth(const std::vector<T> &images)
+{
+  int max_width = 0;
+  for (auto image : images)
+    max_width = std::max(max_width, image->w());
+  return max_width;
+}
+
+
+template <typename T>
+std::vector<typename image::TypeFromPtr<T>::ConstPtr>
+resampleImages(const std::vector<T> &images, int new_width)
+{
+  std::vector<typename image::TypeFromPtr<T>::ConstPtr> resampled;
+
+  for (auto image : images)
+  {
+    if (image->w() < new_width)
+      image = upSample(image, new_width / image->w());
+    else if (image->w() > new_width)
+      image = downSample(image, image->w() / new_width);
+    assert(image->size() == glm::ivec2(new_width));
+
+    resampled.push_back(image);
+  }
+
+  return std::move(resampled);
 }
 
 

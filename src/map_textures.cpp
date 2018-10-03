@@ -226,27 +226,11 @@ ImageGreyScale::Ptr createShoreWaveTexture()
 }
 
 
-void resampleTextures(const std::vector<ImageRGBA::ConstPtr> &textures,
-                        std::vector<ImageRGBA::ConstPtr> &textures_resampled)
-{
-  for (ImageRGBA::ConstPtr texture : textures)
-  {
-    if (texture->w() < texture_size)
-      texture = upSample(texture, texture_size / texture->w());
-    else if (texture->w() > texture_size)
-      texture = downSample(texture, texture->w() / texture_size);
-    assert(texture->size() == glm::ivec2(texture_size));
-
-    textures_resampled.push_back(texture);
-  }
-}
-
-
 TexturePtr createTextureArray(const std::vector<ImageRGBA::ConstPtr> &textures)
 {
   std::vector<ImageRGBA::ConstPtr> textures_resampled;
   cout << "resampling textures ..." << endl;
-  resampleTextures(textures, textures_resampled);
+  textures_resampled = resampleImages(textures, texture_size);
   cout << "resampling textures ... done." << endl;
   return render_util::createTextureArray<ImageRGBA>(textures_resampled);
 }
