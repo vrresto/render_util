@@ -35,12 +35,14 @@ bool render_util::loadImageFromMemory(const std::vector<char> &data_in,
 {
   int actual_channels = 0;
 
+  // num_channels forces the number of channels in the returned data
+  // so channels_in_file can be safely ingnored
   unsigned char *image_data =
     stbi_load_from_memory(reinterpret_cast<const unsigned char*>(data_in.data()),
                           data_in.size(),
                           &width,
                           &height,
-                          &actual_channels,
+                          &channels_in_file,
                           num_channels);
 
   if (image_data)
