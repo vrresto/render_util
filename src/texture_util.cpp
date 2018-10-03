@@ -547,7 +547,7 @@ unsigned int createUnsignedIntTexture(const unsigned int *data, int w, int h)
 TexturePtr createAmosphereThicknessTexture(TextureManager &texture_manager,
                                       std::string resource_path)
 {
-  AtmosphereMapElementType *atmosphere_map = 
+  AtmosphereMapElementType *atmosphere_map =
     new AtmosphereMapElementType[atmosphere_map_num_elements];
 
   ifstream in(resource_path + "/atmosphere_map", ios_base::binary);
