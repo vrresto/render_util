@@ -41,7 +41,7 @@ namespace gl_wrapper::gl_functions::gl
   assert(err == GL_NO_ERROR); \
 }
 
-#if 0
+#if RENDER_UTIL_ENABLE_DEBUG
   #define CHECK_GL_ERROR() FORCE_CHECK_GL_ERROR()
 #else
   #define CHECK_GL_ERROR() {}
