@@ -33,7 +33,7 @@ bool render_util::loadImageFromMemory(const std::vector<char> &data_in,
                           int &width,
                           int &height)
 {
-  int actual_channels = 0;
+  int channels_in_file = 0;
 
   // num_channels forces the number of channels in the returned data
   // so channels_in_file can be safely ingnored
