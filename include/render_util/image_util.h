@@ -250,8 +250,7 @@ extend(T src,
 {
   using ImageType = typename std::remove_const<typename T::element_type>::type;
 
-  assert(new_size.x > src->w());
-  assert(new_size.y > src->h());
+  assert(new_size.x > src->w() || new_size.y > src->h());
 
   auto dst = std::make_shared<ImageType>(new_size);
   fill<ImageType>(dst, color);
