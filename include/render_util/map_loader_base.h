@@ -30,8 +30,8 @@ namespace render_util
   public:
     virtual ~MapLoaderBase() {}
     virtual void loadMap(render_util::Map &map,
-                         bool load_terrain = true,
-                         render_util::ElevationMap::Ptr *elevation_map = nullptr,
+                         bool &has_base_water_map,
+                         render_util::ElevationMap::Ptr &elevation_map,
                          render_util::ElevationMap::Ptr *elevation_map_base = nullptr) = 0;
   };
 }

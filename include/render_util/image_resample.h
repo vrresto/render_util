@@ -149,7 +149,7 @@ public:
 
   std::shared_ptr<const T> getMipmap() { return m_mipmap; }
 
-  typename T::ComponentType get(glm::ivec2 pos, int component)
+  typename T::ComponentType get(glm::ivec2 pos, int component = 0)
   {
     using namespace glm;
 
@@ -163,7 +163,7 @@ public:
     return m_sampler.sample(uv.x, uv.y, component);
   }
 
-  typename T::ComponentType get(int x, int y, int component)
+  typename T::ComponentType get(int x, int y, int component = 0)
   {
     return get(glm::ivec2(x,y), component);
   }

@@ -503,7 +503,6 @@ void TerrainCDLOD::Private::setUniforms(ShaderProgramPtr program)
   program->setUniform("height_map_size_px", height_map_size_px);
 
   program->setUniform("height_map_base_size_m", height_map_base_size_px * (float)HEIGHT_MAP_BASE_METERS_PER_GRID);
-  program->setUniform("height_map_base_origin", vec2(-1000.0 * 1000.0));
 }
 
 

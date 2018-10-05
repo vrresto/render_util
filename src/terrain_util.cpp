@@ -33,7 +33,8 @@ namespace
 
 ShaderProgramPtr createTerrainProgram(const TextureManager &tex_mgr, bool cdlod, const string &shader_path,
                                       const string &shader_program_name,
-                                      bool enable_base_map)
+                                      bool enable_base_map,
+                                      bool enable_base_water_map)
 {
   string name = shader_program_name;
   if (name.empty())
@@ -54,6 +55,7 @@ ShaderProgramPtr createTerrainProgram(const TextureManager &tex_mgr, bool cdlod,
 
   ShaderParameters params;
   params.set("enable_base_map", enable_base_map);
+  params.set("enable_base_water_map", enable_base_water_map);
 
   terrain_program = createShaderProgram(name, tex_mgr, shader_path, attribute_locations, params);
 
@@ -78,9 +80,15 @@ TerrainRenderer::TerrainRenderer(std::shared_ptr<TerrainBase> terrain, ShaderPro
 
 TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr, bool use_lod, const string &shader_path,
                                       const string &shader_program_name,
-                                      bool enable_base_map)
+                                      bool enable_base_map,
+                                      bool enable_base_water_map)
 {
-  auto program = createTerrainProgram(tex_mgr, use_lod, shader_path, shader_program_name, enable_base_map);
+  auto program = createTerrainProgram(tex_mgr,
+                                      use_lod,
+                                      shader_path,
+                                      shader_program_name,
+                                      enable_base_map,
+                                      enable_base_water_map);
 
   auto terrain = use_lod ?
     g_terrain_cdlod_factory() :

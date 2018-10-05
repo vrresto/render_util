@@ -67,12 +67,14 @@ inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
                       const render_util::ElevationMap::ConstPtr elevation_map,
                       const render_util::ElevationMap::ConstPtr elevation_map_base,
                       glm::vec3 color,
-                      bool use_base_map)
+                      bool use_base_map,
+                      bool use_base_water_map)
 {
   Terrain t = render_util::createTerrainRenderer(tex_mgr,
     use_lod,
     RENDER_UTIL_SHADER_DIR, "terrain",
-    use_base_map);
+    use_base_map,
+    use_base_water_map);
 
   t.getTerrain()->build(elevation_map, elevation_map_base);
 
@@ -90,12 +92,14 @@ class Scene
   render_util::TextureManager texture_manager = render_util::TextureManager(0);
 
 public:
-  const bool m_use_base_map = false;
+  const bool m_use_base_map = true;
 
   Camera camera;
   float sun_azimuth = 90.0;
   bool toggle_lod_morph = false;
   bool pause_animations = false;
+  bool m_use_base_water_map = false;
+  glm::vec2 base_map_origin = glm::vec2(0);
 
   Terrain m_terrain;
   Terrain m_terrain_cdlod;
@@ -117,7 +121,8 @@ public:
       render_util::viewer::createTerrain(getTextureManager(), true,
                                          elevation_map, elevation_map_base,
                                          glm::vec3(0,1,0),
-                                         m_use_base_map);
+                                         m_use_base_map,
+                                         m_use_base_water_map);
   }
 
 
@@ -146,6 +151,7 @@ public:
     program->setUniform("view2WorldMatrix", camera.getView2WorldMatrix());
     program->setUniform("sunDir", getSunDir());
     program->setUniform("toggle_lod_morph", toggle_lod_morph);
+    program->setUniform("height_map_base_origin", base_map_origin);
   }
 
   virtual void setup() = 0;

@@ -46,7 +46,8 @@ TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr,
                                       bool use_lod,
                                       const std::string &shader_path,
                                       const std::string &shader_program_name = {},
-                                      bool enable_base_map = false);
+                                      bool enable_base_map = false,
+                                      bool enable_base_water_map = false);
 
 
 } // namespace render_util

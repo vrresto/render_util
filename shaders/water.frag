@@ -34,7 +34,9 @@
 // #define ENABLE_WAVE_FOAM 1
 #define ENABLE_WATER_MAP 1
 // #define ENABLE_SHORE_WAVES 1
+
 #define ENABLE_BASE_MAP @enable_base_map@
+#define ENABLE_BASE_WATER_MAP @enable_base_water_map@
 
 // const float water_map_chunk_size_m = 1600;
 const float water_map_chunk_size_m = 1600 * 4;
@@ -56,6 +58,7 @@ void sampleTypeMap(sampler2D sampler,
             out float weights[4]);
 vec2 rotate(vec2 v, float a);
 float perlin(vec2 p, float dim);
+float genericNoise(vec2 coord);
 
 uniform bool enable_waves = false;
 
@@ -70,6 +73,14 @@ uniform sampler2D sampler_shore_wave;
 uniform sampler2D sampler_water_type_map;
 uniform sampler2D sampler_water_map_table;
 uniform sampler2DArray sampler_water_map;
+
+#if ENABLE_BASE_MAP
+  uniform vec2 height_map_base_size_m;
+  uniform vec2 height_map_base_origin;
+  #if ENABLE_BASE_WATER_MAP
+    uniform sampler2D sampler_water_map_base;
+  #endif
+#endif
 
 uniform vec3 sunDir;
 uniform vec3 water_color;
@@ -446,6 +457,28 @@ void sampleWaterType(vec2 pos, out float shallow_sea_amount, out float river_amo
 }
 
 
+#if ENABLE_BASE_WATER_MAP
+float getWaterDepthBase(vec2 pos)
+{
+  float depth = 1 - texture2D(sampler_water_map_base, (pos - height_map_base_origin) / height_map_base_size_m).x;
+
+  float threshold_noise = clamp(genericNoise(pos * 0.0004), -1, 1);
+  float threshold_noise_coarse = clamp(genericNoise(pos * 0.0001), -1, 1);
+
+  float threshold = 0.5;
+
+  threshold -= 0.5 * threshold_noise_coarse;
+  threshold += 0.5 * threshold_noise;
+
+  threshold = clamp(threshold, 0.1, 0.9);
+
+  depth = smoothstep(threshold, threshold + 0.2, depth);
+
+  return depth;
+}
+#endif
+
+
 float getWaterDepth(vec2 pos)
 {
 #if ENABLE_WATER_MAP
@@ -476,7 +509,14 @@ float getWaterDepth(vec2 pos)
   {
     float detail_map_blend = getDetailMapBlend(pos);
     detail_map_blend = smoothstep(0.7, 1.0, detail_map_blend);
-    depth *= detail_map_blend;
+
+    #if ENABLE_BASE_WATER_MAP
+      float base_depth = getWaterDepthBase(pos);
+      depth = mix(base_depth, depth, detail_map_blend);
+    #else
+      depth *= detail_map_blend;
+    #endif
+
   }
 #endif
 

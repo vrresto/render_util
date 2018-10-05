@@ -126,9 +126,9 @@ void TerrainViewerScene::setup()
   ElevationMap::Ptr elevation_map_base;
 
   if (m_use_base_map)
-    map_loader->loadMap(*map, false, &elevation_map, &elevation_map_base);
+    map_loader->loadMap(*map, m_use_base_water_map, elevation_map, &elevation_map_base);
   else
-    map_loader->loadMap(*map, false, &elevation_map);
+    map_loader->loadMap(*map, m_use_base_water_map, elevation_map);
 
   assert(elevation_map);
   if(m_use_base_map)
@@ -150,6 +150,7 @@ void TerrainViewerScene::setup()
 #endif
 
   map_size = map->size;
+  base_map_origin = map->base_map_origin;
 
   cout<<"map size: "<<map_size.x<<","<<map_size.y<<endl;
 
