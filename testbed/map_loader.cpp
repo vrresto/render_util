@@ -400,9 +400,7 @@ ImageGreyScale::Ptr createForestMap(ImageGreyScale::ConstPtr type_map)
 }
 
 
-
 } // namespace
-
 
 
 void MapLoader::loadMap(render_util::Map &map,
