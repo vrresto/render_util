@@ -159,7 +159,7 @@ void TerrainViewerScene::setup()
 
   CHECK_GL_ERROR();
 
-  map->textures->bind();
+  map->textures->bind(getTextureManager());
   CHECK_GL_ERROR();
 
   CHECK_GL_ERROR();

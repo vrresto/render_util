@@ -72,10 +72,10 @@ class Material
 {
   vector<shared_ptr<TextureBinding>> m_bindings;
   unordered_map<unsigned int, shared_ptr<TextureBinding>> m_map;
-  TextureManager &m_texture_manager;
+  const TextureManager &m_texture_manager;
 
 public:
-  Material(TextureManager &texture_manager) : m_texture_manager(texture_manager) {}
+  Material(const TextureManager &texture_manager) : m_texture_manager(texture_manager) {}
 
   void setTexture(unsigned int texture_unit, TexturePtr texture)
   {
@@ -99,11 +99,11 @@ public:
     }
   }
 
-  void bind()
+  void bind(TextureManager &mgr)
   {
     for (auto b : m_bindings)
     {
-      m_texture_manager.bind(b->texture_unit, b->texture);
+      mgr.bind(b->texture_unit, b->texture);
     }
   }
 };
@@ -249,7 +249,7 @@ struct render_util::MapTextures::Private
 };
 
 
-render_util::MapTextures::MapTextures(TextureManager &texture_manager) :
+render_util::MapTextures::MapTextures(const TextureManager &texture_manager) :
   m_texture_manager(texture_manager), p(new Private)
 {
   p->m_material.reset(new Material(m_texture_manager));
@@ -262,7 +262,7 @@ render_util::MapTextures::~MapTextures()
 }
 
 
-void render_util::MapTextures::bind()
+void render_util::MapTextures::bind(TextureManager &mgr)
 {
   //HACK
   setTexture(TEXUNIT_SHORE_WAVE, createShoreWaveTexture());
@@ -270,7 +270,7 @@ void render_util::MapTextures::bind()
   //HACK
   p->m_material->setTexture(TEXUNIT_GENERIC_NOISE, createNoiseTexture());
 
-  p->m_material->bind();
+  p->m_material->bind(mgr);
 
   CHECK_GL_ERROR();
 }

@@ -31,13 +31,13 @@ namespace render_util
 {
   class MapTextures
   {
-    TextureManager &m_texture_manager;
+    const TextureManager &m_texture_manager;
 
     struct Private;
     Private *p =  nullptr;
 
   public:
-    MapTextures(TextureManager &texture_manager);
+    MapTextures(const TextureManager &texture_manager);
     ~MapTextures();
 
     void setWaterColor(const glm::vec3 &color);
@@ -56,7 +56,7 @@ namespace render_util
 
     void setTexture(unsigned texunit, TexturePtr texture);
 
-    void bind();
+    void bind(TextureManager&);
     void setUniforms(ShaderProgramPtr program);
 
     template <class T>
@@ -76,6 +76,11 @@ namespace render_util
     {
       setTexture(texunit, createTextureArray<T>(images));
     }
+
+
+
+    TexturePtr getBaseMapTexture();
+
   };
 
 }
