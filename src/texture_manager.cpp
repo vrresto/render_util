@@ -186,13 +186,13 @@ TextureManager::~TextureManager()
 }
 
 
-int TextureManager::getLowestUnit()
+int TextureManager::getLowestUnit() const
 {
   return p->lowest_unit;
 }
 
 
-int TextureManager::getHighestUnit()
+int TextureManager::getHighestUnit() const
 {
   return p->highest_unit;
 }
