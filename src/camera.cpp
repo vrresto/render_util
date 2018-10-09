@@ -90,9 +90,12 @@ namespace render_util
     mat4 world_to_view;
     mat4 view_to_world;
     mat4 projection_far;
+    mat4 view_to_world_rot;
 
     vec3 pos;
     ivec2 viewport_size;
+
+    vec2 ndc_to_view = vec2(1);
 
     float m_z_near = 1.2;
     float m_z_far = 2300000;
@@ -143,6 +146,9 @@ namespace render_util
     projection_far = frustum(-right, right, -top, top, m_z_near, m_z_far);
 
     calcFrustumPlanes();
+
+    ndc_to_view.x = tan(radians(m_fov)/2.f);
+    ndc_to_view.y = ndc_to_view.x / aspect;
   }
 
 
@@ -269,6 +275,14 @@ namespace render_util
       world_to_view_trans;
 
     p->view_to_world = affineInverse(p->world_to_view);
+
+    auto world_to_view_rot =
+      world_to_view_roll *
+      world_to_view_pitch *
+      world_to_view_yaw *
+      world_to_y_up;
+
+      p->view_to_world_rot = affineInverse(world_to_view_rot);
   }
 
 
@@ -280,6 +294,25 @@ namespace render_util
         return true;
     }
     return false;
+  }
+
+
+  Beam Camera::createBeamThroughViewportCoord(const vec2 &coord) const
+  {
+    auto rel_coord = clamp(vec2(coord) / vec2(p->viewport_size), vec2(0), vec2(1));
+    rel_coord.x = 1 - rel_coord.x;
+
+    auto ndc = 2.f * rel_coord - vec2(1);
+    auto view = ndc * p->ndc_to_view;
+
+    auto beam_dir_view = normalize(vec3(view.x, view.y, 1));
+    auto beam_dir_world = vec3(p->view_to_world_rot * vec4(beam_dir_view, 0));
+
+    Beam beam;
+    beam.origin = p->pos;
+    beam.direction = beam_dir_world;
+
+    return beam;
   }
 
 }

@@ -25,6 +25,12 @@
 
 namespace render_util
 {
+  struct Beam
+  {
+    glm::vec3 origin;
+    glm::vec3 direction;
+  };
+
   class Camera
   {
     struct Private;
@@ -42,6 +48,8 @@ namespace render_util
     float getFov() const;
     float getZNear() const;
     float getZFar() const;
+
+    Beam createBeamThroughViewportCoord(const glm::vec2&) const;
 
     void setTransform(float x, float y, float z, float yaw, float pitch, float roll);
     void setViewportSize(int width, int height);
