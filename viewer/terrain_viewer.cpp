@@ -138,7 +138,7 @@ void TerrainViewerScene::setup()
 
   assert(!map->water_animation->isEmpty());
 
-  createTerrain(elevation_map, elevation_map_base);
+  createTerrain(elevation_map);
 #if 0
   {
     int elevation_map_width = 5000;

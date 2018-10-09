@@ -29,6 +29,8 @@
 
 namespace render_util
 {
+  enum { HEIGHT_MAP_BASE_METERS_PER_PIXEL = 400 };
+
   class TextureManager;
 
   class TerrainBase
@@ -39,18 +41,10 @@ namespace render_util
     virtual const std::string &getName() = 0;
     virtual void build(ElevationMap::ConstPtr map) = 0;
     virtual void draw() = 0;
+    virtual void setBaseElevationMap(ElevationMap::ConstPtr map) {}
     virtual void update(const Camera &camera) {}
     virtual void setTextureManager(TextureManager*) {};
     virtual void setDrawDistance(float dist) {}
-    virtual void build(ElevationMap::ConstPtr map,
-                       ElevationMap::ConstPtr base_map)
-    {
-      if (!base_map)
-        build(map);
-      else
-        assert(0);
-    }
-
     virtual std::vector<glm::vec3> getNormals() { return std::vector<glm::vec3>(); }
   };
 

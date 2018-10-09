@@ -69,12 +69,11 @@ namespace render_util
 
     const std::string &getName() override;
     void build(ElevationMap::ConstPtr map) override;
-    void build(ElevationMap::ConstPtr map,
-        ElevationMap::ConstPtr base_map) override;
     void draw() override;
     void update(const Camera &camera) override;
     void setTextureManager(TextureManager*) override;
     void setDrawDistance(float dist) override;
+    void setBaseElevationMap(ElevationMap::ConstPtr map) override;
   };
 }
 
@@ -91,7 +90,6 @@ enum
   MIN_LOD_DIST = 40000,
 
   HEIGHT_MAP_METERS_PER_GRID = 200,
-  HEIGHT_MAP_BASE_METERS_PER_GRID = 400,
   METERS_PER_GRID = 200,
 
   LEAF_NODE_SIZE = MESH_GRID_SIZE * METERS_PER_GRID,
@@ -502,7 +500,7 @@ void TerrainCDLOD::Private::setUniforms(ShaderProgramPtr program)
   program->setUniform("height_map_size_m", height_map_size_px * (float)HEIGHT_MAP_METERS_PER_GRID);
   program->setUniform("height_map_size_px", height_map_size_px);
 
-  program->setUniform("height_map_base_size_m", height_map_base_size_px * (float)HEIGHT_MAP_BASE_METERS_PER_GRID);
+  program->setUniform("height_map_base_size_m", height_map_base_size_px * (float)HEIGHT_MAP_BASE_METERS_PER_PIXEL);
 }
 
 
@@ -613,24 +611,6 @@ TerrainCDLOD::TerrainCDLOD() : p(new Private) {}
 TerrainCDLOD::~TerrainCDLOD()
 {
   delete p;
-}
-
-
-void TerrainCDLOD::build(ElevationMap::ConstPtr map,
-                         ElevationMap::ConstPtr base_map)
-{
-  build(map);
-
-  if (base_map)
-  {
-    p->height_map_base_size_px = base_map->size();
-    p->height_map_base_texture = createHeightMapTexture(base_map);
-    p->normal_map_base_texture = createNormalMapTexture(base_map, HEIGHT_MAP_BASE_METERS_PER_GRID);
-  }
-
-  cout<<"TerrainCDLOD: terrain size: "<<getNodeSize(MAX_LOD) / 1000.0<<" km"<<endl;
-  cout<<"TerrainCDLOD: leaf nodes: "<<getNumLeafNodes()<<endl;
-  cout<<"TerrainCDLOD: done buildding terrain."<<endl;
 }
 
 
@@ -915,6 +895,14 @@ const std::string &render_util::TerrainCDLOD::getName()
 void TerrainCDLOD::setDrawDistance(float dist)
 {
   p->draw_distance = dist;
+}
+
+
+void TerrainCDLOD::setBaseElevationMap(ElevationMap::ConstPtr map)
+{
+  p->height_map_base_size_px = map->size();
+  p->height_map_base_texture = createHeightMapTexture(map);
+  p->normal_map_base_texture = createNormalMapTexture(map, HEIGHT_MAP_BASE_METERS_PER_PIXEL);
 }
 
 

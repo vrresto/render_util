@@ -65,7 +65,6 @@ struct Terrain : public render_util::TerrainRenderer
 inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
                       bool use_lod,
                       const render_util::ElevationMap::ConstPtr elevation_map,
-                      const render_util::ElevationMap::ConstPtr elevation_map_base,
                       glm::vec3 color,
                       bool use_base_map,
                       bool use_base_water_map)
@@ -76,7 +75,7 @@ inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
     use_base_map,
     use_base_water_map);
 
-  t.getTerrain()->build(elevation_map, elevation_map_base);
+  t.getTerrain()->build(elevation_map);
 
   t.getProgram()->setUniform("terrain_color", color);
   t.getProgram()->setUniform("draw_near_forest", true);
@@ -119,12 +118,17 @@ public:
 //                                          elevation_map, glm::vec3(1,0,0));
     m_terrain_cdlod =
       render_util::viewer::createTerrain(getTextureManager(), true,
-                                         elevation_map, elevation_map_base,
+                                         elevation_map,
                                          glm::vec3(0,1,0),
                                          m_use_base_map,
                                          m_use_base_water_map);
   }
 
+  void updateTerrain(const render_util::ElevationMap::ConstPtr elevation_map_base)
+  {
+//     m_terrain.getTerrain()->setBaseElevationMap(elevation_map_base);
+    m_terrain_cdlod.getTerrain()->setBaseElevationMap(elevation_map_base);
+  }
 
 //   void updateTerrain()
 //   {
