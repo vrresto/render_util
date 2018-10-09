@@ -30,9 +30,11 @@
 #include <render_util/texture_util.h>
 #include <render_util/texunits.h>
 #include <render_util/image_loader.h>
+#include <render_util/image_util.h>
 #include <render_util/elevation_map.h>
 #include <render_util/camera.h>
 #include <render_util/terrain_util.h>
+#include <render_util/image_util.h>
 #include <gl_wrapper/gl_wrapper.h>
 
 #include <glm/glm.hpp>
@@ -95,7 +97,13 @@ class TerrainViewerScene : public Scene
 
   shared_ptr<render_util::MapLoaderBase> m_map_loader;
 
+  render_util::ImageGreyScale::Ptr m_base_map_land;
+  render_util::TexturePtr m_base_map_land_texture;
+  ElevationMap::Ptr m_elevation_map_base;
+
   void updateUniforms(render_util::ShaderProgramPtr program) override;
+  void updateBaseWaterMapTexture();
+  void buildBaseMap();
 
 public:
   TerrainViewerScene(CreateMapLoaderFunc&);
@@ -113,6 +121,27 @@ TerrainViewerScene::TerrainViewerScene(CreateMapLoaderFunc &create_map_loader)
   assert(m_map_loader);
 }
 
+void TerrainViewerScene::buildBaseMap()
+{
+  m_elevation_map_base = m_map_loader->createBaseElevationMap(m_base_map_land);
+  base_map_size_m =
+    glm::vec2(m_elevation_map_base->getSize() * (int)render_util::HEIGHT_MAP_BASE_METERS_PER_PIXEL);
+
+  updateTerrain(m_elevation_map_base);
+
+  m_map->buildBaseMap(m_elevation_map_base, m_base_map_land);
+  m_map->getTextures().bind(getTextureManager());
+
+  updateBaseWaterMapTexture();
+}
+
+
+void TerrainViewerScene::updateBaseWaterMapTexture()
+{
+  setTextureImage(m_base_map_land_texture, m_base_map_land);
+}
+
+
 void TerrainViewerScene::setup()
 {
   cout<<"void TerrainViewerScene::setup()"<<endl;
@@ -127,7 +156,11 @@ void TerrainViewerScene::setup()
 
   m_map = m_map_loader->loadMap();
 
+  m_base_map_land = m_map_loader->createBaseLandMap();
+
   auto elevation_map = m_map_loader->createElevationMap();
+  m_elevation_map_base = m_map_loader->createBaseElevationMap(m_base_map_land);
+
 
   assert(elevation_map);
   assert(!m_map->getWaterAnimation().isEmpty());
@@ -155,7 +188,13 @@ void TerrainViewerScene::setup()
 
   m_map->getTextures().bind(getTextureManager());
   CHECK_GL_ERROR();
+  if (!m_base_map_land)
+    m_base_map_land = image::create<unsigned char>(0, ivec2(128));
+  m_base_map_land_texture =
+      render_util::createTexture<render_util::ImageGreyScale>(m_base_map_land);
+  getTextureManager().bind(TEXUNIT_WATER_MAP_BASE, m_base_map_land_texture);
 
+  buildBaseMap();
   CHECK_GL_ERROR();
 
   camera.x = map_size.x / 2;

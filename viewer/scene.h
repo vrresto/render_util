@@ -92,13 +92,18 @@ class Scene
 
 public:
   const bool m_use_base_map = true;
+  const bool m_use_base_water_map = true;
 
   Camera camera;
   float sun_azimuth = 90.0;
   bool toggle_lod_morph = false;
   bool pause_animations = false;
-  bool m_use_base_water_map = false;
+
   glm::vec2 base_map_origin = glm::vec2(0);
+  glm::vec2 base_map_size_m = glm::vec2(0);
+
+
+  glm::vec2 m_base_water_map_offset = glm::vec2(0);
 
   Terrain m_terrain;
   Terrain m_terrain_cdlod;

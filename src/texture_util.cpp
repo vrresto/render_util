@@ -219,6 +219,68 @@ namespace render_util
 {
 
 
+void setTextureImage(TexturePtr texture,
+                     const unsigned char *data,
+                     int w,
+                     int h,
+                     int bytes_per_pixel,
+                     bool mipmaps)
+{
+  assert(data);
+  assert(w);
+  assert(h);
+  CHECK_GL_ERROR();
+
+  TemporaryTextureBinding binding(texture);
+  CHECK_GL_ERROR();
+
+  GLint internal_format = -1;
+  GLint format = -1;
+
+  switch (bytes_per_pixel)
+  {
+    case 1:
+      internal_format = GL_R8;
+      format = GL_RED;
+      break;
+    case 2:
+      internal_format = GL_RG8;
+      format = GL_RG;
+      break;
+    case 3:
+      internal_format = GL_RGB8;
+      format = GL_RGB;
+      break;
+    case 4:
+      internal_format = GL_RGBA8;
+      format = GL_RGBA;
+      break;
+    default:
+      cout<<bytes_per_pixel<<endl;
+      assert(0);
+      abort();
+  }
+
+  gl::TexImage2D(GL_TEXTURE_2D, 0,
+                internal_format,
+                w,
+                h,
+                0,
+                format,
+                GL_UNSIGNED_BYTE,
+                data);
+
+  CHECK_GL_ERROR();
+
+  if (mipmaps)
+  {
+    gl::GenerateMipmap(GL_TEXTURE_2D);
+//     gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  }
+//   else
+//     gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  CHECK_GL_ERROR();
+}
 
 TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_pixel, bool mipmaps)
 {

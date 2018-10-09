@@ -21,6 +21,7 @@
 #define RENDER_UTIL_TEXTURE_UTIL_H
 
 #include <render_util/image.h>
+#include <render_util/image_util.h>
 #include <render_util/texture_manager.h>
 #include <render_util/render_util.h>
 #include <render_util/elevation_map.h>
@@ -40,6 +41,28 @@ namespace render_util
 //   unsigned int createTextureArray(const std::vector<render_util::ImageRGBA::ConstPtr> &textures, int mipmap_level);
   TexturePtr createTextureArray(const std::vector<const unsigned char*> &textures,
                                   int mipmap_levels, int texture_width, int bytes_per_pixel);
+
+  void setTextureImage(TexturePtr texture,
+                      const unsigned char *data,
+                      int w,
+                      int h,
+                      int bytes_per_pixel,
+                      bool mipmaps);
+
+
+  template <typename T>
+  void setTextureImage(TexturePtr texture, T image, bool mipmaps = true)
+  {
+    using ImageType = typename image::TypeFromPtr<T>::Type;
+    static_assert(std::is_same<typename ImageType::ComponentType, unsigned char>::value);
+
+    setTextureImage(texture,
+                    image->getData(),
+                    image->w(),
+                    image->h(),
+                    ImageType::BYTES_PER_PIXEL,
+                    mipmaps);
+  }
 
   template <typename T>
   TexturePtr createTextureArray(const std::vector<typename T::ConstPtr> &textures, int mipmap_levels = 0)

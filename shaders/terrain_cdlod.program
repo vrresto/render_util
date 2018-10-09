@@ -15,3 +15,4 @@ texunit terrain_cdlod_height_map_base
 texunit terrain_cdlod_normal_map_base
 texunit curvature_map
 texunit atmosphere_thickness_map
+texunit water_map_base
