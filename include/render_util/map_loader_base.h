@@ -25,14 +25,30 @@
 
 namespace render_util
 {
+  struct MapBase
+  {
+    virtual ~MapBase() {}
+
+    virtual MapTextures &getTextures() = 0;
+    virtual WaterAnimation &getWaterAnimation() = 0;
+    virtual int getHeightMapMetersPerPixel() const = 0;
+
+    virtual void buildBaseMap(render_util::ElevationMap::ConstPtr elevation_map,
+                              render_util::ImageGreyScale::ConstPtr land_map ={}) {}
+  };
+
+
   class MapLoaderBase
   {
   public:
     virtual ~MapLoaderBase() {}
-    virtual void loadMap(render_util::Map &map,
-                         bool &has_base_water_map,
-                         render_util::ElevationMap::Ptr &elevation_map,
-                         render_util::ElevationMap::Ptr *elevation_map_base = nullptr) = 0;
+
+    virtual std::shared_ptr<MapBase> loadMap() const = 0;
+    virtual ElevationMap::Ptr createElevationMap() const = 0;
+    virtual ElevationMap::Ptr createBaseElevationMap(ImageGreyScale::ConstPtr land_map) const = 0;
+    virtual ImageGreyScale::Ptr createBaseLandMap() const = 0;
+
+    virtual glm::vec2 getBaseMapOrigin() const { return {}; };
   };
 }
 

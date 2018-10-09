@@ -26,9 +26,14 @@
 #include <render_util/texture_manager.h>
 #include <factory.h>
 
+#include <functional>
+
 namespace render_util::viewer
 {
-  void runViewer(std::shared_ptr<MapLoaderBase> map_loader);
+  using CreateMapLoaderFunc =
+    std::function<std::shared_ptr<MapLoaderBase>(const render_util::TextureManager&)>;
+
+  void runViewer(CreateMapLoaderFunc&);
 
   void runHeightMapViewer(Image<float>::ConstPtr height_map);
 }

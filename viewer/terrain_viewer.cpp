@@ -85,7 +85,7 @@ class TerrainViewerScene : public Scene
   vec4 shore_wave_pos = vec4(0);
   vec2 map_size = vec2(0);
 
-  shared_ptr<render_util::Map> map;
+  shared_ptr<render_util::MapBase> m_map;
 
   render_util::TexturePtr curvature_map;
   render_util::TexturePtr atmosphere_map;
@@ -93,20 +93,25 @@ class TerrainViewerScene : public Scene
   render_util::ShaderProgramPtr sky_program;
 //   render_util::ShaderProgramPtr forest_program;
 
-  shared_ptr<render_util::MapLoaderBase> map_loader;
+  shared_ptr<render_util::MapLoaderBase> m_map_loader;
 
   void updateUniforms(render_util::ShaderProgramPtr program) override;
 
 public:
-  TerrainViewerScene(shared_ptr<render_util::MapLoaderBase> map_loader) :
-    map_loader(map_loader)
-  {
-    cout<<"TerrainViewerScene()"<<endl;
-  }
+  TerrainViewerScene(CreateMapLoaderFunc&);
+
   void render(float frame_delta) override;
   void setup() override;
 };
 
+
+TerrainViewerScene::TerrainViewerScene(CreateMapLoaderFunc &create_map_loader)
+{
+  cout<<"TerrainViewerScene::TerrainViewerScene"<<endl;
+
+  m_map_loader = create_map_loader(getTextureManager());
+  assert(m_map_loader);
+}
 
 void TerrainViewerScene::setup()
 {
@@ -118,25 +123,14 @@ void TerrainViewerScene::setup()
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
 //   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
-  map = make_shared<Map>();
-  map->textures = make_shared<MapTextures>(getTextureManager());
-  map->water_animation = make_shared<WaterAnimation>();
+  base_map_origin = m_map_loader->getBaseMapOrigin();
 
-  ElevationMap::Ptr elevation_map;
-  ElevationMap::Ptr elevation_map_base;
+  m_map = m_map_loader->loadMap();
 
-  if (m_use_base_map)
-    map_loader->loadMap(*map, m_use_base_water_map, elevation_map, &elevation_map_base);
-  else
-    map_loader->loadMap(*map, m_use_base_water_map, elevation_map);
+  auto elevation_map = m_map_loader->createElevationMap();
 
   assert(elevation_map);
-  if(m_use_base_map)
-  {
-    assert(elevation_map_base);
-  }
-
-  assert(!map->water_animation->isEmpty());
+  assert(!m_map->getWaterAnimation().isEmpty());
 
   createTerrain(elevation_map);
 #if 0
@@ -149,9 +143,9 @@ void TerrainViewerScene::setup()
   }
 #endif
 
-  map_size = map->size;
-  base_map_origin = map->base_map_origin;
+  map_size = glm::vec2(elevation_map->getSize() * m_map->getHeightMapMetersPerPixel());
 
+  assert(map_size != vec2(0));
   cout<<"map size: "<<map_size.x<<","<<map_size.y<<endl;
 
   curvature_map = render_util::createCurvatureTexture(getTextureManager(), cache_path);
@@ -159,7 +153,7 @@ void TerrainViewerScene::setup()
 
   CHECK_GL_ERROR();
 
-  map->textures->bind(getTextureManager());
+  m_map->getTextures().bind(getTextureManager());
   CHECK_GL_ERROR();
 
   CHECK_GL_ERROR();
@@ -177,11 +171,11 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
 
   CHECK_GL_ERROR();
 
-  map->water_animation->updateUniforms(program);
+  m_map->getWaterAnimation().updateUniforms(program);
 
   CHECK_GL_ERROR();
 
-  map->textures->setUniforms(program);
+  m_map->getTextures().setUniforms(program);
   program->setUniform("shore_wave_scroll", shore_wave_pos);
   program->setUniform("terrain_height_offset", 0);
   program->setUniform("map_size", map_size);
@@ -197,7 +191,7 @@ void TerrainViewerScene::render(float frame_delta)
   {
     shore_wave_pos.x = shore_wave_pos.x + (frame_delta * shore_wave_hz.x);
     shore_wave_pos.y = shore_wave_pos.y + (frame_delta * shore_wave_hz.y);
-    map->water_animation->update();
+    m_map->getWaterAnimation().update();
   }
 
   CHECK_GL_ERROR();
@@ -266,14 +260,11 @@ void TerrainViewerScene::render(float frame_delta)
 
 }
 
-void render_util::viewer::runViewer(shared_ptr<MapLoaderBase> map_loader)
+void render_util::viewer::runViewer(CreateMapLoaderFunc &create_map_loader)
 {
-  cout<<"render_util::viewer::runViewer: map loader: "<<map_loader.get()<<endl;
-
-  auto create_func = [map_loader]
+  auto create_func = [&create_map_loader]
   {
-    cout<<"create_func: map loader: "<<map_loader.get()<<endl;
-    auto scene = make_shared<TerrainViewerScene>(map_loader);
+    auto scene = make_shared<TerrainViewerScene>(create_map_loader);
     cout<<"create_func: scene: "<<scene.get()<<endl;
     return scene;
   };
