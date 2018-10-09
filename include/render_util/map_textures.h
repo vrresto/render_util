@@ -76,11 +76,6 @@ namespace render_util
     {
       setTexture(texunit, createTextureArray<T>(images));
     }
-
-
-
-    TexturePtr getBaseMapTexture();
-
   };
 
 }
