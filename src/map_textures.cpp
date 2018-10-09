@@ -70,8 +70,8 @@ struct TextureBinding
 
 class Material
 {
-  vector<TextureBinding> m_bindings;
-  unordered_map<unsigned int, TextureBinding*> m_map;
+  vector<shared_ptr<TextureBinding>> m_bindings;
+  unordered_map<unsigned int, shared_ptr<TextureBinding>> m_map;
   TextureManager &m_texture_manager;
 
 public:
@@ -79,12 +79,12 @@ public:
 
   void setTexture(unsigned int texture_unit, TexturePtr texture)
   {
-    TextureBinding *b = m_map[texture_unit];
+    auto b = m_map[texture_unit];
     if (!b)
     {
       string uniform_name = string("sampler_") + getTexUnitName(texture_unit);
-      m_bindings.push_back(TextureBinding(uniform_name, texture_unit));
-      b = &m_bindings.back();
+      b = make_shared<TextureBinding>(uniform_name, texture_unit);
+      m_bindings.push_back(b);
       m_map[texture_unit] = b;
     }
     assert(b);
@@ -93,17 +93,17 @@ public:
 
   void setUniforms(ShaderProgramPtr program)
   {
-    for (TextureBinding &b : m_bindings)
+    for (auto b : m_bindings)
     {
-      program->setUniformi(b.uniform_name, m_texture_manager.getTexUnitNum(b.texture_unit));
+      program->setUniformi(b->uniform_name, m_texture_manager.getTexUnitNum(b->texture_unit));
     }
   }
 
   void bind()
   {
-    for (TextureBinding &b : m_bindings)
+    for (auto b : m_bindings)
     {
-      m_texture_manager.bind(b.texture_unit, b.texture);
+      m_texture_manager.bind(b->texture_unit, b->texture);
     }
   }
 };
