@@ -147,8 +147,8 @@ TerrainViewerScene::TerrainViewerScene(CreateMapLoaderFunc &create_map_loader)
 
 TerrainViewerScene::~TerrainViewerScene()
 {
-  saveImageToFile("base_map_land_editor.tga", m_base_map_land.get());
-  std::ofstream s("base_map_origin_editor", ios_base::binary);
+  saveImageToFile(RENDER_UTIL_CACHE_DIR "/base_map_land_editor.tga", m_base_map_land.get());
+  std::ofstream s(RENDER_UTIL_CACHE_DIR "/base_map_origin_editor", ios_base::binary);
   s<<"BaseMapOriginX="<<base_map_origin.x<<endl;
   s<<"BaseMapOriginY="<<base_map_origin.y<<endl;
 }
