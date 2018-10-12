@@ -430,7 +430,7 @@ void render_util::MapTextures::setForestLayers(const std::vector<ImageRGBA::Cons
 void render_util::MapTextures::setTexture(unsigned texunit, TexturePtr texture)
 {
   TextureParameters<int> params;
-  
+
   switch (texunit)
   {
     case TEXUNIT_TERRAIN_FAR:

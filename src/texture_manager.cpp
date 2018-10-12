@@ -227,7 +227,7 @@ void TextureManager::bind(unsigned int unit, TexturePtr texture)
   Binding &binding = p->bindings[unit];
 
   binding.texture = texture->getID();
-  binding.target= texture->getTarget();
+  binding.target = texture->getTarget();
 
   if (p->is_active)
     applyBinding(unit, binding, *this);
