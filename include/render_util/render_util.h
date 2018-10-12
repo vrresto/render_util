@@ -41,6 +41,15 @@ namespace render_util
   typedef Float3 Normal;
 
 
+  inline glm::vec3 calcNormal(glm::vec3 vertices[3])
+  {
+    glm::vec3 a = vertices[0] - vertices[1];
+    glm::vec3 b = vertices[0] - vertices[2];
+
+    return glm::normalize(glm::cross(a,b));
+  }
+
+
   class Box
   {
     glm::vec3 m_origin;
@@ -75,13 +84,52 @@ namespace render_util
   };
 
 
-  inline glm::vec3 calcNormal(glm::vec3 vertices[3])
+  struct Plane
   {
-    glm::vec3 a = vertices[0] - vertices[1];
-    glm::vec3 b = vertices[0] - vertices[2];
+    using vec3 = glm::vec3;
 
-    return glm::normalize(glm::cross(a,b));
-  }
+    vec3 point;
+    vec3 normal;
+
+    Plane(const vec3 &point, const vec3 &normal) : point(point), normal(normal) {}
+
+    Plane(const vec3 &p1, const vec3 &p2, const vec3 &p3, bool flip_)
+    {
+      vec3 points[3] { p1, p2, p3 };
+      point = p3;
+      normal = render_util::calcNormal(points);
+      if (flip_)
+        flip();
+    }
+
+
+    void flip()
+    {
+      normal *= -1;
+    }
+
+
+    void move(float dist)
+    {
+      point += normal * dist;
+    }
+
+
+    float distance(const vec3 &pos)
+    {
+      return dot(normal, pos - point);
+    }
+
+    bool cull(const Box &box)
+    {
+      for (auto &c : box.getCornerPoints())
+      {
+        if (distance(c) >= 0)
+          return false;
+      }
+      return true;
+    }
+  };
 
 
   const std::string &getResourcePath();

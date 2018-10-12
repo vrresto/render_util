@@ -31,57 +31,6 @@ using namespace glm;
 using namespace render_util;
 
 
-namespace
-{
-
-
-struct Plane
-{
-  vec3 point;
-  vec3 normal;
-
-  Plane(const vec3 &p1, const vec3 &p2, const vec3 &p3, bool flip_)
-  {
-    vec3 points[3] { p1, p2, p3 };
-    point = p3;
-    normal = render_util::calcNormal(points);
-    if (flip_)
-      flip();
-  }
-
-
-  void flip()
-  {
-    normal *= -1;
-  }
-
-
-  void move(float dist)
-  {
-    point += normal * dist;
-  }
-
-
-  float distance(const vec3 &pos)
-  {
-    return dot(normal, pos - point);
-  }
-
-  bool cull(const Box &box)
-  {
-    for (auto &c : box.getCornerPoints())
-    {
-      if (distance(c) >= 0)
-        return false;
-    }
-    return true;
-  }
-};
-
-
-} // namespace
-
-
 namespace render_util
 {
 
