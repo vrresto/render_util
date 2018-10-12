@@ -73,7 +73,8 @@ inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
     use_lod,
     RENDER_UTIL_SHADER_DIR, "terrain",
     use_base_map,
-    use_base_water_map);
+    use_base_water_map,
+    true);
 
   t.getTerrain()->build(elevation_map);
 
@@ -91,6 +92,8 @@ class Scene
   render_util::TextureManager texture_manager = render_util::TextureManager(0);
 
 public:
+  virtual ~Scene() {}
+
   const bool m_use_base_map = true;
   const bool m_use_base_water_map = true;
 
@@ -101,9 +104,6 @@ public:
 
   glm::vec2 base_map_origin = glm::vec2(0);
   glm::vec2 base_map_size_m = glm::vec2(0);
-
-
-  glm::vec2 m_base_water_map_offset = glm::vec2(0);
 
   Terrain m_terrain;
   Terrain m_terrain_cdlod;
@@ -162,6 +162,11 @@ public:
     program->setUniform("toggle_lod_morph", toggle_lod_morph);
     program->setUniform("height_map_base_origin", base_map_origin);
   }
+
+  virtual void mark() {}
+  virtual void unmark() {}
+  virtual void cursorPos(const glm::dvec2&) {}
+  virtual void rebuild() {}
 
   virtual void setup() = 0;
   virtual void render(float frame_delta) = 0;

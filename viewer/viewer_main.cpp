@@ -69,6 +69,7 @@ namespace
 
   float camera_move_speed = camera_move_speed_default;
   dvec2 last_cursor_pos(-1, -1);
+  bool g_shift_active = false;
 
   void printDistance (float distance, const char *suffix)
   {
@@ -107,16 +108,33 @@ namespace
 
   void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
   {
-    if (action == GLFW_PRESS) {
-      glfwGetCursorPos(window, &last_cursor_pos.x, &last_cursor_pos.y);
+    if (action == GLFW_PRESS)
+    {
+      if (mods == GLFW_MOD_SHIFT)
+        g_shift_active = true;
+      else
+        g_shift_active = false;
     }
-    else if (action == GLFW_RELEASE) {
-      last_cursor_pos = dvec2(-1, -1);
+    else if (action == GLFW_RELEASE)
+    {
+      g_shift_active = false;
+    }
+
+    if (button == 1)
+    {
+      if (action == GLFW_PRESS) {
+        glfwGetCursorPos(window, &last_cursor_pos.x, &last_cursor_pos.y);
+      }
+      else if (action == GLFW_RELEASE) {
+        last_cursor_pos = dvec2(-1, -1);
+      }
     }
   }
 
   void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
   {
+    auto base_map_origin_new = g_scene->base_map_origin;
+
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
       glfwSetWindowShouldClose(window, true);
     }
@@ -151,10 +169,47 @@ namespace
       else
         g_scene->sun_azimuth -= 10;
     }
-    else if (action == GLFW_PRESS)
+    else if (action == GLFW_PRESS && mods == GLFW_MOD_SHIFT)
     {
+      const int offset = 2000;
+
       switch (key)
       {
+        case GLFW_KEY_LEFT:
+          base_map_origin_new.x -= offset;
+          break;
+        case GLFW_KEY_RIGHT:
+          base_map_origin_new.x += offset;
+          break;
+        case GLFW_KEY_UP:
+          base_map_origin_new.y += offset;
+          break;
+        case GLFW_KEY_DOWN:
+          base_map_origin_new.y -= offset;
+          break;
+      }
+    }
+    else if (action == GLFW_PRESS)
+    {
+      const int offset = 20000;
+
+      switch (key)
+      {
+        case GLFW_KEY_B:
+          g_scene->rebuild();
+          break;
+        case GLFW_KEY_LEFT:
+          base_map_origin_new.x -= offset;
+          break;
+        case GLFW_KEY_RIGHT:
+          base_map_origin_new.x += offset;
+          break;
+        case GLFW_KEY_UP:
+          base_map_origin_new.y += offset;
+          break;
+        case GLFW_KEY_DOWN:
+          base_map_origin_new.y -= offset;
+          break;
         case GLFW_KEY_M:
           g_scene->toggle_lod_morph = !g_scene->toggle_lod_morph;
           cout<<endl<<"toggle_lod_morph: "<<g_scene->toggle_lod_morph<<endl;
@@ -162,33 +217,22 @@ namespace
         case GLFW_KEY_P:
           g_scene->pause_animations = !g_scene->pause_animations;
           break;
-//         case GLFW_KEY_K:
-// //           water_map_shift += (water_map_shift_unit / 2);
-//           water_map_table_shift -= vec2(100, 0);
-//           break;
-//         case GLFW_KEY_L:
-// //             water_map_shift -= (water_map_shift_unit / 2);
-//           water_map_table_shift += vec2(100, 0);
-//           break;
-//         case GLFW_KEY_H:
-//           water_map_table_shift -= vec2(0, 100);
-//           break;
-//         case GLFW_KEY_J:
-//           water_map_table_shift += vec2(0, 100);
-//           break;
       }
     }
 
+    if (base_map_origin_new != g_scene->base_map_origin)
+    {
+      g_scene->base_map_origin = base_map_origin_new;
+      cout<<endl<<"base_map_origin: "<<g_scene->base_map_origin.x<<","<<g_scene->base_map_origin.y<<endl;
+    }
   }
 
   void processInput(GLFWwindow *window, float frame_delta)
   {
-//     const dvec2 viewport_size = g_scene->camera.getViewportSize();
-
-    if (glfwGetMouseButton(window, 0) == GLFW_PRESS) {
+    if (glfwGetMouseButton(window, 1) == GLFW_PRESS)
+    {
       dvec2 cursor_pos;
       glfwGetCursorPos(window, &cursor_pos.x, &cursor_pos.y);
-//       glfwSetCursorPos(window, viewport_size.x / 2, viewport_size.y / 2);
 
       if (last_cursor_pos != dvec2(-1, -1)) {
         dvec2 cursor_delta = last_cursor_pos - cursor_pos;
@@ -200,12 +244,26 @@ namespace
         g_scene->camera.pitch += rotation.y;
       }
     }
+    else if (glfwGetMouseButton(window, 0) == GLFW_PRESS)
+    {
+      dvec2 cursor_pos;
+      glfwGetCursorPos(window, &cursor_pos.x, &cursor_pos.y);
+
+      g_scene->cursorPos(cursor_pos);
+      if (g_shift_active)
+        g_scene->unmark();
+      else
+        g_scene->mark();
+    }
+    else
+    {
+      dvec2 cursor_pos;
+      glfwGetCursorPos(window, &cursor_pos.x, &cursor_pos.y);
+
+      g_scene->cursorPos(cursor_pos);
+    }
 
     float move_speed = camera_move_speed;
-
-//     if (glfwGetKey(window, GLFW_MOD_SHIFT) == GLFW_PRESS) {
-//       move_speed /= 5;
-//     }
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
       g_scene->camera.moveForward(frame_delta * move_speed);
@@ -213,18 +271,19 @@ namespace
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
       g_scene->camera.moveForward(frame_delta * -move_speed);
     }
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-      g_scene->camera.pitch -= camera_rotation_speed * frame_delta;
-    }
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-      g_scene->camera.pitch += camera_rotation_speed * frame_delta;
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-      g_scene->camera.yaw += camera_rotation_speed * frame_delta;
-    }
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-      g_scene->camera.yaw -= camera_rotation_speed * frame_delta;
-    }
+
+//     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+//       g_scene->camera.pitch -= camera_rotation_speed * frame_delta;
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+//       g_scene->camera.pitch += camera_rotation_speed * frame_delta;
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+//       g_scene->camera.yaw += camera_rotation_speed * frame_delta;
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+//       g_scene->camera.yaw -= camera_rotation_speed * frame_delta;
+//     }
 
 //     vec4 direction = g_scene->camera.getDirection();
 //     cout<<direction.x<<" "<<direction.y<<" "<<direction.z<<endl;

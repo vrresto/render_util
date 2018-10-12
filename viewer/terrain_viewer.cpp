@@ -48,6 +48,7 @@
 #include <sstream>
 #include <chrono>
 #include <memory>
+#include <exception>
 
 #include <gl_wrapper/gl_interface.h>
 #include <gl_wrapper/gl_functions.h>
@@ -65,6 +66,7 @@ using namespace render_util;
 namespace
 {
 
+
 const bool g_terrain_use_lod = true;
 
 const string cache_path = RENDER_UTIL_CACHE_DIR;
@@ -78,14 +80,31 @@ render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager
 }
 
 
-} // namespace
+glm::dvec3 hitGround(const Beam &beam_)
+{
+  auto beam = beam_;
 
+  beam.direction *= -1;
+
+  const glm::vec3 plane_normal = glm::vec3(0,0,1);
+
+  float distance = -dot(plane_normal, beam.origin) / dot(beam.direction, plane_normal);
+
+  if (distance < 0)
+    throw std::exception();
+  else
+    return beam.origin + beam.direction * distance;
+}
+
+
+} // namespace
 
 
 class TerrainViewerScene : public Scene
 {
   vec4 shore_wave_pos = vec4(0);
   vec2 map_size = vec2(0);
+  ivec2 mark_pixel_coords = ivec2(0);
 
   shared_ptr<render_util::MapBase> m_map;
 
@@ -107,9 +126,14 @@ class TerrainViewerScene : public Scene
 
 public:
   TerrainViewerScene(CreateMapLoaderFunc&);
+  ~TerrainViewerScene() override;
 
   void render(float frame_delta) override;
   void setup() override;
+  void mark() override;
+  void unmark() override;
+  void cursorPos(const glm::dvec2&) override;
+  void rebuild() override { buildBaseMap(); }
 };
 
 
@@ -120,6 +144,15 @@ TerrainViewerScene::TerrainViewerScene(CreateMapLoaderFunc &create_map_loader)
   m_map_loader = create_map_loader(getTextureManager());
   assert(m_map_loader);
 }
+
+TerrainViewerScene::~TerrainViewerScene()
+{
+  saveImageToFile("base_map_land_editor.tga", m_base_map_land.get());
+  std::ofstream s("base_map_origin_editor", ios_base::binary);
+  s<<"BaseMapOriginX="<<base_map_origin.x<<endl;
+  s<<"BaseMapOriginY="<<base_map_origin.y<<endl;
+}
+
 
 void TerrainViewerScene::buildBaseMap()
 {
@@ -136,6 +169,41 @@ void TerrainViewerScene::buildBaseMap()
 }
 
 
+void TerrainViewerScene::mark()
+{
+  m_base_map_land->at(mark_pixel_coords) = 255;
+  updateBaseWaterMapTexture();
+}
+
+
+void TerrainViewerScene::unmark()
+{
+  m_base_map_land->at(mark_pixel_coords) = 0;
+  updateBaseWaterMapTexture();
+}
+
+
+void TerrainViewerScene::cursorPos(const glm::dvec2 &pos)
+{
+  auto beam = camera.createBeamThroughViewportCoord(glm::vec2(pos));
+
+  vec3 ground_plane_pos = vec3(0);
+
+  try
+  {
+    ground_plane_pos = hitGround(beam);
+  }
+  catch(...)
+  {
+    return;
+  }
+
+  auto base_map_pos_relative = (glm::vec2(ground_plane_pos.x, ground_plane_pos.y) - base_map_origin) / base_map_size_m;
+  mark_pixel_coords = base_map_pos_relative * glm::vec2(m_base_map_land->getSize());
+  mark_pixel_coords = clamp(mark_pixel_coords, ivec2(0), m_base_map_land->getSize() - ivec2(1));
+}
+
+
 void TerrainViewerScene::updateBaseWaterMapTexture()
 {
   setTextureImage(m_base_map_land_texture, m_base_map_land);
@@ -147,6 +215,10 @@ void TerrainViewerScene::setup()
   cout<<"void TerrainViewerScene::setup()"<<endl;
 
   getTextureManager().setActive(true);
+
+  curvature_map = render_util::createCurvatureTexture(getTextureManager(), cache_path);
+  atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), cache_path);
+
 
   sky_program = createSkyProgram(getTextureManager());
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
@@ -166,28 +238,17 @@ void TerrainViewerScene::setup()
   assert(!m_map->getWaterAnimation().isEmpty());
 
   createTerrain(elevation_map);
-#if 0
-  {
-    int elevation_map_width = 5000;
-    int elevation_map_height = 5000;
-    std::vector<float> data(elevation_map_width * elevation_map_height);
-    render_util::ElevationMap elevation_map(elevation_map_width, elevation_map_height, data);
-    terrain_renderer.m_terrain->build(&elevation_map);
-  }
-#endif
 
   map_size = glm::vec2(elevation_map->getSize() * m_map->getHeightMapMetersPerPixel());
 
   assert(map_size != vec2(0));
+  assert(base_map_origin != vec2(0));
+
   cout<<"map size: "<<map_size.x<<","<<map_size.y<<endl;
 
-  curvature_map = render_util::createCurvatureTexture(getTextureManager(), cache_path);
-  atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), cache_path);
-
   CHECK_GL_ERROR();
 
-  m_map->getTextures().bind(getTextureManager());
-  CHECK_GL_ERROR();
+  assert(m_base_map_land);
   if (!m_base_map_land)
     m_base_map_land = image::create<unsigned char>(0, ivec2(128));
   m_base_map_land_texture =
@@ -195,12 +256,16 @@ void TerrainViewerScene::setup()
   getTextureManager().bind(TEXUNIT_WATER_MAP_BASE, m_base_map_land_texture);
 
   buildBaseMap();
+
+  CHECK_GL_ERROR();
+  m_map->getTextures().bind(getTextureManager());
   CHECK_GL_ERROR();
 
   camera.x = map_size.x / 2;
   camera.y = map_size.y / 2;
   camera.z = 10000;
 }
+
 
 void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
 {
@@ -219,8 +284,20 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
   program->setUniform("terrain_height_offset", 0);
   program->setUniform("map_size", map_size);
 
+  auto base_map_size =
+    m_elevation_map_base->w() * HEIGHT_MAP_BASE_METERS_PER_PIXEL;
+
+  auto land_map_meters_per_pixel = base_map_size / (float)m_base_map_land->w();
+
+  vec2 mark_coords_m = vec2(mark_pixel_coords) * land_map_meters_per_pixel;
+  mark_coords_m += base_map_origin;
+
+  program->setUniform("cursor_pos_ground", mark_coords_m);
+  program->setUniform("land_map_meters_per_pixel", land_map_meters_per_pixel);
+
   CHECK_GL_ERROR();
 }
+
 
 void TerrainViewerScene::render(float frame_delta)
 {
