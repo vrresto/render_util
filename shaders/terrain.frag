@@ -18,12 +18,22 @@
 
 #version 130
 
+#define IS_EDITOR @is_editor@
+
 void resetDebugColor();
 vec3 getDebugColor();
 void apply_fog();
 vec4 getTerrainColor(vec3 pos);
 
 uniform float curvature_map_max_distance;
+
+#if IS_EDITOR
+uniform vec2 height_map_base_size_m;
+uniform vec2 height_map_base_origin;
+uniform vec2 cursor_pos_ground;
+#endif
+
+uniform float land_map_meters_per_pixel;
 
 varying float vertexHorizontalDist;
 varying vec3 passObjectPosFlat;
@@ -42,6 +52,16 @@ void main(void)
 //   gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
 
   apply_fog();
+
+#if IS_EDITOR
+  if (passObjectPosFlat.x > cursor_pos_ground.x &&
+      passObjectPosFlat.x < cursor_pos_ground.x + land_map_meters_per_pixel &&
+      passObjectPosFlat.y > cursor_pos_ground.y &&
+      passObjectPosFlat.y < cursor_pos_ground.y + land_map_meters_per_pixel)
+  {
+    gl_FragColor.x = 1;
+  }
+#endif
 
 //   if (getDebugColor() != vec3(0))
 //     gl_FragColor.xyz = getDebugColor();

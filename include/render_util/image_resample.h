@@ -30,6 +30,7 @@ template <typename T>
 class Sampler
 {
   const T *image = 0;
+  glm::vec2 m_pixel_offset= glm::vec2(0);
 
   const typename T::ComponentType &getPixel(glm::ivec2 pos, int component) const
   {
@@ -54,11 +55,18 @@ public:
     this->image = image;
   }
 
+  void setPixelOffset(const glm::vec2 &offset)
+  {
+    m_pixel_offset = offset;
+  }
+
   typename T::ComponentType sample(double u, double v, int component) const
   {
     using namespace glm;
 
     vec2 xy(u * image->w(), v * image->h());
+
+    xy += m_pixel_offset;
 
     int x1 = floor(xy.x);
     int x2 = x1 + 1;
@@ -145,6 +153,11 @@ public:
   {
     m_size = size;
     updateMipmap();
+  }
+
+  void setPixelOffset(const glm::vec2 &offset)
+  {
+    m_sampler.setPixelOffset(offset);
   }
 
   std::shared_ptr<const T> getMipmap() { return m_mipmap; }
