@@ -56,6 +56,27 @@ using render_util::ShaderProgram;
 using Clock = std::chrono::steady_clock;
 
 
+namespace render_util::viewer
+{
+
+
+class Globals : public render_util::Globals
+{
+  std::shared_ptr<render_util::GLContext> m_gl_context;
+
+public:
+  Globals() : m_gl_context(make_shared<render_util::GLContext>()) {}
+
+  std::shared_ptr<render_util::GLContext> getCurrentGLContext() override
+  {
+    return m_gl_context;
+  }
+};
+
+
+} // namespace render_util::viewer
+
+
 namespace
 {
   const float camera_move_speed_default = 8000.0;
@@ -64,7 +85,6 @@ namespace
   const float camera_rotation_speed = 45.0;
   const double mouse_rotation_speed = 0.2;
 
-  std::shared_ptr<GLContext> g_context;
   std::shared_ptr<Scene> g_scene;
 
   float camera_move_speed = camera_move_speed_default;
@@ -307,12 +327,6 @@ namespace
 } // namespace
 
 
-shared_ptr<GLContext> render_util::getCurrentGLContext()
-{
-  return g_context;
-}
-
-
 void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
 {
   glfwSetErrorCallback(errorCallback);
@@ -343,7 +357,7 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
   gl_wrapper::GL_Interface *gl_interface = new gl_wrapper::GL_Interface(&getGLProcAddress);
   gl_wrapper::GL_Interface::setCurrent(gl_interface);
 
-  g_context = make_shared<GLContext>();
+  auto globals = make_shared<render_util::viewer::Globals>();
 
   g_scene = f_create_scene();
   assert(g_scene);
@@ -417,7 +431,7 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
   CHECK_GL_ERROR();
 
   g_scene.reset();
-  g_context.reset();
+  globals.reset();
   gl::Finish();
 
   CHECK_GL_ERROR();

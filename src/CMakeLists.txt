@@ -14,6 +14,7 @@ set(CXX_SRCS
   util.cpp
   terrain_util.cpp
   gl_context.cpp
+  globals.cpp
   ${PROJECT_SOURCE_DIR}/_modules/FastNoise/FastNoise.cpp
 )
 

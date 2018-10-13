@@ -16,25 +16,42 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef RENDER_UTIL_GL_CONTEXT_H
-#define RENDER_UTIL_GL_CONTEXT_H
+#include <render_util/globals.h>
 
-#include <render_util/shader.h>
+#include <cassert>
+
+using namespace render_util;
+
+
+namespace
+{
+  Globals* g_globals = nullptr;
+}
+
 
 namespace render_util
 {
 
 
-class GLContext
+Globals::Globals()
 {
-  ShaderProgramPtr m_current_program;
-
-public:
-  ShaderProgramPtr getCurrentProgram() { return m_current_program; }
-  void setCurrentProgram(ShaderProgramPtr);
-};
-
-
+  assert(!g_globals);
+  g_globals = this;
 }
 
-#endif
+
+Globals::~Globals()
+{
+  assert(g_globals == this);
+  g_globals = nullptr;
+}
+
+
+Globals *Globals::get()
+{
+  assert(g_globals);
+  return g_globals;
+}
+
+
+} // namespace render_util

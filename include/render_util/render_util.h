@@ -35,7 +35,6 @@ namespace render_util
     {
       return glm::vec3(x, y, z);
     }
-
   };
 
   typedef Float3 Normal;

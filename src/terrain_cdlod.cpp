@@ -31,7 +31,7 @@
 #include <render_util/image_util.h>
 #include <render_util/water_map.h>
 #include <render_util/render_util.h>
-#include <render_util/gl_context.h>
+#include <render_util/globals.h>
 #include <block_allocator.h>
 
 #include <array>

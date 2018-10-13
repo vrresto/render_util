@@ -19,7 +19,7 @@
 #include <render_util/image.h>
 #include <render_util/terrain.h>
 #include <render_util/elevation_map.h>
-#include <render_util/gl_context.h>
+#include <render_util/globals.h>
 
 #include <iostream>
 #include <vector>

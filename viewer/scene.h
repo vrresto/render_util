@@ -23,7 +23,7 @@
 
 #include <render_util/shader.h>
 #include <render_util/terrain_util.h>
-#include <render_util/gl_context.h>
+#include <render_util/globals.h>
 #include <gl_wrapper/gl_functions.h>
 
 
