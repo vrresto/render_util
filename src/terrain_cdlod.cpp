@@ -85,7 +85,7 @@ enum { NUM_TEST_BUFFERS = 4 };
 
 enum
 {
-  LOD_LEVELS = 6,
+  LOD_LEVELS = 7,
   MESH_GRID_SIZE = 128,
   MIN_LOD_DIST = 40000,
 
