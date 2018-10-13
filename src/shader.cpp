@@ -40,6 +40,44 @@ namespace
 {
 
 
+string getParameterValue(const string &parameter, const ShaderParameters &params)
+{
+  auto pos = parameter.find(':');
+
+  string parameter_name;
+  string default_value;
+
+  if (pos != string::npos && pos < parameter.size()-1)
+  {
+    parameter_name = parameter.substr(0, pos);
+    default_value = parameter.substr(pos+1);
+  }
+  else
+  {
+    parameter_name = parameter;
+  }
+
+  assert(!parameter_name.empty());
+
+  try
+  {
+    return std::to_string(params.get(parameter_name));
+  }
+  catch (...)
+  {
+    if (!default_value.empty())
+    {
+      return default_value;
+    }
+    else
+    {
+      cerr << "unset parameter: " << parameter_name << endl;
+      abort();
+    }
+  }
+}
+
+
 string preProcessShader(const vector<char> &in, const ShaderParameters &params)
 {
   string out;
@@ -74,7 +112,7 @@ string preProcessShader(const vector<char> &in, const ShaderParameters &params)
         {
           assert(!parsed.empty());
 
-          out += std::to_string(params.get(parsed));
+          out += getParameterValue(parsed, params);
 
           parsed.clear();
 
@@ -194,8 +232,7 @@ int ShaderParameters::get(const std::string &name) const
   }
   else
   {
-    cerr << "unset parameter: " << name << endl;
-    abort();
+    throw std::exception();
   }
 }
 
