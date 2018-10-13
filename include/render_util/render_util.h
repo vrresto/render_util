@@ -132,9 +132,6 @@ namespace render_util
   };
 
 
-  const std::string &getResourcePath();
-  const std::string &getDataPath();
-
   bool createAtmosphereMap(const char *output_path);
   bool createCurvatureMap(const char *output_path);
 }
