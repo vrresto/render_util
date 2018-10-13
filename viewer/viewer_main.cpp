@@ -101,6 +101,8 @@ namespace
     cout<<"    |    speed: ";
     printDistance(camera_move_speed / 1000, " ");
 
+    cout<<"   |  yaw: "<<g_scene->camera.yaw;
+
     cout<<"   |    azimuth: "<<g_scene->sun_azimuth;
 
     cout.flush();
