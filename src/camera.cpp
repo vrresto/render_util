@@ -25,10 +25,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
+#include <iostream>
 #include <vector>
+
 
 using namespace glm;
 using namespace render_util;
+
+using Mat4 = Camera::Mat4;
+using Vec3 = Camera::Vec3;
+using Unit = Camera::Unit;
 
 
 namespace render_util
@@ -36,19 +42,20 @@ namespace render_util
 
   struct Camera::Private
   {
-    mat4 world_to_view;
-    mat4 view_to_world;
-    mat4 projection_far;
-    mat4 view_to_world_rot;
+    Mat4 world_to_view;
+    Mat4 view_to_world;
+    Mat4 projection_far;
+    Mat4 world_to_view_rotation;
+    Mat4 view_to_world_rot;
 
-    vec3 pos;
+    Vec3 pos;
     ivec2 viewport_size;
 
     vec2 ndc_to_view = vec2(1);
 
-    float m_z_near = 1.2;
-    float m_z_far = 2300000;
-    float m_fov = 90;
+    Unit m_z_near = 1.2;
+    Unit m_z_far = 2300000;
+    Unit m_fov = 90;
 
     std::vector<Plane> frustum_planes;
 
@@ -56,7 +63,7 @@ namespace render_util
     Private(const Private &other);
     void calcFrustumPlanes();
     void refreshProjection();
-    vec3 view2World(vec3 p) const;
+    Vec3 view2World(Vec3 p) const;
   };
 
 
@@ -88,10 +95,10 @@ namespace render_util
 //     const float z_far = 3500.0 * 1000.0;
 //     const float z_far = 35000.0 * 1000.0;
 
-    const float aspect = (float)viewport_size.x / (float)viewport_size.y;
+    const auto aspect = (Unit)viewport_size.x / (Unit)viewport_size.y;
 
-    const float right = m_z_near * tan(radians(m_fov)/2.f);
-    const float top = right / aspect;
+    const auto right = m_z_near * tan(radians(m_fov) / (Unit)2.0);
+    const auto top = right / aspect;
     projection_far = frustum(-right, right, -top, top, m_z_near, m_z_far);
 
     calcFrustumPlanes();
@@ -101,7 +108,7 @@ namespace render_util
   }
 
 
-  vec3 Camera::Private::view2World(vec3 p) const
+  Vec3 Camera::Private::view2World(Vec3 p) const
   {
     p.z *= -1;
     return xyz(view_to_world * vec4(p, 1));
@@ -112,12 +119,12 @@ namespace render_util
   {
     frustum_planes.clear();
 
-    const float aspect = (float)viewport_size.x / (float)viewport_size.y;
+    const auto aspect = (Unit)viewport_size.x / (Unit)viewport_size.y;
 
-    float right = m_z_near * tan(radians(m_fov)/2.f);
-    float left = -right;
-    float top = right / aspect;
-    float bottom = -top;
+    auto right = m_z_near * tan(radians(m_fov)/2.0);
+    auto left = -right;
+    auto top = right / aspect;
+    auto bottom = -top;
 
     vec3 top_left = view2World(vec3(left, top, m_z_near));
     vec3 bottom_left = view2World(vec3(left, bottom, m_z_near));
@@ -148,11 +155,11 @@ namespace render_util
 
   Camera::Camera(const Camera &other) : p(new Private(*other.p)) {}
 
-
-  const mat4 &Camera::getProjectionMatrixFar() const { return p->projection_far; }
-  const mat4 &Camera::getWorld2ViewMatrix() const { return p->world_to_view; }
-  const mat4 &Camera::getView2WorldMatrix() const { return p->view_to_world; }
-  const vec3 &Camera::getPos() const { return p->pos; }
+  const Mat4 &Camera::getWorldToViewRotationD() const { return p->world_to_view_rotation; }
+  const Mat4 &Camera::getProjectionMatrixFarD() const { return p->projection_far; }
+  const Mat4 &Camera::getWorld2ViewMatrixD() const { return p->world_to_view; }
+  const Mat4 &Camera::getView2WorldMatrixD() const { return p->view_to_world; }
+  const Vec3 &Camera::getPosD() const { return p->pos; }
   const ivec2 &Camera::getViewportSize() const { return p->viewport_size; }
 
 
@@ -163,32 +170,32 @@ namespace render_util
   }
 
 
-  void Camera::setFov(float fov)
+  void Camera::setFov(Unit fov)
   {
     p->m_fov = fov;
     p->refreshProjection();
   }
 
 
-  float Camera::getFov() const
+  Unit Camera::getFov() const
   {
     return p->m_fov;
   }
 
 
-  float Camera::getZNear() const
+  Unit Camera::getZNear() const
   {
     return p->m_z_near;
   }
 
 
-  float Camera::getZFar() const
+  Unit Camera::getZFar() const
   {
     return p->m_z_far;
   }
 
 
-  void Camera::setProjection(float fov, float z_near, float z_far)
+  void Camera::setProjection(Unit fov, Unit z_near, Unit z_far)
   {
     p->m_fov = fov;
     p->m_z_near = z_near;
@@ -197,24 +204,26 @@ namespace render_util
   }
 
 
-  void Camera::setTransform(float x, float y, float z, float yaw, float pitch, float roll)
+  void Camera::setTransform(Unit x, Unit y, Unit z, Unit yaw, Unit pitch, Unit roll)
   {
-    vec3 pos(x,y,z);
+    Vec3 pos(x,y,z);
     p->pos = pos;
 
-    mat4 world_to_y_up(1);
-    world_to_y_up = rotate(world_to_y_up, radians(90.f),
-                          vec3(0.0f, 1.0f, 0.0f));
-    world_to_y_up = rotate(world_to_y_up, radians(-90.f),
-                          vec3(1.0f, 0.0f, 0.0f));
-  
-    mat4 world_to_view_trans = translate(mat4(1), -pos);
-    mat4 world_to_view_pitch = rotate(mat4(1), radians(-pitch),
-                                      vec3(1.0f, 0.0f, 0.0f));
-    mat4 world_to_view_yaw = rotate(mat4(1), radians(-yaw),
-                                    vec3(0.0f, 1.0f, 0.0f));
-    mat4 world_to_view_roll = rotate(mat4(1), radians(-roll),
-                                      vec3(0.0f, 0.0f, 1.0f));
+    Vec3 pos_terrain_space = pos / 200.0;
+
+    Mat4 world_to_y_up(1);
+    world_to_y_up = rotate(world_to_y_up, radians((Unit)90.0),
+                          Vec3(0.0, 1.0, 0.0));
+    world_to_y_up = rotate(world_to_y_up, radians((Unit)-90.0),
+                          Vec3(1.0, 0.0, 0.0));
+
+    Mat4 world_to_view_trans = translate(Mat4(1), -pos);
+    Mat4 world_to_view_pitch = rotate(Mat4(1), radians(-pitch),
+                                      Vec3(1.0, 0.0, 0.0));
+    Mat4 world_to_view_yaw = rotate(Mat4(1), radians(-yaw),
+                                    Vec3(0.0, 1.0, 0.0));
+    Mat4 world_to_view_roll = rotate(Mat4(1), radians(-roll),
+                                      Vec3(0.0, 0.0, 1.0));
 
     p->world_to_view =
       world_to_view_roll *
@@ -225,13 +234,13 @@ namespace render_util
 
     p->view_to_world = affineInverse(p->world_to_view);
 
-    auto world_to_view_rot =
+    p->world_to_view_rotation =
       world_to_view_roll *
       world_to_view_pitch *
       world_to_view_yaw *
       world_to_y_up;
 
-      p->view_to_world_rot = affineInverse(world_to_view_rot);
+    p->view_to_world_rot = affineInverse(p->world_to_view_rotation);
   }
 
 

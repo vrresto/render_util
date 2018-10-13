@@ -37,24 +37,67 @@ namespace render_util
     Private *p = 0;
 
   public:
+    using Mat4 = glm::dmat4;
+    using Vec3 = glm::dvec3;
+    using Unit = double;
+
+
     Camera();
     Camera(const Camera &other);
-    const glm::mat4 &getView2WorldMatrix() const;
-    const glm::mat4 &getWorld2ViewMatrix() const;
-    const glm::mat4 &getProjectionMatrixFar() const;
-    const glm::vec3 &getPos() const;
+
+    const Mat4 &getWorldToViewRotationD() const;
+    const Mat4 &getView2WorldMatrixD() const;
+    const Mat4 &getWorld2ViewMatrixD() const;
+    const Mat4 &getProjectionMatrixFarD() const;
+    const Vec3 &getPosD() const;
     const glm::ivec2 &getViewportSize() const;
     bool cull(const Box &box) const;
-    float getFov() const;
-    float getZNear() const;
-    float getZFar() const;
+    Unit getFov() const;
+    Unit getZNear() const;
+    Unit getZFar() const;
+
+
+    glm::mat4 getWorldToViewRotation() const
+    {
+      return glm::mat4(getWorldToViewRotationD());
+    }
+
+    Mat4 getVP() const
+    {
+      return getProjectionMatrixFarD() * getWorld2ViewMatrixD();
+    }
+
+    glm::mat4 getVP_s() const
+    {
+      return glm::mat4(getVP());
+    }
+
+    const glm::mat4 getView2WorldMatrix() const
+    {
+      return glm::mat4(getView2WorldMatrixD());
+    }
+
+    const glm::mat4 getWorld2ViewMatrix() const
+    {
+      return glm::mat4(getWorld2ViewMatrixD());
+    }
+
+    const glm::mat4 getProjectionMatrixFar() const
+    {
+      return glm::mat4(getProjectionMatrixFarD());
+    }
+
+    const glm::vec3 getPos() const
+    {
+      return glm::vec3(getPosD());
+    }
 
     Beam createBeamThroughViewportCoord(const glm::vec2&) const;
 
-    void setTransform(float x, float y, float z, float yaw, float pitch, float roll);
+    void setTransform(Unit x, Unit y, Unit z, Unit yaw, Unit pitch, Unit roll);
     void setViewportSize(int width, int height);
-    void setFov(float fov);
-    void setProjection(float fov, float z_near, float z_far);
+    void setFov(Unit fov);
+    void setProjection(Unit fov, Unit z_near, Unit z_far);
   };
 
 }
