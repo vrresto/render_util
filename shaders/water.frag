@@ -472,6 +472,8 @@ float getWaterDepthBase(vec2 pos)
 
   threshold = clamp(threshold, 0.1, 0.9);
 
+  threshold = 0.8;
+
   depth = smoothstep(threshold, threshold + 0.2, depth);
 
   return depth;
