@@ -243,13 +243,11 @@ void TerrainViewerScene::setup()
   map_size = glm::vec2(elevation_map->getSize() * m_map->getHeightMapMetersPerPixel());
 
   assert(map_size != vec2(0));
-  assert(base_map_origin != vec2(0));
 
   cout<<"map size: "<<map_size.x<<","<<map_size.y<<endl;
 
   CHECK_GL_ERROR();
 
-  assert(m_base_map_land);
   if (!m_base_map_land)
     m_base_map_land = image::create<unsigned char>(0, ivec2(128));
   m_base_map_land_texture =
