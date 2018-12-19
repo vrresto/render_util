@@ -51,7 +51,6 @@ void main(void)
   gl_FragColor = getTerrainColor(passObjectPosFlat.xyz);
 //   gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
 
-  apply_fog();
 
 #if IS_EDITOR
   if (passObjectPosFlat.x > cursor_pos_ground.x &&
@@ -61,7 +60,20 @@ void main(void)
   {
     gl_FragColor.x = 1;
   }
+
+
+  if (passObjectPosFlat.x < height_map_base_origin.x ||
+      passObjectPosFlat.y < height_map_base_origin.y ||
+      passObjectPosFlat.x > height_map_base_origin.x + height_map_base_size_m.x ||
+      passObjectPosFlat.y > height_map_base_origin.y + height_map_base_size_m.y)
+  {
+    gl_FragColor.x = 0.3;
+    gl_FragColor.y = 0.3;
+    gl_FragColor.z = 0.3;
+  }
 #endif
+
+  apply_fog();
 
 //   if (getDebugColor() != vec3(0))
 //     gl_FragColor.xyz = getDebugColor();
