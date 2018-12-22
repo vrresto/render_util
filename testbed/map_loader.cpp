@@ -41,7 +41,7 @@ namespace
 const glm::vec3 default_water_color = glm::vec3(0.140, 0.195, 0.230);
 const float sea_level = 0;
 const int type_map_meters_per_pixel = 200;
-const int meters_per_tile = 1600;
+const int meters_per_tile = TerrainBase::TILE_SIZE_M;
 
 enum
 {

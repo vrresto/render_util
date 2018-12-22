@@ -27,56 +27,51 @@
 #extension GL_ARB_draw_instanced : require
 
 
-#define DRAW_INSTANCED 1
 #define ENABLE_BASE_MAP @enable_base_map@
 
-#if DRAW_INSTANCED
-attribute vec4 attrib_pos;
-#endif
 
+attribute vec4 attrib_pos;
 
 uniform sampler2D sampler_curvature_map;
 uniform sampler2D sampler_terrain_cdlod_height_map;
-uniform sampler2D sampler_terrain_cdlod_height_map_base;
 
 uniform float max_elevation;
 uniform float curvature_map_max_distance;
-uniform float planet_radius;
 
 uniform vec3 cameraPosWorld;
+uniform vec3 camera_pos_terrain_floor;
+uniform vec3 camera_pos_offset_terrain;
+
+uniform mat4 world_to_view_rotation;
 uniform mat4 projectionMatrixFar;
-uniform mat4 world2ViewMatrix;
-uniform mat4 view2WorldMatrix;
-uniform bool toggle_lod_morph;
+
 uniform vec2 cdlod_grid_size;
 uniform float cdlod_min_dist;
 
-#if !DRAW_INSTANCED
-uniform vec2 cdlod_node_pos;
-uniform float cdlod_node_scale;
-uniform float cdlod_lod_distance;
-#endif
-
-// uniform ivec2 typeMapSize;
 uniform vec2 map_size;
-
 uniform vec2 height_map_size_m;
 uniform vec2 height_map_size_px;
 
-uniform vec2 height_map_base_size_m;
-uniform vec2 height_map_base_origin = vec2(0);
+uniform float terrain_resolution_m;
+uniform float terrain_tile_size_m;
+uniform float terrain_height_offset = 0.0;
 
 varying vec3 passObjectPosFlat;
 varying vec3 passObjectPos;
 varying float vertexHorizontalDist;
 varying vec3 passLight;
 varying vec3 passNormal;
+varying vec2 pass_texcoord;
 
-uniform float terrain_height_offset = 0.0;
+#if ENABLE_BASE_MAP
+uniform sampler2D sampler_terrain_cdlod_height_map_base;
+uniform vec2 height_map_base_size_m;
+uniform vec2 height_map_base_origin = vec2(0);
+#endif
 
 
-float genericNoise(vec2 coord);
 float getDetailMapBlend(vec2 pos);
+
 
 vec2 getDiff(float dist, float height)
 {
@@ -98,7 +93,7 @@ float sampleMap(sampler2D sampler, vec2 world_coord, vec2 map_size_world, vec2 m
 
 float getHeight(vec2 world_coord, float approx_dist)
 {
-  vec2 height_map_coord = (world_coord + vec2(0, 200)) / height_map_size_m;
+  vec2 height_map_coord = (world_coord + vec2(0, terrain_resolution_m)) / height_map_size_m;
   height_map_coord.y = 1.0 - height_map_coord.y;
 
   ivec2 height_map_coord_px = ivec2(height_map_size_px * height_map_coord);
@@ -121,105 +116,91 @@ float getHeight(vec2 world_coord, float approx_dist)
 }
 
 
-vec2 morphVertex(vec2 gridPos, vec2 vertex, float lod_morph)
+vec2 morphVertex(vec2 grid_coords, float lod_morph)
 {
-//   vec2 fracPart = fract(gridPos.xy * cdlod_grid_size.xy * 0.5) * 2.0 / cdlod_grid_size.xy;
-//   return vertex.xy - fracPart * g_quadScale.xy * morphK;
-
-  vec2 grid_coords = gridPos * cdlod_grid_size;
-
   vec2 fp = fract(grid_coords / 2) * 2;;
 
   return grid_coords - fp * lod_morph;
 }
 
+
 void main(void)
 {
-  vec3 pos = gl_Vertex.xyz;
-
-  vec2 grid_pos = gl_Vertex.xy / cdlod_grid_size;
-
-#if DRAW_INSTANCED
+  float grids_per_tile = terrain_tile_size_m / terrain_resolution_m;
   float cdlod_lod_distance = attrib_pos.w;
 
-  pos.xy *= attrib_pos.z;
-  pos.xy += attrib_pos.xy;
-#else
-  pos.xy *= cdlod_node_scale;
-  pos.xy += cdlod_node_pos;
-#endif
-
-//   pos.xy += vec2(gl_InstanceID * 1000);
-//   pos.xy += texelFetch(sampler_cdlod_node_pos, gl_InstanceID, 0).xy;
-//   pos.xy += texelFetch(sampler_cdlod_node_pos, 0, 0).xy;
-
-//   float node_max_height = 3000; //FIXME
+  // float node_max_height = 3000; //FIXME
   float node_max_height = 0; //FIXME
-
   float z_dist = max(0, cameraPosWorld.z - node_max_height);
 
-  float lod_morph = smoothstep(cdlod_lod_distance * 0.7, cdlod_lod_distance, distance(pos, vec3(cameraPosWorld.xy, z_dist)));
+  vec2 origin_tile = floor(camera_pos_terrain_floor.xy / grids_per_tile);
 
-  float approx_dist = distance(pos, vec3(cameraPosWorld.xy, z_dist));
+  float node_scale = attrib_pos.z;
 
-  pos.xy = morphVertex(grid_pos, pos.xy, lod_morph);
+  vec3 pos = gl_Vertex.xyz;
 
-#if DRAW_INSTANCED
-  pos.xy *= attrib_pos.z;
+  pos.xy *= node_scale;
   pos.xy += attrib_pos.xy;
-#else
-  pos.xy *= cdlod_node_scale;
-  pos.xy += cdlod_node_pos;
-#endif
 
-  pos.z = getHeight(pos.xy, approx_dist);
+  pass_texcoord = (pos.xy + vec2(0,1)) / grids_per_tile;
+  pass_texcoord -= origin_tile;
 
+  vec2 pos2d_m = pos.xy * terrain_resolution_m;
+
+  float lod_morph = smoothstep(
+            cdlod_lod_distance * 0.7,
+            cdlod_lod_distance * 0.95,
+            distance(vec3(pos2d_m, 0), vec3(cameraPosWorld.xy, z_dist)));
+
+  pos.xy = morphVertex(gl_Vertex.xy, lod_morph);
+  pos.xy *= node_scale;
+  pos.xy += attrib_pos.xy;
+
+  pos2d_m = pos.xy * terrain_resolution_m;
+
+  float approx_dist = distance(vec3(pos2d_m, 0), vec3(cameraPosWorld.xy, z_dist));
+
+  pos.z = getHeight(pos2d_m, approx_dist);
   pos.z += terrain_height_offset;
 
-  passObjectPosFlat = pos;
+  passObjectPosFlat = vec3(pos2d_m, pos.z);
 
-  vec2 pos_xy_camera_relative = pos.xy - cameraPosWorld.xy;
-  float horizontalDist = length(pos_xy_camera_relative);
+  float height_diff = 0;
 
-  vertexHorizontalDist = horizontalDist;
+  // curvature
+  {
+    vec2 pos_xy_camera_relative = pos.xy - camera_pos_terrain_floor.xy;
+    pos_xy_camera_relative *= terrain_resolution_m;
+    pos_xy_camera_relative -= camera_pos_offset_terrain.xy;
 
-// curvature
-#if 1
-  vec2 view_dir_horizontal = normalize(pos_xy_camera_relative);
+    float horizontalDist = length(pos_xy_camera_relative);
 
-  vec2 diff = getDiff(horizontalDist, pos.z);
+    vec2 view_dir_horizontal = normalize(pos_xy_camera_relative);
 
-  float horizontalDistNew = horizontalDist + diff.x;
-//   float horizontalDistNew = diff.x;
+    vec2 diff = getDiff(horizontalDist, pos.z);
 
-//   vec2 pos_xy_camera_relative_new = view_dir_horizontal * horizontalDist;
-  vec2 pos_xy_camera_relative_new = view_dir_horizontal * horizontalDistNew;
+    float horizontalDistNew = horizontalDist + diff.x;
 
-//   vec2 pos_xy_camera_relative_new = pos_xy_camera_relative;
-  vec2 pos_xy_new = pos_xy_camera_relative_new + cameraPosWorld.xy;
+    vec2 pos_xy_camera_relative_new = view_dir_horizontal * horizontalDistNew;
 
-  pos.xy = pos_xy_new;
-  pos.z += diff.y;
-//   pos.z = diff.y;
+    pos_xy_camera_relative_new += camera_pos_offset_terrain.xy;
+    pos_xy_camera_relative_new /= terrain_resolution_m;
 
-//   pos.z -= planet_radius;
-#endif
+    vec2 pos_xy_new = pos_xy_camera_relative_new + camera_pos_terrain_floor.xy;
 
-  passObjectPos = pos;
+    pos.xy = pos_xy_new;
+    height_diff = diff.y;
+  }
 
-//   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
-//   gl_Position = projectionMatrixFar * gl_ModelViewMatrix * gl_Vertex;
-//     gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;
-//   gl_Position = gl_ProjectionMatrix * world2ViewMatrix * gl_Vertex;
-  gl_Position = projectionMatrixFar * world2ViewMatrix * vec4(pos, 1);
+  passObjectPos = (pos * vec3(vec2(terrain_resolution_m), 1)) + vec3(0, 0, height_diff);
 
+  pos.xyz -= camera_pos_terrain_floor;
+  pos.xy *= terrain_resolution_m;
+  pos.z += height_diff;
+  pos.xyz -= camera_pos_offset_terrain;
+
+  gl_Position = world_to_view_rotation * vec4(pos,1);
+  gl_Position = projectionMatrixFar * gl_Position;
 
   passNormal = gl_Normal.xyz;
-//   vec3 sun_direction = normalize(vec3(0.5, 0.5, 0.7));
-//   float light = clamp(dot(gl_Normal, sun_direction), 0.0, 1.0);
-//   passLight = vec3(light);
-
-
-//   gl_Position = projectionMatrixFar * gl_Vertex;
-//   gl_Position = gl_ProjectionMatrix * gl_Vertex;
 }

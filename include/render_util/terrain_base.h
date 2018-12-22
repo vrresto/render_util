@@ -36,6 +36,9 @@ namespace render_util
   class TerrainBase
   {
   public:
+
+    static constexpr int TILE_SIZE_M = 1600;
+
     virtual ~TerrainBase() {}
 
     virtual const std::string &getName() = 0;

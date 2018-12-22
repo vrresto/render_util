@@ -231,6 +231,12 @@ TexturePtr createTextureArray(const std::vector<ImageRGBA::ConstPtr> &textures)
   std::vector<ImageRGBA::ConstPtr> textures_resampled;
   cout << "resampling textures ..." << endl;
   textures_resampled = resampleImages(textures, texture_size);
+
+  for (auto &texture : textures_resampled)
+  {
+    texture = image::flipY(texture);
+  }
+
   cout << "resampling textures ... done." << endl;
   return render_util::createTextureArray<ImageRGBA>(textures_resampled);
 }

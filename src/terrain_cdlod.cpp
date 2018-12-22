@@ -85,8 +85,8 @@ enum { NUM_TEST_BUFFERS = 4 };
 
 enum
 {
-  LOD_LEVELS = 7,
-  MESH_GRID_SIZE = 128,
+  LOD_LEVELS = 8,
+  MESH_GRID_SIZE = 64,
   MIN_LOD_DIST = 40000,
 
   HEIGHT_MAP_METERS_PER_GRID = 200,
@@ -213,6 +213,7 @@ struct Node
 {
   std::array<Node*, 4> children;
   vec2 pos = vec2(0);
+  vec2 pos_grid = vec2(0);
   float size = 0;
   float max_height = 0;
   BoundingBox bounding_box;
@@ -273,7 +274,7 @@ void RenderBatch::addNode(Node *node)
 //   positions[size] = { node->pos.x, node->pos.y };
 //   size++;
 // #else
-  positions.push_back(node->pos);
+  positions.push_back(node->pos_grid);
 // #endif
 }
 
@@ -313,18 +314,18 @@ float getMaxHeight(const render_util::ElevationMap &map, vec2 pos, float size)
   return 4000.0;
 }
 
-constexpr float getNodeSize(int lod_level)
+constexpr double getNodeSize(int lod_level)
 {
   return pow(2, lod_level) * LEAF_NODE_SIZE;
 }
 
-constexpr float getNodeScale(int lod_level)
+constexpr double getNodeScale(int lod_level)
 {
-  return METERS_PER_GRID * pow(2, lod_level);
+  return pow(2, lod_level);
 }
 
 static_assert(getNodeSize(0) == LEAF_NODE_SIZE);
-static_assert(getNodeScale(0) == METERS_PER_GRID);
+static_assert(getNodeScale(0) == 1);
 
 
 TexturePtr createNormalMapTexture(render_util::ElevationMap::ConstPtr map, int meters_per_grid)
@@ -392,7 +393,7 @@ struct TerrainCDLOD::Private
 
   RenderList render_list;
   Node *root_node = 0;
-  vec2 root_node_pos = -vec2(getNodeSize(MAX_LOD) / 2.0);
+  dvec2 root_node_pos = -dvec2(getNodeSize(MAX_LOD) / 2.0);
 
   GLuint vao_id = 0;
   GLuint vertex_buffer_id = 0;
@@ -419,7 +420,7 @@ struct TerrainCDLOD::Private
   void processNode(Node *node, int lod_level, const Camera &camera);
   void selectNode(Node *node, int lod_level);
   void drawInstanced();
-  Node *createNode(const render_util::ElevationMap &map, vec2 pos, int lod_level);
+  Node *createNode(const render_util::ElevationMap &map, dvec2 pos, int lod_level);
   void setUniforms(ShaderProgramPtr program);
 };
 
@@ -494,6 +495,8 @@ TerrainCDLOD::Private::Private()
 
 void TerrainCDLOD::Private::setUniforms(ShaderProgramPtr program)
 {
+  program->setUniform("terrain_resolution_m", (float)METERS_PER_GRID);
+
   program->setUniform("cdlod_min_dist", MIN_LOD_DIST);
   program->setUniform("cdlod_grid_size", vec2(MESH_GRID_SIZE));
 
@@ -501,15 +504,25 @@ void TerrainCDLOD::Private::setUniforms(ShaderProgramPtr program)
   program->setUniform("height_map_size_px", height_map_size_px);
 
   program->setUniform("height_map_base_size_m", height_map_base_size_px * (float)HEIGHT_MAP_BASE_METERS_PER_PIXEL);
+
+  program->setUniform("terrain_tile_size_m", (float)TILE_SIZE_M);
 }
 
 
-Node *TerrainCDLOD::Private::createNode(const render_util::ElevationMap &map, vec2 pos, int lod_level)
+Node *TerrainCDLOD::Private::createNode(const render_util::ElevationMap &map,
+                                        dvec2 pos,
+                                        int lod_level)
 {
-  Node *node = node_allocator.alloc();
-  node->pos = pos;
+  assert(fract(pos) == dvec2(0));
 
-  float node_size = getNodeSize(lod_level);
+  Node *node = node_allocator.alloc();
+  node->pos = vec2(pos);
+  node->pos_grid = vec2(pos / (double)METERS_PER_GRID);
+
+  assert(fract(node->pos) == vec2(0));
+  assert(fract(node->pos_grid) == vec2(0));
+
+  double node_size = getNodeSize(lod_level);
 
   node->size = node_size;
 
@@ -519,13 +532,13 @@ Node *TerrainCDLOD::Private::createNode(const render_util::ElevationMap &map, ve
   }
   else
   {
-    float child_node_size = node_size / 2;
+    double child_node_size = node_size / 2;
     assert(child_node_size == getNodeSize(lod_level-1));
 
-    node->children[0] = createNode(map, node->pos + vec2(0, child_node_size), lod_level-1);
-    node->children[1] = createNode(map, node->pos + vec2(child_node_size, child_node_size), lod_level-1);
-    node->children[2] = createNode(map, node->pos + vec2(0, 0), lod_level-1);
-    node->children[3] = createNode(map, node->pos + vec2(child_node_size, 0), lod_level-1);
+    node->children[0] = createNode(map, pos + dvec2(0, child_node_size), lod_level-1);
+    node->children[1] = createNode(map, pos + dvec2(child_node_size, child_node_size), lod_level-1);
+    node->children[2] = createNode(map, pos + dvec2(0, 0), lod_level-1);
+    node->children[3] = createNode(map, pos + dvec2(child_node_size, 0), lod_level-1);
 
     for (Node *child : node->children)
     {

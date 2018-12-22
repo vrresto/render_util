@@ -49,7 +49,8 @@ vec4 applyWater(vec4 color,
   float river_amount,
   float bank_amount);
 
-const float meters_per_tile = 1600;
+uniform float terrain_tile_size_m;
+
 const float near_distance = 80000;
 
 uniform bool draw_near_forest = false;
@@ -72,6 +73,8 @@ uniform sampler2DArray sampler_beach;
 uniform ivec2 typeMapSize;
 uniform vec2 map_size;
 uniform vec3 cameraPosWorld;
+
+varying vec2 pass_texcoord;
 
 const ivec2 type_map_base_size_px = ivec2(4096);
 const ivec2 type_map_base_meters_per_pixel = ivec2(400);
@@ -163,10 +166,9 @@ void sampleTypeMap(sampler2D sampler,
 }
 
 
-vec4 sampleTerrain(vec2 pos, float type_normalized)
+vec4 sampleTerrain(float type_normalized)
 {
-  vec2 mapCoords = (pos + vec2(0, 200)) / meters_per_tile;
-  mapCoords.y = 1.0 - mapCoords.y;
+  vec2 mapCoords = pass_texcoord;
 
   uint index = uint(type_normalized * 255) & 0x1Fu;
   float scale = texelFetch(sampler_terrain_scale_map, int(index), 0).x;
@@ -187,10 +189,10 @@ vec4 sampleTerrainTextures(vec2 pos)
 
   sampleTypeMap(sampler_type_map, typeMapSize, typeMapCoords, types, weights);
 
-  vec4 c00 = sampleTerrain(pos.xy, types[0]);
-  vec4 c01 = sampleTerrain(pos.xy, types[1]);
-  vec4 c10 = sampleTerrain(pos.xy, types[2]);
-  vec4 c11 = sampleTerrain(pos.xy, types[3]);
+  vec4 c00 = sampleTerrain(types[0]);
+  vec4 c01 = sampleTerrain(types[1]);
+  vec4 c10 = sampleTerrain(types[2]);
+  vec4 c11 = sampleTerrain(types[3]);
 
   return
     c00 * weights[0] +
@@ -200,10 +202,9 @@ vec4 sampleTerrainTextures(vec2 pos)
 }
 
 
-vec4 sampleBaseTerrain(vec2 pos, float type_normalized)
+vec4 sampleBaseTerrain(float type_normalized)
 {
-  vec2 mapCoords = pos / meters_per_tile;
-  mapCoords.y = 1.0 - mapCoords.y;
+  vec2 mapCoords = pass_texcoord;
 
   uint index = uint(type_normalized * 255);
 //   float scale = texelFetch(sampler_terrain_scale_map, int(index), 0).x;
@@ -222,10 +223,10 @@ vec4 sampleBaseTerrainTextures(vec2 pos)
 
   sampleTypeMap(sampler_type_map_base, type_map_base_size_px, typeMapCoords, types, weights);
 
-  vec4 c00 = sampleBaseTerrain(pos.xy, types[0]);
-  vec4 c01 = sampleBaseTerrain(pos.xy, types[1]);
-  vec4 c10 = sampleBaseTerrain(pos.xy, types[2]);
-  vec4 c11 = sampleBaseTerrain(pos.xy, types[3]);
+  vec4 c00 = sampleBaseTerrain(types[0]);
+  vec4 c01 = sampleBaseTerrain(types[1]);
+  vec4 c10 = sampleBaseTerrain(types[2]);
+  vec4 c11 = sampleBaseTerrain(types[3]);
 
   return
     c00 * weights[0] +
@@ -290,14 +291,15 @@ vec4 applyForest(vec4 color, vec2 pos, vec3 view_dir, float dist)
 }
 
 
-vec4 applyTerrainNoise(vec4 color, vec2 coords, float dist)
+vec4 applyTerrainNoise(vec4 color, float dist)
 {
 //   const float noise_near_strength = 0.4;
 //   const float noise_far_strength = 0.2;
 //   const float noise_very_far_strength = 0.15;
 
+  vec2 coords = pass_texcoord;
+
   const float noise_strength = 1.0;
-  
   const float noise_near_strength = 0.4 * noise_strength;
   const float noise_far_strength = 0.4 * noise_strength;
   const float noise_very_far_strength = 0.4 * noise_strength;
@@ -360,8 +362,6 @@ vec4 getTerrainColor(vec3 pos)
   float dist = distance(cameraPosWorld, pos);
   vec3 view_dir = normalize(cameraPosWorld - pos);
 
-  vec2 mapCoords = (pos.xy + vec2(0, 200)) / meters_per_tile;
-  mapCoords.y = 1.0 - mapCoords.y;
 
 
   float detail_blend = 1.0;
@@ -440,11 +440,11 @@ float bank_amount = 0;
 
   waterDepth = getWaterDepth(pos.xy);
 
-  vec3 shallowWaterColor = texture2D(sampler_shallow_water, mapCoords * 2).xyz;  
+  vec3 shallowWaterColor = texture2D(sampler_shallow_water, pass_texcoord * 2).xyz;
 
   color.xyz = mix(color.xyz, shallowWaterColor, smoothstep(0.55, 0.9, waterDepth));
 
-  vec4 bankColor = texture(sampler_beach, vec3(mapCoords * 5, 2));
+  vec4 bankColor = texture(sampler_beach, vec3(pass_texcoord * 5, 2));
   bank_amount = smoothstep(0.4, 0.45, waterDepth);
   bank_amount *= (1-shallow_sea_amount);
 //   bank_amount *= 0.8;
@@ -456,7 +456,9 @@ float bank_amount = 0;
 
 #if ENABLE_TERRAIN_NOISE
   if (enable_terrain_noise)
-    color = applyTerrainNoise(color, mapCoords, dist);
+  {
+    color = applyTerrainNoise(color, dist);
+  }
 #endif
 
 #if ENABLE_FAR_TEXTURE
@@ -470,7 +472,7 @@ float bank_amount = 0;
   color.xyz *= light;
 
 #if ENABLE_WATER
-  color = applyWater(color, view_dir, dist, waterDepth, mapCoords, pos.xy, shallow_sea_amount, river_amount, bank_amount);
+  color = applyWater(color, view_dir, dist, waterDepth, pass_texcoord, pos.xy, shallow_sea_amount, river_amount, bank_amount);
 #endif
 
 // DEBUG
