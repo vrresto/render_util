@@ -342,7 +342,7 @@ void ShaderProgram::create()
   id = gl::CreateProgram();
   assert(id != 0);
 
-  cerr<<name<<"num fragment shaders: "<<fragment_shaders.size()<<endl;
+  cerr<<name<<": num fragment shaders: "<<fragment_shaders.size()<<endl;
   for (auto name : fragment_shaders)
   {
     GLuint shader = createShader(name, path, GL_FRAGMENT_SHADER, m_parameters);
