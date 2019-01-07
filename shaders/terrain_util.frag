@@ -390,6 +390,8 @@ vec4 getTerrainColor(vec3 pos)
   vec3 normal = vec3(0,0,1);
 #endif
 
+  normal.y *= -1;
+
   vec3 light = calcLight(pos, normal); 
 
   float shallow_sea_amount = 0;
