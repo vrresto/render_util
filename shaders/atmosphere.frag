@@ -403,7 +403,7 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
 //   float v = 25 * 1000 * 1000;
 //   float d = dist / v;
 
-  vec3 rayleighColor = vec3(0.0, 0.25, 0.9);
+  vec3 rayleighColor = vec3(0.0, 0.25, 0.8);
   
 //   rayleighColor = mix(rayleighColor, vec3(0.9, 0.95, 1.0), 0.4);
 
@@ -510,8 +510,7 @@ void apply_fog()
 
   gl_FragColor.xyz *= 1.0 - extinction;
 
-  atmosphereColor *=  mix(0.75, 1.0, 1.0 - exp(-3 * (t/atmosphereVisibility) * 5.0));
-    
+//   atmosphereColor *=  mix(0.75, 1.0, 1.0 - exp(-3 * (t/atmosphereVisibility) * 5.0));
 //   else if (gl_FragCoord.x > 1200)
 //     atmosphereColor *= 1.0 - exp(-3 * (t/atmosphereVisibility) * 10.0);
   
