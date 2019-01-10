@@ -55,8 +55,8 @@ varying vec3 passNormal;
 const float atmosphereVisibility = 900000.0;
 
 // const float hazyness = 0.0;
-//   const float hazyness = 0.05;
-  const float hazyness = 0.1;
+// const float hazyness = 0.05;
+const float hazyness = 0.1;
 
 vec3 debugColor;
 
