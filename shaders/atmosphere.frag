@@ -408,7 +408,7 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
 //   float v = 25 * 1000 * 1000;
 //   float d = dist / v;
 
-  vec3 rayleighColor = vec3(0.0, 0.25, 0.8);
+  vec3 rayleighColor = vec3(0.0, 0.225, 0.8);
   
 //   rayleighColor = mix(rayleighColor, vec3(0.9, 0.95, 1.0), 0.4);
 
