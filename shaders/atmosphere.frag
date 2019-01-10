@@ -54,6 +54,10 @@ varying vec3 passNormal;
 // const float atmosphereVisibility = 600000.0;
 const float atmosphereVisibility = 900000.0;
 
+// const float hazyness = 0.0;
+//   const float hazyness = 0.05;
+  const float hazyness = 0.1;
+
 vec3 debugColor;
 
 void resetDebugColor() {
@@ -410,11 +414,8 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
 
   vec3 diffuseScatteringColorDark = vec3(0.15, 0.62, 1.0);
 
-//   if (gl_FragCoord.x > 900)
-  {
-    rayleighColor = mix(rayleighColor, vec3(1.0), 0.05);
-    diffuseScatteringColorDark = mix(diffuseScatteringColorDark, vec3(1), 0.05);
-  }
+  rayleighColor = mix(rayleighColor, vec3(1), hazyness);
+  diffuseScatteringColorDark = mix(diffuseScatteringColorDark, vec3(1), hazyness);
 
 
 //   vec3 diffuseScatteringColorBright = vec3(0.7, 0.9, 1.0);
