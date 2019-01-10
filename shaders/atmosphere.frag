@@ -51,8 +51,8 @@ varying vec3 passNormal;
 
 // const float atmosphereVisibility = 400000.0;
 // const float atmosphereVisibility = 200000.0;
-// const float atmosphereVisibility = 600000.0;
-const float atmosphereVisibility = 900000.0;
+const float atmosphereVisibility = 600000.0;
+// const float atmosphereVisibility = 900000.0;
 
 // const float hazyness = 0.0;
 // const float hazyness = 0.05;
