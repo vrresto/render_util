@@ -74,6 +74,16 @@ namespace render_util
   public:
     const std::array<glm::vec3, 8> &getCornerPoints() const { return m_corner_points; }
 
+    float getMaxRadius()
+    {
+      return glm::length(m_extent) / 2.f;
+    }
+
+    glm::vec3 getCenter()
+    {
+      return m_origin + m_extent / 2.f;
+    }
+
     void set(const glm::vec3 &origin, const glm::vec3 &extent)
     {
       m_origin = origin;

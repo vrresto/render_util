@@ -81,26 +81,54 @@ namespace render_util
 namespace
 {
 
+
 enum { NUM_TEST_BUFFERS = 4 };
 
+#if 1
 enum
 {
   LOD_LEVELS = 7,
   MESH_GRID_SIZE = 128,
-  MIN_LOD_DIST = 40000,
 
   HEIGHT_MAP_METERS_PER_GRID = 200,
   METERS_PER_GRID = 200,
 
   LEAF_NODE_SIZE = MESH_GRID_SIZE * METERS_PER_GRID,
 
+  MIN_LOD_DIST = 80000,
+
   MAX_LOD = LOD_LEVELS,
 };
+#else
+enum
+{
+  LOD_LEVELS = 8,
+  MESH_GRID_SIZE = 64,
+
+  HEIGHT_MAP_METERS_PER_GRID = 200,
+  METERS_PER_GRID = 200,
+
+  LEAF_NODE_SIZE = MESH_GRID_SIZE * METERS_PER_GRID,
+
+  MIN_LOD_DIST = 40000,
+
+  MAX_LOD = LOD_LEVELS,
+};
+#endif
+
+
+constexpr float getLodLevelDist(int lod_level)
+{
+  return MIN_LOD_DIST * pow(2, lod_level);
+}
 
 constexpr size_t getNumLeafNodes()
 {
   return pow(4, (size_t)LOD_LEVELS);
 }
+
+static_assert(LEAF_NODE_SIZE < 0.4 * getLodLevelDist(0));
+
 
 struct GridMesh
 {
@@ -220,6 +248,8 @@ struct Node
   bool isInRange(const vec3 &camera_pos, float radius)
   {
     return bounding_box.getShortestDistance(camera_pos) <= radius;
+//     auto dist = distance(camera_pos, bounding_box.getCenter()) - bounding_box.getMaxRadius();
+//     return dist <= radius;
   }
 };
 
@@ -302,11 +332,6 @@ public:
   }
 };
 
-
-float getLodLevelDist(int lod_level)
-{
-  return MIN_LOD_DIST * pow(2, lod_level);
-}
 
 float getMaxHeight(const render_util::ElevationMap &map, vec2 pos, float size)
 {

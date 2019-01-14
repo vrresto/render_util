@@ -131,6 +131,7 @@ vec2 morphVertex(vec2 gridPos, vec2 vertex, float lod_morph)
   vec2 fp = fract(grid_coords / 2) * 2;;
 
   return grid_coords - fp * lod_morph;
+//   return grid_coords;
 }
 
 void main(void)
@@ -158,7 +159,7 @@ void main(void)
 
   float z_dist = max(0, cameraPosWorld.z - node_max_height);
 
-  float lod_morph = smoothstep(cdlod_lod_distance * 0.7, cdlod_lod_distance, distance(pos, vec3(cameraPosWorld.xy, z_dist)));
+  float lod_morph = smoothstep(cdlod_lod_distance * 0.7, cdlod_lod_distance * 0.95, distance(pos, vec3(cameraPosWorld.xy, z_dist)));
 
   float approx_dist = distance(pos, vec3(cameraPosWorld.xy, z_dist));
 

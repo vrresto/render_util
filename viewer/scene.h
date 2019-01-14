@@ -46,7 +46,7 @@ struct Terrain : public render_util::TerrainRenderer
     gl::FrontFace(GL_CCW);
     gl::Enable(GL_DEPTH_TEST);
     gl::DepthMask(GL_TRUE);
-//     gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     getTerrain()->setDrawDistance(0);
     getTerrain()->update(camera);
@@ -55,7 +55,7 @@ struct Terrain : public render_util::TerrainRenderer
 
     getTerrain()->draw();
 
-//     gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     CHECK_GL_ERROR();
   }
