@@ -34,7 +34,6 @@ namespace render_util
   struct Map
   {
     glm::ivec2 size = glm::ivec2(0);
-    glm::ivec2 type_map_size = glm::ivec2(0);
     glm::vec2 base_map_origin = glm::vec2(0);
     std::shared_ptr<MapTextures> textures;
     std::shared_ptr<TerrainBase> terrain;
