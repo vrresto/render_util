@@ -19,9 +19,8 @@
 #ifndef RENDER_UTIL_CAMERA_H
 #define RENDER_UTIL_CAMERA_H
 
-#include <render_util/render_util.h>
+#include <render_util/geometry.h>
 
-#include <glm/glm.hpp>
 
 namespace render_util
 {

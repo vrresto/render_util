@@ -38,6 +38,7 @@ namespace render_util
   public:
 
     static constexpr int TILE_SIZE_M = 1600;
+    static constexpr int GRID_RESOLUTION_M = 200;
 
     virtual ~TerrainBase() {}
 

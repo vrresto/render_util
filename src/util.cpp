@@ -17,6 +17,8 @@
  */
 
 #include <util.h>
+#include <render_util/render_util.h>
+#include <render_util/terrain_base.h>
 
 #ifdef RENDER_UTIL_USE_MSVCRT
 
@@ -29,3 +31,23 @@ bool util::mkdir(const char *name)
 }
 
 #endif
+
+void render_util::updateUniforms(render_util::ShaderProgramPtr program, const render_util::Camera &camera)
+{
+  using Vec3 = render_util::Camera::Vec3;
+
+  glm::mat4 mvp(camera.getProjectionMatrixFarD() * camera.getWorld2ViewMatrixD());
+
+  program->setUniform("cameraPosWorld", camera.getPos());
+  program->setUniform("projectionMatrixFar", camera.getProjectionMatrixFar());
+  program->setUniform("world2ViewMatrix", camera.getWorld2ViewMatrix());
+  program->setUniform("view2WorldMatrix", camera.getView2WorldMatrix());
+  program->setUniform("world_to_view_rotation", camera.getWorldToViewRotation());
+
+  Vec3 terrain_scale(glm::ivec2(TerrainBase::GRID_RESOLUTION_M), 1);
+
+  program->setUniform("camera_pos_terrain_floor",
+                      glm::vec3(glm::floor(camera.getPosD() / terrain_scale)));
+  program->setUniform("camera_pos_offset_terrain",
+                      glm::vec3(terrain_scale * glm::fract(camera.getPosD() / terrain_scale)));
+}

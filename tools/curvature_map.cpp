@@ -57,7 +57,7 @@ namespace
     GLfloat y = 0;
   };
 
-  float2 map[curvature_map_width][curvature_map_height];
+  float2 g_map[curvature_map_width][curvature_map_height];
 
   template<typename T>
   bool equals(const T &a, const T &b, const T &epsilon)
@@ -249,16 +249,16 @@ namespace
 //         assert(diff.y <= 0);
 //         assert(diff.x <= 0);
 
-//         map[x][y].x = diff.x;
-//         map[x][y].x = diff.0;
+//         g_map[x][y].x = diff.x;
+//         g_map[x][y].x = diff.0;
 
-        map[y][x].x = diff.x;
-//         map[y][x].x = 0;
+        g_map[y][x].x = diff.x;
+//         g_map[y][x].x = 0;
 
-        map[y][x].y = diff.y;
+        g_map[y][x].y = diff.y;
 
 
-//         map[x][y].y = -100000;
+//         g_map[x][y].y = -100000;
       }
 
     }
@@ -272,5 +272,5 @@ bool render_util::createCurvatureMap(const char *output_path)
 
   calcCurvatureValues();
   
-  return util::writeFile(output_path, (const char*) map, sizeof(map));
+  return util::writeFile(output_path, (const char*) g_map, sizeof(g_map));
 }

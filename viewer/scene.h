@@ -21,6 +21,7 @@
 
 #include "camera.h"
 
+#include <render_util/render_util.h>
 #include <render_util/shader.h>
 #include <render_util/terrain_util.h>
 #include <render_util/globals.h>
@@ -154,25 +155,10 @@ public:
 
   virtual void updateUniforms(render_util::ShaderProgramPtr program)
   {
-    using Vec3 = render_util::Camera::Vec3;
-
-    program->setUniform("cameraPosWorld", camera.getPos());
-    program->setUniform("projectionMatrixFar", camera.getProjectionMatrixFar());
-    program->setUniform("world2ViewMatrix", camera.getWorld2ViewMatrix());
-    program->setUniform("view2WorldMatrix", camera.getView2WorldMatrix());
     program->setUniform("sunDir", getSunDir());
     program->setUniform("toggle_lod_morph", toggle_lod_morph);
     program->setUniform("height_map_base_origin", base_map_origin);
-
-    glm::mat4 mvp(camera.getProjectionMatrixFarD() * camera.getWorld2ViewMatrixD());
-
-    program->setUniform("world_to_view_rotation", camera.getWorldToViewRotation());
-    program->setUniform("camera_pos_terrain_floor",
-                        glm::vec3(glm::floor(camera.getPosD() / Vec3(200.0, 200.0, 1.0))));
-    program->setUniform("camera_pos_offset_terrain",
-                        glm::vec3(Vec3(200.0, 200.0, 1.0) *
-                          glm::fract(camera.getPosD() / Vec3(200.0, 200.0, 1.0))));
-
+    render_util::updateUniforms(program, camera);
   }
 
   virtual void mark() {}

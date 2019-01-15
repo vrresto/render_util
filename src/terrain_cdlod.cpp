@@ -83,6 +83,9 @@ namespace
 
 enum { NUM_TEST_BUFFERS = 4 };
 
+
+constexpr int METERS_PER_GRID = render_util::TerrainBase::GRID_RESOLUTION_M;
+
 enum
 {
   LOD_LEVELS = 8,
@@ -90,7 +93,6 @@ enum
   MIN_LOD_DIST = 40000,
 
   HEIGHT_MAP_METERS_PER_GRID = 200,
-  METERS_PER_GRID = 200,
 
   LEAF_NODE_SIZE = MESH_GRID_SIZE * METERS_PER_GRID,
 

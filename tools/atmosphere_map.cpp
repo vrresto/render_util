@@ -55,7 +55,7 @@ namespace
   const int map_num_rows = map_size.y;
   const int map_num_elements = ATMOSPHERE_MAP_NUM_ELEMENTS;
 
-  AtmosphereMapElementType map[map_num_elements];
+  AtmosphereMapElementType g_map[map_num_elements];
 
 
   double getDistanceToHorizon(double r)
@@ -357,7 +357,7 @@ namespace
         thickness = -1.0;
       }
 
-      map[getMapIndex(x,y)] = thickness;
+      g_map[getMapIndex(x,y)] = thickness;
 
     }
 
@@ -374,5 +374,5 @@ bool render_util::createAtmosphereMap(const char *output_path)
 
   ofstream out(output_path);
   
-  return util::writeFile(output_path, (const char*) map, sizeof(map));
+  return util::writeFile(output_path, (const char*) g_map, sizeof(g_map));
 }

@@ -39,7 +39,6 @@ public:
   TerrainRenderer(std::shared_ptr<TerrainBase>, ShaderProgramPtr);
   std::shared_ptr<TerrainBase> getTerrain() { return m_terrain; }
   ShaderProgramPtr getProgram() { return m_program; }
-
 };
 
 TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr,
