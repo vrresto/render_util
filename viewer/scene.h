@@ -80,9 +80,6 @@ inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
   t.getTerrain()->build(elevation_map);
 
   t.getProgram()->setUniform("terrain_color", color);
-  t.getProgram()->setUniform("draw_near_forest", true);
-  t.getProgram()->setUniform("enable_waves", true);
-  t.getProgram()->setUniform("enable_terrain_noise", true);
 
   return t;
 }

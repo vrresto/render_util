@@ -55,9 +55,6 @@ uniform float terrain_tile_size_m;
 
 const float near_distance = 80000;
 
-uniform bool draw_near_forest = false;
-uniform bool enable_terrain_noise = false;
-
 uniform sampler2D sampler_terrain_cdlod_normal_map;
 uniform sampler2D sampler_terrain_cdlod_normal_map_base;
 uniform vec2 height_map_base_size_m;

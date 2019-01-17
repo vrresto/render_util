@@ -29,7 +29,8 @@
  
 #version 130
 
-#define ENABLE_WAVES 1
+#define LOW_DETAIL @low_detail:false@
+#define ENABLE_WAVES !LOW_DETAIL
 #define ENABLE_WAVE_INTERPOLATION 1
 // #define ENABLE_WAVE_FOAM 1
 #define ENABLE_WATER_MAP 1
@@ -60,7 +61,6 @@ vec2 rotate(vec2 v, float a);
 float perlin(vec2 p, float dim);
 float genericNoise(vec2 coord);
 
-uniform bool enable_waves = false;
 
 uniform sampler2DArray sampler_beach;
 uniform sampler2DArray sampler_foam_mask;
@@ -309,7 +309,7 @@ vec3 getWaterNormal(float dist, vec2 coord, float waterDepth)
 {
   vec3 normal = vec3(0,0,1);
 #if ENABLE_WAVES
-  if (enable_waves && dist < 30000)
+  if (dist < 30000)
   {
     const float bigWaveStrength = 0.01;
     const float mediumWaveStrength = 0.2;
