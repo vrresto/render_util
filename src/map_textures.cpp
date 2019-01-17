@@ -332,8 +332,7 @@ void render_util::MapTextures::setWaterMap(const std::vector<ImageGreyScale::Con
 {
   p->water_map_table_size = table->size();
 
-  Image<float>::Ptr table_float =
-    image::convert<float>(table);
+  auto table_float = image::convert<float>(table);
 
   TexturePtr chunks_texture = createTextureArray<ImageGreyScale>(chunks);
 

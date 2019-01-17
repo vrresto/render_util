@@ -20,6 +20,7 @@
 #define RENDER_UTIL_MAPLOADER_BASE_H
 
 #include <render_util/map.h>
+#include <render_util/terrain_base.h>
 
 #include <string>
 
@@ -32,6 +33,7 @@ namespace render_util
     virtual MapTextures &getTextures() = 0;
     virtual WaterAnimation &getWaterAnimation() = 0;
     virtual int getHeightMapMetersPerPixel() const = 0;
+    virtual TerrainBase::MaterialMap::ConstPtr getMaterialMap() const = 0;
 
     virtual void buildBaseMap(render_util::ElevationMap::ConstPtr elevation_map,
                               render_util::ImageGreyScale::ConstPtr land_map ={}) {}

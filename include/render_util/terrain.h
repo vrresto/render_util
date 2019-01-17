@@ -24,7 +24,7 @@
 
 namespace render_util
 {
-  extern const util::Factory<TerrainBase> g_terrain_factory;
+//   extern const util::Factory<TerrainBase> g_terrain_factory;
 }
 
 #endif

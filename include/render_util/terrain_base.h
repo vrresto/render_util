@@ -22,6 +22,8 @@
 #include <render_util/shader.h>
 #include <render_util/camera.h>
 #include <render_util/elevation_map.h>
+#include <render_util/texture_manager.h>
+#include <factory.h>
 
 #include <string>
 #include <vector>
@@ -31,27 +33,48 @@ namespace render_util
 {
   enum { HEIGHT_MAP_BASE_METERS_PER_PIXEL = 400 };
 
-  class TextureManager;
-
   class TerrainBase
   {
   public:
-
     static constexpr int TILE_SIZE_M = 1600;
     static constexpr int GRID_RESOLUTION_M = 200;
+
+    struct MaterialID
+    {
+      static constexpr unsigned int LAND = 1;
+      static constexpr unsigned int WATER = 1 << 1;
+      static constexpr unsigned int FOREST = 1 << 2;
+      static constexpr unsigned int ALL = LAND | WATER | FOREST;
+    };
+
+    using MaterialMap = Image<unsigned int>;
+
+    struct Client
+    {
+      virtual void setActiveProgram(ShaderProgramPtr) = 0;
+    };
 
     virtual ~TerrainBase() {}
 
     virtual const std::string &getName() = 0;
-    virtual void build(ElevationMap::ConstPtr map) = 0;
-    virtual void draw() = 0;
+    virtual void build(ElevationMap::ConstPtr map, MaterialMap::ConstPtr material_map = {}) = 0;
+    virtual void draw(Client *client = nullptr) = 0;
     virtual void setBaseElevationMap(ElevationMap::ConstPtr map) {}
-    virtual void update(const Camera &camera) {}
-    virtual void setTextureManager(TextureManager*) {};
+    virtual void update(const Camera &camera, bool low_detail) {}
     virtual void setDrawDistance(float dist) {}
-    virtual std::vector<glm::vec3> getNormals() { return std::vector<glm::vec3>(); }
+    virtual std::vector<glm::vec3> getNormals() { return {}; }
   };
 
+  using TerrainFactory = util::Factory<TerrainBase, TextureManager&, std::string>;
+
+  template <class T>
+  TerrainFactory makeTerrainFactory()
+  {
+    return [] (TextureManager &tm, std::string shader_path)
+    {
+      return std::make_shared<T>(tm, shader_path);
+    };
+  }
 }
 
 #endif

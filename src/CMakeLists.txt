@@ -1,5 +1,5 @@
 set(CXX_SRCS
-  terrain.cpp
+#   terrain.cpp
   terrain_cdlod.cpp
   camera.cpp
   texunits.cpp

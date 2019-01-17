@@ -24,7 +24,7 @@
 
 namespace render_util
 {
-  extern const util::Factory<TerrainBase> g_terrain_cdlod_factory;
+  extern const TerrainFactory g_terrain_cdlod_factory;
 }
 
 #endif

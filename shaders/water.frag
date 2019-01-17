@@ -29,7 +29,7 @@
  
 #version 130
 
-#define LOW_DETAIL @low_detail:false@
+#define LOW_DETAIL @low_detail:0@
 #define ENABLE_WAVES !LOW_DETAIL
 #define ENABLE_WAVE_INTERPOLATION 1
 // #define ENABLE_WAVE_FOAM 1

@@ -42,7 +42,7 @@ struct Terrain : public render_util::TerrainRenderer
     *static_cast<render_util::TerrainRenderer*>(this) = other;
   }
 
-  void draw(const Camera &camera)
+  void draw(const Camera &camera, TerrainBase::Client *client)
   {
     gl::FrontFace(GL_CCW);
     gl::Enable(GL_DEPTH_TEST);
@@ -50,11 +50,9 @@ struct Terrain : public render_util::TerrainRenderer
 //     gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     getTerrain()->setDrawDistance(0);
-    getTerrain()->update(camera);
+    getTerrain()->update(camera, false);
 
-    render_util::getCurrentGLContext()->setCurrentProgram(getProgram());
-
-    getTerrain()->draw();
+    getTerrain()->draw(client);
 
 //     gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -65,11 +63,14 @@ struct Terrain : public render_util::TerrainRenderer
 
 inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
                       bool use_lod,
-                      const render_util::ElevationMap::ConstPtr elevation_map,
+                      render_util::ElevationMap::ConstPtr elevation_map,
+                      render_util::TerrainBase::MaterialMap::ConstPtr material_map,
                       glm::vec3 color,
                       bool use_base_map,
                       bool use_base_water_map)
 {
+  assert(material_map);
+
   Terrain t = render_util::createTerrainRenderer(tex_mgr,
     use_lod,
     RENDER_UTIL_SHADER_DIR, "terrain",
@@ -77,7 +78,7 @@ inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
     use_base_water_map,
     false);
 
-  t.getTerrain()->build(elevation_map);
+  t.getTerrain()->build(elevation_map, material_map);
 
   t.getProgram()->setUniform("terrain_color", color);
 
@@ -113,8 +114,9 @@ public:
     return glm::vec3(0, sun_dir_h.x, sun_dir_h.y);
   }
 
-  void createTerrain(const render_util::ElevationMap::ConstPtr elevation_map,
-                     const render_util::ElevationMap::ConstPtr elevation_map_base = {})
+  void createTerrain(render_util::ElevationMap::ConstPtr elevation_map,
+                     render_util::TerrainBase::MaterialMap::ConstPtr material_map = {},
+                     render_util::ElevationMap::ConstPtr elevation_map_base = {})
   {
 //     m_terrain =
 //       render_util::viewer::createTerrain(getTextureManager(), false,
@@ -122,6 +124,7 @@ public:
     m_terrain_cdlod =
       render_util::viewer::createTerrain(getTextureManager(), true,
                                          elevation_map,
+                                         material_map,
                                          glm::vec3(0,1,0),
                                          m_use_base_map,
                                          m_use_base_water_map);
@@ -139,14 +142,7 @@ public:
 //     m_terrain_cdlod.update(camera);
 //   }
 
-  void drawTerrain()
-  {
-//     updateUniforms(m_terrain.getProgram());
-//     m_terrain.draw(camera);
-
-    updateUniforms(m_terrain_cdlod.getProgram());
-    m_terrain_cdlod.draw(camera);
-  }
+  void drawTerrain();
 
   render_util::TextureManager &getTextureManager() { return texture_manager; }
 
@@ -166,6 +162,28 @@ public:
   virtual void setup() = 0;
   virtual void render(float frame_delta) = 0;
 };
+
+
+class TerrainClient : public TerrainBase::Client
+{
+  Scene *m_scene = nullptr;
+
+public:
+  TerrainClient(Scene *scene) : m_scene(scene) {}
+
+  void setActiveProgram(ShaderProgramPtr p) override
+  {
+    render_util::getCurrentGLContext()->setCurrentProgram(p);
+    m_scene->updateUniforms(p);
+  }
+};
+
+
+inline void Scene::drawTerrain()
+{
+  TerrainClient client(this);
+  m_terrain_cdlod.draw(camera, &client);
+}
 
 
 } // namespace render_util::viewer

@@ -109,11 +109,12 @@ TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr, bool use_lod, con
                                                  is_editor,
                                                  true);
 
-  auto terrain = use_lod ?
-    g_terrain_cdlod_factory() :
-    g_terrain_factory();
-  terrain->setTextureManager(&tex_mgr);
+  assert(use_lod);
+  auto terrain = g_terrain_cdlod_factory(tex_mgr, shader_path);
 
+//   auto terrain = use_lod ?
+//     g_terrain_cdlod_factory() :
+//     g_terrain_factory();
 
   return TerrainRenderer(terrain, program, low_detail_program);
 }
