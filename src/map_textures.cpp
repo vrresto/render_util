@@ -442,7 +442,7 @@ void render_util::MapTextures::setTexture(unsigned texunit, TexturePtr texture)
     case TEXUNIT_TERRAIN_FAR:
       params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
       params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-      params.set(GL_TEXTURE_LOD_BIAS, 1.0);
+      params.set(GL_TEXTURE_LOD_BIAS, -3.0);
       break;
     case TEXUNIT_FOREST_MAP:
     case TEXUNIT_FOREST_MAP_BASE:
