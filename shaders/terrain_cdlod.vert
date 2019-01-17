@@ -142,9 +142,6 @@ void main(void)
   pos.xy *= node_scale;
   pos.xy += attrib_pos.xy;
 
-  pass_texcoord = (pos.xy + vec2(0,1)) / grids_per_tile;
-  pass_texcoord -= origin_tile;
-
   vec2 pos2d_m = pos.xy * terrain_resolution_m;
 
   float lod_morph = smoothstep(
@@ -155,6 +152,9 @@ void main(void)
   pos.xy = morphVertex(gl_Vertex.xy, lod_morph);
   pos.xy *= node_scale;
   pos.xy += attrib_pos.xy;
+
+  pass_texcoord = (pos.xy + vec2(0,1)) / grids_per_tile;
+  pass_texcoord -= origin_tile;
 
   pos2d_m = pos.xy * terrain_resolution_m;
 
