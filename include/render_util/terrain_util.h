@@ -33,12 +33,14 @@ class TerrainRenderer
 {
   std::shared_ptr<TerrainBase> m_terrain;
   ShaderProgramPtr m_program;
+  ShaderProgramPtr m_low_detail_program;
 
 public:
   TerrainRenderer() {}
-  TerrainRenderer(std::shared_ptr<TerrainBase>, ShaderProgramPtr);
+  TerrainRenderer(std::shared_ptr<TerrainBase>, ShaderProgramPtr, ShaderProgramPtr);
   std::shared_ptr<TerrainBase> getTerrain() { return m_terrain; }
   ShaderProgramPtr getProgram() { return m_program; }
+  ShaderProgramPtr getLowDetailProgram() { return m_low_detail_program; }
 };
 
 TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr,

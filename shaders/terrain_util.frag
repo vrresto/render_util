@@ -26,9 +26,11 @@
 #define ENABLE_WATER 1
 #define ENABLE_WATER_TYPE_MAP 1
 #define ENABLE_FOREST 1
+#define ENABLE_FAR_FOREST 0
 #define DETAILED_FOREST false
 #define ENABLE_TERRAIN_NORMAL_MAP 1
 #define ENABLE_TYPE_MAP 1
+#define LOW_DETAIL @low_detail:false@
 
 
 float getDetailMapBlend(vec2 pos);
@@ -240,23 +242,30 @@ vec4 applyForest(vec4 color, vec2 pos, vec3 view_dir, float dist)
 {
   vec4 forest_far_simple = getForestFarColorSimple(pos.xy);
 
-  if (!draw_near_forest)
-    return mix(color, forest_far_simple, forest_far_simple.a * 0.8);
+  vec4 far_simple_color = vec4(mix(color, forest_far_simple, forest_far_simple.a * 0.8).xyz, 1);
 
-//   forest_far_simple.xyz = vec3(1,0,0);
-#if 1
+#if LOW_DETAIL
+    return far_simple_color;
+#else
+
   float lod = textureQueryLOD(sampler_terrain_far, pos.xy / map_size).x;
 
-  if (dist > 80000.0 && false)
+  float far_simple_blend = clamp(lod, 0, 1);
+  far_simple_blend = mix(far_simple_blend, 1.0, smoothstep(30000.0, 45000.0, dist));
+
+#if ENABLE_FAR_FOREST
+  vec4 forest_far = getForestFarColor(pos.xy);
+  vec4 far_color = color;
+  const float far_max_alpha = 1.0;
+//   forest_far.a = 1;
+  far_color.xyz = mix(color.xyz, forest_far.xyz, forest_far.a * far_max_alpha);
+
+  if (dist > 15000.0)
   {
-    color.xyz = mix(color.xyz, forest_far_simple.xyz, forest_far_simple.a * 0.8);
-  }
-  else if (dist > 15000.0)
-  {
-    vec4 forest_far = getForestFarColor(pos.xy);
-    color.xyz = mix(color.xyz, forest_far.xyz, forest_far.a * 0.8);
+    color = far_color;
   }
   else
+#endif
   {
     vec4 forest_floor = getForestColor(pos.xy, 0);
     color.xyz = mix(color.xyz, forest_floor.xyz, forest_floor.a);
@@ -280,14 +289,16 @@ vec4 applyForest(vec4 color, vec2 pos, vec3 view_dir, float dist)
         color.xyz = mix(color.xyz, layer.xyz, layer.a);
       }
     }
-  }
-#else
-  float lod = 1;
+
+#if ENABLE_FAR_FOREST
+    float far_blend = smoothstep(10000.0, 14000.0, dist);
+    color.xyz = mix(color.xyz, far_color.xyz, far_blend);
 #endif
-
-  color = mix(color, forest_far_simple, clamp(lod, 0, 1) * forest_far_simple.a * 0.8);
-
+  }
+  color = mix(color, far_simple_color, far_simple_blend);
   return color;
+
+#endif
 }
 
 
@@ -333,22 +344,31 @@ vec4 applyFarTexture(vec4 color, vec2 pos, float dist)
   float lod = textureQueryLOD(sampler_terrain_far, mapCoordsFar).x;
  
 #if ENABLE_TYPE_MAP
-//   float farBlend = 1 - exp(-pow(3 * (dist / near_distance), 2));
-//   float farBlend = 1 - exp(-pow(3 * (dist / near_distance), 2));
-  
-//   float farBlend = 1 - clamp(dot(view_dir, normal), 0, 1);
-//   farBlend = smoothstep(0.9, 1.0, farBlend);
 
-//   float farBlend = smoothstep(near_distance * 0.5, near_distance, dist);
+#if !LOW_DETAIL
+  {
+  //   float farBlend = 1 - exp(-pow(3 * (dist / near_distance), 2));
+  //   float farBlend = 1 - exp(-pow(3 * (dist / near_distance), 2));
 
-  float farBlend = clamp(lod, 0, 1);
+  //   float farBlend = 1 - clamp(dot(view_dir, normal), 0, 1);
+  //   farBlend = smoothstep(0.9, 1.0, farBlend);
 
-//   farColor *= 0;
+  //   float farBlend = smoothstep(near_distance * 0.5, near_distance, dist);
 
-  color = mix(color, farColor, farBlend);
+    float farBlend = clamp(lod, 0, 1);
+    farBlend = mix(farBlend, 1.0, smoothstep(30000.0, 45000.0, dist));
 
-//   if (gl_FragCoord.x > 900)
-//     color = farColor;
+  //   farColor *= 0;
+
+    color = mix(color, farColor, farBlend);
+
+  //   if (gl_FragCoord.x > 900)
+  //     color = farColor;
+  }
+#else
+  color = farColor;
+#endif
+
 #else
   color = farColor;
 #endif
@@ -361,8 +381,6 @@ vec4 getTerrainColor(vec3 pos)
 {
   float dist = distance(cameraPosWorld, pos);
   vec3 view_dir = normalize(cameraPosWorld - pos);
-
-
 
   float detail_blend = 1.0;
 
@@ -409,25 +427,12 @@ vec4 getTerrainColor(vec3 pos)
 //   float lod = mip_map_level(pos.xy / 200);
 
 #if ENABLE_TYPE_MAP
-#if ENABLE_FAR_TEXTURE
-//   if (dist <= near_distance)
-//     color = sampleTerrainTextures(pos.xy);
-//   else
-//     color = vec4(0);
-  {
-
-//     if (lod < 1.0)
-      color = sampleTerrainTextures(pos.xy);
-//     else
-//       color = vec4(0);
-  }
-#else
-  color = sampleTerrainTextures(pos.xy);
+#if !LOW_DETAIL
+    color = sampleTerrainTextures(pos.xy);
 
 #if ENABLE_BASE_MAP
   color = mix(sampleBaseTerrainTextures(pos.xy), color, detail_blend);
 #endif
-
 #endif
   color.w = 1;
 #endif
@@ -455,10 +460,9 @@ float bank_amount = 0;
 #endif
 
 #if ENABLE_TERRAIN_NOISE
-  if (enable_terrain_noise)
-  {
-    color = applyTerrainNoise(color, dist);
-  }
+#if !LOW_DETAIL
+  color = applyTerrainNoise(color, dist);
+#endif
 #endif
 
 #if ENABLE_FAR_TEXTURE
