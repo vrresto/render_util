@@ -44,10 +44,6 @@
 #include <gl_wrapper/gl_functions.h>
 
 
-void doStuff(void *data);
-
-#define DRAW_INSTANCED 1
-
 using namespace gl_wrapper::gl_functions;
 using namespace glm;
 using render_util::TexturePtr;
@@ -81,10 +77,9 @@ namespace render_util
 namespace
 {
 
-enum { NUM_TEST_BUFFERS = 4 };
-
 
 constexpr int METERS_PER_GRID = render_util::TerrainBase::GRID_RESOLUTION_M;
+
 
 enum
 {
@@ -99,10 +94,51 @@ enum
   MAX_LOD = LOD_LEVELS,
 };
 
+
+enum class MaterialID
+{
+  LAND,
+  WATER,
+  LAND_WATER,
+  LAND_FOREST,
+  WATER_FOREST,
+  LAND_WATER_FOREST
+};
+
+
 constexpr size_t getNumLeafNodes()
 {
   return pow(4, (size_t)LOD_LEVELS);
 }
+
+
+constexpr float getLodLevelDist(int lod_level)
+{
+  return MIN_LOD_DIST * pow(2, lod_level);
+}
+
+
+float getMaxHeight(const render_util::ElevationMap &map, vec2 pos, float size)
+{
+  return 4000.0;
+}
+
+
+constexpr double getNodeSize(int lod_level)
+{
+  return pow(2, lod_level) * LEAF_NODE_SIZE;
+}
+
+
+constexpr double getNodeScale(int lod_level)
+{
+  return pow(2, lod_level);
+}
+
+
+static_assert(getNodeSize(0) == LEAF_NODE_SIZE);
+static_assert(getNodeScale(0) == 1);
+
 
 struct GridMesh
 {
@@ -219,6 +255,7 @@ struct Node
   float size = 0;
   float max_height = 0;
   BoundingBox bounding_box;
+  MaterialID material = MaterialID::LAND;
 
   bool isInRange(const vec3 &camera_pos, float radius)
   {
@@ -232,102 +269,72 @@ typedef util::BlockAllocator<Node, 1000> NodeAllocator;
 
 struct RenderBatch
 {
-#if DRAW_INSTANCED
   struct NodePos
   {
-    float x = 0; 
+    float x = 0;
     float y = 0;
     float z = 0;
     float w = 0;
   };
-//   std::array<NodePos, 400> positions;
-//   int size = 0;
+
+  MaterialID material = MaterialID::LAND;
   std::vector<vec2> positions;
-#else
-  std::vector<vec2> positions;
-#endif
+  std::vector<int> lods;
+  size_t node_pos_buffer_offset = 0;
 
-  void addNode(Node *node);
-  void prepare();
-  void bind();
-
-// #if DRAW_INSTANCED
-//   size_t getSize() { return size; }
-// #else
-  size_t getSize() { return positions.size(); }
-// #endif
-
-
-  void clear()
+  void addNode(Node *node, int lod)
   {
-// #if DRAW_INSTANCED
-//     size = 0;
-// #else
-    positions.clear();
-// #endif
+    positions.push_back(node->pos_grid);
+    lods.push_back(lod);
   }
+
+  size_t getSize() { return positions.size(); }
 };
 
 
-void RenderBatch::addNode(Node *node)
-{
-// #if DRAW_INSTANCED
-//   assert(size < positions.size());
-//   positions[size] = { node->pos.x, node->pos.y };
-//   size++;
-// #else
-  positions.push_back(node->pos_grid);
-// #endif
-}
-
 class RenderList
 {
-  std::array<RenderBatch, MAX_LOD+1> m_batches;
+  std::vector<RenderBatch*> m_batches;
+  std::unordered_map<MaterialID, RenderBatch*> m_materials;
 
 public:
-  RenderBatch *getBatch(int lod_level)
+  RenderBatch *getBatch(MaterialID material)
   {
-    return &m_batches[lod_level];
+    if (!m_materials[material])
+    {
+      auto batch = new RenderBatch;
+      m_batches.push_back(batch);
+      m_materials[material] = batch;
+    }
+    return m_materials[material];
+  }
+
+  void addNode(Node *node, int lod_level)
+  {
+    RenderBatch *batch = getBatch(node->material);
+    batch->addNode(node, lod_level);
   }
 
   void clear()
   {
-    for (RenderBatch &batch : m_batches)
-      batch.clear();
+    m_materials.clear();
+    for (RenderBatch *batch : m_batches)
+    {
+      delete batch;
+    }
+    m_batches.clear();
   }
 
   int getNodeCount()
   {
     int count = 0;
-    for (RenderBatch &b : m_batches)
-      count += b.getSize();
+    for (RenderBatch *b : m_batches)
+      count += b->getSize();
     return count;
   }
+
+  const std::vector<RenderBatch*> &getBatches() { return m_batches; }
 };
-
-
-float getLodLevelDist(int lod_level)
-{
-  return MIN_LOD_DIST * pow(2, lod_level);
-}
-
-float getMaxHeight(const render_util::ElevationMap &map, vec2 pos, float size)
-{
-  return 4000.0;
-}
-
-constexpr double getNodeSize(int lod_level)
-{
-  return pow(2, lod_level) * LEAF_NODE_SIZE;
-}
-
-constexpr double getNodeScale(int lod_level)
-{
-  return pow(2, lod_level);
-}
-
-static_assert(getNodeSize(0) == LEAF_NODE_SIZE);
-static_assert(getNodeScale(0) == 1);
 
 
 TexturePtr createNormalMapTexture(render_util::ElevationMap::ConstPtr map, int meters_per_grid)
@@ -387,6 +394,7 @@ TexturePtr createHeightMapTexture(render_util::ElevationMap::ConstPtr hm_image)
 namespace render_util
 {
 
+
 struct TerrainCDLOD::Private
 {
   TextureManager *texture_manager = 0;
@@ -400,9 +408,7 @@ struct TerrainCDLOD::Private
   GLuint vao_id = 0;
   GLuint vertex_buffer_id = 0;
   GLuint index_buffer_id = 0;
-#if DRAW_INSTANCED
   GLuint node_pos_buffer_id = 0;
-#endif
 
   int num_indices = 0;
   float draw_distance = 0;
@@ -415,8 +421,6 @@ struct TerrainCDLOD::Private
   TexturePtr normal_map_base_texture;
   vec2 height_map_base_size_px = vec2(0);
 
-  GLuint test_buffer_id[NUM_TEST_BUFFERS] = { 0 };
-
   Private();
   ~Private();
   void processNode(Node *node, int lod_level, const Camera &camera);
@@ -426,6 +430,7 @@ struct TerrainCDLOD::Private
   void setUniforms(ShaderProgramPtr program);
 };
 
+
 TerrainCDLOD::Private::~Private()
 {
   CHECK_GL_ERROR();
@@ -434,15 +439,12 @@ TerrainCDLOD::Private::~Private()
   gl::DeleteBuffers(1, &vertex_buffer_id);
   gl::DeleteBuffers(1, &index_buffer_id);
 
-  gl::DeleteBuffers(NUM_TEST_BUFFERS, test_buffer_id);
-
   root_node = 0;
   node_allocator.clear();
 
-//   gl::DeleteBuffers(1, &normal_buffer_id);
-
   CHECK_GL_ERROR();
 }
+
 
 TerrainCDLOD::Private::Private()
 {
@@ -451,12 +453,8 @@ TerrainCDLOD::Private::Private()
 
   num_indices = mesh.triangle_data_indexed.size();
 
-  gl::GenBuffers(NUM_TEST_BUFFERS, test_buffer_id);
-
-#if DRAW_INSTANCED
   gl::GenBuffers(1, &node_pos_buffer_id);
   assert(node_pos_buffer_id > 0);
-#endif
 
   gl::GenBuffers(1, &vertex_buffer_id);
   assert(vertex_buffer_id > 0);
@@ -475,13 +473,11 @@ TerrainCDLOD::Private::Private()
   gl::EnableClientState(GL_VERTEX_ARRAY);
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
 
-#if DRAW_INSTANCED
   gl::BindBuffer(GL_ARRAY_BUFFER, node_pos_buffer_id);
   gl::VertexAttribPointer(4, 4, GL_FLOAT, false, 0, 0);
   gl::EnableVertexAttribArray(4);
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
   CHECK_GL_ERROR();
-#endif
 
   gl::BindVertexArray(0);
   CHECK_GL_ERROR();
@@ -557,7 +553,7 @@ Node *TerrainCDLOD::Private::createNode(const render_util::ElevationMap &map,
 
 void TerrainCDLOD::Private::selectNode(Node *node, int lod_level)
 {
-  render_list.getBatch(lod_level)->addNode(node);
+  render_list.addNode(node, lod_level);
 }
 
 
@@ -666,36 +662,9 @@ void TerrainCDLOD::update(const Camera &camera)
 {
   assert(p->root_node);
 
-//   unsigned int texture_save = 0;
-//   gl::GetIntegerv(GL_TEXTURE_BINDING_1D, (int*)&texture_save);
-
   p->render_list.clear();
 
   p->processNode(p->root_node, MAX_LOD, camera);
-
-#if 0
-  for (int i = 0; i < NUM_TEST_BUFFERS; i++)
-  {
-    const int buffer_size = 4 * 2000 * 2000;
-//     const int buffer_size = 1024;
-    gl::BindBuffer(GL_ARRAY_BUFFER, p->test_buffer_id[i]);
-    gl::BufferData(GL_ARRAY_BUFFER, buffer_size, 0, GL_STREAM_DRAW);
-
-    char *buffer = (char*) gl::MapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-    assert(buffer);
-    
-    doStuff(buffer);
-
-  }
-  
-  for (int i = 0; i < NUM_TEST_BUFFERS; i++)
-  {
-    gl::BindBuffer(GL_ARRAY_BUFFER, p->test_buffer_id[i]);
-    gl::UnmapBuffer(GL_ARRAY_BUFFER);
-  }
-#endif
-
-#if DRAW_INSTANCED
 
   const int buffer_elements = getNumLeafNodes();
   const int buffer_size = sizeof(RenderBatch::NodePos) * buffer_elements;
@@ -709,33 +678,31 @@ void TerrainCDLOD::update(const Camera &camera)
   RenderBatch::NodePos *buffer = (RenderBatch::NodePos*) gl::MapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
   assert(buffer);
 
-  for (int i = MAX_LOD; i >= 0; i--)
+  for (auto batch : p->render_list.getBatches())
   {
-    int scale = getNodeScale(i);
-    float lod_distance = getLodLevelDist(i);
-
-    RenderBatch *batch = p->render_list.getBatch(i);
+    batch->node_pos_buffer_offset = buffer_pos;
 
     for (int i = 0; i < batch->getSize(); i++)
     {
       assert(buffer_pos < buffer_elements);
 
+      const int lod = batch->lods[i];
+
       RenderBatch::NodePos &pos = buffer[buffer_pos];
       pos.x = batch->positions[i].x;
       pos.y = batch->positions[i].y;
-      pos.z = scale;
-      pos.w = lod_distance;
+      pos.z = getNodeScale(lod);
+      pos.w = getLodLevelDist(lod);
 
       buffer_pos++;
     }
   }
 
-  buffer = 0;
+
+  buffer = nullptr;
   gl::UnmapBuffer(GL_ARRAY_BUFFER);
 
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
-
-#endif
 }
 
 void TerrainCDLOD::draw()
@@ -751,7 +718,6 @@ void TerrainCDLOD::draw()
   if (p->height_map_base_texture)
     p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, p->height_map_base_texture);
 
-#if DRAW_INSTANCED
   p->setUniforms(program);
   CHECK_GL_ERROR();
   program->assertUniformsAreSet();
@@ -759,141 +725,6 @@ void TerrainCDLOD::draw()
   p->drawInstanced();
 
   CHECK_GL_ERROR();
-  return;
-#endif
-
-  assert(p->texture_manager);
-
-  CHECK_GL_ERROR();
-
-//   unsigned int active_unit_save;
-//   gl::GetIntegerv(GL_ACTIVE_TEXTURE, reinterpret_cast<GLint*>(&active_unit_save));
-
-//   gl::ActiveTexture(GL_TEXTURE0 + p->texture_manager->getTexUnitNum(TEXUNIT_TERRAIN_CDLOD_NODE_POS));
-
-  gl::BindVertexArray(p->vao_id);
-  CHECK_GL_ERROR();
-
-  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, p->index_buffer_id);
-  CHECK_GL_ERROR();
-
-#if DRAW_INSTANCED
-  gl::BindBuffer(GL_ARRAY_BUFFER, p->node_pos_buffer_id);
-  CHECK_GL_ERROR();
-#endif
-
-#if DRAW_INSTANCED
-  gl::VertexAttribDivisor(4, 1);
-  CHECK_GL_ERROR();
-#endif
-
-  int draw_count = 0;
-
-  p->setUniforms(program);
-
-  for (int i = MAX_LOD; i >= 0; i--)
-  {
-    RenderBatch *batch = p->render_list.getBatch(i);
-
-//     p->texture_manager->bind(TEXUNIT_TERRAIN_CDLOD_NODE_POS, batch->texture, GL_TEXTURE_1D);
-
-    int scale = getNodeScale(i);
-
-//     int scale = getNodeScale(5); //FIXME
-
-//     program->setUniform("cdlod_node_pos", vec2(i * 100000));
-
-    program->setUniform("cdlod_node_scale", scale);
-
-    float lod_distance = getLodLevelDist(i);
-    program->setUniform("cdlod_lod_distance", lod_distance);
-
-
-//   if (batch->getSize())
-//     cout<<batch->getSize()<<endl;
-
-#if DRAW_INSTANCED
-    if (batch->getSize())
-    {
-//       gl::TexImage1D(GL_TEXTURE_1D,
-//           0,
-//           GL_RG32F,
-//           batch->positions.size(),
-//           0,
-//           GL_RG,
-//           GL_FLOAT,
-// //           batch->positions.data()
-//           (const float*)batch->positions.data()
-//           );
-//       CHECK_GL_ERROR();
-
-//       gl::BufferData(GL_ARRAY_BUFFER,
-//                      sizeof(RenderBatch::NodePos) * batch->positions.size(),
-//                      batch->positions.data(),
-//                      GL_STREAM_DRAW);
-
-
-      const int buffer_elements = 1000;
-      const int buffer_size = sizeof(RenderBatch::NodePos) * buffer_elements;
-
-      assert(batch->getSize() <= buffer_elements);
-
-      gl::BufferData(GL_ARRAY_BUFFER,
-                     buffer_size,
-                     0,
-                     GL_STREAM_DRAW);
-
-      RenderBatch::NodePos *buffer = (RenderBatch::NodePos*) gl::MapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-      assert(buffer);
-
-//       memcpy(buffer, batch->positions.data(), sizeof(RenderBatch::NodePos) * batch->positions.size());
-      for (int i = 0; i < batch->getSize(); i++)
-      {
-        RenderBatch::NodePos &pos = buffer[i];
-        pos.x = batch->positions[i].x;
-        pos.y = batch->positions[i].y;
-        pos.z = scale;
-      }
-
-      buffer = 0;
-      gl::UnmapBuffer(GL_ARRAY_BUFFER);
-
-      CHECK_GL_ERROR();
-
-      program->assertUniformsAreSet();
-      CHECK_GL_ERROR();
-
-//       unsigned int num_instances = min(batch->getSize(), 10u);
-
-//       gl::DrawElements(GL_TRIANGLES, p->num_indices, GL_UNSIGNED_INT, 0);
-      gl::DrawElementsInstancedARB(GL_TRIANGLES, p->num_indices, GL_UNSIGNED_INT, 0, batch->getSize());
-//       gl::DrawElementsInstancedARB(GL_TRIANGLES, p->num_indices, GL_UNSIGNED_INT, 0, num_instances);
-// //       gl::DrawArraysInstancedARB(GL_TRIANGLES, 0, p->num_indices, 10);
-      CHECK_GL_ERROR();
-    }
-#else
-    for (size_t i = 0; i < batch->getSize(); i++)
-    {
-      program->setUniform("cdlod_node_pos", batch->positions[i]);
-      program->assertUniformsAreSet();
-      gl::DrawElements(GL_TRIANGLES, p->num_indices, GL_UNSIGNED_INT, 0);
-      draw_count++;
-      CHECK_GL_ERROR();
-    }
-#endif
-
-  }
-
-//   cout<<"draw_count: "<<draw_count<<endl;
-
-  CHECK_GL_ERROR();
-
-  gl::BindBuffer(GL_ARRAY_BUFFER, 0);
-  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  gl::BindVertexArray(0);
-
-//   gl::ActiveTexture(active_unit_save);
-//   CHECK_GL_ERROR();
 }
 
 void TerrainCDLOD::setTextureManager(TextureManager *m)
