@@ -744,6 +744,7 @@ Node *TerrainCDLOD::Private::createNode(const render_util::ElevationMap &map,
   return node;
 }
 
+
 void TerrainCDLOD::Private::selectNode(Node *node, int lod_level, bool low_detail)
 {
   render_list.addNode(node, lod_level, low_detail);
@@ -801,11 +802,8 @@ void TerrainCDLOD::Private::drawInstanced(TerrainBase::Client *client)
   gl::VertexAttribDivisor(4, 1);
   CHECK_GL_ERROR();
 
-  assert(render_list.getNodeCount() > 0);
-
   gl::BindBuffer(GL_ARRAY_BUFFER, node_pos_buffer_id);
   gl::EnableVertexAttribArray(4);
-
 
   for (RenderBatch *batch : render_list.getBatches())
   {
@@ -824,7 +822,6 @@ void TerrainCDLOD::Private::drawInstanced(TerrainBase::Client *client)
     gl::DrawElementsInstancedARB(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, 0, batch->getSize());
     CHECK_GL_ERROR();
   }
-
 
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
   CHECK_GL_ERROR();
@@ -888,7 +885,7 @@ void TerrainCDLOD::update(const Camera &camera, bool low_detail)
   const int buffer_elements = getNumLeafNodes();
   const int buffer_size = sizeof(RenderBatch::NodePos) * buffer_elements;
 
-  unsigned int buffer_pos = 0;
+  size_t buffer_pos = 0;
 
   gl::BindBuffer(GL_ARRAY_BUFFER, p->node_pos_buffer_id);
 
@@ -924,6 +921,7 @@ void TerrainCDLOD::update(const Camera &camera, bool low_detail)
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+
 void TerrainCDLOD::draw(Client *client)
 {
   p->texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP, p->normal_map_texture);
@@ -939,11 +937,13 @@ void TerrainCDLOD::draw(Client *client)
   CHECK_GL_ERROR();
 }
 
+
 const std::string &render_util::TerrainCDLOD::getName()
 {
   static std::string name = "terrain_cdlod";
   return name;
 }
+
 
 void TerrainCDLOD::setDrawDistance(float dist)
 {
