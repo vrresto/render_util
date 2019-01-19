@@ -26,7 +26,7 @@
   #define GLAPIENTRY __stdcall
 #endif
 
-namespace gl_wrapper
+namespace render_util::gl_binding
 {
 
   struct GL_Interface
@@ -35,7 +35,7 @@ namespace gl_wrapper
 
     GL_Interface(GetProcAddressFunc *getProcAddress);
 
-    #include <gl_wrapper/_generated/gl_p_proc.inc>
+    #include <gl_binding/_generated/gl_p_proc.inc>
 
     static GL_Interface *getCurrent() { return s_current; }
     static void setCurrent(GL_Interface *iface);

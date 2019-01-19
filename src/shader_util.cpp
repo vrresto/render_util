@@ -22,11 +22,9 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <GL/gl.h>
 
-#include <gl_wrapper/gl_functions.h>
+#include <render_util/gl_binding/gl_functions.h>
 
-using namespace gl_wrapper::gl_functions;
 using namespace std;
 
 namespace render_util

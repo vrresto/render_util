@@ -29,9 +29,9 @@
 #include <distances.h>
 #include <curvature_map.h>
 #include <render_util/shader.h>
-#include <gl_wrapper/gl_functions.h>
+#include <render_util/gl_binding/gl_functions.h>
 
-using namespace gl_wrapper::gl_functions;
+using namespace render_util::gl_binding;
 using namespace std;
 using namespace glm;
 using namespace render_util;
@@ -385,7 +385,7 @@ void ShaderProgram::create()
     if (error != GL_NO_ERROR)
     {
       cerr<<"glAttachShader() failed for program "<<name<<endl;
-      cerr<<"gl error: "<<gl_wrapper::getGLErrorString(error)<<endl;
+      cerr<<"gl error: "<<gl_binding::getGLErrorString(error)<<endl;
       abort();
     }
   }
@@ -400,7 +400,7 @@ void ShaderProgram::create()
     {
       cerr<<"gl::BindAttribLocation() failed for program "<<name<<endl;
       cerr<<"index: "<<it.first<<", name: "<<it.second<<endl;
-      cerr<<"gl error: "<<gl_wrapper::getGLErrorString(error)<<endl;
+      cerr<<"gl error: "<<gl_binding::getGLErrorString(error)<<endl;
       abort();
     }
   }

@@ -31,11 +31,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <GL/gl.h>
 
-#include <gl_wrapper/gl_functions.h>
+#include <render_util/gl_binding/gl_functions.h>
 #include <atmosphere_map.h>
 #include <curvature_map.h>
 
-using namespace gl_wrapper::gl_functions;
+using namespace render_util::gl_binding;
 using namespace render_util;
 using namespace glm;
 using namespace std;

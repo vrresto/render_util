@@ -31,7 +31,7 @@
 #include <render_util/image_loader.h>
 #include <render_util/camera.h>
 #include <render_util/terrain_util.h>
-#include <gl_wrapper/gl_wrapper.h>
+#include <render_util/gl_binding/gl_binding.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -45,12 +45,12 @@
 #include <chrono>
 #include <memory>
 
-#include <gl_wrapper/gl_interface.h>
-#include <gl_wrapper/gl_functions.h>
+#include <render_util/gl_binding/gl_interface.h>
+#include <render_util/gl_binding/gl_functions.h>
 
 using namespace glm;
 using namespace std;
-using namespace gl_wrapper::gl_functions;
+using namespace render_util::gl_binding;
 using namespace render_util::viewer;
 using render_util::ShaderProgram;
 using render_util::TerrainBase;

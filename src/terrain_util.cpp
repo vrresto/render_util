@@ -21,11 +21,10 @@
 #include <render_util/terrain.h>
 #include <render_util/terrain_cdlod.h>
 
-#include <gl_wrapper/gl_functions.h>
+#include <render_util/gl_binding/gl_functions.h>
 
 using namespace render_util;
 using namespace std;
-using namespace gl_wrapper::gl_functions;
 
 namespace
 {

@@ -25,13 +25,13 @@
 #include <render_util/shader.h>
 #include <render_util/terrain_util.h>
 #include <render_util/globals.h>
-#include <gl_wrapper/gl_functions.h>
+#include <render_util/gl_binding/gl_functions.h>
 
 
 namespace render_util::viewer
 {
 
-using namespace gl_wrapper::gl_functions;
+using namespace gl_binding;
 
 
 struct Terrain : public render_util::TerrainRenderer

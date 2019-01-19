@@ -30,7 +30,7 @@
 #include <render_util/image_loader.h>
 #include <render_util/gl_context.h>
 #include <render_util/camera.h>
-#include <gl_wrapper/gl_wrapper.h>
+#include <render_util/gl_binding/gl_binding.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -44,12 +44,9 @@
 #include <chrono>
 #include <memory>
 
-#include <gl_wrapper/gl_interface.h>
-#include <gl_wrapper/gl_functions.h>
 
 using namespace glm;
 using namespace std;
-using namespace gl_wrapper::gl_functions;
 using namespace render_util::viewer;
 using namespace render_util;
 using render_util::ShaderProgram;
@@ -361,8 +358,8 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
   glfwSetKeyCallback(window, keyCallback);
   glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
-  gl_wrapper::GL_Interface *gl_interface = new gl_wrapper::GL_Interface(&getGLProcAddress);
-  gl_wrapper::GL_Interface::setCurrent(gl_interface);
+  gl_binding::GL_Interface *gl_interface = new gl_binding::GL_Interface(&getGLProcAddress);
+  gl_binding::GL_Interface::setCurrent(gl_interface);
 
   auto globals = make_shared<render_util::viewer::Globals>();
 
@@ -443,7 +440,7 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
 
   CHECK_GL_ERROR();
 
-  gl_wrapper::GL_Interface::setCurrent(nullptr);
+  gl_binding::GL_Interface::setCurrent(nullptr);
 
   glfwMakeContextCurrent(0);
 

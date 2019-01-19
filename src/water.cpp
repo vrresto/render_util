@@ -30,13 +30,9 @@
 #include <unistd.h>
 #include "GL/gl.h"
 
-// #include "texunits.h"
-#include <gl_wrapper/gl_functions.h>
-
 
 using Clock = std::chrono::steady_clock;
 
-using namespace gl_wrapper::gl_functions;
 using namespace std;
 
 

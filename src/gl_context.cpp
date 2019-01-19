@@ -17,9 +17,9 @@
  */
 
 #include <render_util/gl_context.h>
-#include <gl_wrapper/gl_functions.h>
+#include <render_util/gl_binding/gl_functions.h>
 
-using namespace gl_wrapper::gl_functions;
+using namespace render_util::gl_binding;
 
 void render_util::GLContext::setCurrentProgram(ShaderProgramPtr program)
 {

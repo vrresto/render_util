@@ -16,25 +16,35 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <GL/gl.h>
-#include <GL/glext.h>
+#ifndef GL_FUNCTIONS2_H
+#define GL_FUNCTIONS2_H
 
-#include <gl_wrapper/gl_interface.h>
+#include <cassert>
+#include <cstdio>
 
-#define PROC_INIT(type, proc) proc = (type) getProcAddress(#proc);
+#include <render_util/gl_binding/gl_interface.h>
+#include <render_util/gl_binding/gl_binding.h>
 
-namespace gl_wrapper
+namespace render_util::gl_binding::gl
 {
-  GL_Interface *GL_Interface::s_current = 0;
-
-  GL_Interface::GL_Interface(GetProcAddressFunc *getProcAddress)
-  {
-    #include "gl_wrapper/_generated/gl_p_proc_init.inc"
-  }
-
-  void GL_Interface::setCurrent(GL_Interface *iface)
-  {
-    s_current = iface;
-  }
-
+  #include <gl_binding/_generated/gl_inline_forwards.inc>
 }
+
+#define FORCE_CHECK_GL_ERROR() \
+{ \
+  render_util::gl_binding::gl::Finish(); \
+  auto err = render_util::gl_binding::gl::GetError(); \
+  if (err != GL_NO_ERROR) \
+  { \
+    printf("gl error: %s\n", render_util::gl_binding::getGLErrorString(err)); \
+  } \
+  assert(err == GL_NO_ERROR); \
+}
+
+#if RENDER_UTIL_ENABLE_DEBUG
+  #define CHECK_GL_ERROR() FORCE_CHECK_GL_ERROR()
+#else
+  #define CHECK_GL_ERROR() {}
+#endif
+
+#endif

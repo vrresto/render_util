@@ -16,35 +16,12 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef GL_FUNCTIONS2_H
-#define GL_FUNCTIONS2_H
+#ifndef GL_WRAPPER_H
+#define GL_WRAPPER_H
 
-#include <cassert>
-#include <cstdio>
-
-#include <gl_wrapper/gl_interface.h>
-#include <gl_wrapper/gl_wrapper.h>
-
-namespace gl_wrapper::gl_functions::gl
+namespace render_util::gl_binding
 {
-  #include <gl_wrapper/_generated/gl_inline_forwards.inc>
+  const char *getGLErrorString(unsigned int code);
 }
-
-#define FORCE_CHECK_GL_ERROR() \
-{ \
-  gl_wrapper::gl_functions::gl::Finish(); \
-  auto err = gl_wrapper::gl_functions::gl::GetError(); \
-  if (err != GL_NO_ERROR) \
-  { \
-    printf("gl error: %s\n", gl_wrapper::getGLErrorString(err)); \
-  } \
-  assert(err == GL_NO_ERROR); \
-}
-
-#if RENDER_UTIL_ENABLE_DEBUG
-  #define CHECK_GL_ERROR() FORCE_CHECK_GL_ERROR()
-#else
-  #define CHECK_GL_ERROR() {}
-#endif
 
 #endif

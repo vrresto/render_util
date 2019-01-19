@@ -42,9 +42,9 @@
 #include <glm/gtc/round.hpp>
 
 #include <GL/gl.h>
-#include <gl_wrapper/gl_functions.h>
+#include <render_util/gl_binding/gl_functions.h>
 
-using namespace gl_wrapper::gl_functions;
+using namespace render_util::gl_binding;
 using namespace glm;
 using render_util::TexturePtr;
 using std::cout;

@@ -32,13 +32,13 @@
 #include <glm/gtc/noise.hpp>
 #include <GL/gl.h>
 
-#include <gl_wrapper/gl_functions.h>
+#include <render_util/gl_binding/gl_functions.h>
 
 #ifdef max
 #undef max
 #endif
 
-using namespace gl_wrapper::gl_functions;
+using namespace render_util::gl_binding;
 using namespace std;
 
 namespace

@@ -68,7 +68,7 @@ add_definitions(
   -DRENDER_UTIL_CACHE_DIR="${renderutil_cache_dir}"
 )
 
-add_subdirectory(gl_wrapper)
+add_subdirectory(gl_binding)
 add_subdirectory(src)
 add_subdirectory(tools)
 
