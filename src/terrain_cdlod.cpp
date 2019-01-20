@@ -158,9 +158,18 @@ render_util::ShaderProgramPtr createProgram(unsigned int material,
   params.set("enable_base_water_map", enable_base_water_map);
   params.set("is_editor", is_editor);
   params.set("low_detail", low_detail);
-  params.set("enable_type_map", material & MaterialID::LAND);
-  params.set("enable_water", material & MaterialID::WATER);
-  params.set("enable_forest", material & MaterialID::FOREST);
+
+  if (material == MaterialID::WATER)
+  {
+    params.set("enable_water", true);
+    params.set("enable_water_only", true);
+  }
+  else
+  {
+    params.set("enable_type_map", material & MaterialID::LAND);
+    params.set("enable_water", material & MaterialID::WATER);
+    params.set("enable_forest", material & MaterialID::FOREST);
+  }
 
   terrain_program = createShaderProgram(name, tex_mgr, shader_path, attribute_locations, params);
 

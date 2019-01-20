@@ -29,6 +29,7 @@
 #define ENABLE_BASE_MAP @enable_base_map@
 #define ENABLE_FAR_TEXTURE !@enable_base_map@
 #define LOW_DETAIL @low_detail:0@
+#define DETAILED_WATER @detailed_water:1@
 #define ENABLE_WATER @enable_water:0@
 #define ENABLE_FOREST @enable_forest:0@
 #define ENABLE_TYPE_MAP @enable_type_map:0@
@@ -447,11 +448,13 @@ float bank_amount = 0;
 
   color.xyz = mix(color.xyz, shallowWaterColor, smoothstep(0.55, 0.9, waterDepth));
 
+#if DETAILED_WATER
   vec4 bankColor = texture(sampler_beach, vec3(pass_texcoord * 5, 2));
   bank_amount = smoothstep(0.4, 0.45, waterDepth);
   bank_amount *= (1-shallow_sea_amount);
 //   bank_amount *= 0.8;
   color.xyz = mix(color.xyz, bankColor.xyz, bank_amount);
+#endif
 
 //   color.xyz = mix(color.xyz, mix(bankColor.xyz, color.xyz, smoothstep(0.0, 0.05, terrain_height)), 0.9 * (1-shallow_sea_amount));
 //   color.xyz = mix(color.xyz, color.xyz * 0.8, wetness);

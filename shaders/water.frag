@@ -29,8 +29,8 @@
  
 #version 130
 
-#define LOW_DETAIL @low_detail:0@
 #define ENABLE_WAVES !LOW_DETAIL
+#define LOW_DETAIL !@detailed_water:1@
 #define ENABLE_WAVE_INTERPOLATION 1
 // #define ENABLE_WAVE_FOAM 1
 #define ENABLE_WATER_MAP 1
@@ -330,6 +330,37 @@ vec3 getWaterNormal(float dist, vec2 coord, float waterDepth)
 }
 
 
+vec3 getWaterColorSimple(vec3 viewDir, float dist)
+{
+  float ambientLight = 0.3 * smoothstep(-0.5, 0.4, sunDir.z);
+  float directLight = 1.2;
+
+  vec3 directLightColor = vec3(1.0, 1.0, 0.8);
+  vec3 directLightColorLow = vec3(1.0, 0.6, 0.2);
+  directLightColor = mix(directLightColorLow, directLightColor, smoothstep(-0.1, 0.4, sunDir.z));
+
+  vec3 normal = vec3(0,0,1);
+
+  float fresnel = fresnelSchlick(viewDir, normal, schlick_r0_water);
+
+  float specularDetailFactor = exp(-3 * (dist/30000));
+  float specHardness = mix(SPEC_HARDNESS * 0.4, SPEC_HARDNESS, specularDetailFactor);
+  float specular = calcSpecular(viewDir, normal, specHardness);
+  specular = mix(specular * 0.5, specular, specularDetailFactor);
+
+  vec3 envColor = vec3(0.65, 0.85, 1.0);
+  envColor = mix(envColor, vec3(0.7), 0.4);
+  envColor *= smoothstep(-0.1, 0.4, sunDir.z);
+
+  vec3 refractionColor = 0.9 * water_color * smoothstep(0.1, 0.4, sunDir.z);
+
+  vec3 color = mix(refractionColor, envColor, fresnel);
+  color += specular * directLightColor * directLight;
+
+  return color;
+}
+
+
 vec3 getWaterColor(vec3 viewDir, float dist, vec2 coord, float waterDepth, vec3 groundColor, vec3 normal,
                    float shallow_sea_amount, float river_amount)
 {
@@ -582,13 +613,15 @@ vec4 applyWater(vec4 color,
   const float surf_threshold_min = 0.7;
   const float surf_threshold_max = 1.0;
 
+#if !LOW_DETAIL
   float foamDetail = texture(sampler_beach, vec3(mapCoords * 40, 0)).a;
 
   vec4 surfColor = texture(sampler_beach, vec3(mapCoords * 80, 1));
   vec4 foamColor = texture(sampler_beach, vec3(mapCoords * 4, 1));
   float waterline_noise = texture(sampler_beach, vec3(mapCoords * 10, 1)).a;
   float waterline_noise2 = texture(sampler_beach, vec3(mapCoords * 40, 1)).a;
-  
+#endif
+
   float terrain_height = (2 * (1-waterDepth)) - 1;
   if (terrain_height > 0)
   {
@@ -601,7 +634,8 @@ vec4 applyWater(vec4 color,
 #if ENABLE_SHORE_WAVES
   shore_wave_strength = getShoreWaveStrength(pos.xy, waterDepth, shallow_sea_amount);
 #endif
-  
+
+#if !LOW_DETAIL
   float foam_strength = shore_wave_strength;
 
   water_level = mix(0, 0.03, 1 - exp(-5 * 1 * shore_wave_strength));
@@ -631,11 +665,14 @@ vec4 applyWater(vec4 color,
   water_level += 0.02 * pow(waterline_noise2, 8);
 
   water_level *= mix(0.25, 1.0, shallow_sea_amount);
+#endif
 
   waterDepth = water_level - terrain_height;
 
+#if !LOW_DETAIL
   float wave_strength = mix(0.0, 1.0, 1 - exp(-2 * clamp(waterDepth, 0, 1)));
   wave_strength = mix(wave_strength, wave_strength * 0.3, river_amount);
+#endif
 
   vec3 water_normal = getWaterNormal(dist, mapCoords, waterDepth);
 
@@ -648,24 +685,34 @@ vec4 applyWater(vec4 color,
   wave_foam_amount *= 1 - river_amount;
 #endif
 
+#if !LOW_DETAIL
   water_normal.xy *= wave_strength;
   water_normal = normalize(water_normal);
+#endif
 
   float water_alpha = smoothstep(0.0, 0.01, waterDepth);
 
+#if !LOW_DETAIL
   float wetness = smoothstep(-0.02, -0.01, waterDepth);
   wetness = max(wetness, wetness_secondary);
+#endif
 
+#if !LOW_DETAIL
   color.xyz = mix(color.xyz, color.xyz * 0.8, wetness);
+#endif
 
   vec3 waterColor = getWaterColor(view_dir, dist, mapCoords, waterDepth, color.xyz, water_normal, shallow_sea_amount, river_amount);
-  
+
+
 #if ENABLE_WAVE_FOAM
   waterColor = mix(waterColor, vec3(1), wave_foam_amount);
 #endif
 
   color.xyz = mix(color.xyz, waterColor, water_alpha);
+
+#if !LOW_DETAIL
   color.xyz = mix(color.xyz, foamColor.xyz, foam_strength);
-  
+#endif
+
   return color;
 }
