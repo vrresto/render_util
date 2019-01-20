@@ -77,15 +77,181 @@ namespace
 {
 
 
+class BufferManagerBase
+{
+protected:
+  const GLenum m_target = 0;
+  const size_t m_size = 0;
+
+public:
+  BufferManagerBase(GLenum target, size_t size) : m_target(target), m_size(size) {}
+  size_t getSize() { return m_size; }
+};
+
+
+template <typename T>
+class BufferManagerFencing : public BufferManagerBase
+{
+  struct Buffer
+  {
+//     size_t fill = 0;
+    GLsync fence = nullptr;
+  };
+
+  static constexpr size_t NUM_BUFFERS = 3;
+
+  T *m_data = nullptr;
+  size_t m_current_buffer = 0;
+  Buffer m_buffers[NUM_BUFFERS];
+
+  size_t getSizeBytes() { return m_size * sizeof(T); }
+
+  void createBuffers()
+  {
+    if (m_data)
+      return;
+
+//     gl::BufferData(m_target, getSizeBytes() * NUM_BUFFERS, 0, GL_STREAM_DRAW); //FIXME
+//     m_data = (T*) gl::MapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);  //FIXME
+
+    auto flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+//         | GL_MAP_UNSYNCHRONIZED_BIT;
+    gl::BufferStorage(m_target, getSizeBytes() * NUM_BUFFERS, nullptr, flags);
+
+    m_data = (T*) gl::MapBufferRange(m_target, 0, getSizeBytes() * NUM_BUFFERS, flags);
+    assert(m_data);
+  }
+
+  T* getCurrentBuffer()
+  {
+    assert(m_data);
+    return m_data + m_size * m_current_buffer;
+  }
+
+  void waitForCurrentBuffer()
+  {
+    if (m_buffers[m_current_buffer].fence)
+    {
+//       auto flags = GL_SYNC_FLUSH_COMMANDS_BIT;
+      auto flags = 0;
+      auto timeout = 100000000;
+      auto result = gl::ClientWaitSync(m_buffers[m_current_buffer].fence, flags, timeout);
+      assert(result == GL_ALREADY_SIGNALED || result == GL_CONDITION_SATISFIED);
+      gl::DeleteSync(m_buffers[m_current_buffer].fence);
+      m_buffers[m_current_buffer].fence = nullptr;
+    }
+  }
+
+public:
+  BufferManagerFencing(GLenum target, size_t size) : BufferManagerBase(target, size) {}
+  ~BufferManagerFencing()
+  {
+    //FIXME unmap the buffer
+    m_data = nullptr;
+  }
+
+  void beginFill()
+  {
+    createBuffers();
+    waitForCurrentBuffer();
+  }
+
+  void endFill(size_t fill)
+  {
+//     m_buffers[m_current_buffer].fill = fill;
+  }
+
+  void endDraw()
+  {
+//     gl::MemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+
+    m_buffers[m_current_buffer].fence = gl::FenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    assert(m_buffers[m_current_buffer].fence);
+
+    m_current_buffer = (m_current_buffer + 1) % NUM_BUFFERS;
+  }
+
+  T& at(size_t pos) { return getCurrentBuffer()[pos]; }
+  size_t getSize() { return m_size; }
+  size_t getBufferOffset() { return m_current_buffer * getSizeBytes(); }
+};
+
+
+template <typename T>
+class BufferManagerOrphaning
+{
+  const GLenum m_target = 0;
+  const size_t m_size = 0;
+  T *m_data = nullptr;
+
+  size_t getSizeBytes() { return m_size * sizeof(T); }
+
+public:
+  BufferManagerOrphaning(GLenum target, size_t size) : m_target(target), m_size(size) {}
+  ~BufferManagerOrphaning()
+  {
+    assert(!m_data);
+  }
+
+  void beginFill()
+  {
+    assert(!m_data);
+    gl::BufferData(m_target, getSizeBytes(), 0, GL_STREAM_DRAW);
+    m_data = (T*) gl::MapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+    assert(m_data);
+  }
+
+  void endFill(size_t fill)
+  {
+    assert(m_data);
+    m_data = nullptr;
+    gl::UnmapBuffer(GL_ARRAY_BUFFER);
+  }
+
+  void endDraw() {}
+
+  T& at(size_t pos) { return m_data[pos]; }
+  size_t getSize() { return m_size; }
+  size_t getBufferOffset() { return 0; }
+};
+
+
+
+template <typename T>
+class BufferManagerCopying
+{
+  const GLenum m_target = 0;
+  std::vector<T> m_data;
+
+  size_t getSizeBytes() { return getSize() * sizeof(T); }
+
+public:
+  BufferManagerCopying(GLenum target, size_t size) : m_target(target), m_data(size) {}
+
+  void beginFill() {}
+
+  void endFill(size_t fill)
+  {
+    gl::BufferData(m_target, getSizeBytes(), 0, GL_STREAM_DRAW);
+    gl::BufferData(m_target, getSizeBytes(), m_data.data(), GL_STREAM_DRAW);
+  }
+
+  void endDraw() {}
+
+  T& at(size_t pos) { return m_data[pos]; }
+  size_t getSize() { return m_data.size(); }
+  size_t getBufferOffset() { return 0; }
+};
+
 using MaterialID = render_util::TerrainBase::MaterialID;
 
 constexpr int METERS_PER_GRID = render_util::TerrainBase::GRID_RESOLUTION_M;
 
 enum
 {
-  LOD_LEVELS = 8,
-  MESH_GRID_SIZE = 64,
-  MIN_LOD_DIST = 40000,
+  LOD_LEVELS = 10,
+  MESH_GRID_SIZE = 32,
+  MIN_LOD_DIST = 20000,
 
   HEIGHT_MAP_METERS_PER_GRID = 200,
 
@@ -367,6 +533,11 @@ public:
 };
 
 
+// using BufferManager = BufferManagerCopying<RenderBatch::NodePos>;
+// using BufferManager = BufferManagerOrphaning<RenderBatch::NodePos>;
+using BufferManager = BufferManagerFencing<RenderBatch::NodePos>;
+
+
 class RenderList
 {
   std::vector<std::unique_ptr<RenderBatch>> m_all_batches;
@@ -605,6 +776,8 @@ struct TerrainCDLOD::Private
   TexturePtr normal_map_base_texture;
   vec2 height_map_base_size_px = vec2(0);
 
+  BufferManager node_pos_buffer_manager {GL_ARRAY_BUFFER, getNumLeafNodes()};
+
   Private(TextureManager&, std::string);
   ~Private();
   void processNode(Node *node, int lod_level, const Camera &camera, bool low_detail);
@@ -807,7 +980,8 @@ void TerrainCDLOD::Private::drawInstanced(TerrainBase::Client *client)
 
   for (RenderBatch *batch : render_list.getBatches())
   {
-    const size_t offset = batch->node_pos_buffer_offset * sizeof(RenderBatch::NodePos);
+    const size_t offset = node_pos_buffer_manager.getBufferOffset() +
+        batch->node_pos_buffer_offset * sizeof(RenderBatch::NodePos);
 
     auto program = batch->program;
     assert(program);
@@ -822,6 +996,8 @@ void TerrainCDLOD::Private::drawInstanced(TerrainBase::Client *client)
     gl::DrawElementsInstancedARB(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, 0, batch->getSize());
     CHECK_GL_ERROR();
   }
+
+  node_pos_buffer_manager.endDraw();
 
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
   CHECK_GL_ERROR();
@@ -882,29 +1058,24 @@ void TerrainCDLOD::update(const Camera &camera, bool low_detail)
 
   p->processNode(p->root_node, MAX_LOD, camera, low_detail);
 
-  const int buffer_elements = getNumLeafNodes();
-  const int buffer_size = sizeof(RenderBatch::NodePos) * buffer_elements;
-
   size_t buffer_pos = 0;
 
   gl::BindBuffer(GL_ARRAY_BUFFER, p->node_pos_buffer_id);
 
-  gl::BufferData(GL_ARRAY_BUFFER, buffer_size, 0, GL_STREAM_DRAW);
+  auto &buffer = p->node_pos_buffer_manager;
 
-  RenderBatch::NodePos *buffer = (RenderBatch::NodePos*) gl::MapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-  assert(buffer);
-
+  buffer.beginFill();
   for (auto batch : p->render_list.getBatches())
   {
     batch->node_pos_buffer_offset = buffer_pos;
 
     for (int i = 0; i < batch->getSize(); i++)
     {
-      assert(buffer_pos < buffer_elements);
+      assert(buffer_pos < buffer.getSize());
 
       const int lod = batch->lods[i];
 
-      RenderBatch::NodePos &pos = buffer[buffer_pos];
+      RenderBatch::NodePos &pos = buffer.at(buffer_pos);
       pos.x = batch->positions[i].x;
       pos.y = batch->positions[i].y;
       pos.z = getNodeScale(lod);
@@ -913,10 +1084,8 @@ void TerrainCDLOD::update(const Camera &camera, bool low_detail)
       buffer_pos++;
     }
   }
+  buffer.endFill(buffer_pos);
 
-
-  buffer = nullptr;
-  gl::UnmapBuffer(GL_ARRAY_BUFFER);
 
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
 }
