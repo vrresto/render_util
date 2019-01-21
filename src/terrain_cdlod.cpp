@@ -77,6 +77,8 @@ namespace
 {
 
 
+class Material;
+
 using MaterialID = render_util::TerrainBase::MaterialID;
 
 constexpr int METERS_PER_GRID = render_util::TerrainBase::GRID_RESOLUTION_M;
@@ -129,8 +131,52 @@ static_assert(getNodeSize(0) == LEAF_NODE_SIZE);
 static_assert(getNodeScale(0) == 1);
 
 
+struct DetailOption
+{
+  using Type = unsigned int;
+
+  constexpr static Type LAND = 1;
+  constexpr static Type WATER = 1 << 1;
+  constexpr static Type FOREST = 1 << 2;
+  constexpr static Type COAST = 1 << 3;
+  constexpr static Type ALL = LAND | WATER | FOREST | COAST;
+};
+
+struct DetailLevel
+{
+  double distance = 0;
+  unsigned int options = 0;
+};
+
+constexpr DetailLevel g_detail_levels[] =
+{
+  { 0, 0 },
+  { 40000, DetailOption::LAND },
+  { 15000, DetailOption::LAND | DetailOption::FOREST },
+  { 5000, DetailOption::LAND | DetailOption::WATER | DetailOption::FOREST },
+  { 2000, DetailOption::ALL },
+};
+constexpr size_t NUM_DETAIL_LEVELS = sizeof(g_detail_levels) / sizeof(DetailLevel);
+
+const DetailLevel &getDetailLevel(size_t level)
+{
+  assert(level < NUM_DETAIL_LEVELS);
+  return g_detail_levels[level];
+}
+
+size_t getDetailLevelAtDistance(double dist)
+{
+  for (size_t i = 0; i < NUM_DETAIL_LEVELS; i++)
+  {
+    if (getDetailLevel(i).distance >= dist)
+      return i;
+  }
+  return 0;
+}
+
+
 render_util::ShaderProgramPtr createProgram(unsigned int material,
-                                            bool low_detail,
+                                            size_t detail_level,
                                             render_util::TextureManager &tex_mgr,
                                             std::string shader_path)
 {
@@ -147,7 +193,7 @@ render_util::ShaderProgramPtr createProgram(unsigned int material,
 
   name += "_cdlod";
 
-  ShaderProgramPtr terrain_program;
+  auto detail_options = getDetailLevel(detail_level).options;
 
   CHECK_GL_ERROR();
 
@@ -157,7 +203,6 @@ render_util::ShaderProgramPtr createProgram(unsigned int material,
   params.set("enable_base_map", enable_base_map);
   params.set("enable_base_water_map", enable_base_water_map);
   params.set("is_editor", is_editor);
-  params.set("low_detail", low_detail);
 
   if (material == MaterialID::WATER)
   {
@@ -166,16 +211,20 @@ render_util::ShaderProgramPtr createProgram(unsigned int material,
   }
   else
   {
-    params.set("enable_type_map", material & MaterialID::LAND);
+    params.set("enable_type_map", (material & MaterialID::LAND) &&
+                                  (detail_options & DetailOption::LAND));
     params.set("enable_water", material & MaterialID::WATER);
     params.set("enable_forest", material & MaterialID::FOREST);
   }
 
-  terrain_program = createShaderProgram(name, tex_mgr, shader_path, attribute_locations, params);
+  params.set("detailed_water", detail_options & DetailOption::WATER);
+  params.set("detailed_forest", detail_options & DetailOption::FOREST);
+
+  auto program = createShaderProgram(name, tex_mgr, shader_path, attribute_locations, params);
 
   CHECK_GL_ERROR();
 
-  return terrain_program;
+  return program;
 }
 
 
@@ -286,8 +335,6 @@ struct BoundingBox : public render_util::Box
 };
 
 
-struct RenderBatch;
-
 struct Node
 {
   std::array<Node*, 4> children;
@@ -296,9 +343,8 @@ struct Node
   float size = 0;
   float max_height = 0;
   BoundingBox bounding_box;
-  unsigned int material = 0;
-  RenderBatch *batch = nullptr;
-  RenderBatch *batch_low_detail = nullptr;
+  unsigned int material_id = 0;
+  Material *material = nullptr;
 
   bool isInRange(const vec3 &camera_pos, float radius)
   {
@@ -320,17 +366,13 @@ struct RenderBatch
     float w = 0;
   };
 
-  const bool is_low_detail = false;
-  const unsigned int material = MaterialID::LAND;
   const render_util::ShaderProgramPtr program;
-
   std::vector<vec2> positions;
   std::vector<int> lods;
   size_t node_pos_buffer_offset = 0;
   bool is_active = false;
 
-  RenderBatch(render_util::ShaderProgramPtr program, unsigned int material, bool low_detail) :
-    program(program), is_low_detail(low_detail), material(material) {}
+  RenderBatch(render_util::ShaderProgramPtr program) : program(program) {}
 
   void addNode(Node *node, int lod)
   {
@@ -349,41 +391,45 @@ struct RenderBatch
 };
 
 
-class ShaderPrograms
+class Material
 {
-  render_util::TextureManager &m_texture_manager;
-  std::string m_shader_path;
-
-  std::unordered_map<unsigned int, render_util::ShaderProgramPtr> programs;
-  std::unordered_map<unsigned int, render_util::ShaderProgramPtr> low_detail_programs;
+  std::array<std::unique_ptr<RenderBatch>, NUM_DETAIL_LEVELS> m_batches;
 
 public:
-  ShaderPrograms(render_util::TextureManager &tex_mgr, std::string shader_path) :
-    m_texture_manager(tex_mgr), m_shader_path(shader_path) {}
-
-  render_util::ShaderProgramPtr get(unsigned int material, bool low_detail)
+  Material(unsigned int id, render_util::TextureManager &tm, std::string shader_path)
   {
-    auto &program_map = low_detail ? low_detail_programs : programs;
-
-    auto p = program_map[material];
-    if (!p)
+    assert(m_batches.size() == NUM_DETAIL_LEVELS);
+    for (size_t i = 0; i < m_batches.size(); i++)
     {
-      p = createProgram(material, low_detail, m_texture_manager, m_shader_path);
-      program_map[material] = p;
+      assert(i < m_batches.size());
+      auto program = createProgram(id, i, tm, shader_path);
+      m_batches[i] = std::make_unique<RenderBatch>(program);
     }
-    return p;
+  }
+
+  RenderBatch *getBatch(size_t detail_level)
+  {
+    assert(detail_level < m_batches.size());
+    return m_batches[detail_level].get();
   }
 };
 
 
 class RenderList
 {
-  std::vector<std::unique_ptr<RenderBatch>> m_all_batches;
   std::vector<RenderBatch*> m_active_batches;
-  ShaderPrograms &m_programs;
 
-  void addNode(Node *node, int lod, RenderBatch *batch)
+public:
+  ~RenderList()
   {
+    clear();
+  }
+
+  void addNode(Node *node, int lod, size_t detail_level)
+  {
+    assert(node->material);
+
+    auto batch = node->material->getBatch(detail_level);
     if (!batch->is_active)
     {
       m_active_batches.push_back(batch);
@@ -392,43 +438,9 @@ class RenderList
     batch->addNode(node, lod);
   }
 
-  RenderBatch *getBatch(unsigned int material, bool low_detail)
-  {
-    for (auto &batch : m_all_batches)
-    {
-      if (batch->material == material && batch->is_low_detail == low_detail)
-        return batch.get();
-    }
-
-    auto program = m_programs.get(material, low_detail);
-
-    m_all_batches.push_back(std::make_unique<RenderBatch>(program, material, low_detail));
-
-    return m_all_batches.back().get();
-  }
-
-public:
-  RenderList(ShaderPrograms &p) : m_programs(p) {}
-
-  void addNode(Node *node, int lod, bool low_detail)
-  {
-    if (!low_detail)
-    {
-      if (!node->batch)
-        node->batch = getBatch(node->material, false);
-      addNode(node, lod, node->batch);
-    }
-    else
-    {
-      if (!node->batch_low_detail)
-        node->batch_low_detail = getBatch(node->material, true);
-      addNode(node, lod, node->batch_low_detail);
-    }
-  }
-
   void clear()
   {
-    for (auto &batch : m_all_batches)
+    for (auto &batch : m_active_batches)
     {
       batch->clear();
       batch->is_active = false;
@@ -436,13 +448,7 @@ public:
     m_active_batches.clear();
   }
 
-  int getNodeCount()
-  {
-    int count = 0;
-    for (RenderBatch *b : m_active_batches)
-      count += b->getSize();
-    return count;
-  }
+  bool isEmpty() { return m_active_batches.empty(); }
 
   const std::vector<RenderBatch*> &getBatches() { return m_active_batches; }
 };
@@ -559,7 +565,7 @@ processMaterialMap(render_util::TerrainBase::MaterialMap::ConstPtr in)
 }
 
 
-unsigned int getMaterial(render_util::TerrainBase::MaterialMap::ConstPtr material_map,
+unsigned int getMaterialID(render_util::TerrainBase::MaterialMap::ConstPtr material_map,
                          const glm::dvec2 &node_origin)
 {
   if (material_map)
@@ -592,8 +598,9 @@ struct TerrainCDLOD::Private
 {
   TextureManager &texture_manager;
 
+  std::string shader_path;
+
   NodeAllocator node_allocator;
-  ShaderPrograms programs;
   RenderList render_list;
   Node *root_node = 0;
   dvec2 root_node_pos = -dvec2(getNodeSize(MAX_LOD) / 2.0);
@@ -614,19 +621,22 @@ struct TerrainCDLOD::Private
   TexturePtr normal_map_base_texture;
   vec2 height_map_base_size_px = vec2(0);
 
+  std::unordered_map<unsigned int, std::unique_ptr<Material>> materials;
+
   Private(TextureManager&, std::string);
   ~Private();
   void processNode(Node *node, int lod_level, const Camera &camera, bool low_detail);
-  void selectNode(Node *node, int lod_level, bool low_detail);
   void drawInstanced(TerrainBase::Client *client);
   Node *createNode(const render_util::ElevationMap &map, dvec2 pos, int lod_level, MaterialMap::ConstPtr material_map);
   void setUniforms(ShaderProgramPtr program);
-
+  Material *getMaterial(unsigned int id);
 };
 
 
 TerrainCDLOD::Private::~Private()
 {
+  render_list.clear();
+
   CHECK_GL_ERROR();
 
   gl::DeleteVertexArrays(1, &vao_id);
@@ -642,8 +652,7 @@ TerrainCDLOD::Private::~Private()
 
 TerrainCDLOD::Private::Private(TextureManager &tm, std::string shader_path) :
   texture_manager(tm),
-  programs(tm, shader_path),
-  render_list(programs)
+  shader_path(shader_path)
 {
   GridMesh mesh(MESH_GRID_SIZE+1, MESH_GRID_SIZE+1);
   mesh.createTriangleDataIndexed();
@@ -688,6 +697,20 @@ TerrainCDLOD::Private::Private(TextureManager &tm, std::string shader_path) :
 }
 
 
+Material *TerrainCDLOD::Private::getMaterial(unsigned int id)
+{
+  auto it = materials.find(id);
+  if (it != materials.end())
+  {
+    return it->second.get();
+  }
+
+  materials[id] = std::make_unique<Material>(id, texture_manager, shader_path);
+
+  return materials[id].get();
+}
+
+
 void TerrainCDLOD::Private::setUniforms(ShaderProgramPtr program)
 {
   program->setUniform("terrain_resolution_m", (float)METERS_PER_GRID);
@@ -725,7 +748,7 @@ Node *TerrainCDLOD::Private::createNode(const render_util::ElevationMap &map,
   if (lod_level == 0)
   {
     node->max_height = getMaxHeight(map, node->pos, node_size);
-    node->material = ::getMaterial(material_map, pos);
+    node->material_id = ::getMaterialID(material_map, pos);
   }
   else
   {
@@ -740,7 +763,7 @@ Node *TerrainCDLOD::Private::createNode(const render_util::ElevationMap &map,
     for (Node *child : node->children)
     {
       node->max_height = max(node->max_height, child->max_height);
-      node->material |= child->material;
+      node->material_id |= child->material_id;
     }
   }
 
@@ -748,15 +771,10 @@ Node *TerrainCDLOD::Private::createNode(const render_util::ElevationMap &map,
   auto bb_extent = vec3(node_size, node_size, node->max_height);
   node->bounding_box.set(bb_origin, bb_extent);
 
-  assert(node->material);
+  assert(node->material_id);
+  node->material = getMaterial(node->material_id);
 
   return node;
-}
-
-
-void TerrainCDLOD::Private::selectNode(Node *node, int lod_level, bool low_detail)
-{
-  render_list.addNode(node, lod_level, low_detail);
 }
 
 
@@ -767,12 +785,22 @@ void TerrainCDLOD::Private::processNode(Node *node, int lod_level, const Camera 
   if (camera.cull(node->bounding_box))
     return;
 
+  size_t detail_level = 0;
+  if (!low_detail)
+  {
+    for (size_t i = 0; i < NUM_DETAIL_LEVELS; i++)
+    {
+      if (node->isInRange(camera_pos, getDetailLevel(i).distance))
+        detail_level = i;
+    }
+  }
+
   if (lod_level == 0)
   {
     if (draw_distance > 0.0  && !node->isInRange(camera_pos, draw_distance))
       return;
 
-    selectNode(node, 0, low_detail);
+    render_list.addNode(node, 0, detail_level);
   }
   else
   {
@@ -789,7 +817,7 @@ void TerrainCDLOD::Private::processNode(Node *node, int lod_level, const Camera 
       if (draw_distance > 0.0  && !node->isInRange(camera_pos, draw_distance))
         return;
 
-      selectNode(node, lod_level, low_detail);
+      render_list.addNode(node, lod_level, detail_level);
     }
   }
 }
@@ -797,7 +825,7 @@ void TerrainCDLOD::Private::processNode(Node *node, int lod_level, const Camera 
 
 void TerrainCDLOD::Private::drawInstanced(TerrainBase::Client *client)
 {
-  if (render_list.getNodeCount() == 0)
+  if (render_list.isEmpty())
     return;
 
   assert(client);

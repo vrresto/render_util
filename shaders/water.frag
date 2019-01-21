@@ -29,8 +29,8 @@
  
 #version 130
 
-#define ENABLE_WAVES !LOW_DETAIL
 #define LOW_DETAIL !@detailed_water:1@
+#define ENABLE_WAVES !LOW_DETAIL
 #define ENABLE_WAVE_INTERPOLATION 1
 // #define ENABLE_WAVE_FOAM 1
 #define ENABLE_WATER_MAP 1
