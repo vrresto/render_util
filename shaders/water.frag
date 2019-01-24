@@ -53,11 +53,6 @@ const float schlick_r0_water = pow(ior_water - 1, 2) / pow(ior_water + 1, 2);
 float getDetailMapBlend(vec2 pos);
 vec3 calcWaterLight(vec3 normal);
 vec3 calcLight(vec3 pos, vec3 normal);
-void sampleTypeMap(sampler2D sampler,
-            ivec2 textureSize,
-            vec2 coords,
-            out float types[4],
-            out float weights[4]);
 vec2 rotate(vec2 v, float a);
 float perlin(vec2 p, float dim);
 float genericNoise(vec2 coord);
@@ -105,6 +100,7 @@ uniform vec4 shore_wave_scroll;
 uniform ivec2 typeMapSize;
 
 varying vec2 pass_texcoord;
+varying vec2 pass_type_map_coord;
 
 
 float calcSpecular(vec3 view_dir, vec3 normal, float hardness)
@@ -450,13 +446,42 @@ vec3 getWaterColor(vec3 viewDir, float dist, vec2 coord, float waterDepth, vec3 
 }
 
 
+void sampleWaterTypeMap(out float types[4], out float weights[4])
+{
+  float x = pass_type_map_coord.x;
+  float y = pass_type_map_coord.y;
+
+  float x0 = floor(x);
+  float y0 = floor(y);
+
+  float x1 = x0 + 1.0;
+  float y1 = y0 + 1.0;
+
+  float x0_w = abs(x - x1);
+  float x1_w = 1.0 - x0_w;
+
+  float y0_w = abs(y - y1);
+  float y1_w = 1.0 - y0_w;
+
+  types[0] = texelFetch(sampler_water_type_map, ivec2(x0, y0), 0).x;
+  types[1] = texelFetch(sampler_water_type_map, ivec2(x0, y1), 0).x;
+  types[2] = texelFetch(sampler_water_type_map, ivec2(x1, y0), 0).x;
+  types[3] = texelFetch(sampler_water_type_map, ivec2(x1, y1), 0).x;
+
+  weights[0] = x0_w * y0_w;
+  weights[1] = x0_w * y1_w;
+  weights[2] = x1_w * y0_w;
+  weights[3] = x1_w * y1_w;
+}
+
+
 void sampleWaterType(vec2 pos, out float shallow_sea_amount, out float river_amount)
 {
   vec2 typeMapCoords = pos.xy / 200.0;
 
   float water_types[4];
   float water_types_w[4];
-  sampleTypeMap(sampler_water_type_map, typeMapSize, typeMapCoords, water_types, water_types_w);
+  sampleWaterTypeMap(water_types, water_types_w);
 
   shallow_sea_amount = 0;
   river_amount = 0;

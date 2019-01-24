@@ -251,7 +251,7 @@ void TerrainViewerScene::setup()
   assert(elevation_map);
   assert(!m_map->getWaterAnimation().isEmpty());
 
-  createTerrain(elevation_map, m_map->getMaterialMap());
+  createTerrain(m_map->getTextures().getShaderParameters(), elevation_map, m_map->getMaterialMap());
 
   map_size = glm::vec2(elevation_map->getSize() * m_map->getHeightMapMetersPerPixel());
 

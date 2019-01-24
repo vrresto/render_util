@@ -245,13 +245,13 @@ TexturePtr createTextureArray(const std::vector<ImageRGBA::ConstPtr> &textures)
 } // namespace
 
 
-
 struct render_util::MapTextures::Private
 {
   shared_ptr<Material> m_material;
   glm::vec3 water_color = glm::vec3(0);
   glm::ivec2 type_map_size = glm::ivec2(0);
   glm::ivec2 water_map_table_size = glm::ivec2(0);
+  ShaderParameters shader_params;
 };
 
 
@@ -265,6 +265,12 @@ render_util::MapTextures::MapTextures(const TextureManager &texture_manager) :
 render_util::MapTextures::~MapTextures()
 {
   delete p;
+}
+
+
+const render_util::ShaderParameters &render_util::MapTextures::getShaderParameters()
+{
+  return p->shader_params;
 }
 
 
@@ -315,15 +321,17 @@ void render_util::MapTextures::setUniforms(ShaderProgramPtr program)
 
 
 void render_util::MapTextures::setTextures(const std::vector<ImageRGBA::ConstPtr> &textures,
-                                      const std::vector<float> &texture_scale)
+                                           size_t index)
 {
   CHECK_GL_ERROR();
 
-  p->m_material->setTexture(TEXUNIT_TERRAIN, ::createTextureArray(textures));
-  CHECK_GL_ERROR();
+  auto texunit = TEXUNIT_TERRAIN + index;
+  assert(texunit < TEXUNIT_NUM);
 
-  p->m_material->setTexture(TEXUNIT_TERRAIN_SCALE_MAP,
-                            createFloatTexture1D(texture_scale.data(), texture_scale.size(), 1));
+  p->shader_params.set(string( "enable_terrain") + to_string(index), true);
+
+  p->m_material->setTexture(texunit, render_util::createTextureArray<ImageRGBA>(textures));
+
   CHECK_GL_ERROR();
 }
 
@@ -362,10 +370,10 @@ void render_util::MapTextures::setWaterMap(const std::vector<ImageGreyScale::Con
 }
 
 
-void render_util::MapTextures::setTypeMap(ImageGreyScale::ConstPtr type_map)
+void render_util::MapTextures::setTypeMap(ImageRGBA::ConstPtr type_map)
 {
   p->type_map_size = type_map->size();
-  TexturePtr t = createTexture<ImageGreyScale>(type_map, false);
+  TexturePtr t = createTexture<ImageRGBA>(type_map, false);
 //   TexturePtr t = createTexture<ImageGreyScale>(type_map, true);
   TextureParameters<int> params;
   params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);

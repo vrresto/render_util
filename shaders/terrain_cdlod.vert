@@ -64,6 +64,7 @@ varying float vertexHorizontalDist;
 varying vec3 passLight;
 varying vec3 passNormal;
 varying vec2 pass_texcoord;
+varying vec2 pass_type_map_coord;
 
 #if ENABLE_BASE_MAP
 uniform sampler2D sampler_terrain_cdlod_height_map_base;
@@ -157,6 +158,8 @@ void main(void)
 
   pass_texcoord = (pos.xy + vec2(0,1)) / grids_per_tile;
   pass_texcoord -= origin_tile;
+
+  pass_type_map_coord = pos.xy;
 
   pos2d_m = pos.xy * terrain_resolution_m;
 

@@ -26,13 +26,18 @@
 #define DETAILED_FOREST false
 #define ENABLE_TERRAIN_NORMAL_MAP 1
 
-#define ENABLE_BASE_MAP @enable_base_map@
+// #define ENABLE_BASE_MAP @enable_base_map@
 #define ENABLE_FAR_TEXTURE !@enable_base_map@
 #define LOW_DETAIL @low_detail:0@
 #define DETAILED_WATER @detailed_water:1@
 #define ENABLE_WATER @enable_water:0@
 #define ENABLE_FOREST @enable_forest:0@
 #define ENABLE_TYPE_MAP @enable_type_map:0@
+
+#define ENABLE_TERRAIN0 @enable_terrain0:0@
+#define ENABLE_TERRAIN1 @enable_terrain1:0@
+#define ENABLE_TERRAIN2 @enable_terrain2:0@
+#define ENABLE_TERRAIN3 @enable_terrain3:0@
 
 
 float getDetailMapBlend(vec2 pos);
@@ -62,7 +67,6 @@ uniform sampler2D sampler_terrain_cdlod_normal_map_base;
 uniform vec2 height_map_base_size_m;
 uniform vec2 height_map_base_origin;
 
-uniform sampler2DArray sampler_terrain;
 uniform sampler1D sampler_terrain_scale_map;
 uniform sampler2D sampler_type_map;
 uniform sampler2D sampler_type_map_base;
@@ -75,7 +79,13 @@ uniform ivec2 typeMapSize;
 uniform vec2 map_size;
 uniform vec3 cameraPosWorld;
 
+uniform sampler2DArray sampler_terrain;
+uniform sampler2DArray sampler_terrain1;
+uniform sampler2DArray sampler_terrain2;
+uniform sampler2DArray sampler_terrain3;
+
 varying vec2 pass_texcoord;
+varying vec2 pass_type_map_coord;
 
 const ivec2 type_map_base_size_px = ivec2(4096);
 const ivec2 type_map_base_meters_per_pixel = ivec2(400);
@@ -98,7 +108,7 @@ float sampleNoise(vec2 coord)
 void sampleTypeMap(sampler2D sampler,
             ivec2 textureSize,
             vec2 coords,
-            out float types[4],
+            out vec3 types[4],
             out float weights[4])
 {
 //   float x = coords.x - 0.5;
@@ -155,10 +165,10 @@ void sampleTypeMap(sampler2D sampler,
 //   vec4 c10 = texture(sampler, p10 / textureSize);
 //   vec4 c11 = texture(sampler, p11 / textureSize);
 
-  types[0] = c00.x;
-  types[1] = c01.x;
-  types[2] = c10.x;
-  types[3] = c11.x;
+  types[0] = c00.xyz;
+  types[1] = c01.xyz;
+  types[2] = c10.xyz;
+  types[3] = c11.xyz;
 
   weights[0] = w00;
   weights[1] = w01;
@@ -167,28 +177,43 @@ void sampleTypeMap(sampler2D sampler,
 }
 
 
-vec4 sampleTerrain(float type_normalized)
+vec4 sampleTerrain(vec3 type)
 {
-  vec2 mapCoords = pass_texcoord;
+  float sampler_nr = type.x * 255;
+  uint index = uint(type.y * 255);
+  float scale = (type.z * 255) - 128;
+  if (scale < 0)
+    scale = 1 / -scale;
+  vec4 color = vec4(0);
 
-  uint index = uint(type_normalized * 255) & 0x1Fu;
-  float scale = texelFetch(sampler_terrain_scale_map, int(index), 0).x;
+#if ENABLE_TERRAIN0
+  color += texture(sampler_terrain, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 0);
+#endif
+#if ENABLE_TERRAIN1
+  color += texture(sampler_terrain1, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 1);
+#endif
+#if ENABLE_TERRAIN2
+  color += texture(sampler_terrain2, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 2);
+#endif
+#if ENABLE_TERRAIN3
+  color += texture(sampler_terrain3, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 3);
+#endif
 
-  return texture(sampler_terrain, vec3(mapCoords * scale, index));
+  color.a = 1;
+
+  return color;
 }
 
 
 vec4 sampleTerrainTextures(vec2 pos)
 {
-  float types[4];
+  vec3 types[4];
   float weights[4];
-
-  vec2 typeMapCoords = pos.xy / 200.0;
 
 //   float lod = textureQueryLod(sampler_type_map, typeMapCoords).y;
 //   float lod = mip_map_level(pos.xy / map_size);
 
-  sampleTypeMap(sampler_type_map, typeMapSize, typeMapCoords, types, weights);
+  sampleTypeMap(sampler_type_map, typeMapSize, pass_type_map_coord, types, weights);
 
   vec4 c00 = sampleTerrain(types[0]);
   vec4 c01 = sampleTerrain(types[1]);
@@ -203,6 +228,7 @@ vec4 sampleTerrainTextures(vec2 pos)
 }
 
 
+#if ENABLE_BASE_MAP
 vec4 sampleBaseTerrain(float type_normalized)
 {
   vec2 mapCoords = pass_texcoord;
@@ -235,6 +261,7 @@ vec4 sampleBaseTerrainTextures(vec2 pos)
     c10 * weights[2] +
     c11 * weights[3];
 }
+#endif
 
 
 vec4 applyForest(vec4 color, vec2 pos, vec3 view_dir, float dist)
@@ -247,7 +274,11 @@ vec4 applyForest(vec4 color, vec2 pos, vec3 view_dir, float dist)
     return far_simple_color;
 #else
 
+#if ENABLE_FAR_TEXTURE
   float lod = textureQueryLOD(sampler_terrain_far, pos.xy / map_size).x;
+#else
+  float lod = 0;
+#endif
 
   float far_simple_blend = clamp(lod, 0, 1);
   far_simple_blend = mix(far_simple_blend, 1.0, smoothstep(30000.0, 45000.0, dist));

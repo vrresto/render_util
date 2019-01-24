@@ -70,6 +70,7 @@ namespace render_util
     void setDrawDistance(float dist) override;
     void setBaseElevationMap(ElevationMap::ConstPtr map) override;
     render_util::TexturePtr getNormalMapTexture() override;
+    void setShaderParameters(const ShaderParameters&) override;
   };
 }
 
@@ -179,7 +180,8 @@ size_t getDetailLevelAtDistance(double dist)
 render_util::ShaderProgramPtr createProgram(unsigned int material,
                                             size_t detail_level,
                                             render_util::TextureManager &tex_mgr,
-                                            std::string shader_path)
+                                            std::string shader_path,
+                                            const render_util::ShaderParameters &params_)
 {
   using namespace std;
   using namespace render_util;
@@ -200,7 +202,7 @@ render_util::ShaderProgramPtr createProgram(unsigned int material,
 
   map<unsigned int, string>  attribute_locations = { { 4, "attrib_pos" } };
 
-  ShaderParameters params;
+  ShaderParameters params = params_;
   params.set("enable_base_map", enable_base_map);
   params.set("enable_base_water_map", enable_base_water_map);
   params.set("is_editor", is_editor);
@@ -390,13 +392,14 @@ class Material
   std::array<std::unique_ptr<RenderBatch>, NUM_DETAIL_LEVELS> m_batches;
 
 public:
-  Material(unsigned int id, render_util::TextureManager &tm, std::string shader_path)
+  Material(unsigned int id, render_util::TextureManager &tm,
+           std::string shader_path, const render_util::ShaderParameters &params)
   {
     assert(m_batches.size() == NUM_DETAIL_LEVELS);
     for (size_t i = 0; i < m_batches.size(); i++)
     {
       assert(i < m_batches.size());
-      auto program = createProgram(id, i, tm, shader_path);
+      auto program = createProgram(id, i, tm, shader_path, params);
       m_batches[i] = std::make_unique<RenderBatch>(program);
     }
   }
@@ -593,6 +596,7 @@ struct TerrainCDLOD::Private
   TextureManager &texture_manager;
 
   std::string shader_path;
+  ShaderParameters shader_parameters;
 
   NodeAllocator node_allocator;
   RenderList render_list;
@@ -699,7 +703,7 @@ Material *TerrainCDLOD::Private::getMaterial(unsigned int id)
     return it->second.get();
   }
 
-  materials[id] = std::make_unique<Material>(id, texture_manager, shader_path);
+  materials[id] = std::make_unique<Material>(id, texture_manager, shader_path, shader_parameters);
 
   return materials[id].get();
 }
@@ -993,6 +997,12 @@ void TerrainCDLOD::setBaseElevationMap(ElevationMap::ConstPtr map)
   p->height_map_base_size_px = map->size();
   p->height_map_base_texture = createHeightMapTexture(map);
   p->normal_map_base_texture = createNormalMapTexture(map, HEIGHT_MAP_BASE_METERS_PER_PIXEL);
+}
+
+
+void TerrainCDLOD::setShaderParameters(const ShaderParameters &params)
+{
+  p->shader_parameters = params;
 }
 
 const TerrainFactory g_terrain_cdlod_factory = makeTerrainFactory<TerrainCDLOD>();

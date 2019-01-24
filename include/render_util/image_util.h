@@ -59,7 +59,7 @@ clone(T image)
 
 template <typename T>
 void
-fill(typename T::Ptr image, typename T::PixelType color)
+fill(T image, typename TypeFromPtr<T>::Type::PixelType color)
 {
   for (int y = 0; y < image->h(); y++)
   {
@@ -247,7 +247,7 @@ extend(T src,
   assert(new_size.x > src->w() || new_size.y > src->h());
 
   auto dst = std::make_shared<ImageType>(new_size);
-  fill<ImageType>(dst, color);
+  fill(dst, color);
 
   glm::ivec2 blit_coord(0);
 

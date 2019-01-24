@@ -43,8 +43,10 @@ namespace render_util
     MapTextures(const TextureManager &texture_manager);
     ~MapTextures();
 
+    const ShaderParameters &getShaderParameters();
+
     void setWaterColor(const glm::vec3 &color);
-    void setTypeMap(ImageGreyScale::ConstPtr type_map);
+    void setTypeMap(ImageRGBA::ConstPtr type_map);
     void setWaterTypeMap(ImageGreyScale::ConstPtr type_map);
     void setBeach(std::vector<ImageRGBA::ConstPtr> textures);
 
@@ -52,7 +54,7 @@ namespace render_util
     void setForestLayers(const std::vector<ImageRGBA::ConstPtr> &textures);
 
     void setTextures(const std::vector<ImageRGBA::ConstPtr> &textures,
-                     const std::vector<float> &texture_scale);
+                     size_t index = 0);
 
     void setWaterMap(const std::vector<ImageGreyScale::ConstPtr> &chunks,
                      Image<unsigned int>::ConstPtr table);

@@ -61,7 +61,8 @@ struct Terrain : public render_util::TerrainRenderer
 };
 
 
-inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
+inline Terrain createTerrain(const render_util::ShaderParameters &shader_params,
+                      render_util::TextureManager &tex_mgr,
                       bool use_lod,
                       render_util::ElevationMap::ConstPtr elevation_map,
                       render_util::TerrainBase::MaterialMap::ConstPtr material_map,
@@ -78,6 +79,7 @@ inline Terrain createTerrain(render_util::TextureManager &tex_mgr,
     use_base_water_map,
     false);
 
+  t.getTerrain()->setShaderParameters(shader_params);
   t.getTerrain()->build(elevation_map, material_map);
 
   t.getProgram()->setUniform("terrain_color", color);
@@ -116,7 +118,8 @@ public:
     return glm::vec3(0, sun_dir_h.x, sun_dir_h.y);
   }
 
-  void createTerrain(render_util::ElevationMap::ConstPtr elevation_map,
+  void createTerrain(const render_util::ShaderParameters &shader_params,
+                     render_util::ElevationMap::ConstPtr elevation_map,
                      render_util::TerrainBase::MaterialMap::ConstPtr material_map = {},
                      render_util::ElevationMap::ConstPtr elevation_map_base = {})
   {
@@ -124,7 +127,8 @@ public:
 //       render_util::viewer::createTerrain(getTextureManager(), false,
 //                                          elevation_map, glm::vec3(1,0,0));
     m_terrain_cdlod =
-      render_util::viewer::createTerrain(getTextureManager(), true,
+      render_util::viewer::createTerrain(shader_params,
+                                         getTextureManager(), true,
                                          elevation_map,
                                          material_map,
                                          glm::vec3(0,1,0),
