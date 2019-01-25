@@ -322,15 +322,8 @@ struct BoundingBox : public render_util::Box
 {
   float getShortestDistance(vec3 pos) const
   {
-    float d = 0;
-    for (auto &point : getCornerPoints())
-    {
-      if (d)
-        d = min(d, distance(point, pos));
-      else
-        d = distance(point, pos);
-    }
-    return d;
+    auto d = max(abs(pos - getCenter()) - getSize() / 2.f, vec3(0));
+    return length(d);
   }
 };
 

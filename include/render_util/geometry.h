@@ -54,6 +54,7 @@ namespace render_util
   {
     glm::vec3 m_origin;
     glm::vec3 m_extent;
+    glm::vec3 m_center;
     std::array<glm::vec3, 8> m_corner_points;
 
     void updateCornerPoints()
@@ -74,11 +75,14 @@ namespace render_util
 
   public:
     const std::array<glm::vec3, 8> &getCornerPoints() const { return m_corner_points; }
+    const glm::vec3 &getCenter() const { return m_center; }
+    const glm::vec3 &getSize() const { return m_extent; }
 
     void set(const glm::vec3 &origin, const glm::vec3 &extent)
     {
       m_origin = origin;
       m_extent = extent;
+      m_center = origin + extent / 2.f;
       updateCornerPoints();
     }
   };
