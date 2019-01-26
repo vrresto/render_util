@@ -44,6 +44,15 @@ namespace render_util
   class ShaderProgram
   {
   public:
+    ShaderProgram() {}
+    ShaderProgram(const std::string &name,
+                  const std::vector<std::string> &vertex_shaders,
+                  const std::vector<std::string> &fragment_shaders,
+                  const std::vector<std::string> &paths,
+                  bool must_be_valid = true,
+                  const std::map<unsigned int, std::string> &attribute_locations = {},
+                  const ShaderParameters &parameters = {});
+
     ShaderProgram(const std::string &name,
                   const std::vector<std::string> &vertex_shaders,
                   const std::vector<std::string> &fragment_shaders,
@@ -51,9 +60,6 @@ namespace render_util
                   bool must_be_valid = true,
                   const std::map<unsigned int, std::string> &attribute_locations = {},
                   const ShaderParameters &parameters = {});
-
-    ShaderProgram(const char *name, const std::string &path, bool must_be_valid = true);
-    ShaderProgram(const char *name_vert, const char *name_frag, const std::string &path, bool must_be_valid = true);
 
     ~ShaderProgram();
 
@@ -107,7 +113,7 @@ namespace render_util
 
     unsigned int id = 0;
     std::string name;
-    std::string path;
+    std::vector<std::string> paths;
 
     std::vector<std::string> vertex_shaders;
     std::vector<std::string> fragment_shaders;

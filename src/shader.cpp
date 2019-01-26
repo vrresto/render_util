@@ -133,7 +133,7 @@ string preProcessShader(const vector<char> &in, const ShaderParameters &params)
 
 
 string readShaderFile(const string &name,
-                     const string &path,
+                     const std::vector<std::string> &paths_,
                      GLenum type,
                      const ShaderParameters &params,
                      string &filename)
@@ -156,8 +156,12 @@ string readShaderFile(const string &name,
   vector<char> data;
 
   vector<string> paths;
-  paths.push_back(path + '/' + name + ext);
-  paths.push_back(path + '/' + name + ".glsl");
+
+  for (auto &path : paths_)
+  {
+    paths.push_back(path + '/' + name + ext);
+    paths.push_back(path + '/' + name + ".glsl");
+  }
 
   for (auto p : paths)
   {
@@ -175,12 +179,12 @@ string readShaderFile(const string &name,
 
 
 GLuint createShader(const string &name,
-                    const string &path,
+                    const std::vector<std::string> &paths,
                     GLenum type,
                     const ShaderParameters &params)
 {
   string filename;
-  string source = readShaderFile(name, path, type, params, filename);
+  string source = readShaderFile(name, paths, type, params, filename);
   if (source.empty()) {
     return 0;
   }
@@ -246,6 +250,25 @@ void ShaderParameters::set(const std::string &name, int value)
 ShaderProgram::ShaderProgram( const string &name,
                               const std::vector<std::string> &vertex_shaders,
                               const std::vector<std::string> &fragment_shaders,
+                              const std::vector<std::string> &paths,
+                              bool must_be_valid,
+                              const std::map<unsigned int, std::string> &attribute_locations,
+                              const ShaderParameters &parameters)
+  : m_parameters(parameters),
+    name(name),
+    vertex_shaders(vertex_shaders),
+    fragment_shaders(fragment_shaders),
+    paths(paths),
+    must_be_valid(must_be_valid),
+    attribute_locations(attribute_locations)
+{
+  create();
+  assertIsValid();
+}
+
+ShaderProgram::ShaderProgram( const string &name,
+                              const std::vector<std::string> &vertex_shaders,
+                              const std::vector<std::string> &fragment_shaders,
                               const std::string &path,
                               bool must_be_valid,
                               const std::map<unsigned int, std::string> &attribute_locations,
@@ -254,32 +277,10 @@ ShaderProgram::ShaderProgram( const string &name,
     name(name),
     vertex_shaders(vertex_shaders),
     fragment_shaders(fragment_shaders),
-    path(path),
     must_be_valid(must_be_valid),
     attribute_locations(attribute_locations)
 {
-  create();
-  assertIsValid();
-}
-
-ShaderProgram::ShaderProgram(const char *name, const string &path, bool must_be_valid) :
-  id(0), path(path), must_be_valid(must_be_valid)
-{
-  this->name = name;
-  fragment_shaders.push_back("main");
-  fragment_shaders.push_back(name);
-  vertex_shaders.push_back(name);
-  create();
-  assertIsValid();
-}
-
-ShaderProgram::ShaderProgram(const char *name_vert, const char *name_frag, const string &path, bool must_be_valid) :
-  id(0), path(path), must_be_valid(must_be_valid)
-{
-  name = name_frag;
-  fragment_shaders.push_back("main");
-  fragment_shaders.push_back(name_frag);
-  vertex_shaders.push_back(name_vert);
+  paths.push_back(path);
   create();
   assertIsValid();
 }
@@ -289,16 +290,16 @@ ShaderProgram::~ShaderProgram()
   cout<<"~ShaderProgram()"<<endl;
   CHECK_GL_ERROR();
 
-  assert(id);
-
   for (auto shader : shader_objects)
   {
-    gl::DetachShader(id, shader);
+    if (id)
+      gl::DetachShader(id, shader);
     gl::DeleteShader(shader);
     CHECK_GL_ERROR();
   }
 
-  gl::DeleteProgram(id);
+  if (id)
+    gl::DeleteProgram(id);
 
   CHECK_GL_ERROR();
 }
@@ -345,7 +346,7 @@ void ShaderProgram::create()
   cerr<<name<<": num fragment shaders: "<<fragment_shaders.size()<<endl;
   for (auto name : fragment_shaders)
   {
-    GLuint shader = createShader(name, path, GL_FRAGMENT_SHADER, m_parameters);
+    GLuint shader = createShader(name, paths, GL_FRAGMENT_SHADER, m_parameters);
     if (!shader)
     {
       cerr<<"failed to create shader: "<<name<<endl;
@@ -360,7 +361,7 @@ void ShaderProgram::create()
   cerr<<name<<": num vertex shaders: "<<vertex_shaders.size()<<endl;
   for (auto name : vertex_shaders)
   {
-    GLuint shader = createShader(name, path, GL_VERTEX_SHADER, m_parameters);
+    GLuint shader = createShader(name, paths, GL_VERTEX_SHADER, m_parameters);
     if (!shader)
     {
       cerr<<"failed to create shader: "<<name<<endl;
