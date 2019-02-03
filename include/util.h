@@ -40,22 +40,41 @@ inline bool isPrefix(const std::string &prefix, const std::string &s)
 }
 
 
-inline std::vector<std::string> tokenize(std::string in)
+inline std::vector<std::string> tokenize(std::string in, char separator = ' ')
 {
-  std::istringstream stream(in);
   std::vector<std::string> out;
 
-  while (stream.good())
+  for (size_t token_start = 0, token_len = 0; token_start < in.size(); )
   {
-    std::string token;
-    stream >> token;
-    if (!token.empty() && stream.good())
+    size_t token_end = token_start + token_len;
+
+    if (token_end >= in.size())
     {
-      out.push_back(token);
+      if (token_len)
+      {
+        std::string token = in.substr(token_start);
+        out.push_back(std::move(token));
+      }
+      break;
+    }
+    else if (in[token_end] == separator)
+    {
+      if (token_len)
+      {
+        std::string token = in.substr(token_start, token_len);
+        out.push_back(std::move(token));
+      }
+
+      token_start = token_end + 1;
+      token_len = 0;
+    }
+    else
+    {
+      token_len++;
     }
   }
 
-  return out;
+  return std::move(out);
 }
 
 

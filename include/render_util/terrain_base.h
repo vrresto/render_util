@@ -63,6 +63,7 @@ namespace render_util
     virtual void update(const Camera &camera, bool low_detail) {}
     virtual void setDrawDistance(float dist) {}
     virtual std::vector<glm::vec3> getNormals() { return {}; }
+    virtual TexturePtr getNormalMapTexture() { return nullptr; }
   };
 
   using TerrainFactory = util::Factory<TerrainBase, TextureManager&, std::string>;

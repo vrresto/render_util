@@ -44,14 +44,15 @@ if(platform_mingw)
   ExternalProject_Get_Property(glm SOURCE_DIR)
   include_directories(${SOURCE_DIR})
 
-
-  ExternalProject_Add(glfw_source
-    URL "https://github.com/glfw/glfw/releases/download/3.2.1/glfw-3.2.1.zip"
-    CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=CMake/i686-w64-mingw32.cmake -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-    INSTALL_COMMAND ""
-  )
-  ExternalProject_Get_Property(glfw_source SOURCE_DIR)
-  set(glfw_source_dir ${SOURCE_DIR})
+  if (render_util_build_viewer)
+    ExternalProject_Add(glfw_source
+      URL "https://github.com/glfw/glfw/releases/download/3.2.1/glfw-3.2.1.zip"
+      CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=CMake/i686-w64-mingw32.cmake -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+      INSTALL_COMMAND ""
+    )
+    ExternalProject_Get_Property(glfw_source SOURCE_DIR)
+    set(glfw_source_dir ${SOURCE_DIR})
+  endif()
 
 endif(platform_mingw)
 
@@ -70,10 +71,14 @@ add_definitions(
 add_subdirectory(gl_wrapper)
 add_subdirectory(src)
 add_subdirectory(tools)
-add_subdirectory(viewer)
-if(NOT platform_mingw)
-  add_subdirectory(testbed)
-endif(NOT platform_mingw)
+
+if(render_util_build_viewer)
+  add_subdirectory(viewer)
+
+  if(NOT platform_mingw)
+    add_subdirectory(testbed)
+  endif(NOT platform_mingw)
+endif()
 
 if(platform_mingw)
   add_dependencies(render_util_tools glm)

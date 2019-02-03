@@ -69,6 +69,7 @@ namespace render_util
     void update(const Camera &camera, bool low_detail) override;
     void setDrawDistance(float dist) override;
     void setBaseElevationMap(ElevationMap::ConstPtr map) override;
+    render_util::TexturePtr getNormalMapTexture() override;
   };
 }
 
@@ -949,6 +950,12 @@ void TerrainCDLOD::update(const Camera &camera, bool low_detail)
   gl::UnmapBuffer(GL_ARRAY_BUFFER);
 
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+
+render_util::TexturePtr TerrainCDLOD::getNormalMapTexture()
+{
+  return p->normal_map_texture;
 }
 
 
