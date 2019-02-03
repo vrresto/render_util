@@ -56,6 +56,8 @@ uniform float terrain_resolution_m;
 uniform float terrain_tile_size_m;
 uniform float terrain_height_offset = 0.0;
 
+uniform float max_terrain_texture_scale;
+
 varying vec3 passObjectPosFlat;
 varying vec3 passObjectPos;
 varying float vertexHorizontalDist;
@@ -133,7 +135,7 @@ void main(void)
   float node_max_height = 0; //FIXME
   float z_dist = max(0, cameraPosWorld.z - node_max_height);
 
-  vec2 origin_tile = floor(camera_pos_terrain_floor.xy / grids_per_tile);
+  vec2 origin_tile = max_terrain_texture_scale * floor(camera_pos_terrain_floor.xy / (grids_per_tile * max_terrain_texture_scale));
 
   float node_scale = attrib_pos.z;
 

@@ -37,6 +37,9 @@ namespace render_util
     Private *p =  nullptr;
 
   public:
+
+    static constexpr float MAX_TERRAIN_TEXTURE_SCALE = 8;
+
     MapTextures(const TextureManager &texture_manager);
     ~MapTextures();
 
