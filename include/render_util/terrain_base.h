@@ -22,6 +22,7 @@
 #include <render_util/shader.h>
 #include <render_util/camera.h>
 #include <render_util/elevation_map.h>
+#include <render_util/texture_manager.h>
 
 #include <string>
 #include <vector>
@@ -50,6 +51,7 @@ namespace render_util
     virtual void setTextureManager(TextureManager*) {};
     virtual void setDrawDistance(float dist) {}
     virtual std::vector<glm::vec3> getNormals() { return std::vector<glm::vec3>(); }
+    virtual TexturePtr getNormalMapTexture() { return nullptr; }
   };
 
 }
