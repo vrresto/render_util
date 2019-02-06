@@ -95,11 +95,10 @@ vec3 calcWaterLight(vec3 normal)
 //   vec2 normal_map_coord = pos.xy / (200 * typeMapSize);
 //   vec3 normal = texture2D(sampler_terrain_cdlod_normal_map, normal_map_coord).xyz;
 
-  float ambientLight = 0.8 * smoothstep(-0.5, 0.4, sunDir.z);
+  float ambientLight = 0.6 * smoothstep(-0.5, 0.4, sunDir.z);
 
-//   ambientLight = 0;
 
-  float directLight = 0.2;
+  float directLight = 0.7;
 
   directLight *= clamp(dot(normalize(normal), sunDir), 0.0, 2.0);
 

@@ -43,7 +43,8 @@
 const float water_map_chunk_size_m = 1600 * 4;
 const vec2 water_map_table_shift = vec2(0, 200);
 const float SPEC_HARDNESS = 256.0;
-const float sea_roughness = 0.2;
+// const float sea_roughness = 0.4;
+const float sea_roughness = 1.0;
 const float PI = 3.14159265359;
 const float ior_water = 1.333;
 const float schlick_r0_water = pow(ior_water - 1, 2) / pow(ior_water + 1, 2);
@@ -88,8 +89,14 @@ uniform vec2 map_size;
 
 uniform vec3 cameraPosWorld;
 
-uniform float waterAnimationFrameDelta = 0;
-uniform int water_animation_pos = 0;
+struct WaterAnimationParameters
+{
+  float frame_delta;
+  int pos;
+};
+
+uniform WaterAnimationParameters water_animation_params[2];
+
 uniform int water_animation_num_frames = 0;
 uniform vec2 water_map_shift = vec2(0);
 uniform vec2 water_map_scale = vec2(1);
@@ -115,12 +122,14 @@ float fresnelSchlick(vec3 incoming, vec3 normal, float r0)
 }
 
 
-vec3 interpolateWaterAnimationFrames(vec3 texA, vec3 texB, vec3 texC)
+vec3 interpolateWaterAnimationFrames(vec3 texA, vec3 texB, vec3 texC, int layer)
 {
   vec3 phase1A = texA;
   vec3 phase1B = texB;
   vec3 phase2A = texA;
   vec3 phase2B = texB;
+
+  float waterAnimationFrameDelta = water_animation_params[layer].frame_delta;
 
   float waterAnimationFrameDelta2 = waterAnimationFrameDelta + 0.5;
   if (waterAnimationFrameDelta2 > 1.0)
@@ -137,20 +146,20 @@ vec3 interpolateWaterAnimationFrames(vec3 texA, vec3 texB, vec3 texC)
 }
 
 
-int getWaterAnimationPos(int offset)
+int getWaterAnimationPos(int offset, int layer)
 {
-  return (water_animation_pos + offset) % water_animation_num_frames;
+  return (water_animation_params[layer].pos + offset) % water_animation_num_frames;
 }
 
 
-float getFoamAmount(vec2 coord, int animation_offset)
-{
-  vec3 texA = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(0 + animation_offset))).xyz;  
-  vec3 texB = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(1 + animation_offset))).xyz;  
-  vec3 texC = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(2 + animation_offset))).xyz;  
-
-  return interpolateWaterAnimationFrames(texA, texB, texC).x;
-}
+// float getFoamAmount(vec2 coord, int animation_offset)
+// {
+//   vec3 texA = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(0 + animation_offset))).xyz;
+//   vec3 texB = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(1 + animation_offset))).xyz;
+//   vec3 texC = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(2 + animation_offset))).xyz;
+//
+//   return interpolateWaterAnimationFrames(texA, texB, texC).x;
+// }
 
 
 float getNoise(vec2 coord)
@@ -291,14 +300,17 @@ vec3 blendNormal(vec3 n1, vec3 n2, float dist, float vis, float strength)
 }
 
 
-vec3 sampleWaterNormalMap(float scale, vec2 coord)
+vec3 sampleWaterNormalMap(float scale, vec2 coord, int layer)
 {
 #if ENABLE_WAVE_INTERPOLATION
-  vec3 texA = texture(sampler_water_normal_map, vec3(coord * scale, getWaterAnimationPos(0))).xyz;
-  vec3 texB = texture(sampler_water_normal_map, vec3(coord * scale, getWaterAnimationPos(1))).xyz;
-  vec3 texC = texture(sampler_water_normal_map, vec3(coord * scale, getWaterAnimationPos(2))).xyz;
+  vec3 texA = texture(sampler_water_normal_map, vec3(coord * scale, getWaterAnimationPos(0, layer))).xyz;
+  vec3 texB = texture(sampler_water_normal_map, vec3(coord * scale, getWaterAnimationPos(1, layer))).xyz;
+  vec3 texC = texture(sampler_water_normal_map, vec3(coord * scale, getWaterAnimationPos(2, layer))).xyz;
 
-  return interpolateWaterAnimationFrames(texA, texB, texC) * 2 - 1;
+  vec3 normal = interpolateWaterAnimationFrames(texA, texB, texC, layer) * 2 - 1;
+  normal.y *= -1;
+
+  return normal;
 #else
   return texture(sampler_water_normal_map, vec3(coord * scale, getWaterAnimationPos(0))).xyz * 2 - 1;
 #endif
@@ -312,12 +324,12 @@ vec3 getWaterNormal(float dist, vec2 coord, float waterDepth)
   if (dist < 30000)
   {
     const float bigWaveStrength = 0.01;
-    const float mediumWaveStrength = 0.2;
-    const float smallWaveStrength = 0.4;
+    const float mediumWaveStrength = 0.1;
+    const float smallWaveStrength = 0.1;
 
-    normal = blendNormal(normal, sampleWaterNormalMap(2, coord), dist, 30000, mediumWaveStrength);
-    normal = blendNormal(normal, sampleWaterNormalMap(12, coord), dist, 15000, smallWaveStrength);
-    normal = blendNormal(normal, sampleWaterNormalMap(30, coord), dist, 5000, 0.8);
+    normal = blendNormal(normal, sampleWaterNormalMap(4, coord, 0), dist, 30000, mediumWaveStrength);
+    normal = blendNormal(normal, sampleWaterNormalMap(20, coord, 1), dist, 15000, smallWaveStrength);
+//     normal = blendNormal(normal, sampleWaterNormalMap(140, coord), dist, 500, 0.1);
 
     normal = normalize(normal);
 
@@ -391,7 +403,7 @@ vec3 getWaterColor(vec3 viewDir, float dist, vec2 coord, float waterDepth, vec3 
 
   vec3 envColor = vec3(0.65, 0.85, 1.0);
 //   envColor = mix(envColor, vec3(0.9), 0.4);
-  envColor = mix(envColor, vec3(0.7), 0.4);
+  envColor = mix(envColor, vec3(0.7), 0.6);
 
   envColor *= smoothstep(-0.1, 0.4, sunDir.z);
   
@@ -405,8 +417,10 @@ vec3 getWaterColor(vec3 viewDir, float dist, vec2 coord, float waterDepth, vec3 
 
   vec3 c = mix(water_color, river_color, river_amount);
 
-  vec3 refractionColor = 0.9 * c * smoothstep(0.1, 0.4, sunDir.z);
+  vec3 refractionColor = 0.9 * c ;// * smoothstep(0.1, 0.4, sunDir.z);
   
+  refractionColor *= calcWaterLight(normal);
+
 //   refractionColor *= 0;
 
   //extinction

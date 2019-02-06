@@ -42,8 +42,6 @@ namespace render_util
 
     void updateUniforms(ShaderProgramPtr program);
 
-    int getCurrentStep();
-    float getFrameDelta();
     void update();
     bool isEmpty();
   };

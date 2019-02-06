@@ -40,23 +40,49 @@ using namespace gl_wrapper::gl_functions;
 using namespace std;
 
 
+
+namespace
+{
+
+
+constexpr int NUM_LAYERS = 2;
+
+struct Layer
+{
+  const int step_duration_microseconds = 0;
+  int current_step = 0;
+  std::chrono::milliseconds delta_last_frame;
+
+  Clock::time_point last_step_time;
+  Clock::time_point next_step_time;
+
+  Layer(float fps) : step_duration_microseconds(1000 * (1000.f / fps))
+  {
+    last_step_time = Clock::now();
+    next_step_time = Clock::now() + std::chrono::microseconds(step_duration_microseconds);
+  }
+
+  float getFrameDelta() const
+  {
+    return  (float)delta_last_frame.count() / ((float)step_duration_microseconds / 1000.f);
+  }
+};
+
+
+} // namespace
+
+
 namespace render_util
 {
 
 
 struct WaterAnimation::Private
 {
-  const float fps = 4;
-  const int step_duration_microseconds =
-    1000 * (1000.f / fps);
+  array<Layer, NUM_LAYERS> layers { 2, 6 };
 
-  size_t current_step = 0;
   int num_animation_steps = 0;
 
-  Clock::time_point last_step_time = Clock::now();
-  Clock::time_point next_step_time =
-    Clock::now() + std::chrono::microseconds(step_duration_microseconds);
-  std::chrono::milliseconds delta_last_frame;
+  const Layer &getLayer(size_t index) { return layers.at(index); }
 
   void createTextures(MapTextures *map_textures,
                       const vector<ImageRGBA::ConstPtr> &normal_maps,
@@ -71,30 +97,27 @@ struct WaterAnimation::Private
 
   }
 
-  float getFrameDelta()
-  {
-    float delta =  (float)delta_last_frame.count() / ((float)step_duration_microseconds / 1000.f);
-//     std::cout<<delta<<'\n';
-//     std::cout<< (float)delta_last_frame.count() / 1000.f << '\n';
-//     delta = 0;
-    
-    return delta;
-  }
-  
+
   void update()
   {
     assert(num_animation_steps);
 
     Clock::time_point now = Clock::now();
-    if (now >= next_step_time) {
-      last_step_time = next_step_time;
-      next_step_time += std::chrono::microseconds(step_duration_microseconds);
-      current_step++;
-      current_step %= num_animation_steps;
+
+    for (Layer &l : layers)
+    {
+      if (now >= l.next_step_time)
+      {
+        l.last_step_time = l.next_step_time;
+        l.next_step_time += std::chrono::microseconds(l.step_duration_microseconds);
+        l.current_step++;
+        l.current_step %= num_animation_steps;
+      }
+
+      l.delta_last_frame =
+        std::chrono::duration_cast<std::chrono::milliseconds>(now - l.last_step_time);
     }
 
-    delta_last_frame =
-      std::chrono::duration_cast<std::chrono::milliseconds>(now - last_step_time);
   }
 
 };
@@ -114,26 +137,22 @@ void WaterAnimation::createTextures(MapTextures *map_textures,
   p->createTextures(map_textures, normal_maps, foam_masks);
 }
 
-int WaterAnimation::getCurrentStep()
-{ 
-  return p->current_step;
-}
-
 void WaterAnimation::update()
 {
   p->update();
 }
- 
+
 void WaterAnimation::updateUniforms(ShaderProgramPtr program)
 {
   program->setUniformi("water_animation_num_frames", p->num_animation_steps);
-  program->setUniformi("water_animation_pos", p->current_step);
-  program->setUniform<float>("waterAnimationFrameDelta", p->getFrameDelta());
-}
- 
-float WaterAnimation::getFrameDelta()
-{
-  return p->getFrameDelta();
+
+  for (int i = 0; i < NUM_LAYERS; i++)
+  {
+    string prefix = string("water_animation_params[") + to_string(i) + "].";
+
+    program->setUniformi(prefix + "pos", p->getLayer(i).current_step);
+    program->setUniform<float>(prefix + "frame_delta", p->getLayer(i).getFrameDelta());
+  }
 }
 
 bool WaterAnimation::isEmpty()

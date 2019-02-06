@@ -44,6 +44,8 @@ namespace render_util
   class ShaderProgram
   {
   public:
+    unsigned long long frame_nr = 0;
+
     ShaderProgram() {}
     ShaderProgram(const std::string &name,
                   const std::vector<std::string> &vertex_shaders,
