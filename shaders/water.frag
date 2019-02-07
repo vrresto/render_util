@@ -323,21 +323,15 @@ vec3 getWaterNormal(float dist, vec2 coord)
 {
   vec3 normal = vec3(0,0,1);
 #if ENABLE_WAVES
-  if (dist < 30000)
-  {
-    const float bigWaveStrength = 0.01;
-    const float mediumWaveStrength = 0.1;
-    const float smallWaveStrength = 0.1;
+  const float bigWaveStrength = 0.01;
+  const float mediumWaveStrength = 0.1;
+  const float smallWaveStrength = 0.1;
 
-    normal = blendNormal(normal, sampleWaterNormalMap(4, coord, 0), dist, 30000, mediumWaveStrength);
-    normal = blendNormal(normal, sampleWaterNormalMap(20, coord, 1), dist, 15000, smallWaveStrength);
+  normal = blendNormal(normal, sampleWaterNormalMap(4, coord, 0), dist, 30000, mediumWaveStrength);
+  normal = blendNormal(normal, sampleWaterNormalMap(20, coord, 1), dist, 15000, smallWaveStrength);
 //     normal = blendNormal(normal, sampleWaterNormalMap(140, coord), dist, 500, 0.1);
 
-    normal = normalize(normal);
-
-  //   normal.xy *= smoothstep(0.05, 1.0,  waterDepth);
-    normal = normalize(normal);
-  }
+  normal = normalize(normal);
 #endif
 
   return normal;
