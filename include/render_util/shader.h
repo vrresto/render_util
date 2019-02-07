@@ -45,6 +45,7 @@ namespace render_util
   {
   public:
     unsigned long long frame_nr = 0;
+    bool is_far_camera = false;
 
     ShaderProgram() {}
     ShaderProgram(const std::string &name,
