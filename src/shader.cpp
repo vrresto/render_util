@@ -227,6 +227,7 @@ GLuint createShader(const string &name,
 namespace render_util
 {
 
+
 int ShaderParameters::get(const std::string &name) const
 {
   auto it = m_map.find(name);
