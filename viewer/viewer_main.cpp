@@ -155,8 +155,9 @@ namespace
 
   void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
   {
+#if ENABLE_BASE_MAP
     auto base_map_origin_new = g_scene->base_map_origin;
-
+#endif
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
       glfwSetWindowShouldClose(window, true);
     }
@@ -193,6 +194,7 @@ namespace
     }
     else if (action == GLFW_PRESS && mods == GLFW_MOD_SHIFT)
     {
+#if ENABLE_BASE_MAP
       const int offset = 2000;
 
       switch (key)
@@ -210,9 +212,11 @@ namespace
           base_map_origin_new.y -= offset;
           break;
       }
+#endif
     }
     else if (action == GLFW_PRESS)
     {
+#if ENABLE_BASE_MAP
       const int offset = 20000;
 
       switch (key)
@@ -240,13 +244,15 @@ namespace
           g_scene->pause_animations = !g_scene->pause_animations;
           break;
       }
+#endif
     }
-
+#if ENABLE_BASE_MAP
     if (base_map_origin_new != g_scene->base_map_origin)
     {
       g_scene->base_map_origin = base_map_origin_new;
       cout<<endl<<"base_map_origin: "<<g_scene->base_map_origin.x<<","<<g_scene->base_map_origin.y<<endl;
     }
+#endif
   }
 
   void processInput(GLFWwindow *window, float frame_delta)
@@ -282,6 +288,7 @@ namespace
       dvec2 cursor_pos;
       glfwGetCursorPos(window, &cursor_pos.x, &cursor_pos.y);
 
+      assert(g_scene);
       g_scene->cursorPos(cursor_pos);
     }
 

@@ -96,13 +96,15 @@ public:
   const bool m_use_base_map = false;
   const bool m_use_base_water_map = false;
 
+#if ENABLE_BASE_MAP
+  glm::vec2 base_map_origin = glm::vec2(0);
+  glm::vec2 base_map_size_m = glm::vec2(0);
+#endif
+
   Camera camera;
   float sun_azimuth = 90.0;
   bool toggle_lod_morph = false;
   bool pause_animations = false;
-
-  glm::vec2 base_map_origin = glm::vec2(0);
-  glm::vec2 base_map_size_m = glm::vec2(0);
 
   Terrain m_terrain;
   Terrain m_terrain_cdlod;
@@ -150,7 +152,9 @@ public:
   {
     program->setUniform("sunDir", getSunDir());
     program->setUniform("toggle_lod_morph", toggle_lod_morph);
+#if ENABLE_BASE_MAP
     program->setUniform("height_map_base_origin", base_map_origin);
+#endif
     render_util::updateUniforms(program, camera);
   }
 

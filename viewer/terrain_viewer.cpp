@@ -116,9 +116,11 @@ class TerrainViewerScene : public Scene
 
   shared_ptr<render_util::MapLoaderBase> m_map_loader;
 
+#if ENABLE_BASE_MAP
   render_util::ImageGreyScale::Ptr m_base_map_land;
   render_util::TexturePtr m_base_map_land_texture;
   ElevationMap::Ptr m_elevation_map_base;
+#endif
 
   void updateUniforms(render_util::ShaderProgramPtr program) override;
   void updateBaseWaterMapTexture();
@@ -147,16 +149,19 @@ TerrainViewerScene::TerrainViewerScene(CreateMapLoaderFunc &create_map_loader)
 
 TerrainViewerScene::~TerrainViewerScene()
 {
+#if ENABLE_BASE_MAP
   auto land_map_flipped = image::flipY(m_base_map_land);
   saveImageToFile(RENDER_UTIL_CACHE_DIR "/base_map_land_editor.tga", land_map_flipped.get());
   std::ofstream s(RENDER_UTIL_CACHE_DIR "/base_map_origin_editor", ios_base::binary);
   s<<"BaseMapOriginX="<<base_map_origin.x<<endl;
   s<<"BaseMapOriginY="<<base_map_origin.y<<endl;
+#endif
 }
 
 
 void TerrainViewerScene::buildBaseMap()
 {
+#if ENABLE_BASE_MAP
   m_elevation_map_base = m_map_loader->createBaseElevationMap(m_base_map_land);
   base_map_size_m =
     glm::vec2(m_elevation_map_base->getSize() * (int)render_util::HEIGHT_MAP_BASE_METERS_PER_PIXEL);
@@ -167,25 +172,31 @@ void TerrainViewerScene::buildBaseMap()
   m_map->getTextures().bind(getTextureManager());
 
   updateBaseWaterMapTexture();
+#endif
 }
 
 
 void TerrainViewerScene::mark()
 {
+#if ENABLE_BASE_MAP
   m_base_map_land->at(mark_pixel_coords) = 255;
   updateBaseWaterMapTexture();
+#endif
 }
 
 
 void TerrainViewerScene::unmark()
 {
+#if ENABLE_BASE_MAP
   m_base_map_land->at(mark_pixel_coords) = 0;
   updateBaseWaterMapTexture();
+#endif
 }
 
 
 void TerrainViewerScene::cursorPos(const glm::dvec2 &pos)
 {
+#if ENABLE_BASE_MAP
   auto beam = camera.createBeamThroughViewportCoord(glm::vec2(pos));
 
   vec3 ground_plane_pos = vec3(0);
@@ -202,12 +213,15 @@ void TerrainViewerScene::cursorPos(const glm::dvec2 &pos)
   auto base_map_pos_relative = (glm::vec2(ground_plane_pos.x, ground_plane_pos.y) - base_map_origin) / base_map_size_m;
   mark_pixel_coords = base_map_pos_relative * glm::vec2(m_base_map_land->getSize());
   mark_pixel_coords = clamp(mark_pixel_coords, ivec2(0), m_base_map_land->getSize() - ivec2(1));
+#endif
 }
 
 
 void TerrainViewerScene::updateBaseWaterMapTexture()
 {
+#if ENABLE_BASE_MAP
   setTextureImage(m_base_map_land_texture, m_base_map_land);
+#endif
 }
 
 
@@ -220,20 +234,19 @@ void TerrainViewerScene::setup()
   curvature_map = render_util::createCurvatureTexture(getTextureManager(), cache_path);
   atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), cache_path);
 
-
   sky_program = createSkyProgram(getTextureManager());
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
 //   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
-  base_map_origin = m_map_loader->getBaseMapOrigin();
-
   m_map = m_map_loader->loadMap();
 
-  m_base_map_land = m_map_loader->createBaseLandMap();
-
   auto elevation_map = m_map_loader->createElevationMap();
-  m_elevation_map_base = m_map_loader->createBaseElevationMap(m_base_map_land);
 
+#if ENABLE_BASE_MAP
+  base_map_origin = m_map_loader->getBaseMapOrigin();
+  m_base_map_land = m_map_loader->createBaseLandMap();
+  m_elevation_map_base = m_map_loader->createBaseElevationMap(m_base_map_land);
+#endif
 
   assert(elevation_map);
   assert(!m_map->getWaterAnimation().isEmpty());
@@ -248,6 +261,7 @@ void TerrainViewerScene::setup()
 
   CHECK_GL_ERROR();
 
+#if ENABLE_BASE_MAP
   if (!m_base_map_land)
     m_base_map_land = image::create<unsigned char>(0, ivec2(128));
   m_base_map_land_texture =
@@ -255,6 +269,7 @@ void TerrainViewerScene::setup()
   getTextureManager().bind(TEXUNIT_WATER_MAP_BASE, m_base_map_land_texture);
 
   buildBaseMap();
+#endif
 
   CHECK_GL_ERROR();
   m_map->getTextures().bind(getTextureManager());
@@ -283,6 +298,7 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
   program->setUniform("terrain_height_offset", 0);
   program->setUniform("map_size", map_size);
 
+#if ENABLE_BASE_MAP
   auto base_map_size =
     m_elevation_map_base->w() * HEIGHT_MAP_BASE_METERS_PER_PIXEL;
 
@@ -293,6 +309,7 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
 
   program->setUniform("cursor_pos_ground", mark_coords_m);
   program->setUniform("land_map_meters_per_pixel", land_map_meters_per_pixel);
+#endif
 
   CHECK_GL_ERROR();
 }
