@@ -104,6 +104,8 @@ uniform ivec2 water_map_table_size;
 uniform vec4 shore_wave_scroll;
 uniform ivec2 typeMapSize;
 
+varying vec2 pass_texcoord;
+
 
 float calcSpecular(vec3 view_dir, vec3 normal, float hardness)
 {
@@ -317,7 +319,7 @@ vec3 sampleWaterNormalMap(float scale, vec2 coord, int layer)
 }
 
 
-vec3 getWaterNormal(float dist, vec2 coord, float waterDepth)
+vec3 getWaterNormal(float dist, vec2 coord)
 {
   vec3 normal = vec3(0,0,1);
 #if ENABLE_WAVES
@@ -351,7 +353,7 @@ vec3 getWaterColorSimple(vec3 viewDir, float dist)
   vec3 directLightColorLow = vec3(1.0, 0.6, 0.2);
   directLightColor = mix(directLightColorLow, directLightColor, smoothstep(-0.1, 0.4, sunDir.z));
 
-  vec3 normal = vec3(0,0,1);
+  vec3 normal = getWaterNormal(dist, pass_texcoord);
 
   float fresnel = fresnelSchlick(viewDir, normal, schlick_r0_water);
 
@@ -361,10 +363,11 @@ vec3 getWaterColorSimple(vec3 viewDir, float dist)
   specular = mix(specular * 0.5, specular, specularDetailFactor);
 
   vec3 envColor = vec3(0.65, 0.85, 1.0);
-  envColor = mix(envColor, vec3(0.7), 0.4);
+  envColor = mix(envColor, vec3(0.7), 0.6);
   envColor *= smoothstep(-0.1, 0.4, sunDir.z);
 
-  vec3 refractionColor = 0.9 * water_color * smoothstep(0.1, 0.4, sunDir.z);
+  vec3 refractionColor = 0.9 * water_color;
+  refractionColor *= calcWaterLight(normal);
 
   vec3 color = mix(refractionColor, envColor, fresnel);
   color += specular * directLightColor * directLight;
@@ -391,12 +394,10 @@ vec3 getWaterColor(vec3 viewDir, float dist, vec2 coord, float waterDepth, vec3 
 
   directLightColor = mix(directLightColorLow, directLightColor, smoothstep(-0.1, 0.4, sunDir.z));
 
-  vec3 color = vec3(0);
 
   float specularDetailFactor = exp(-3 * (dist/30000));
-  
+
   float fresnel = fresnelSchlick(viewDir, normal, schlick_r0_water);
-  
   float specHardness = mix(SPEC_HARDNESS * 0.4, SPEC_HARDNESS, specularDetailFactor);
   float specular = calcSpecular(viewDir, normal, specHardness);
   specular = mix(specular * 0.5, specular, specularDetailFactor);
@@ -404,9 +405,8 @@ vec3 getWaterColor(vec3 viewDir, float dist, vec2 coord, float waterDepth, vec3 
   vec3 envColor = vec3(0.65, 0.85, 1.0);
 //   envColor = mix(envColor, vec3(0.9), 0.4);
   envColor = mix(envColor, vec3(0.7), 0.6);
-
   envColor *= smoothstep(-0.1, 0.4, sunDir.z);
-  
+
 //   vec3 deepColor = texture2D(sampler_deep_water, coord * 2).xyz;
 //   vec3 deepColor = vec3(0.150, 0.225, 0.180);
 //   vec3 deepColor = vec3(0.165, 0.264, 0.233);
@@ -415,10 +415,7 @@ vec3 getWaterColor(vec3 viewDir, float dist, vec2 coord, float waterDepth, vec3 
   
   river_amount = 0;
 
-  vec3 c = mix(water_color, river_color, river_amount);
-
-  vec3 refractionColor = 0.9 * c ;// * smoothstep(0.1, 0.4, sunDir.z);
-  
+  vec3 refractionColor = 0.9 * mix(water_color, river_color, river_amount);
   refractionColor *= calcWaterLight(normal);
 
 //   refractionColor *= 0;
@@ -452,7 +449,7 @@ vec3 getWaterColor(vec3 viewDir, float dist, vec2 coord, float waterDepth, vec3 
 
 //   refractionColor *= calcWaterLight(normal);
 
-  color = mix(refractionColor, envColor, fresnel);
+  vec3 color = mix(refractionColor, envColor, fresnel);
   color += specular * directLightColor * directLight;
 
   return color;
@@ -688,7 +685,7 @@ vec4 applyWater(vec4 color,
   wave_strength = mix(wave_strength, wave_strength * 0.3, river_amount);
 #endif
 
-  vec3 water_normal = getWaterNormal(dist, mapCoords, waterDepth);
+  vec3 water_normal = getWaterNormal(dist, mapCoords);
 
 #if ENABLE_WAVE_FOAM
   float wave_foam_amount = getFoamAmountWithNoise(mapCoords * 2);
