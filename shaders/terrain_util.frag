@@ -334,32 +334,10 @@ vec4 applyForest(vec4 color, vec2 pos, vec3 view_dir, float dist)
 
 vec4 applyTerrainNoise(vec4 color, float dist)
 {
-//   const float noise_near_strength = 0.4;
-//   const float noise_far_strength = 0.2;
-//   const float noise_very_far_strength = 0.15;
-
   vec2 coords = pass_texcoord;
 
-  const float noise_strength = 1.0;
-  const float noise_near_strength = 0.4 * noise_strength;
-  const float noise_far_strength = 0.4 * noise_strength;
-  const float noise_very_far_strength = 0.4 * noise_strength;
-
-//   color.xyz = vec3(0.5);
-
-  float noise = sampleNoise(coords * 80);
-  float noise_blend = noise_near_strength * (1 - smoothstep(0, 1000, dist));
-
-//   float noise_far = sampleNoise(coords * 10);
-  float noise_far = sampleNoise(coords * 20);
-  float noise_far_blend = noise_far_strength * (1 - smoothstep(500, 2000, dist));
- 
-  float noise_very_far = sampleNoise(coords * 4);
-  float noise_very_far_blend = noise_very_far_strength * (1 - smoothstep(100, 4000, dist));
-
-  color = mix(color, color * noise_very_far, noise_very_far_blend);
-  color = mix(color, color * noise_far, noise_far_blend);
-  color = mix(color, color * noise, noise_blend);
+  color = mix(color, color * sampleNoise(coords * 32), 0.4 * (1 - smoothstep(500, 1000, dist)));
+  color = mix(color, color * sampleNoise(coords * 128), 0.4 * (1 - smoothstep(100, 200, dist)));
 
   return color;
 }
