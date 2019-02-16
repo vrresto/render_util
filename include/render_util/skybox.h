@@ -19,63 +19,14 @@
 #ifndef RENDER_UTIL_SKYBOX_H
 #define RENDER_UTIL_SKYBOX_H
 
+#include <render_util/draw_box.h>
+
 namespace render_util
 {
 
   inline void drawSkyBox()
   {
-    const int x = 0;
-    const int y = 0;
-    const int z = 0;
-    const int size = 10000;
-
-    // top
-    gl::Begin(GL_POLYGON);
-    gl::Vertex3f(  size+x, -size+y, size+z );
-    gl::Vertex3f(  size+x,  size+y, size+z );
-    gl::Vertex3f( -size+x,  size+y, size+z );
-    gl::Vertex3f( -size+x, -size+y, size+z );
-    gl::End();
-
-    // bottom
-    gl::Begin(GL_POLYGON);
-    gl::Vertex3f( -size+x, -size+y, -size+z );
-    gl::Vertex3f( -size+x,  size+y, -size+z );
-    gl::Vertex3f(  size+x,  size+y, -size+z );
-    gl::Vertex3f(  size+x, -size+y, -size+z );
-    gl::End();
-
-    // east
-    gl::Begin(GL_POLYGON);
-    gl::Vertex3f( size+x, -size+y, -size+z );
-    gl::Vertex3f( size+x,  size+y, -size+z );
-    gl::Vertex3f( size+x,  size+y,  size+z );
-    gl::Vertex3f( size+x, -size+y,  size+z );
-    gl::End();
-  
-    // west
-    gl::Begin(GL_POLYGON);
-    gl::Vertex3f( -size+x,  size+y,  size+z );
-    gl::Vertex3f( -size+x,  size+y, -size+z );
-    gl::Vertex3f( -size+x, -size+y, -size+z );    
-    gl::Vertex3f( -size+x, -size+y,  size+z );
-    gl::End();
-  
-    // north
-    gl::Begin(GL_POLYGON);
-    gl::Vertex3f(  size+x,  size+y,  size+z );
-    gl::Vertex3f(  size+x,  size+y, -size+z );
-    gl::Vertex3f( -size+x,  size+y, -size+z );
-    gl::Vertex3f( -size+x,  size+y,  size+z );
-    gl::End();
-  
-    // south
-    gl::Begin(GL_POLYGON);
-    gl::Vertex3f(  size+x, -size+y, -size+z );
-    gl::Vertex3f(  size+x, -size+y,  size+z );
-    gl::Vertex3f( -size+x, -size+y,  size+z );
-    gl::Vertex3f( -size+x, -size+y, -size+z );
-    gl::End();
+    drawBox(0, 0, 0, 10000);
   }
 
 }
