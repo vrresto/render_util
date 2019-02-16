@@ -40,7 +40,30 @@ inline bool isPrefix(const std::string &prefix, const std::string &s)
 }
 
 
-inline std::vector<std::string> tokenize(std::string in, char separator = ' ')
+inline std::string trim(const std::string &in)
+{
+  size_t start = in.find_first_not_of(" \t\n\r");
+  if (start == std::string::npos)
+    return {};
+
+  size_t end = in.find_last_not_of(" \t\n\r");
+  assert(end != std::string::npos);
+
+  if (start >= end+1)
+  {
+    std::cout<<"start: "<<start<<", end: "<<end<<std::endl;
+  }
+
+  assert(start < end+1);
+
+  size_t len = end+1 - start;
+  assert(len);
+
+  return std::move(in.substr(start, len));
+}
+
+
+inline std::vector<std::string> tokenize(std::string in, const std::string &separators = " \t\n\r")
 {
   std::vector<std::string> out;
 
@@ -57,7 +80,7 @@ inline std::vector<std::string> tokenize(std::string in, char separator = ' ')
       }
       break;
     }
-    else if (in[token_end] == separator)
+    else if (separators.find(in[token_end]) != std::string::npos)
     {
       if (token_len)
       {
@@ -75,6 +98,12 @@ inline std::vector<std::string> tokenize(std::string in, char separator = ' ')
   }
 
   return std::move(out);
+}
+
+
+inline std::vector<std::string> tokenize(std::string in, char separator)
+{
+  return std::move(tokenize(in, std::string {separator}));
 }
 
 
@@ -118,6 +147,41 @@ inline std::string basename(std::string path, bool remove_extension = false)
     path = path.substr(0, path.find_last_of('.'));
 
   return path;
+}
+
+
+inline std::string resolveRelativePathComponents(const std::string &path)
+{
+  auto components = tokenize(path, "/\\");
+  assert(!components.empty());
+
+  std::string resolved;
+
+  std::vector<std::string> new_components;
+
+  for (auto &component : components)
+  {
+    if (component == "..")
+    {
+      assert(!new_components.empty());
+      new_components.pop_back();
+    }
+    else
+    {
+      new_components.push_back(component);
+    }
+  }
+
+  assert(!new_components.empty());
+
+  for (auto &component : new_components)
+  {
+    if (!resolved.empty())
+      resolved += '/';
+    resolved += component;
+  }
+
+  return std::move(resolved);
 }
 
 
