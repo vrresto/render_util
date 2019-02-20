@@ -84,12 +84,12 @@ class Material;
 using MaterialID = render_util::TerrainBase::MaterialID;
 
 constexpr int METERS_PER_GRID = render_util::TerrainBase::GRID_RESOLUTION_M;
+constexpr float MIN_LOD_DIST = 40000;
 
 enum
 {
   LOD_LEVELS = 8,
   MESH_GRID_SIZE = 64,
-  MIN_LOD_DIST = 40000,
 
   HEIGHT_MAP_METERS_PER_GRID = 200,
 

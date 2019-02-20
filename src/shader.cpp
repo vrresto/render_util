@@ -481,6 +481,12 @@ void ShaderProgram::setUniformi(GLint location, GLint value)
   set_uniforms.insert(location);
 }
 
+void ShaderProgram::setUniform(int location, const bool &value)
+{
+  gl::ProgramUniform1i(id, location, value);
+  set_uniforms.insert(location);
+}
+
 void ShaderProgram::setUniform(GLint location, const GLfloat &value)
 {
   gl::ProgramUniform1f(id, location, value);

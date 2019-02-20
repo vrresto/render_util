@@ -133,6 +133,8 @@ namespace render_util
     void create();
     void assertIsValid();
     void setUniformi(int location, int);
+    void setUniform(int location, const int&);
+    void setUniform(int location, const bool&);
     void setUniform(int location, const float&);
     void setUniform(int location, const glm::vec2&);
     void setUniform(int location, const glm::vec3&);
