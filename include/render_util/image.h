@@ -131,20 +131,39 @@ inline RGBA vectorToPixel(glm::vec4 v)
 }
 
 
-template <typename T, int N = 1>
-class Image
+template <typename T, int N>
+struct ImageComponentsConst
 {
-public:
-  static const int BYTES_PER_PIXEL = sizeof(T) * N;
-  static const int NUM_COMPONENTS = N;
+  using ComponentType = T;
 
-  typedef std::shared_ptr<Image<T,N>> Ptr;
-  typedef std::shared_ptr<const Image<T,N>> ConstPtr;
-  typedef Pixel<T,N> PixelType;
-  typedef Image<T,N> Type;
-  typedef T ComponentType;
+  static constexpr int numComponents() { return N; }
+};
+
+
+template<typename T>
+struct ImageComponentsVarying
+{
+  using ComponentType = T;
+
+  ImageComponentsVarying(int num_components) : m_num_components(num_components) {}
+
+  int numComponents() const { return m_num_components; }
 
 private:
+  int m_num_components = 0;
+};
+
+
+template <class T>
+class ImageBase : public T
+{
+  using Base = T;
+
+public:
+  using typename Base::ComponentType;
+  static constexpr int BYTES_PER_COMPONENT = sizeof(ComponentType);
+
+protected:
   int _w = 0;
   int _h = 0;
   std::vector<unsigned char> _data;
@@ -153,119 +172,78 @@ private:
     return _w * _h;
   }
   unsigned sizeBytes() const {
-    return numPixels() * BYTES_PER_PIXEL;
+    return numPixels() * BYTES_PER_COMPONENT * Base::numComponents();
   }
 
-  unsigned getPixelIndex(unsigned x, unsigned y) const {
-    return (y * _w + x) ;
+  unsigned getPixelOffset(int x, int y) const {
+    return (y * _w + x) * BYTES_PER_COMPONENT * Base::numComponents();
   }
 
-  unsigned getPixelOffset(unsigned x, unsigned y) const {
-    return (y * _w + x) * BYTES_PER_PIXEL;
+  ComponentType *getPixel(int x, int y)
+  {
+    auto offset = getPixelOffset(x, y);
+    return reinterpret_cast<ComponentType*>(_data.data() + offset);
   }
-  
-  unsigned getPixelOffset(unsigned index) const {
-    assert(index < numPixels());
-    return index * BYTES_PER_PIXEL;
+
+  const ComponentType *getPixel(int x, int y) const
+  {
+    auto offset = getPixelOffset(x, y);
+    return reinterpret_cast<const ComponentType*>(_data.data() + offset);
   }
 
 public:
-  Image(int width, int height, unsigned data_size, const unsigned char *data = 0) {
-    _w = width;
-    _h = height;
-    assert(data_size == sizeBytes());
-    _data.resize(sizeBytes());
-    assert(_data.size() == sizeBytes());
-    if (data) {
-//         memcpy(_data.data(), data, _data.size());
-      for (size_t i = 0; i < _data.size(); i++) {
-//           std::cout<<i<<" of "<<_data.size()-1<<std::endl;
-//           fflush(stdout);
-        _data[i] = data[i];
-      }
-    }
-  }
-
-  Image(int width, int height, std::vector<unsigned char> &&data) :
-    _w(width),
-    _h(height),
-    _data(std::move(data))
+  template <typename...Args>
+  ImageBase(glm::ivec2 size, Args...args) : Base(args...)
   {
-    assert(_data.size() == sizeBytes());
-  }
-
-  Image(glm::ivec2 size) {
     _w = size.x;
     _h = size.y;
     _data.resize(sizeBytes());
   }
 
-  int numComponents() { return NUM_COMPONENTS; }
-
-  const PixelType &getPixel(const glm::ivec2 pos) const
+  template <typename...Args>
+  ImageBase(glm::ivec2 size, std::vector<unsigned char> &&data, Args...args) :
+    Base(args...),
+    _data(std::move(data))
   {
-    return getPixel(pos.x, pos.y);
+    _w = size.x;
+    _h = size.y;
+    assert(_data.size() == sizeBytes());
   }
 
-  const PixelType &getPixel(int x, int y) const
+  template <typename...Args>
+  ImageBase(glm::ivec2 size, const std::vector<ComponentType> &data, Args...args) :
+    Base(args...)
   {
-    assert(x >= 0);
-    assert(y >= 0);
-    assert(x < _w);
-    assert(y < _h);
-    return *reinterpret_cast<const PixelType*>(_data.data() + getPixelOffset(getPixelIndex(x,y)));
+    _w = size.x;
+    _h = size.y;
+    _data.resize(sizeBytes());
+
+    assert(_data.size() == data.size() * sizeof(ComponentType));
+    memcpy(reinterpret_cast<void*>(_data.data()),
+           reinterpret_cast<const void*>(data.data()), _data.size());
   }
 
-
-  void setPixel(glm::ivec2 pos, const PixelType &color)
+  ComponentType &at(int x, int y, size_t component = 0)
   {
-    setPixel(pos.x, pos.y, color);
+    assert(component < Base::numComponents());
+    return getPixel(x, y) [component];
   }
 
-  void setPixel(int x, int y, const PixelType &color)
+  ComponentType &at(const glm::ivec2 &pos, size_t component = 0)
   {
-    assert(x >= 0);
-    assert(y >= 0);
-    assert(x < _w);
-    assert(y < _h);
-    *reinterpret_cast<PixelType*>(_data.data() + getPixelOffset(getPixelIndex(x,y))) = color;
+    return at(pos.x, pos.y, component);
   }
 
-
-  PixelType &pixelAt(int x, int y)
+  const ComponentType &get(int x, int y, size_t component = 0) const
   {
-    assert(x >= 0);
-    assert(y >= 0);
-    assert(x < _w);
-    assert(y < _h);
-    return *reinterpret_cast<PixelType*>(_data.data() + getPixelOffset(getPixelIndex(x,y)));
+    assert(component < Base::numComponents());
+    return getPixel(x, y) [component];
   }
 
-  PixelType &pixelAt(const glm::ivec2 &pos)
+  const ComponentType &get(const glm::ivec2 &pos, size_t component = 0) const
   {
-    return pixelAt(pos.x, pos.y);
+    return get(pos.x, pos.y, component);
   }
-
-  T &at(int x, int y, size_t component = 0)
-  {
-    return pixelAt(x,y)[component];
-  }
-
-  T &at(const glm::ivec2 &pos, size_t component = 0)
-  {
-    return pixelAt(pos)[component];
-  }
-
-  const T &get(int x, int y, size_t component = 0) const
-  {
-    return getPixel(x,y)[component];
-  }
-
-  const T &get(const glm::ivec2 &pos, size_t component = 0) const
-  {
-    return getPixel(pos)[component];
-  }
-
 
   template <class F>
   void forEach(F func)
@@ -274,7 +252,7 @@ public:
     {
       for (int x = 0; x < w(); x++)
       {
-        for (int i = 0; i < NUM_COMPONENTS; i++)
+        for (int i = 0; i < Base::numComponents(); i++)
         {
           func(at(x,y,i));
         }
@@ -285,7 +263,7 @@ public:
   template <class F>
   void forEach(int component, F func)
   {
-    assert(component < NUM_COMPONENTS);
+    assert(component < Base::numComponents());
     for (int y = 0; y < h(); y++)
     {
       for (int x = 0; x < w(); x++)
@@ -294,7 +272,6 @@ public:
       }
     }
   }
-
 
   int w() const { return _w; }
   int h() const { return _h; }
@@ -307,11 +284,62 @@ public:
   const unsigned char *getData() const { return _data.data(); }
   const unsigned char *data() const { return getData(); }
   unsigned dataSize() const { return _data.size(); }
+  const std::vector<unsigned char> &getDataContainer() const { return _data; }
+
   glm::ivec2 size() const { return glm::ivec2(_w, _h); }
   glm::ivec2 getSize() const { return size(); }
 };
 
 
+template <typename T, int N = 1>
+class Image : public ImageBase<ImageComponentsConst<T,N>>
+{
+  static_assert(N >= 1);
+  using Base = ImageBase<ImageComponentsConst<T,N>>;
+
+public:
+  using PixelType = Pixel<T,N>;
+  using Ptr =std::shared_ptr<Image<T,N>>;
+  using ConstPtr = std::shared_ptr<const Image<T,N>>;
+
+  static constexpr int BYTES_PER_PIXEL = sizeof(T) * N;
+  static constexpr int NUM_COMPONENTS = N;
+
+  Image(glm::ivec2 size) : Base(size) {}
+  Image(glm::ivec2 size, std::vector<unsigned char> &&data) : Base(size, data) {}
+  Image(glm::ivec2 size, const std::vector<T> &data) : Base(size, data) {}
+
+  const PixelType &getPixel(const glm::ivec2 pos) const
+  {
+    return getPixel(pos.x, pos.y);
+  }
+
+  const PixelType &getPixel(int x, int y) const
+  {
+    assert(x >= 0);
+    assert(y >= 0);
+    assert(x < Base::_w);
+    assert(y < Base::_h);
+    return *reinterpret_cast<const PixelType*>(Base::getPixel(x, y));
+  }
+
+  void setPixel(glm::ivec2 pos, const PixelType &color)
+  {
+    setPixel(pos.x, pos.y, color);
+  }
+
+  void setPixel(int x, int y, const PixelType &color)
+  {
+    assert(x >= 0);
+    assert(y >= 0);
+    assert(x < Base::_w);
+    assert(y < Base::_h);
+    *reinterpret_cast<PixelType*>(Base::getPixel(x, y)) = color;
+  }
+};
+
+
+typedef ImageBase<ImageComponentsVarying<unsigned char>> GenericImage;
 typedef Image<unsigned char, 1> ImageGreyScale;
 typedef Image<unsigned char, 3> ImageRGB;
 typedef Image<unsigned char, 4> ImageRGBA;

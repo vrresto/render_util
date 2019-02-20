@@ -28,6 +28,39 @@
 #include "stb_image.h"
 
 bool render_util::loadImageFromMemory(const std::vector<char> &data_in,
+                          std::vector<unsigned char> &data_out,
+                          int &width,
+                          int &height,
+                          int &num_channels)
+{
+  // num_channels forces the number of channels in the returned data
+  // so channels_in_file can be safely ingnored
+  unsigned char *image_data =
+    stbi_load_from_memory(reinterpret_cast<const unsigned char*>(data_in.data()),
+                          data_in.size(),
+                          &width,
+                          &height,
+                          &num_channels,
+                          0);
+
+  if (image_data)
+  {
+    data_out.resize(width * height * num_channels);
+    memcpy(data_out.data(), image_data, data_out.size());
+
+    stbi_image_free(image_data);
+    image_data = 0;
+
+    return true;
+  }
+  else
+  {
+    std::cout << "error loading image: " << stbi_failure_reason() << std::endl;
+    return false;
+  }
+}
+
+bool render_util::loadImageFromMemory(const std::vector<char> &data_in,
                           int num_channels,
                           std::vector<unsigned char> &data_out,
                           int &width,

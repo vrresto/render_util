@@ -20,7 +20,9 @@
 #define RENDER_UTIL_IMAGE_LOADER_H
 
 #include <util.h>
+#include <render_util/image.h>
 
+#include <glm/glm.hpp>
 #include <string>
 #include <vector>
 #include <memory>
@@ -35,6 +37,13 @@ namespace render_util
                            std::vector<unsigned char> &data_out,
                            int &width,
                            int &height);
+
+  bool loadImageFromMemory(const std::vector<char> &data_in,
+                           std::vector<unsigned char> &data_out,
+                           int &width,
+                           int &height,
+                           int &num_channels);
+
 
   bool saveImage(const std::string &file_path,
                  int num_channels,
@@ -52,7 +61,21 @@ namespace render_util
     int width = 0, height = 0;
     if (loadImageFromMemory(data, T::BYTES_PER_PIXEL, image_data, width, height))
     {
-      return std::make_shared<T>(width, height, std::move(image_data));
+      return std::make_shared<T>(glm::ivec2(width, height), std::move(image_data));
+    }
+    else
+    {
+      return {};
+    }
+  }
+
+  inline std::shared_ptr<GenericImage> loadImageFromMemory(const std::vector<char> &data)
+  {
+    std::vector<unsigned char> image_data;
+    int width = 0, height = 0, num_channels = 0;
+    if (loadImageFromMemory(data, image_data, width, height, num_channels))
+    {
+      return std::make_shared<GenericImage>(glm::ivec2(width, height), std::move(image_data), num_channels);
     }
     else
     {

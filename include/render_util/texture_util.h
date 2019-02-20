@@ -97,6 +97,18 @@ namespace render_util
 //                          render_util::Image<T>::BYTES_PER_PIXEL,
 //                          mipmaps);
 //   }
+
+
+  inline TexturePtr createTexture(std::shared_ptr<const GenericImage> image, bool mipmaps = true)
+  {
+    return createTexture(image->data(),
+                         image->w(),
+                         image->h(),
+                         image->numComponents(),
+                         mipmaps);
+  }
+
+
   template <typename T>
   TexturePtr createTexture(typename T::ConstPtr image, bool mipmaps = true)
   {

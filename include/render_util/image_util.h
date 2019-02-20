@@ -50,10 +50,8 @@ template <typename T>
 typename TypeFromPtr<T>::Ptr
 clone(T image)
 {
-  return std::make_shared<typename TypeFromPtr<T>::Type>(image->w(),
-                                                         image->h(),
-                                                         image->dataSize(),
-                                                         image->getData());
+  return std::make_shared<typename TypeFromPtr<T>::Type>(image->getSize(),
+                                                         image->getDataContainer());
 }
 
 
