@@ -53,29 +53,6 @@ using std::endl;
 using std::vector;
 
 
-namespace render_util
-{
-  class TerrainCDLOD : public TerrainBase
-  {
-    struct Private;
-    Private *p = 0;
-
-  public:
-    TerrainCDLOD(TextureManager&, std::string);
-    ~TerrainCDLOD() override;
-
-    const std::string &getName() override;
-    void build(ElevationMap::ConstPtr map, MaterialMap::ConstPtr material_map) override;
-    void draw(TerrainBase::Client *client) override;
-    void update(const Camera &camera, bool low_detail) override;
-    void setDrawDistance(float dist) override;
-    void setBaseElevationMap(ElevationMap::ConstPtr map) override;
-    render_util::TexturePtr getNormalMapTexture() override;
-    void setShaderParameters(const ShaderParameters&) override;
-  };
-}
-
-
 namespace
 {
 
@@ -493,7 +470,7 @@ namespace render_util
 {
 
 
-struct TerrainCDLOD::Private
+class TerrainCDLOD : public TerrainBase
 {
   TextureManager &texture_manager;
 
@@ -523,17 +500,28 @@ struct TerrainCDLOD::Private
 
   std::unordered_map<unsigned int, std::unique_ptr<Material>> materials;
 
-  Private(TextureManager&, std::string);
-  ~Private();
   void processNode(Node *node, int lod_level, const Camera &camera, bool low_detail);
   void drawInstanced(TerrainBase::Client *client);
   Node *createNode(const render_util::ElevationMap &map, dvec2 pos, int lod_level, MaterialMap::ConstPtr material_map);
   void setUniforms(ShaderProgramPtr program);
   Material *getMaterial(unsigned int id);
+
+public:
+  TerrainCDLOD(TextureManager&, std::string);
+  ~TerrainCDLOD() override;
+
+  const std::string &getName() override;
+  void build(ElevationMap::ConstPtr map, MaterialMap::ConstPtr material_map) override;
+  void draw(TerrainBase::Client *client) override;
+  void update(const Camera &camera, bool low_detail) override;
+  void setDrawDistance(float dist) override;
+  void setBaseElevationMap(ElevationMap::ConstPtr map) override;
+  render_util::TexturePtr getNormalMapTexture() override;
+  void setShaderParameters(const ShaderParameters&) override;
 };
 
 
-TerrainCDLOD::Private::~Private()
+TerrainCDLOD::~TerrainCDLOD()
 {
   render_list.clear();
 
@@ -550,7 +538,7 @@ TerrainCDLOD::Private::~Private()
 }
 
 
-TerrainCDLOD::Private::Private(TextureManager &tm, std::string shader_path) :
+TerrainCDLOD::TerrainCDLOD(TextureManager &tm, std::string shader_path) :
   texture_manager(tm),
   shader_path(shader_path)
 {
@@ -597,7 +585,7 @@ TerrainCDLOD::Private::Private(TextureManager &tm, std::string shader_path) :
 }
 
 
-Material *TerrainCDLOD::Private::getMaterial(unsigned int id)
+Material *TerrainCDLOD::getMaterial(unsigned int id)
 {
   auto it = materials.find(id);
   if (it != materials.end())
@@ -611,7 +599,7 @@ Material *TerrainCDLOD::Private::getMaterial(unsigned int id)
 }
 
 
-void TerrainCDLOD::Private::setUniforms(ShaderProgramPtr program)
+void TerrainCDLOD::setUniforms(ShaderProgramPtr program)
 {
   program->setUniform("terrain_resolution_m", (float)METERS_PER_GRID);
 
@@ -627,7 +615,7 @@ void TerrainCDLOD::Private::setUniforms(ShaderProgramPtr program)
 }
 
 
-Node *TerrainCDLOD::Private::createNode(const render_util::ElevationMap &map,
+Node *TerrainCDLOD::createNode(const render_util::ElevationMap &map,
                                         dvec2 pos,
                                         int lod_level,
                                         MaterialMap::ConstPtr material_map)
@@ -678,7 +666,7 @@ Node *TerrainCDLOD::Private::createNode(const render_util::ElevationMap &map,
 }
 
 
-void TerrainCDLOD::Private::processNode(Node *node, int lod_level, const Camera &camera, bool low_detail)
+void TerrainCDLOD::processNode(Node *node, int lod_level, const Camera &camera, bool low_detail)
 {
   auto camera_pos = camera.getPos();
 
@@ -723,7 +711,7 @@ void TerrainCDLOD::Private::processNode(Node *node, int lod_level, const Camera 
 }
 
 
-void TerrainCDLOD::Private::drawInstanced(TerrainBase::Client *client)
+void TerrainCDLOD::drawInstanced(TerrainBase::Client *client)
 {
   if (render_list.isEmpty())
     return;
@@ -768,33 +756,23 @@ void TerrainCDLOD::Private::drawInstanced(TerrainBase::Client *client)
 }
 
 
-TerrainCDLOD::TerrainCDLOD(TextureManager &tm, std::string shader_path) :
-  p(new Private(tm, shader_path)) {}
-
-
-TerrainCDLOD::~TerrainCDLOD()
-{
-  delete p;
-}
-
-
 void TerrainCDLOD::build(ElevationMap::ConstPtr map, MaterialMap::ConstPtr material_map)
 {
   CHECK_GL_ERROR();
 
   assert(material_map);
-  assert(!p->root_node);
-  assert(!p->normal_map_texture);
+  assert(!root_node);
+  assert(!normal_map_texture);
 
-  p->normal_map_texture = createNormalMapTexture(map, HEIGHT_MAP_METERS_PER_GRID);
+  normal_map_texture = createNormalMapTexture(map, HEIGHT_MAP_METERS_PER_GRID);
 
   CHECK_GL_ERROR();
 
   cout<<"TerrainCDLOD: creating nodes ..."<<endl;
-  p->root_node = p->createNode(*map, p->root_node_pos, MAX_LOD, processMaterialMap(material_map));
+  root_node = createNode(*map, root_node_pos, MAX_LOD, processMaterialMap(material_map));
   cout<<"TerrainCDLOD: creating nodes done."<<endl;
 
-  assert(!p->height_map_texture);
+  assert(!height_map_texture);
   cout<<"TerrainCDLOD: creating height map texture ..."<<endl;
 
   auto hm_image = map;
@@ -803,9 +781,9 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map, MaterialMap::ConstPtr mater
   if (new_size != hm_image->size())
     hm_image = image::extend(hm_image, new_size, 0.f, image::TOP_LEFT);
 
-  p->height_map_size_px = hm_image->size();
+  height_map_size_px = hm_image->size();
 
-  p->height_map_texture = createHeightMapTexture(hm_image);
+  height_map_texture = createHeightMapTexture(hm_image);
 
   cout<<"TerrainCDLOD: done buildding terrain."<<endl;
 }
@@ -813,25 +791,25 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map, MaterialMap::ConstPtr mater
 
 void TerrainCDLOD::update(const Camera &camera, bool low_detail)
 {
-  assert(p->root_node);
+  assert(root_node);
 
-  p->render_list.clear();
+  render_list.clear();
 
-  p->processNode(p->root_node, MAX_LOD, camera, low_detail);
+  processNode(root_node, MAX_LOD, camera, low_detail);
 
   const int buffer_elements = getNumLeafNodes();
   const int buffer_size = sizeof(RenderBatch::NodePos) * buffer_elements;
 
   size_t buffer_pos = 0;
 
-  gl::BindBuffer(GL_ARRAY_BUFFER, p->node_pos_buffer_id);
+  gl::BindBuffer(GL_ARRAY_BUFFER, node_pos_buffer_id);
 
   gl::BufferData(GL_ARRAY_BUFFER, buffer_size, 0, GL_STREAM_DRAW);
 
   RenderBatch::NodePos *buffer = (RenderBatch::NodePos*) gl::MapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
   assert(buffer);
 
-  for (auto batch : p->render_list.getBatches())
+  for (auto batch : render_list.getBatches())
   {
     batch->node_pos_buffer_offset = buffer_pos;
 
@@ -861,21 +839,21 @@ void TerrainCDLOD::update(const Camera &camera, bool low_detail)
 
 render_util::TexturePtr TerrainCDLOD::getNormalMapTexture()
 {
-  return p->normal_map_texture;
+  return normal_map_texture;
 }
 
 
 void TerrainCDLOD::draw(Client *client)
 {
-  p->texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP, p->normal_map_texture);
-  p->texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP, p->height_map_texture);
+  texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP, normal_map_texture);
+  texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP, height_map_texture);
 
-  if (p->normal_map_base_texture)
-    p->texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, p->normal_map_base_texture);
-  if (p->height_map_base_texture)
-    p->texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, p->height_map_base_texture);
+  if (normal_map_base_texture)
+    texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, normal_map_base_texture);
+  if (height_map_base_texture)
+    texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, height_map_base_texture);
 
-  p->drawInstanced(client);
+  drawInstanced(client);
 
   CHECK_GL_ERROR();
 }
@@ -890,21 +868,21 @@ const std::string &render_util::TerrainCDLOD::getName()
 
 void TerrainCDLOD::setDrawDistance(float dist)
 {
-  p->draw_distance = dist;
+  draw_distance = dist;
 }
 
 
 void TerrainCDLOD::setBaseElevationMap(ElevationMap::ConstPtr map)
 {
-  p->height_map_base_size_px = map->size();
-  p->height_map_base_texture = createHeightMapTexture(map);
-  p->normal_map_base_texture = createNormalMapTexture(map, HEIGHT_MAP_BASE_METERS_PER_PIXEL);
+  height_map_base_size_px = map->size();
+  height_map_base_texture = createHeightMapTexture(map);
+  normal_map_base_texture = createNormalMapTexture(map, HEIGHT_MAP_BASE_METERS_PER_PIXEL);
 }
 
 
 void TerrainCDLOD::setShaderParameters(const ShaderParameters &params)
 {
-  p->shader_parameters = params;
+  shader_parameters = params;
 }
 
 const TerrainFactory g_terrain_cdlod_factory = makeTerrainFactory<TerrainCDLOD>();
