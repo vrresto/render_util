@@ -85,6 +85,12 @@ namespace render_util
       m_center = origin + extent / 2.f;
       updateCornerPoints();
     }
+
+    float getShortestDistance(const glm::vec3 &pos) const
+    {
+      auto d = max(glm::abs(pos - getCenter()) - getSize() / 2.f, glm::vec3(0));
+      return length(d);
+    }
   };
 
 
