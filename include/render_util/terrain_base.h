@@ -48,6 +48,7 @@ namespace render_util
     };
 
     using MaterialMap = Image<unsigned int>;
+    using TypeMap = ImageGreyScale;
 
     struct Client
     {

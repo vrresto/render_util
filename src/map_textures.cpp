@@ -109,6 +109,17 @@ public:
 };
 
 
+int getTerrainTextureArrayIndex(int size)
+{
+  constexpr double SMALLEST_SIZE = 256;
+
+  int index = glm::log2(double(size)) - glm::log2(SMALLEST_SIZE);
+  assert(index >= 0);
+  assert(index < MAX_TERRAIN_TEXUNITS);
+  return index;
+}
+
+
 TexturePtr createNoiseTexture()
 {
   auto image = image::create<unsigned char>(0, glm::ivec2(2048));
@@ -320,22 +331,6 @@ void render_util::MapTextures::setUniforms(ShaderProgramPtr program)
 // 
 
 
-void render_util::MapTextures::setTextures(const std::vector<ImageRGBA::ConstPtr> &textures,
-                                           size_t index)
-{
-  CHECK_GL_ERROR();
-
-  auto texunit = TEXUNIT_TERRAIN + index;
-  assert(texunit < TEXUNIT_NUM);
-
-  p->shader_params.set(string( "enable_terrain") + to_string(index), true);
-
-  p->m_material->setTexture(texunit, render_util::createTextureArray<ImageRGBA>(textures));
-
-  CHECK_GL_ERROR();
-}
-
-
 void render_util::MapTextures::setWaterMap(const std::vector<ImageGreyScale::ConstPtr> &chunks,
                                       Image<unsigned int>::ConstPtr table)
 {
@@ -358,7 +353,7 @@ void render_util::MapTextures::setWaterMap(const std::vector<ImageGreyScale::Con
                                 table_float->w(),
                                 table_float->h(),
                                 1);
-  
+
   TextureParameters<int> table_params;
   table_params.set(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   table_params.set(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -367,21 +362,6 @@ void render_util::MapTextures::setWaterMap(const std::vector<ImageGreyScale::Con
   table_params.apply(table_texture);
 
   p->m_material->setTexture(TEXUNIT_WATER_MAP_TABLE, table_texture);
-}
-
-
-void render_util::MapTextures::setTypeMap(ImageRGBA::ConstPtr type_map)
-{
-  p->type_map_size = type_map->size();
-  TexturePtr t = createTexture<ImageRGBA>(type_map, false);
-//   TexturePtr t = createTexture<ImageGreyScale>(type_map, true);
-  TextureParameters<int> params;
-  params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-  params.set(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  params.set(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  params.apply(t);
-  p->m_material->setTexture(TEXUNIT_TYPE_MAP, t);
 }
 
 
@@ -438,6 +418,103 @@ void render_util::MapTextures::setForestLayers(const std::vector<ImageRGBA::Cons
   params.apply(texture);
 
   p->m_material->setTexture(TEXUNIT_FOREST_LAYERS, texture);
+}
+
+
+void render_util::MapTextures::setTerrainTextures(const std::vector<ImageRGBA::ConstPtr> &textures,
+                                                  const std::vector<float> &texture_scale,
+                                                  TerrainBase::TypeMap::ConstPtr type_map_)
+{
+  using namespace glm;
+
+  using TextureArray = vector<ImageRGBA::ConstPtr>;
+
+  std::array<TextureArray, MAX_TERRAIN_TEXUNITS> texture_arrays;
+  map<unsigned, glm::uvec3> mapping;
+
+  for (int i = 0; i < textures.size(); i++)
+  {
+    float scale = texture_scale.at(i);
+    assert(scale != 0);
+    assert(fract(scale) == 0);
+    assert(scale <= MAX_TERRAIN_TEXTURE_SCALE);
+    scale += 128;
+    assert(scale >= 0);
+    assert(scale <= 255);
+
+    auto image = textures.at(i);
+
+    auto index = getTerrainTextureArrayIndex(image->w());
+    assert(index < MAX_TERRAIN_TEXUNITS);
+    texture_arrays[index].push_back(image);
+    mapping.insert(make_pair(i, glm::uvec3{index, texture_arrays[index].size()-1, scale}));
+  }
+
+  auto type_map = make_shared<ImageRGBA>(type_map_->getSize());
+
+  for (int y = 0; y < type_map->h(); y++)
+  {
+    for (int x = 0; x < type_map->w(); x++)
+    {
+      unsigned int orig_index = type_map_->get(x,y) & 0x1F;
+
+      uvec3 new_index{0};
+
+      try
+      {
+        new_index = mapping.at(orig_index);
+      }
+      catch(...)
+      {
+        for (int i = 0; i < 4; i++)
+        {
+          try
+          {
+            new_index = mapping.at(orig_index - (orig_index % 4) + i);
+            break;
+          }
+          catch(...) {}
+        }
+      }
+
+      assert(new_index.y <= 0x1F+1);
+      type_map->at(x,y,0) = new_index.x;
+      type_map->at(x,y,1) = new_index.y;
+      type_map->at(x,y,2) = new_index.z;
+      type_map->at(x,y,3) = 255;
+    }
+  }
+
+  {
+    p->type_map_size = type_map->size();
+    TexturePtr t = createTexture<ImageRGBA>(type_map, false);
+    TextureParameters<int> params;
+    params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    params.set(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    params.set(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    params.apply(t);
+    p->m_material->setTexture(TEXUNIT_TYPE_MAP, t);
+  }
+
+  for (int i = 0; i < texture_arrays.size(); i++)
+  {
+    CHECK_GL_ERROR();
+
+    auto &textures = texture_arrays.at(i);
+    if (textures.empty())
+      continue;
+
+    auto texunit = TEXUNIT_TERRAIN + i;
+    assert(texunit < TEXUNIT_NUM);
+
+    p->shader_params.set(string( "enable_terrain") + to_string(i), true);
+
+    p->m_material->setTexture(texunit, render_util::createTextureArray<ImageRGBA>(textures));
+
+    CHECK_GL_ERROR();
+  }
+
 }
 
 

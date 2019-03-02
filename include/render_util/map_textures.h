@@ -24,6 +24,7 @@
 #include <render_util/texture_util.h>
 #include <render_util/image.h>
 #include <render_util/shader.h>
+#include <render_util/terrain_base.h>
 
 #include <glm/glm.hpp>
 
@@ -46,15 +47,16 @@ namespace render_util
     const ShaderParameters &getShaderParameters();
 
     void setWaterColor(const glm::vec3 &color);
-    void setTypeMap(ImageRGBA::ConstPtr type_map);
     void setWaterTypeMap(ImageGreyScale::ConstPtr type_map);
     void setBeach(std::vector<ImageRGBA::ConstPtr> textures);
 
     void setForestMap(ImageGreyScale::ConstPtr texture);
     void setForestLayers(const std::vector<ImageRGBA::ConstPtr> &textures);
 
-    void setTextures(const std::vector<ImageRGBA::ConstPtr> &textures,
-                     size_t index = 0);
+    void setTerrainTextures(const std::vector<ImageRGBA::ConstPtr> &textures,
+                            const std::vector<float> &texture_scale,
+                            TerrainBase::TypeMap::ConstPtr type_map);
+
 
     void setWaterMap(const std::vector<ImageGreyScale::ConstPtr> &chunks,
                      Image<unsigned int>::ConstPtr table);
