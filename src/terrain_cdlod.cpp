@@ -23,6 +23,7 @@
  */
 
 #include "grid_mesh.h"
+#include "terrain_cdlod_base.h"
 #include <render_util/terrain_cdlod.h>
 #include <render_util/texture_manager.h>
 #include <render_util/texunits.h>
@@ -48,6 +49,7 @@
 using namespace render_util::gl_binding;
 using namespace glm;
 using render_util::TexturePtr;
+using render_util::TerrainCDLODBase;
 using std::cout;
 using std::endl;
 using std::vector;
@@ -61,55 +63,6 @@ class Material;
 
 using MaterialID = render_util::TerrainBase::MaterialID;
 using BoundingBox = render_util::Box;
-
-constexpr int METERS_PER_GRID = render_util::TerrainBase::GRID_RESOLUTION_M;
-constexpr float MIN_LOD_DIST = 40000;
-
-enum
-{
-  LOD_LEVELS = 8,
-  MESH_GRID_SIZE = 64,
-
-  HEIGHT_MAP_METERS_PER_GRID = 200,
-
-  LEAF_NODE_SIZE = MESH_GRID_SIZE * METERS_PER_GRID,
-
-  MAX_LOD = LOD_LEVELS,
-};
-
-
-constexpr size_t getNumLeafNodes()
-{
-  return pow(4, (size_t)LOD_LEVELS);
-}
-
-
-constexpr float getLodLevelDist(int lod_level)
-{
-  return MIN_LOD_DIST * pow(2, lod_level);
-}
-
-
-float getMaxHeight(const render_util::ElevationMap &map, vec2 pos, float size)
-{
-  return 4000.0;
-}
-
-
-constexpr double getNodeSize(int lod_level)
-{
-  return pow(2, lod_level) * LEAF_NODE_SIZE;
-}
-
-
-constexpr double getNodeScale(int lod_level)
-{
-  return pow(2, lod_level);
-}
-
-
-static_assert(getNodeSize(0) == LEAF_NODE_SIZE);
-static_assert(getNodeScale(0) == 1);
 
 
 struct DetailOption
@@ -330,57 +283,6 @@ public:
 };
 
 
-TexturePtr createNormalMapTexture(render_util::ElevationMap::ConstPtr map, int meters_per_grid)
-{
-  using namespace render_util;
-
-  cout<<"TerrainCDLOD: creating normal map ..."<<endl;
-  auto normal_map = createNormalMap(map, meters_per_grid);
-  cout<<"TerrainCDLOD: creating normal map done."<<endl;
-
-  auto normal_map_texture =
-    createFloatTexture(reinterpret_cast<const float*>(normal_map->getData()),
-                      map->getWidth(),
-                      map->getHeight(),
-                      3);
-  cout<<"TerrainCDLOD: creating normal map  texture done."<<endl;
-
-  TextureParameters<int> params;
-  params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-  params.apply(normal_map_texture);
-
-  TextureParameters<glm::vec4> params_vec4;
-  params_vec4.set(GL_TEXTURE_BORDER_COLOR, glm::vec4(0,0,1,0));
-  params_vec4.apply(normal_map_texture);
-
-  return normal_map_texture;
-}
-
-
-TexturePtr createHeightMapTexture(render_util::ElevationMap::ConstPtr hm_image)
-{
-  using namespace render_util;
-
-  cout<<"TerrainCDLOD: creating height map texture ..."<<endl;
-
-  auto height_map_texture = createFloatTexture(hm_image, true);
-  assert(height_map_texture);
-  CHECK_GL_ERROR();
-
-  TextureParameters<int> params;
-  params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  params.set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-  params.apply(height_map_texture);
-
-  CHECK_GL_ERROR();
-
-  return height_map_texture;
-}
-
-
 unsigned int gatherMaterials(render_util::TerrainBase::MaterialMap::ConstPtr map,
                              uvec2 begin,
                              uvec2 size)
@@ -414,15 +316,15 @@ processMaterialMap(render_util::TerrainBase::MaterialMap::ConstPtr in)
   if (!in)
     return {};
 
-  uvec2 new_size = uvec2(in->getSize()) / (unsigned int)MESH_GRID_SIZE;
+  uvec2 new_size = uvec2(in->getSize()) / TerrainCDLODBase::MESH_GRID_SIZE;
   auto resized = std::make_shared<render_util::TerrainBase::MaterialMap>(new_size);
 
   for (int y = 0; y < resized->h(); y++)
   {
     for (int x = 0; x < resized->w(); x++)
     {
-      uvec2 src_coords = uvec2(x,y) * (unsigned int)MESH_GRID_SIZE;
-      uvec2 size = uvec2((unsigned int)MESH_GRID_SIZE + 1);
+      uvec2 src_coords = uvec2(x,y) * TerrainCDLODBase::MESH_GRID_SIZE;
+      uvec2 size = uvec2(TerrainCDLODBase::MESH_GRID_SIZE + 1);
       if (src_coords.x > 0)
       {
         src_coords.x -= 1;
@@ -446,7 +348,7 @@ unsigned int getMaterialID(render_util::TerrainBase::MaterialMap::ConstPtr mater
 {
   if (material_map)
   {
-    const uvec2 grid_pos = uvec2(node_origin) / (unsigned int)LEAF_NODE_SIZE;
+    const uvec2 grid_pos = uvec2(node_origin) / (unsigned int)TerrainCDLODBase::LEAF_NODE_SIZE;
 
     if (node_origin.x < 0 || node_origin.y < 0)
       return MaterialID::WATER;
@@ -470,7 +372,7 @@ namespace render_util
 {
 
 
-class TerrainCDLOD : public TerrainBase
+class TerrainCDLOD : public TerrainCDLODBase
 {
   TextureManager &texture_manager;
 
@@ -510,7 +412,6 @@ public:
   TerrainCDLOD(TextureManager&, std::string);
   ~TerrainCDLOD() override;
 
-  const std::string &getName() override;
   void build(ElevationMap::ConstPtr map, MaterialMap::ConstPtr material_map) override;
   void draw(TerrainBase::Client *client) override;
   void update(const Camera &camera, bool low_detail) override;
@@ -711,51 +612,6 @@ void TerrainCDLOD::processNode(Node *node, int lod_level, const Camera &camera, 
 }
 
 
-void TerrainCDLOD::drawInstanced(TerrainBase::Client *client)
-{
-  if (render_list.isEmpty())
-    return;
-
-  assert(client);
-
-  gl::BindVertexArray(vao_id);
-  CHECK_GL_ERROR();
-
-  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
-  CHECK_GL_ERROR();
-
-  gl::VertexAttribDivisor(4, 1);
-  CHECK_GL_ERROR();
-
-  gl::BindBuffer(GL_ARRAY_BUFFER, node_pos_buffer_id);
-  gl::EnableVertexAttribArray(4);
-
-  for (RenderBatch *batch : render_list.getBatches())
-  {
-    const size_t offset = batch->node_pos_buffer_offset * sizeof(RenderBatch::NodePos);
-
-    auto program = batch->program;
-    assert(program);
-    client->setActiveProgram(program);
-    setUniforms(program);
-    CHECK_GL_ERROR();
-    program->assertUniformsAreSet();
-
-    gl::VertexAttribPointer(4, 4, GL_FLOAT, false, 0, (void*)offset);
-    CHECK_GL_ERROR();
-
-    gl::DrawElementsInstancedARB(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, 0, batch->getSize());
-    CHECK_GL_ERROR();
-  }
-
-  gl::BindBuffer(GL_ARRAY_BUFFER, 0);
-  CHECK_GL_ERROR();
-
-  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  gl::BindVertexArray(0);
-}
-
-
 void TerrainCDLOD::build(ElevationMap::ConstPtr map, MaterialMap::ConstPtr material_map)
 {
   CHECK_GL_ERROR();
@@ -845,6 +701,9 @@ render_util::TexturePtr TerrainCDLOD::getNormalMapTexture()
 
 void TerrainCDLOD::draw(Client *client)
 {
+  if (render_list.isEmpty())
+    return;
+
   texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP, normal_map_texture);
   texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP, height_map_texture);
 
@@ -853,16 +712,45 @@ void TerrainCDLOD::draw(Client *client)
   if (height_map_base_texture)
     texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, height_map_base_texture);
 
-  drawInstanced(client);
+  assert(client);
+
+  gl::BindVertexArray(vao_id);
+  CHECK_GL_ERROR();
+
+  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
+  CHECK_GL_ERROR();
+
+  gl::VertexAttribDivisor(4, 1);
+  CHECK_GL_ERROR();
+
+  gl::BindBuffer(GL_ARRAY_BUFFER, node_pos_buffer_id);
+  gl::EnableVertexAttribArray(4);
+
+  for (RenderBatch *batch : render_list.getBatches())
+  {
+    const size_t offset = batch->node_pos_buffer_offset * sizeof(RenderBatch::NodePos);
+
+    auto program = batch->program;
+    assert(program);
+    client->setActiveProgram(program);
+    setUniforms(program);
+    CHECK_GL_ERROR();
+    program->assertUniformsAreSet();
+
+    gl::VertexAttribPointer(4, 4, GL_FLOAT, false, 0, (void*)offset);
+    CHECK_GL_ERROR();
+
+    gl::DrawElementsInstancedARB(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, 0, batch->getSize());
+    CHECK_GL_ERROR();
+  }
+
+  gl::BindBuffer(GL_ARRAY_BUFFER, 0);
+  CHECK_GL_ERROR();
+
+  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  gl::BindVertexArray(0);
 
   CHECK_GL_ERROR();
-}
-
-
-const std::string &render_util::TerrainCDLOD::getName()
-{
-  static std::string name = "terrain_cdlod";
-  return name;
 }
 
 

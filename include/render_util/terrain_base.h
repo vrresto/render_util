@@ -57,7 +57,6 @@ namespace render_util
 
     virtual ~TerrainBase() {}
 
-    virtual const std::string &getName() = 0;
     virtual void build(ElevationMap::ConstPtr map, MaterialMap::ConstPtr material_map = {}) = 0;
     virtual void draw(Client *client = nullptr) = 0;
     virtual void setShaderParameters(const ShaderParameters&) = 0;
