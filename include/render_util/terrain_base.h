@@ -57,9 +57,13 @@ namespace render_util
 
     virtual ~TerrainBase() {}
 
-    virtual void build(ElevationMap::ConstPtr map, MaterialMap::ConstPtr material_map = {}) = 0;
+    virtual void build(ElevationMap::ConstPtr map,
+                       MaterialMap::ConstPtr,
+                       TypeMap::ConstPtr,
+                       const std::vector<ImageRGBA::ConstPtr> &textures,
+                       const std::vector<float> &texture_scale) = 0;
+
     virtual void draw(Client *client = nullptr) = 0;
-    virtual void setShaderParameters(const ShaderParameters&) = 0;
     virtual void setBaseElevationMap(ElevationMap::ConstPtr map) {}
     virtual void update(const Camera &camera, bool low_detail) {}
     virtual void setDrawDistance(float dist) {}

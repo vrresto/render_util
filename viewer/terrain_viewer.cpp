@@ -100,13 +100,36 @@ glm::dvec3 hitGround(const Beam &beam_)
 } // namespace
 
 
+namespace terrain_viewer
+{
+  class Map : public MapBase
+  {
+    TerrainBase::MaterialMap::ConstPtr m_material_map;
+    MapTextures m_map_textures;
+    WaterAnimation m_water_animation;
+
+  public:
+    Map(const TextureManager &texture_manager) : m_map_textures(texture_manager) {}
+
+    MapTextures &getTextures() override { return m_map_textures; }
+    WaterAnimation &getWaterAnimation() override { return m_water_animation; }
+    void setMaterialMap(TerrainBase::MaterialMap::ConstPtr map) override
+    {
+      m_material_map = map;
+    }
+
+    TerrainBase::MaterialMap::ConstPtr getMaterialMap() { return m_material_map; }
+  };
+}
+
+
 class TerrainViewerScene : public Scene
 {
   vec4 shore_wave_pos = vec4(0);
   vec2 map_size = vec2(0);
   ivec2 mark_pixel_coords = ivec2(0);
 
-  shared_ptr<render_util::MapBase> m_map;
+  unique_ptr<terrain_viewer::Map> m_map;
 
   render_util::TexturePtr curvature_map;
   render_util::TexturePtr atmosphere_map;
@@ -168,7 +191,6 @@ void TerrainViewerScene::buildBaseMap()
 
   updateTerrain(m_elevation_map_base);
 
-  m_map->buildBaseMap(m_elevation_map_base, m_base_map_land);
   m_map->getTextures().bind(getTextureManager());
 
   updateBaseWaterMapTexture();
@@ -238,9 +260,11 @@ void TerrainViewerScene::setup()
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
 //   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
-  m_map = m_map_loader->loadMap();
+  m_map = make_unique<terrain_viewer::Map>(getTextureManager());
 
   auto elevation_map = m_map_loader->createElevationMap();
+
+  m_map_loader->createMapTextures(m_map.get());
 
 #if ENABLE_BASE_MAP
   base_map_origin = m_map_loader->getBaseMapOrigin();
@@ -251,9 +275,16 @@ void TerrainViewerScene::setup()
   assert(elevation_map);
   assert(!m_map->getWaterAnimation().isEmpty());
 
-  createTerrain(m_map->getTextures().getShaderParameters(), elevation_map, m_map->getMaterialMap());
+  MapLoaderBase::TerrainTextures terrain_textures;
+  m_map_loader->createTerrainTextures(terrain_textures);
 
-  map_size = glm::vec2(elevation_map->getSize() * m_map->getHeightMapMetersPerPixel());
+  assert(m_map->getMaterialMap());
+
+  m_map->getTextures().setTexture(TEXUNIT_TERRAIN_FAR, terrain_textures.far_texture);
+
+  createTerrain(elevation_map, m_map->getMaterialMap(), terrain_textures);
+
+  map_size = glm::vec2(elevation_map->getSize() * m_map_loader->getHeightMapMetersPerPixel());
 
   assert(map_size != vec2(0));
 

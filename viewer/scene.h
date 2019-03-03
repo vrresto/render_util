@@ -22,6 +22,7 @@
 #include "camera.h"
 
 #include <render_util/render_util.h>
+#include <render_util/map_loader_base.h>
 #include <render_util/shader.h>
 #include <render_util/terrain_util.h>
 #include <render_util/globals.h>
@@ -61,33 +62,6 @@ struct Terrain : public render_util::TerrainRenderer
 };
 
 
-inline Terrain createTerrain(const render_util::ShaderParameters &shader_params,
-                      render_util::TextureManager &tex_mgr,
-                      bool use_lod,
-                      render_util::ElevationMap::ConstPtr elevation_map,
-                      render_util::TerrainBase::MaterialMap::ConstPtr material_map,
-                      glm::vec3 color,
-                      bool use_base_map,
-                      bool use_base_water_map)
-{
-  assert(material_map);
-
-  Terrain t = render_util::createTerrainRenderer(tex_mgr,
-    use_lod,
-    RENDER_UTIL_SHADER_DIR, "terrain",
-    use_base_map,
-    use_base_water_map,
-    false);
-
-  t.getTerrain()->setShaderParameters(shader_params);
-  t.getTerrain()->build(elevation_map, material_map);
-
-  t.getProgram()->setUniform("terrain_color", color);
-
-  return t;
-}
-
-
 class Scene
 {
   render_util::TextureManager texture_manager = render_util::TextureManager(0);
@@ -109,7 +83,6 @@ public:
   bool pause_animations = false;
 
   Terrain m_terrain;
-  Terrain m_terrain_cdlod;
 
   glm::vec3 getSunDir()
   {
@@ -118,28 +91,34 @@ public:
     return glm::vec3(0, sun_dir_h.x, sun_dir_h.y);
   }
 
-  void createTerrain(const render_util::ShaderParameters &shader_params,
-                     render_util::ElevationMap::ConstPtr elevation_map,
-                     render_util::TerrainBase::MaterialMap::ConstPtr material_map = {},
-                     render_util::ElevationMap::ConstPtr elevation_map_base = {})
+  void createTerrain(render_util::ElevationMap::ConstPtr elevation_map,
+                     render_util::TerrainBase::MaterialMap::ConstPtr material_map,
+                     const render_util::MapLoaderBase::TerrainTextures &textures)
   {
-//     m_terrain =
-//       render_util::viewer::createTerrain(getTextureManager(), false,
-//                                          elevation_map, glm::vec3(1,0,0));
-    m_terrain_cdlod =
-      render_util::viewer::createTerrain(shader_params,
-                                         getTextureManager(), true,
-                                         elevation_map,
-                                         material_map,
-                                         glm::vec3(0,1,0),
-                                         m_use_base_map,
-                                         m_use_base_water_map);
+
+    Terrain t = render_util::createTerrainRenderer(texture_manager,
+      true,
+      RENDER_UTIL_SHADER_DIR, "terrain",
+      false,
+      false,
+      false);
+
+    assert(textures.type_map);
+    assert(!textures.textures.empty());
+    assert(textures.texture_scale.size() == textures.textures.size());
+
+    t.getTerrain()->build(elevation_map,
+                          material_map,
+                          textures.type_map,
+                          textures.textures,
+                          textures.texture_scale);
+
+    m_terrain = t;
   }
 
   void updateTerrain(const render_util::ElevationMap::ConstPtr elevation_map_base)
   {
-//     m_terrain.getTerrain()->setBaseElevationMap(elevation_map_base);
-    m_terrain_cdlod.getTerrain()->setBaseElevationMap(elevation_map_base);
+    m_terrain.getTerrain()->setBaseElevationMap(elevation_map_base);
   }
 
 //   void updateTerrain()
@@ -190,7 +169,7 @@ public:
 inline void Scene::drawTerrain()
 {
   TerrainClient client(this);
-  m_terrain_cdlod.draw(camera, &client);
+  m_terrain.draw(camera, &client);
 }
 
 

@@ -32,24 +32,31 @@ namespace render_util
 
     virtual MapTextures &getTextures() = 0;
     virtual WaterAnimation &getWaterAnimation() = 0;
-    virtual int getHeightMapMetersPerPixel() const = 0;
-    virtual TerrainBase::MaterialMap::ConstPtr getMaterialMap() const = 0;
+    virtual void setMaterialMap(TerrainBase::MaterialMap::ConstPtr) = 0;
 
-    virtual void buildBaseMap(render_util::ElevationMap::ConstPtr elevation_map,
-                              render_util::ImageGreyScale::ConstPtr land_map ={}) {}
   };
 
 
   class MapLoaderBase
   {
   public:
+    struct TerrainTextures
+    {
+      TerrainBase::TypeMap::ConstPtr type_map;
+      std::vector<ImageRGBA::ConstPtr> textures;
+      std::vector<float> texture_scale;
+      ImageRGBA::ConstPtr far_texture;
+    };
+
     virtual ~MapLoaderBase() {}
 
-    virtual std::shared_ptr<MapBase> loadMap() const = 0;
+    virtual void createMapTextures(MapBase*) const = 0;
     virtual ElevationMap::Ptr createElevationMap() const = 0;
+    virtual void createTerrainTextures(TerrainTextures&) const = 0;
+    virtual int getHeightMapMetersPerPixel() const = 0;
+
     virtual ElevationMap::Ptr createBaseElevationMap(ImageGreyScale::ConstPtr land_map) const = 0;
     virtual ImageGreyScale::Ptr createBaseLandMap() const = 0;
-
     virtual glm::vec2 getBaseMapOrigin() const { return {}; };
   };
 }
