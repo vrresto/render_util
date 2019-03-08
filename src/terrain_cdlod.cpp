@@ -31,12 +31,15 @@
 #include <render_util/texture_util.h>
 #include <render_util/image.h>
 #include <render_util/image_util.h>
+#include <render_util/image_resample.h>
 #include <render_util/water_map.h>
 #include <render_util/shader_util.h>
 #include <render_util/render_util.h>
 #include <render_util/globals.h>
 #include <block_allocator.h>
 
+#include <set>
+#include <deque>
 #include <array>
 #include <vector>
 #include <iostream>
@@ -69,19 +72,6 @@ class Material;
 
 using MaterialID = render_util::TerrainBase::MaterialID;
 using BoundingBox = render_util::Box;
-
-
-int getTerrainTextureArrayIndex(int size)
-{
-  using namespace render_util;
-
-  constexpr double SMALLEST_SIZE = 256;
-
-  int index = glm::log2(double(size)) - glm::log2(SMALLEST_SIZE);
-  assert(index >= 0);
-  assert(index < MAX_TERRAIN_TEXUNITS);
-  return index;
-}
 
 
 class TerrainTextures
@@ -126,6 +116,26 @@ TerrainTextures::TerrainTextures(const TextureManager &texture_manager,
   std::array<TextureArray, MAX_TERRAIN_TEXUNITS> texture_arrays;
   map<unsigned, glm::uvec3> mapping;
 
+  std::set<size_t> all_texture_sizes;
+  for (auto texture : textures)
+  {
+    assert(texture->w() == texture->h());
+    all_texture_sizes.insert(texture->w());
+  }
+
+  std::deque<size_t> texture_sizes;
+  for (auto size : all_texture_sizes)
+    texture_sizes.push_back(size);
+
+  while (texture_sizes.size() > MAX_TERRAIN_TEXUNITS)
+    texture_sizes.pop_front();
+
+  auto smallest_size = texture_sizes.front();
+
+  std::unordered_map<int, int> array_index_for_size;
+  for (size_t i = 0; i < texture_sizes.size(); i++)
+    array_index_for_size[texture_sizes[i]] = i;
+
   for (int i = 0; i < textures.size(); i++)
   {
     float scale = texture_scale.at(i);
@@ -138,9 +148,17 @@ TerrainTextures::TerrainTextures(const TextureManager &texture_manager,
 
     auto image = textures.at(i);
 
-    auto index = getTerrainTextureArrayIndex(image->w());
-    assert(index < MAX_TERRAIN_TEXUNITS);
-    texture_arrays[index].push_back(image);
+    while (image->w() < smallest_size)
+    {
+//       auto biggest_size = texture_sizes.back();
+//       cout<<"image->w(): "<<image->w()<<", smallest_size: "
+//         <<smallest_size<<", biggest_size: "<<biggest_size<<endl;
+      image = render_util::upSample(image, 2);
+    }
+
+    auto index = array_index_for_size.at(image->w());
+
+    texture_arrays.at(index).push_back(image);
     mapping.insert(make_pair(i, glm::uvec3{index, texture_arrays[index].size()-1, scale}));
   }
 
