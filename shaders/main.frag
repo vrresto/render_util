@@ -65,8 +65,6 @@ vec3 calcLight(vec3 pos, vec3 normal)
 
   float ambientLight = 0.3 * smoothstep(-0.5, 0.4, sunDir.z);
 
-//   ambientLight = 0;
-
   float directLight = 0.8 * smoothstep(-0.1, 0.4, sunDir.z);
 
   directLight = 1.2;
@@ -88,6 +86,42 @@ vec3 calcLight(vec3 pos, vec3 normal)
   
   return light;
 }
+
+
+vec3 calcLightWithSpecular(vec3 input, vec3 normal, float shinyness, vec3 specular_amount, vec3 viewDir)
+{
+  float ambientLight = 0.5 * smoothstep(-0.5, 0.4, sunDir.z);
+  float directLight = 1.0;
+  directLight *= smoothstep(-0.05, 0.01, sunDir.z);
+
+  directLight *= clamp(dot(normalize(normal), sunDir), 0.0, 2.0);
+
+  vec3 directLightColor = vec3(1.0, 1.0, 0.95);
+  vec3 directLightColorLow = vec3(1.0, 0.6, 0.2);
+  vec3 ambientColor = vec3(0.95, 0.98, 1.0);
+
+  directLightColor = mix(directLightColorLow, directLightColor, smoothstep(0.0, 0.2, sunDir.z));
+
+  vec3 light = directLightColor * directLight + ambientColor * ambientLight;
+
+  vec3 specular = vec3(0);
+
+  {
+    vec3 reflectDir = reflect(-sunDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), shinyness);
+
+      vec3 R = reflect(viewDir, normal);
+      vec3 lVec = -sunDir;
+      spec = pow(max(dot(R, lVec), 0.0), shinyness);
+
+    specular = directLightColor * directLight * spec;
+
+    specular *= specular_amount;
+  }
+
+  return light * input + specular;
+}
+
 
 vec3 calcWaterLight(vec3 normal)
 {
