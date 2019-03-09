@@ -57,52 +57,45 @@ vec2 rotate(vec2 v, float a)
 }
 
 
-vec3 calcLight(vec3 pos, vec3 normal)
+void calcLightParams(vec3 normal, out vec3 ambientLightColor, out vec3 directLightColor)
 {
-
-//   vec2 normal_map_coord = pos.xy / (200 * typeMapSize);
-//   vec3 normal = texture2D(sampler_terrain_cdlod_normal_map, normal_map_coord).xyz;
-
   float ambientLight = 0.3 * smoothstep(-0.5, 0.4, sunDir.z);
-
   float directLight = 0.8 * smoothstep(-0.1, 0.4, sunDir.z);
 
   directLight = 1.2;
 
   directLight *= clamp(dot(normalize(normal), sunDir), 0.0, 2.0);
 
-  vec3 directLightColor = vec3(1.0, 1.0, 0.8);
   vec3 directLightColorLow = vec3(1.0, 0.6, 0.2);
-  vec3 ambientColor = vec3(0.95, 0.98, 1.0);
-
-
-//   float light = clamp(directLight + ambientLight, 0, 3);
+  directLightColor = vec3(1.0, 1.0, 0.8);
+  ambientLightColor = vec3(0.95, 0.98, 1.0);
 
   directLightColor = mix(directLightColorLow, directLightColor, smoothstep(-0.1, 0.4, sunDir.z));
 
-  vec3 light = directLightColor * directLight + ambientColor * ambientLight;
+  directLightColor = directLightColor * directLight;
+  ambientLightColor = ambientLightColor * ambientLight;
+}
 
-//   light *= 1.2;
-  
+
+vec3 calcLight(vec3 pos, vec3 normal)
+{
+  vec3 ambientLightColor;
+  vec3 directLightColor;
+  calcLightParams(normal, ambientLightColor, directLightColor);
+
+  vec3 light = directLightColor + ambientLightColor;
+
   return light;
 }
 
 
 vec3 calcLightWithSpecular(vec3 input, vec3 normal, float shinyness, vec3 specular_amount, vec3 viewDir)
 {
-  float ambientLight = 0.5 * smoothstep(-0.5, 0.4, sunDir.z);
-  float directLight = 1.0;
-  directLight *= smoothstep(-0.05, 0.01, sunDir.z);
+  vec3 ambientLightColor;
+  vec3 directLightColor;
+  calcLightParams(normal, ambientLightColor, directLightColor);
 
-  directLight *= clamp(dot(normalize(normal), sunDir), 0.0, 2.0);
-
-  vec3 directLightColor = vec3(1.0, 1.0, 0.95);
-  vec3 directLightColorLow = vec3(1.0, 0.6, 0.2);
-  vec3 ambientColor = vec3(0.95, 0.98, 1.0);
-
-  directLightColor = mix(directLightColorLow, directLightColor, smoothstep(0.0, 0.2, sunDir.z));
-
-  vec3 light = directLightColor * directLight + ambientColor * ambientLight;
+  vec3 light = directLightColor + ambientLightColor;
 
   vec3 specular = vec3(0);
 
@@ -114,12 +107,12 @@ vec3 calcLightWithSpecular(vec3 input, vec3 normal, float shinyness, vec3 specul
       vec3 lVec = -sunDir;
       spec = pow(max(dot(R, lVec), 0.0), shinyness);
 
-    specular = directLightColor * directLight * spec;
+    specular = directLightColor * spec;
 
     specular *= specular_amount;
   }
 
-  return light * input + specular;
+  return (light * input) + specular;
 }
 
 
