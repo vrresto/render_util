@@ -57,23 +57,32 @@ vec2 rotate(vec2 v, float a)
 }
 
 
+vec3 calcIncomingDirectLight()
+{
+  vec3 directLightColor = vec3(1.0, 1.0, 0.9);
+  vec3 directLightColorLow = directLightColor * vec3(1.0, 0.9, 0.6);
+  vec3 directLightColorVeryLow = vec3(1.0, 0.6, 0.2);
+
+  directLightColor = mix(directLightColorLow, directLightColor, smoothstep(0.0, 0.3, sunDir.z));
+  directLightColor = mix(directLightColorVeryLow, directLightColor, smoothstep(-0.02, 0.1, sunDir.z));
+  directLightColor *= smoothstep(-0.02, 0.02, sunDir.z);
+
+  return directLightColor;
+}
+
+
 void calcLightParams(vec3 normal, out vec3 ambientLightColor, out vec3 directLightColor)
 {
-  float ambientLight = 0.3 * smoothstep(-0.5, 0.4, sunDir.z);
-  float directLight = 0.8 * smoothstep(-0.1, 0.4, sunDir.z);
-
-  directLight = 1.2;
-
+  float directLight = 1.2;
   directLight *= clamp(dot(normalize(normal), sunDir), 0.0, 2.0);
+  directLightColor = calcIncomingDirectLight() * directLight;
 
-  vec3 directLightColorLow = vec3(1.0, 0.6, 0.2);
-  directLightColor = vec3(1.0, 1.0, 0.8);
+  float ambientLight = 0.6 * smoothstep(0.0, 0.3, sunDir.z);
   ambientLightColor = vec3(0.95, 0.98, 1.0);
-
-  directLightColor = mix(directLightColorLow, directLightColor, smoothstep(-0.1, 0.4, sunDir.z));
-
-  directLightColor = directLightColor * directLight;
-  ambientLightColor = ambientLightColor * ambientLight;
+  ambientLightColor *= 0.6;
+  vec3 ambientLightColorLow = ambientLightColor * 0.6;
+  ambientLightColor = mix(ambientLightColorLow, ambientLightColor, smoothstep(0.0, 0.3, sunDir.z));
+  ambientLightColor *= smoothstep(-0.4, 0.0, sunDir.z);
 }
 
 
@@ -107,40 +116,10 @@ vec3 calcLightWithSpecular(vec3 input, vec3 normal, float shinyness, vec3 specul
       vec3 lVec = -sunDir;
       spec = pow(max(dot(R, lVec), 0.0), shinyness);
 
-    specular = directLightColor * spec;
+    specular = calcIncomingDirectLight() * spec;
 
     specular *= specular_amount;
   }
 
   return (light * input) + specular;
-}
-
-
-vec3 calcWaterLight(vec3 normal)
-{
-
-//   vec2 normal_map_coord = pos.xy / (200 * typeMapSize);
-//   vec3 normal = texture2D(sampler_terrain_cdlod_normal_map, normal_map_coord).xyz;
-
-  float ambientLight = 0.6 * smoothstep(-0.5, 0.4, sunDir.z);
-
-
-  float directLight = 0.7;
-
-  directLight *= clamp(dot(normalize(normal), sunDir), 0.0, 2.0);
-
-  vec3 directLightColor = vec3(1.0, 1.0, 0.8);
-  vec3 directLightColorLow = vec3(1.0, 0.6, 0.2);
-  vec3 ambientColor = vec3(0.95, 0.98, 1.0);
-
-
-//   float light = clamp(directLight + ambientLight, 0, 3);
-
-  directLightColor = mix(directLightColorLow, directLightColor, smoothstep(-0.1, 0.4, sunDir.z));
-
-  vec3 light = directLightColor * directLight + ambientColor * ambientLight;
-
-//   light *= 1.2;
-  
-  return light;
 }

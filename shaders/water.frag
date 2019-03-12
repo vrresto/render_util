@@ -51,7 +51,8 @@ const float schlick_r0_water = pow(ior_water - 1, 2) / pow(ior_water + 1, 2);
 
 
 float getDetailMapBlend(vec2 pos);
-vec3 calcWaterLight(vec3 normal);
+void calcLightParams(vec3 normal, out vec3 ambientLightColor, out vec3 directLightColor);
+vec3 calcIncomingDirectLight();
 vec3 calcLight(vec3 pos, vec3 normal);
 vec2 rotate(vec2 v, float a);
 float perlin(vec2 p, float dim);
@@ -334,16 +335,27 @@ vec3 getWaterNormal(float dist, vec2 coord)
 }
 
 
+vec3 calcEnvColor()
+{
+  vec3 envColor = vec3(0.65, 0.85, 1.0);
+  envColor = mix(envColor, vec3(0.7), 0.6);
+  vec3 envColorLow = envColor * vec3(0.8, 0.7, 0.5) * 0.5;
+  envColor =  mix(envColorLow, envColor, smoothstep(0.0, 0.4, sunDir.z));
+  envColor *= smoothstep(-0.4, 0.2, sunDir.z);
+
+  return envColor;
+}
+
+
 vec3 getWaterColorSimple(vec3 viewDir, float dist)
 {
-  float ambientLight = 0.3 * smoothstep(-0.5, 0.4, sunDir.z);
-  float directLight = 1.2;
-
-  vec3 directLightColor = vec3(1.0, 1.0, 0.8);
-  vec3 directLightColorLow = vec3(1.0, 0.6, 0.2);
-  directLightColor = mix(directLightColorLow, directLightColor, smoothstep(-0.1, 0.4, sunDir.z));
-
   vec3 normal = getWaterNormal(dist, pass_texcoord);
+
+  vec3 ambientLightColor;
+  vec3 directLightColor;
+  calcLightParams(normal, ambientLightColor, directLightColor);
+
+  vec3 directLightColorIncoming = calcIncomingDirectLight();
 
   float fresnel = fresnelSchlick(viewDir, normal, schlick_r0_water);
 
@@ -352,15 +364,13 @@ vec3 getWaterColorSimple(vec3 viewDir, float dist)
   float specular = calcSpecular(viewDir, normal, specHardness);
   specular = mix(specular * 0.5, specular, specularDetailFactor);
 
-  vec3 envColor = vec3(0.65, 0.85, 1.0);
-  envColor = mix(envColor, vec3(0.7), 0.6);
-  envColor *= smoothstep(-0.1, 0.4, sunDir.z);
+  vec3 envColor = calcEnvColor();
 
   vec3 refractionColor = 0.9 * water_color;
-  refractionColor *= calcWaterLight(normal);
+  refractionColor *= ambientLightColor + 0.5 * directLightColor;
 
   vec3 color = mix(refractionColor, envColor, fresnel);
-  color += specular * directLightColor * directLight;
+  color += specular * directLightColorIncoming;
 
   return color;
 }
@@ -374,16 +384,11 @@ vec3 getWaterColor(vec3 viewDir, float dist, vec2 coord, float waterDepth, vec3 
 
   extinction_factor *= 4;
 
-  float ambientLight = 0.3 * smoothstep(-0.5, 0.4, sunDir.z);
-  float directLight = 0.8 * smoothstep(-0.1, 0.4, sunDir.z);
-  directLight = 1.2;
+  vec3 ambientLightColor;
+  vec3 directLightColor;
+  calcLightParams(normal, ambientLightColor, directLightColor);
 
-  vec3 directLightColor = vec3(1.0, 1.0, 0.8);
-  vec3 directLightColorLow = vec3(1.0, 0.6, 0.2);
-  vec3 ambienColor = vec3(0.95, 0.98, 1.0);
-
-  directLightColor = mix(directLightColorLow, directLightColor, smoothstep(-0.1, 0.4, sunDir.z));
-
+  vec3 directLightColorIncoming = calcIncomingDirectLight();
 
   float specularDetailFactor = exp(-3 * (dist/30000));
 
@@ -392,38 +397,19 @@ vec3 getWaterColor(vec3 viewDir, float dist, vec2 coord, float waterDepth, vec3 
   float specular = calcSpecular(viewDir, normal, specHardness);
   specular = mix(specular * 0.5, specular, specularDetailFactor);
 
-  vec3 envColor = vec3(0.65, 0.85, 1.0);
-//   envColor = mix(envColor, vec3(0.9), 0.4);
-  envColor = mix(envColor, vec3(0.7), 0.6);
-  envColor *= smoothstep(-0.1, 0.4, sunDir.z);
+  vec3 envColor = calcEnvColor();
 
-//   vec3 deepColor = texture2D(sampler_deep_water, coord * 2).xyz;
-//   vec3 deepColor = vec3(0.150, 0.225, 0.180);
-//   vec3 deepColor = vec3(0.165, 0.264, 0.233);
-
-  vec3 river_color = mix(water_color, vec3(0.63, 0.6, 0.2) * 0.5, 0.3);
-  
-  river_amount = 0;
-
-  vec3 refractionColor = 0.9 * mix(water_color, river_color, river_amount);
-  refractionColor *= calcWaterLight(normal);
-
-//   refractionColor *= 0;
+  vec3 refractionColor = 0.9 * water_color;
+  refractionColor *= ambientLightColor  + 0.5 * directLightColor;
 
   //extinction
   /////////////////////////////////
 
-//   groundColor *= exp(-waterDepth * 0.15 * vec3(4, 1.2, 1));
-
-//   groundColor *= 1.1;
-
   vec3 extincion = vec3(4.0, 1.2, 1.0);
-//   extincion = mix(extincion, vec3(4.0, 4.0, 7.0) * 1, river_amount);
 
   groundColor *= 0.95;
-
   groundColor *= exp(-extinction_factor * extincion);
-  
+
   float visibility_shallow = 1-waterDepth;
   float visibility_deep = pow(visibility_shallow * smoothstep(0.3, 1.0, visibility_shallow), 1);
 
@@ -433,14 +419,9 @@ vec3 getWaterColor(vec3 viewDir, float dist, vec2 coord, float waterDepth, vec3 
 
   refractionColor = mix(groundColor, refractionColor, 1-visibility);
 
-//   float refractionBrightness = clamp(dot(normalize(normal), sunDir), 0.0, 2.0);
-//   refractionColor *= mix(0.9, 1.0, refractionBrightness);
-//   refractionColor *= mix(0.5, 1.0, refractionBrightness);
-
-//   refractionColor *= calcWaterLight(normal);
 
   vec3 color = mix(refractionColor, envColor, fresnel);
-  color += specular * directLightColor * directLight;
+  color += specular * directLightColorIncoming;
 
   return color;
 }

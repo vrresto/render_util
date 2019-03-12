@@ -408,24 +408,32 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
 //   float v = 25 * 1000 * 1000;
 //   float d = dist / v;
 
+  float brightness = smoothstep(0.0, 0.25, sunDir.z);
+
   vec3 rayleighColor = vec3(0.0, 0.225, 0.9);
-  
-//   rayleighColor = mix(rayleighColor, vec3(0.9, 0.95, 1.0), 0.4);
+  vec3 rayleighColorLow = rayleighColor * vec3(1.0, 0.4, 0.3);
+  rayleighColor = mix(rayleighColorLow, rayleighColor, brightness);
 
   vec3 diffuseScatteringColorDark = vec3(0.15, 0.62, 1.0);
+  vec3 diffuseScatteringColorDarkLow = diffuseScatteringColorDark * vec3(1.0, 0.4, 0.3);
+  diffuseScatteringColorDark = mix(diffuseScatteringColorDarkLow, diffuseScatteringColorDark, brightness);
 
   rayleighColor = mix(rayleighColor, vec3(1), hazyness);
   diffuseScatteringColorDark = mix(diffuseScatteringColorDark, vec3(1), hazyness);
 
-
 //   vec3 diffuseScatteringColorBright = vec3(0.7, 0.9, 1.0);
-  vec3 diffuseScatteringColorBright = mix(diffuseScatteringColorDark, vec3(1.0), 0.75);
+  vec3 diffuseScatteringColorBright = mix(diffuseScatteringColorDark,
+    vec3(1.0, 1.0, 1.0) * mix(0.95, 1.0, brightness), 0.75);
 //   vec3 diffuseScatteringColorBright = mix(vec3(0.15, 0.75, 1.0), vec3(0.95), 0.7);
+  vec3 diffuseScatteringColorBrightLow = diffuseScatteringColorBright * 0.7;
+  diffuseScatteringColorBright = mix(diffuseScatteringColorBrightLow,
+    diffuseScatteringColorBright, brightness);
+
 
   float diffuseScatteringAmount = 1.0;
   
 //   float opacity = 1.0 - exp(-3 * d * 1.0);
-  float opacity = calcOpacity(d);
+  float opacity = calcOpacity(d * 1.5);
   
 //   rayleighColor *= 1.0 - exp(-3.0 * d  * 15.0);
 //   rayleighColor = mix(rayleighColor, diffuseScatteringColorDark, 1.0 - exp(-3 * d *  4.0));
@@ -434,30 +442,24 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
   rayleighColor = mix(rayleighColor, diffuseScatteringColorDark, calcOpacity(4 * d));
   rayleighColor = mix(rayleighColor, diffuseScatteringColorBright,calcOpacity(2 * d));
 
-  
-//   opacity = 1
-
-  rayleighColor *= smoothstep(-0.4, 0.4, sunDir.z);
-
 
   float mieBrightmess = clamp(dot(viewDir, sunDir), 0, 1);
   float mie = mieBrightmess;
   mie *= mie;
   mie *= 1 - exp(-3 * d * 3);
 
-  vec3 mieColor = mix(vec3(1.0, 0.7, 0.0), vec3(1), mieBrightmess);
+  vec3 mieColor = mix(vec3(1.0, 0.9, 0.5), vec3(1), smoothstep(0.0, 0.25, sunDir.z));
+  mieColor = mix(mieColor * vec3(1.0, 0.8, 0.6), mieColor, smoothstep(-0.2, 0.1, sunDir.z));
+  mieColor = mix(mieColor * vec3(1.0, 0.8, 0.6), mieColor, smoothstep(-0.5, -0.1, sunDir.z));
 
-  mie *= smoothstep(-0.5, 0.4, sunDir.z);
-//   mie *= 0.7;
-  
   mieColor *= mie;
 
-//   rayleighColor *= 0;
-  
+  rayleighColor *= smoothstep(-0.5, 0.0, sunDir.z);
+  mieColor *= smoothstep(-0.6, -0.0, sunDir.z);
+
   rayleighColor = mix(rayleighColor, vec3(1), mieColor);
 
   return vec4(rayleighColor, opacity);
-//   return vec4(1,0,0,1);
 }
 
 
@@ -507,8 +509,6 @@ void apply_fog()
   vec4 atmosphereColor = calcAtmosphereColor(t, viewDir);
 
   float extinction = atmosphereColor.w;
-
-  extinction *=  1.0 - exp(-3 * (t/atmosphereVisibility) * 5.0);
 
   gl_FragColor.xyz *= 1.0 - extinction;
 
