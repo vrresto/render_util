@@ -97,8 +97,6 @@ float sampleNoise(vec2 coord)
 
   float noise = texture2D(sampler_terrain_noise, coord).x;
 
-//   noise = clamp((noise - 0.5) * 2, 0, 5);
-
   noise *= 2;
 
   return noise;
@@ -336,8 +334,8 @@ vec4 applyTerrainNoise(vec4 color, float dist)
 {
   vec2 coords = pass_texcoord;
 
-  color = mix(color, color * sampleNoise(coords * 32), 0.4 * (1 - smoothstep(500, 1000, dist)));
-  color = mix(color, color * sampleNoise(coords * 128), 0.4 * (1 - smoothstep(100, 200, dist)));
+  color = mix(color, color * sampleNoise(coords * 32), 0.5 * (1 - smoothstep(500, 1000, dist)));
+  color = mix(color, color * sampleNoise(coords * 128), 1.0 * (1 - smoothstep(100, 200, dist)));
 
   return color;
 }
