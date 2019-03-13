@@ -506,6 +506,8 @@ void apply_fog()
     t = t1 - t2;
   }
 
+  t = max(0, t);
+
   vec4 atmosphereColor = calcAtmosphereColor(t, viewDir);
 
   float extinction = atmosphereColor.w;
@@ -522,8 +524,8 @@ void apply_fog()
 //   atmosphereColor *= 0;
 
   gl_FragColor.xyz = mix(gl_FragColor.xyz, vec3(1), atmosphereColor.xyz);
-  
-  
+
+#if 0
   if (t == -1.0) {
     gl_FragColor.xyz = vec3(0.5, 0.5, 0.0);
   }
@@ -535,4 +537,5 @@ void apply_fog()
   if (debugColor != vec3(0)) {
     gl_FragColor.xyz = debugColor;
   }
+#endif
 }
