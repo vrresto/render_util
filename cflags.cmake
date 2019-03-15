@@ -4,7 +4,7 @@ if(NOT enable_debug)
   # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse3")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mssse3")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpmath=sse")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffast-math") # makes std::sort<float>() crash
+#   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffast-math") # makes std::sort<float>() crash
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftree-vectorize")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
 
