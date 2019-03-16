@@ -58,6 +58,8 @@ const float atmosphereVisibility = 600000.0;
 // const float hazyness = 0.05;
 const float hazyness = 0.1;
 
+const float PI = acos(-1.0);
+
 vec3 debugColor;
 
 void resetDebugColor() {
@@ -67,6 +69,13 @@ void resetDebugColor() {
 vec3 getDebugColor() {
   return debugColor;
 }
+
+
+float miePhase(vec3 view_dir, vec3 light_dir, float g)
+{
+  return (1.f - g*g) / (4*PI * pow(1.f + g*g - 2*g*dot(view_dir, light_dir), 1.5));
+}
+
 
 float getAtmosphereEdgeIntersectionDistFromInside(vec2 rayStart, vec2 rayDir)
 {
@@ -443,9 +452,7 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
   rayleighColor = mix(rayleighColor, diffuseScatteringColorBright,calcOpacity(2 * d));
 
 
-  float mieBrightmess = clamp(dot(viewDir, sunDir), 0, 1);
-  float mie = mieBrightmess;
-  mie *= mie;
+  float mie = 1.5 * miePhase(viewDir, sunDir, 0.6);
   mie *= 1 - exp(-3 * d * 3);
 
   vec3 mieColor = mix(vec3(1.0, 0.9, 0.5), vec3(1), smoothstep(0.0, 0.25, sunDir.z));
@@ -455,7 +462,8 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
   mieColor *= mie;
 
   rayleighColor *= smoothstep(-0.5, 0.0, sunDir.z);
-  mieColor *= smoothstep(-0.6, -0.0, sunDir.z);
+  mieColor *= smoothstep(-0.6, 0.4, sunDir.z);
+  mieColor *= 1.5;
 
   rayleighColor = mix(rayleighColor, vec3(1), mieColor);
 
