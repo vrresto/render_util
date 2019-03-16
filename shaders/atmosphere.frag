@@ -449,8 +449,7 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
 //   rayleighColor = mix(rayleighColor, diffuseScatteringColorBright, 1.0 - exp(-3 * d * 2.0));
   rayleighColor *= calcOpacity(15 * d);
   rayleighColor = mix(rayleighColor, diffuseScatteringColorDark, calcOpacity(4 * d));
-  rayleighColor = mix(rayleighColor, diffuseScatteringColorBright,calcOpacity(2 * d));
-
+  rayleighColor = mix(rayleighColor, diffuseScatteringColorBright, calcOpacity(2 * d));
 
   float mie = 1.5 * miePhase(viewDir, sunDir, 0.6);
   mie *= 1 - exp(-3 * d * 3);
@@ -462,6 +461,7 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
   mieColor *= mie;
 
   rayleighColor *= smoothstep(-0.5, 0.0, sunDir.z);
+
   mieColor *= smoothstep(-0.6, 0.4, sunDir.z);
   mieColor *= 1.5;
 
