@@ -30,8 +30,7 @@
 
 #define ENABLE_FOG 1
 
-float getMaxAtmosphereThickness(vec2 cameraPos, vec2 viewDir);
-float getMaxAtmosphereThickness(vec3 cameraPos, vec3 viewDir);
+vec3 debugColor;
 
 uniform sampler2D sampler_atmosphere_thickness_map;
 uniform sampler2D sampler_curvature_map;
@@ -47,6 +46,7 @@ uniform vec3 cameraPosWorld;
 
 varying vec3 passObjectPosFlat;
 varying vec3 passObjectPos;
+varying vec3 passObjectPosView;
 varying vec3 passNormal;
 
 // const float atmosphereVisibility = 400000.0;
@@ -56,11 +56,122 @@ const float atmosphereVisibility = 600000.0;
 
 // const float hazyness = 0.0;
 // const float hazyness = 0.05;
-const float hazyness = 0.1;
+const float hazyness = 0.0;
+
+const float HAZE_VISIBILITY = 50000;
 
 const float PI = acos(-1.0);
 
-vec3 debugColor;
+
+float getSphereIntersectionFromInside(vec3 rayStart, vec3 rayDir, vec3 sphere_center, float radius)
+{
+  // scalar projection
+  // = distFromCameraToDeepestPoint
+  // may be negative
+  float rayStartOntoRayDirScalar = dot(sphere_center - rayStart, rayDir);
+
+  if (isnan(rayStartOntoRayDirScalar)) {
+    debugColor = vec3(1,0,0);
+    return 0.0;
+  }
+
+  if (rayStartOntoRayDirScalar < 0) {
+//     debugColor = vec3(1,0,1);
+//     return 0.0;
+  }
+
+  vec3 deepestPoint = rayStart + rayDir * rayStartOntoRayDirScalar;
+
+  float deepestPointHeight = distance(deepestPoint, sphere_center);
+
+  float distFromDeepestPointToIntersection =
+    sqrt(pow(radius, 2.0) - deepestPointHeight*deepestPointHeight);
+
+  if (isnan(distFromDeepestPointToIntersection)) {
+    debugColor = vec3(1,0,0);
+    return 0.0;
+  }
+
+  if (distFromDeepestPointToIntersection > rayStartOntoRayDirScalar) {
+//     gl_FragColor.xyz = vec3(1, 0.5, 0);
+//     return -2.0;
+  }
+
+  if (distFromDeepestPointToIntersection < 0)
+  {
+    debugColor = vec3(1,0,1);
+    return 0.0;
+  }
+
+  float dist = rayStartOntoRayDirScalar + distFromDeepestPointToIntersection;
+
+  return dist;
+}
+
+
+// https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
+bool sphereIntersection(vec3 ray_origin, vec3 ray_dir, float ray_length,
+  vec3 sphere_center, float sphere_radius,
+  out float t0, out float t1)
+{
+  vec3 L = sphere_center - ray_origin;
+  vec3 D = ray_dir;
+  float tCA = dot(L, D);
+
+  if (tCA < 0)
+  {
+//     debugColor = vec3(1,0,0);
+    return false;
+  }
+
+  float d = sqrt(dot(L,L) - dot(tCA,tCA));
+
+  if (d < 0)
+  {
+    debugColor = vec3(0,1,0);
+    return false;
+  }
+
+  float tHC = sqrt(sphere_radius*sphere_radius - d*d);
+
+  t0 = tCA - tHC;
+  t1 = tCA + tHC;
+
+  return true;
+}
+
+
+float sphericalFogDistance(vec3 ray_origin, vec3 ray_dir, float ray_length, vec3 sphere_center, float sphere_radius)
+{
+  float t0 = 0;
+  float t1 = 0;
+
+  if (distance(ray_origin, sphere_center) < sphere_radius)
+  {
+    t1 = getSphereIntersectionFromInside(ray_origin, ray_dir, sphere_center, sphere_radius);
+  }
+  else
+  {
+    bool intersection = sphereIntersection(ray_origin, ray_dir, ray_length,
+      sphere_center, sphere_radius,
+      t0, t1);
+
+    if (!intersection)
+    {
+      return 0;
+    }
+
+    t0 = max(0, t0);
+  }
+
+  float segment_length = min(max(0, t1 - t0), max(0, ray_length - t0));
+
+  return segment_length;
+}
+
+
+vec2 getMaxAtmosphereThickness(vec2 cameraPos, vec2 viewDir);
+
 
 void resetDebugColor() {
   debugColor = vec3(0);
@@ -230,7 +341,7 @@ float getCircleIntersectionDistFromOutside(vec2 rayStart, vec2 rayDir, float rad
 }
 
 
-float getMaxAtmosphereThickness(float height, float mu)
+vec2 getMaxAtmosphereThickness(float height, float mu)
 {
   float r = planet_radius + height;
   float Rg = planet_radius;
@@ -243,9 +354,9 @@ float getMaxAtmosphereThickness(float height, float mu)
 
 //   float relativeHeight = height / atmosphereHeight;
 
-  float t = texture2D(sampler_atmosphere_thickness_map, vec2(mu, Ur)).x;
+  vec2 t = texture2D(sampler_atmosphere_thickness_map, vec2(mu, Ur)).xy;
   
-  if (t < 0.0)
+  if (t.x < 0.0)
     debugColor = vec3(0,1,1);
   
   return t;
@@ -253,7 +364,7 @@ float getMaxAtmosphereThickness(float height, float mu)
 }
 
 
-float getMaxAtmosphereThickness(vec2 cameraPos, vec2 viewDir)
+vec2 getMaxAtmosphereThickness(vec2 cameraPos, vec2 viewDir)
 {
   cameraPos.y += planet_radius;
 
@@ -270,20 +381,20 @@ float getMaxAtmosphereThickness(vec2 cameraPos, vec2 viewDir)
       if (isnan(atmosphereEdgeIntersectionDist))
       {
         debugColor = vec3(1, 0, 0);
-        return 0.0;
+        return vec2(0.0);
       }
 
       if (atmosphereEdgeIntersectionDist < 0)
       {
         debugColor = vec3(1, 0.5, 0);
-        return 0.0;
+        return vec2(0.0);
       }
 
       cameraPos += viewDir * atmosphereEdgeIntersectionDist;
     }
     else
     {
-      return 0.0;
+      return vec2(0.0);
     }
   }
 
@@ -311,7 +422,7 @@ float getMaxAtmosphereThickness(vec2 cameraPos, vec2 viewDir)
 
   if (distToAtmosphereBorder <= 0) {
     debugColor = vec3(1,0,1);
-    return 0.0;
+    return vec2(0.0);
   }
 
 //   if (isnan(maxDistToAtmosphereBorder)) {
@@ -352,7 +463,7 @@ float getMaxAtmosphereThickness(vec2 cameraPos, vec2 viewDir)
 
 }
 
-float getMaxAtmosphereThicknessFromObject(vec3 objectPosWorld)
+vec2 getMaxAtmosphereThicknessFromObject(vec3 objectPosWorld)
 {
   float horizontalDist = distance(objectPosWorld.xy, cameraPosWorld.xy);
 
@@ -365,7 +476,7 @@ float getMaxAtmosphereThicknessFromObject(vec3 objectPosWorld)
   return getMaxAtmosphereThickness(objectPos, viewDir);
 }
 
-float getMaxAtmosphereThicknessFromCamera(vec3 objectPosWorld)
+vec2 getMaxAtmosphereThicknessFromCamera(vec3 objectPosWorld)
 {
   float horizontalDist = distance(objectPosWorld.xy, cameraPosWorld.xy);
 
@@ -379,7 +490,7 @@ float getMaxAtmosphereThicknessFromCamera(vec3 objectPosWorld)
   return getMaxAtmosphereThickness(cameraPos, viewDir);
 }
 
-float getMaxAtmosphereThicknessFromObjectReverse(vec3 objectPosWorld)
+vec2 getMaxAtmosphereThicknessFromObjectReverse(vec3 objectPosWorld)
 {
   float horizontalDist = distance(objectPosWorld.xy, cameraPosWorld.xy);
 
@@ -391,7 +502,7 @@ float getMaxAtmosphereThicknessFromObjectReverse(vec3 objectPosWorld)
   return getMaxAtmosphereThickness(objectPos, viewDir);
 }
 
-float getMaxAtmosphereThicknessFromCameraReverse(vec3 objectPosWorld)
+vec2 getMaxAtmosphereThicknessFromCameraReverse(vec3 objectPosWorld)
 {
   float horizontalDist = distance(objectPosWorld.xy, cameraPosWorld.xy);
 
@@ -411,9 +522,16 @@ float calcOpacity(float dist)
 //   return 1.0 - exp(-pow(3.0 * dist, 2));
 }
 
-vec4 calcAtmosphereColor(float dist, vec3 viewDir)
+
+float hazeForDistance(float dist)
 {
-  float d = dist / (atmosphereVisibility);
+  return  1.0 - exp(-3.0 * (dist / HAZE_VISIBILITY));
+}
+
+
+vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir, out vec3 fog_color)
+{
+  float d = air_dist / (atmosphereVisibility);
 //   float v = 25 * 1000 * 1000;
 //   float d = dist / v;
 
@@ -431,13 +549,17 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
   diffuseScatteringColorDark = mix(diffuseScatteringColorDark, vec3(1), hazyness);
 
 //   vec3 diffuseScatteringColorBright = vec3(0.7, 0.9, 1.0);
-  vec3 diffuseScatteringColorBright = mix(diffuseScatteringColorDark,
-    vec3(1.0, 1.0, 1.0) * mix(0.95, 1.0, brightness), 0.75);
-//   vec3 diffuseScatteringColorBright = mix(vec3(0.15, 0.75, 1.0), vec3(0.95), 0.7);
-  vec3 diffuseScatteringColorBrightLow = diffuseScatteringColorBright * 0.7;
+  vec3 diffuseScatteringColorBright = vec3(0.4, 0.8, 1.0);
+  diffuseScatteringColorBright = mix(diffuseScatteringColorBright, vec3(1), 0.5);
+
+  fog_color = mix(diffuseScatteringColorDark,
+      vec3(1) * mix(0.95, 1.0, brightness), 0.8);
+
+  fog_color = mix(mix(fog_color, vec3(0.8), 0.4), fog_color, smoothstep(0, 3000, cameraPosWorld.z));
+
+  vec3 diffuseScatteringColorBrightLow = diffuseScatteringColorBright * 0.6;
   diffuseScatteringColorBright = mix(diffuseScatteringColorBrightLow,
     diffuseScatteringColorBright, brightness);
-
 
   float diffuseScatteringAmount = 1.0;
   
@@ -452,7 +574,7 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
   rayleighColor = mix(rayleighColor, diffuseScatteringColorBright, calcOpacity(2 * d));
 
   float mie = 1.5 * miePhase(viewDir, sunDir, 0.6);
-  mie *= 1 - exp(-3 * d * 3);
+  mie *= hazeForDistance(haze_dist); //1 - exp(-3 * (haze_dist/HAZE_VISIBILITY));
 
   vec3 mieColor = mix(vec3(1.0, 0.9, 0.5), vec3(1), smoothstep(0.0, 0.25, sunDir.z));
   mieColor = mix(mieColor * vec3(1.0, 0.8, 0.6), mieColor, smoothstep(-0.2, 0.1, sunDir.z));
@@ -461,6 +583,9 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
   mieColor *= mie;
 
   rayleighColor *= smoothstep(-0.5, 0.0, sunDir.z);
+  fog_color *= smoothstep(-0.5, 0.0, sunDir.z);
+  fog_color = mix(fog_color, vec3(1),
+    1.5 * 1.5 * smoothstep(-0.6, 0.4, sunDir.z) * mieColor * miePhase(viewDir, sunDir, 0.6));
 
   mieColor *= smoothstep(-0.6, 0.4, sunDir.z);
   mieColor *= 1.5;
@@ -470,6 +595,107 @@ vec4 calcAtmosphereColor(float dist, vec3 viewDir)
   return vec4(rayleighColor, opacity);
 }
 
+
+vec3 intersect(vec3 lineP,
+               vec3 lineN,
+               vec3 planeN,
+               float  planeD)
+{
+    float distance = (planeD - dot(planeN, lineP)) / dot(lineN, planeN);
+    return lineP + lineN * distance;
+}
+
+
+float calcHazeTransitionDistance(float baseHeight, float layerTop, vec3 cameraPos, vec3 worldPos)
+{
+    vec3 minPos = cameraPos.z < worldPos.z ? cameraPos : worldPos;
+    vec3 maxPos = cameraPos.z < worldPos.z ? worldPos : cameraPos;
+
+    // only the distance below the fog layer top is relevant
+    maxPos = (maxPos.z > layerTop && minPos.z != maxPos.z) ?
+            intersect(minPos, maxPos - minPos, vec3(0, 0, 1), layerTop) :
+            maxPos;
+    minPos = minPos.z > layerTop ? maxPos : minPos;
+
+    minPos = (minPos.z < baseHeight && minPos.z != maxPos.z) ?
+        intersect(minPos, maxPos - minPos, vec3(0, 0, 1), baseHeight) :
+        minPos;
+
+    maxPos = maxPos.z < baseHeight ? minPos : maxPos;
+
+    float minHeight = minPos.z;
+    float maxHeight = maxPos.z;
+
+    minHeight = clamp(minHeight, baseHeight, layerTop);
+    maxHeight = clamp(maxHeight, baseHeight, layerTop);
+
+    float deltaHeight = maxHeight - minHeight;
+
+    float h0 = clamp((minHeight - baseHeight) / (layerTop - baseHeight), 0, 1);
+    float h1 = clamp((maxHeight - baseHeight) / (layerTop - baseHeight), 0, 1);
+    float delta = h1 - h0;
+
+#define DENSITY_ANTIDERIVATIVE(h) (pow(h,4) / 2 - pow(h,3) + h)
+
+    float avgDensityScale = deltaHeight != 0.f ?
+                (DENSITY_ANTIDERIVATIVE(h1) - DENSITY_ANTIDERIVATIVE(h0))
+            / delta
+            :
+        0;
+
+#undef DENSITY_ANTIDERIVATIVE
+
+    avgDensityScale = abs(avgDensityScale);
+
+    return length(minPos - maxPos) * avgDensityScale;
+}
+
+
+float calcHazeDistanceConstantDenisty(float baseHeight, float layerTop, vec3 cameraPos, vec3 worldPos)
+{
+    vec3 minPos = cameraPos.z < worldPos.z ? cameraPos : worldPos;
+    vec3 maxPos = cameraPos.z < worldPos.z ? worldPos : cameraPos;
+
+    // only the distance below the fog layer top is relevant
+    maxPos = (maxPos.z > layerTop && minPos.z != maxPos.z) ?
+            intersect(minPos, maxPos - minPos, vec3(0, 0, 1), layerTop) :
+            maxPos;
+    minPos = minPos.z > layerTop ? maxPos : minPos;
+
+    minPos = (minPos.z < baseHeight && minPos.z != maxPos.z) ?
+        intersect(minPos, maxPos - minPos, vec3(0, 0, 1), baseHeight) :
+        minPos;
+
+    maxPos = maxPos.z < baseHeight ? minPos : maxPos;
+
+    return length(minPos - maxPos);
+}
+
+
+float calcHaze(vec3 obj_pos)
+{
+  vec3 viewDir = normalize(obj_pos - cameraPosWorld);
+  float obj_dist = distance(obj_pos, cameraPosWorld);
+
+  float sphere_radius = planet_radius + 1550;
+  vec3 sphere_center = vec3(cameraPosWorld.xy, -planet_radius);
+
+  vec3 view_dir_view = normalize((world2ViewMatrix * vec4(viewDir, 0)).xyz);
+
+  float fog = 0;
+
+  float spherical_fog_dist = sphericalFogDistance(cameraPosWorld, viewDir, obj_dist, sphere_center, sphere_radius);
+  float spherical_fog = hazeForDistance(spherical_fog_dist);
+
+  float fog_distance = 0;
+  fog_distance += calcHazeDistanceConstantDenisty(0, 1500, cameraPosWorld, obj_pos);
+  fog_distance += calcHazeTransitionDistance(1500, 2000, cameraPosWorld, obj_pos);
+  fog = hazeForDistance(fog_distance);
+
+  fog = mix(fog, spherical_fog, smoothstep(3000, 6000, cameraPosWorld.z));
+
+  return fog;
+}
 
 void apply_fog()
 {
@@ -482,7 +708,7 @@ void apply_fog()
 
   vec3 viewDir = normalize(passObjectPos - cameraPosWorld);
 
-  float t = 0.0;
+  vec2 t = vec2(0.0);
 
   if
     (
@@ -497,26 +723,30 @@ void apply_fog()
     }
     else
     {
-      float t1 = getMaxAtmosphereThicknessFromObjectReverse(passObjectPos);
-      float t2 = getMaxAtmosphereThicknessFromCameraReverse(passObjectPos);
+      vec2 t1 = getMaxAtmosphereThicknessFromObjectReverse(passObjectPos);
+      vec2 t2 = getMaxAtmosphereThicknessFromCameraReverse(passObjectPos);
       t = t1 - t2;
 
 //       t = t2;
-      if (t1 < t2) {
+      if (t1.x < t2.x) {
         debugColor = vec3(1,1,0);
       }
     }
 
   }
   else {
-    float t1 = getMaxAtmosphereThicknessFromCamera(passObjectPos);
-    float t2 = getMaxAtmosphereThicknessFromObject(passObjectPos);
+    vec2 t1 = getMaxAtmosphereThicknessFromCamera(passObjectPos);
+    vec2 t2 = getMaxAtmosphereThicknessFromObject(passObjectPos);
     t = t1 - t2;
   }
 
-  t = max(0, t);
+  t = max(vec2(0), t);
 
-  vec4 atmosphereColor = calcAtmosphereColor(t, viewDir);
+  vec3 fog_color;
+
+  vec4 atmosphereColor = calcAtmosphereColor(t.x, t.y, viewDir, fog_color);
+
+  float fog = max(calcHaze(passObjectPos), atmosphereColor.w);
 
   float extinction = atmosphereColor.w;
 
@@ -533,11 +763,14 @@ void apply_fog()
 
   gl_FragColor.xyz = mix(gl_FragColor.xyz, vec3(1), atmosphereColor.xyz);
 
-#if 0
+
+  gl_FragColor.xyz = mix(gl_FragColor.xyz, fog_color, fog);
+
+#if 1
   if (t == -1.0) {
     gl_FragColor.xyz = vec3(0.5, 0.5, 0.0);
   }
-  else if (t < 0.0) {
+  else if (t.x < 0.0) {
     gl_FragColor.xyz = vec3(1,0,1);
 //     gl_FragColor.xyz = vec3(0.0, abs(t + 1.0) * 4.0, 0.0);
   }

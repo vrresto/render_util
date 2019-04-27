@@ -72,6 +72,11 @@ namespace
            getDistanceToHorizon(planet_radius + atmosphere_height);
   }
 
+  double calcHazeDensityAtHeight(double height)
+  {
+    return exp(-(height/2000));
+  }
+
   double calcAtmosphereDensityAtHeight(double height)
   {
     assert(height >= 0);
@@ -161,7 +166,7 @@ namespace
 #endif
   }
 
-  double calcAtmosphereThickness(double camera_height, const glm::dvec2 &view_dir)
+  glm::dvec2 calcAtmosphereThickness(double camera_height, const glm::dvec2 &view_dir)
   {
     const double sampling_step = 100.0;
     const int max_steps = max_atmosphere_distance / sampling_step;
@@ -172,6 +177,7 @@ namespace
     const glm::dvec2 camera_pos(0, camera_height);
 
     double total = 0;
+    double haze_total = 0;
     int walked_steps = 0;
 
     //FIXME calculate exact distance to surface
@@ -196,9 +202,11 @@ namespace
         break;
 
       const double density_at_step = calcRelativeAtmosphereDensityAtHeight(height);
+      const double haze_density_at_step = calcHazeDensityAtHeight(height);
 
       walked_steps++;
       total += density_at_step;
+      haze_total += haze_density_at_step;
 
       assert(total == total);
     }
@@ -207,7 +215,7 @@ namespace
 //     assert(!isnan(average));
 //     return walked_steps * sampling_step * average;
     // <=>
-    return sampling_step * total;
+    return sampling_step * glm::dvec2(total, haze_total);
   }
 
   int getMapIndex(int x, int y) {
@@ -246,7 +254,7 @@ namespace
 
     for (int x = 0; x < map_size.x; x++)
     {
-      float thickness = -1;
+      glm::dvec2 thickness = glm::dvec2(-1);
 
       const double x_normalized = x * view_dir_step;
 
@@ -354,10 +362,10 @@ namespace
       }
       else {
 //           thickness = -1.0 - x_normalized;
-        thickness = -1.0;
+        thickness = glm::dvec2(-1.0);
       }
 
-      g_map[getMapIndex(x,y)] = thickness;
+      g_map[getMapIndex(x,y)] = { (float)thickness.x, (float)thickness.y };
 
     }
 

@@ -21,6 +21,7 @@
 uniform mat4 projectionMatrixFar;
 uniform mat4 world2ViewMatrix;
 varying vec3 passObjectPosWorld;
+varying vec3 passObjectPos;
 uniform vec3 cameraPosWorld;
 
 void main(void)
@@ -28,6 +29,7 @@ void main(void)
   vec4 pos = gl_Vertex;
   pos.xyz += cameraPosWorld;
   passObjectPosWorld = pos.xyz;
+  passObjectPos = pos.xyz;
 
   gl_Position = projectionMatrixFar * world2ViewMatrix * pos;
 }

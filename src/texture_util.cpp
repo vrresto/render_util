@@ -620,7 +620,7 @@ TexturePtr createAmosphereThicknessTexture(TextureManager &texture_manager,
 
   const glm::ivec2 dimensions = atmosphere_map_dimensions;
 
-  TexturePtr texture = createFloatTexture(atmosphere_map, dimensions.x, dimensions.y, 1);
+  TexturePtr texture = createFloatTexture((float*)atmosphere_map, dimensions.x, dimensions.y, 2);
 
   TextureParameters<int> params;
   params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);

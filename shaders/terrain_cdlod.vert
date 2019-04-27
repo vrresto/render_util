@@ -60,6 +60,7 @@ uniform float max_terrain_texture_scale;
 
 varying vec3 passObjectPosFlat;
 varying vec3 passObjectPos;
+varying vec3 passObjectPosView;
 varying float vertexHorizontalDist;
 varying vec3 passLight;
 varying vec3 passNormal;
@@ -205,6 +206,7 @@ void main(void)
   pos.xyz -= camera_pos_offset_terrain;
 
   gl_Position = world_to_view_rotation * vec4(pos,1);
+  passObjectPosView = gl_Position.xyz;
   gl_Position = projectionMatrixFar * gl_Position;
 
   passNormal = gl_Normal.xyz;

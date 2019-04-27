@@ -18,14 +18,15 @@
 
 #version 130
 
-vec4 calcAtmosphereColor(float dist, vec3 viewDir);
-float getMaxAtmosphereThickness(vec2 cameraPos, vec2 viewDir);
-float getMaxAtmosphereThickness(vec3 cameraPos, vec3 viewDir);
+vec4 calcAtmosphereColor(float dist_air, float dist_haze, vec3 viewDir, out vec3 fog_color);
+vec2 getMaxAtmosphereThickness(vec2 cameraPos, vec2 viewDir);
 bool intersectsGround(vec3 rayStart, vec3 rayDir);
 float getCircleIntersectionDistFromOutside(vec2 rayStart, vec2 rayDir, float radius);
 void resetDebugColor();
 vec3 getDebugColor();
 
+float calcHaze(vec3 obj_pos);
+float hazeForDistance(float dist);
 
 varying vec3 passObjectPosWorld;
 uniform vec3 cameraPosWorld;
@@ -60,26 +61,20 @@ void main(void)
 
   vec2 cameraPosVertical = vec2(0, cameraPosWorld.z);
 
-  float t = 0;
+  vec2 t = vec2(0);
 
-  if (intersectsGround(vec3(0, 0, cameraPosWorld.z + planet_radius), viewDir))
   {
-    gl_FragColor.xyz = vec3(55,61,31) / 255;
-    gl_FragColor.xyz *= calcLight2();
-
-    vec2 objectPosVertical = cameraPosVertical +
-      (viewDirVertical *
-        getCircleIntersectionDistFromOutside(cameraPosVertical + vec2(0, planet_radius), viewDirVertical, planet_radius));
-
-    t = getMaxAtmosphereThickness(objectPosVertical, -viewDirVertical) -
-        getMaxAtmosphereThickness(cameraPosVertical, -viewDirVertical);
-  }
-  else {
     t = getMaxAtmosphereThickness(cameraPosVertical, viewDirVertical);
   }
 
-  vec4 atmosphere_color = calcAtmosphereColor(t, viewDir);
+
+  vec3 fog_color;
+  vec4 atmosphere_color = calcAtmosphereColor(t.x, t.y, viewDir, fog_color);
  
+  vec3 obj_pos = cameraPosWorld + viewDir * 9000000;
+  float fog = hazeForDistance(t.y);
+  atmosphere_color.xyz = mix(atmosphere_color.xyz, fog_color, fog);
+
   gl_FragColor.xyz *= 1.0 - atmosphere_color.w;
   gl_FragColor.xyz = mix(gl_FragColor.xyz, vec3(1), atmosphere_color.xyz);
 

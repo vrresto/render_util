@@ -20,7 +20,11 @@
 
 namespace
 {
-  typedef float AtmosphereMapElementType;
+  struct AtmosphereMapElementType
+  {
+    float air_thickness = 0;
+    float haze_thickness = 0;
+  };
 
   enum 
   {
