@@ -74,7 +74,7 @@ namespace
 
   double calcHazeDensityAtHeight(double height)
   {
-    return exp(-(height/2000));
+    return exp(-(height/1300));
   }
 
   double calcAtmosphereDensityAtHeight(double height)

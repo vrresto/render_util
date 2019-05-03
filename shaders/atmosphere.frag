@@ -538,11 +538,11 @@ vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir, out vec3
   float brightness = smoothstep(0.0, 0.25, sunDir.z);
 
   vec3 rayleighColor = vec3(0.0, 0.225, 0.9);
-  vec3 rayleighColorLow = rayleighColor * vec3(1.0, 0.4, 0.3);
+  vec3 rayleighColorLow = rayleighColor * vec3(1.0, 0.5, 0.4);
   rayleighColor = mix(rayleighColorLow, rayleighColor, brightness);
 
   vec3 diffuseScatteringColorDark = vec3(0.15, 0.62, 1.0);
-  vec3 diffuseScatteringColorDarkLow = diffuseScatteringColorDark * vec3(1.0, 0.4, 0.3);
+  vec3 diffuseScatteringColorDarkLow = diffuseScatteringColorDark * vec3(1.0, 0.5, 0.4);
   diffuseScatteringColorDark = mix(diffuseScatteringColorDarkLow, diffuseScatteringColorDark, brightness);
 
   rayleighColor = mix(rayleighColor, vec3(1), hazyness);
@@ -552,10 +552,14 @@ vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir, out vec3
   vec3 diffuseScatteringColorBright = vec3(0.4, 0.8, 1.0);
   diffuseScatteringColorBright = mix(diffuseScatteringColorBright, vec3(1), 0.5);
 
-  fog_color = mix(diffuseScatteringColorDark,
-      vec3(1) * mix(0.95, 1.0, brightness), 0.8);
+  fog_color = vec3(0.8, 0.93, 1.0);
+  vec3 fog_color_low = fog_color * 0.6 * vec3(0.84, 0.88, 0.95);
+  fog_color = mix(fog_color_low, fog_color, brightness);
 
-  fog_color = mix(mix(fog_color, vec3(0.8), 0.4), fog_color, smoothstep(0, 3000, cameraPosWorld.z));
+  vec3 fog_color_low_alt = vec3(0.76, 0.87, 0.98);
+  vec3 fog_color_low_alt_low = fog_color_low_alt * 0.6 * vec3(0.84, 0.88, 0.95);
+  fog_color_low_alt = mix(fog_color_low_alt_low, fog_color_low_alt, brightness);
+  fog_color = mix(fog_color_low_alt, fog_color, smoothstep(0, 5000, cameraPosWorld.z));
 
   vec3 diffuseScatteringColorBrightLow = diffuseScatteringColorBright * 0.6;
   diffuseScatteringColorBright = mix(diffuseScatteringColorBrightLow,
@@ -746,7 +750,7 @@ void apply_fog()
 
   vec4 atmosphereColor = calcAtmosphereColor(t.x, t.y, viewDir, fog_color);
 
-  float fog = max(calcHaze(passObjectPos), atmosphereColor.w);
+  float fog = hazeForDistance(t.y);
 
   float extinction = atmosphereColor.w;
 
@@ -762,7 +766,6 @@ void apply_fog()
 //   atmosphereColor *= 0;
 
   gl_FragColor.xyz = mix(gl_FragColor.xyz, vec3(1), atmosphereColor.xyz);
-
 
   gl_FragColor.xyz = mix(gl_FragColor.xyz, fog_color, fog);
 
