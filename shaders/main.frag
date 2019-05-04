@@ -98,7 +98,7 @@ vec3 calcLight(vec3 pos, vec3 normal)
 }
 
 
-vec3 calcLightWithSpecular(vec3 input, vec3 normal, float shinyness, vec3 specular_amount, vec3 viewDir)
+vec3 calcLightWithSpecular(vec3 input_color, vec3 normal, float shinyness, vec3 specular_amount, vec3 viewDir)
 {
   vec3 ambientLightColor;
   vec3 directLightColor;
@@ -121,5 +121,5 @@ vec3 calcLightWithSpecular(vec3 input, vec3 normal, float shinyness, vec3 specul
     specular *= specular_amount;
   }
 
-  return (light * input) + specular;
+  return (light * input_color) + specular;
 }
