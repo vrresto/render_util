@@ -59,6 +59,8 @@ const float atmosphereVisibility = 600000.0;
 const float hazyness = 0.0;
 
 const float HAZE_VISIBILITY = 50000;
+const float GROUND_FOG_HEIGHT = 300;
+const float GROUND_FOG_DENSITY_SCALE = 10;
 
 const float PI = acos(-1.0);
 
@@ -676,29 +678,27 @@ float calcHazeDistanceConstantDenisty(float baseHeight, float layerTop, vec3 cam
 }
 
 
-float calcHaze(vec3 obj_pos)
+float calcHazeDistance(vec3 obj_pos)
 {
   vec3 viewDir = normalize(obj_pos - cameraPosWorld);
   float obj_dist = distance(obj_pos, cameraPosWorld);
 
-  float sphere_radius = planet_radius + 1550;
+  float sphere_radius = planet_radius + GROUND_FOG_HEIGHT + 50;
   vec3 sphere_center = vec3(cameraPosWorld.xy, -planet_radius);
 
   vec3 view_dir_view = normalize((world2ViewMatrix * vec4(viewDir, 0)).xyz);
 
-  float fog = 0;
-
   float spherical_fog_dist = sphericalFogDistance(cameraPosWorld, viewDir, obj_dist, sphere_center, sphere_radius);
-  float spherical_fog = hazeForDistance(spherical_fog_dist);
 
   float fog_distance = 0;
-  fog_distance += calcHazeDistanceConstantDenisty(0, 1500, cameraPosWorld, obj_pos);
-  fog_distance += calcHazeTransitionDistance(1500, 2000, cameraPosWorld, obj_pos);
-  fog = hazeForDistance(fog_distance);
+  fog_distance += calcHazeDistanceConstantDenisty(0, GROUND_FOG_HEIGHT, cameraPosWorld, obj_pos);
+  fog_distance += calcHazeTransitionDistance(GROUND_FOG_HEIGHT, GROUND_FOG_HEIGHT + 100, cameraPosWorld, obj_pos);
 
-  fog = mix(fog, spherical_fog, smoothstep(3000, 6000, cameraPosWorld.z));
+  fog_distance = mix(fog_distance, spherical_fog_dist, smoothstep(1000, 2000, cameraPosWorld.z));
 
-  return fog;
+  fog_distance *= GROUND_FOG_DENSITY_SCALE;
+
+  return fog_distance;
 }
 
 void apply_fog()
@@ -750,7 +750,11 @@ void apply_fog()
 
   vec4 atmosphereColor = calcAtmosphereColor(t.x, t.y, viewDir, fog_color);
 
-  float fog = hazeForDistance(t.y);
+  float fog_dist = 0;
+  fog_dist += calcHazeDistance(passObjectPos);
+  fog_dist += t.y;
+
+  float fog = hazeForDistance(fog_dist);
 
   float extinction = atmosphereColor.w;
 
