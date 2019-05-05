@@ -58,9 +58,10 @@ const float atmosphereVisibility = 600000.0;
 // const float hazyness = 0.05;
 const float hazyness = 0.0;
 
-const float HAZE_VISIBILITY = 50000;
+const float HAZE_VISIBILITY = 20000;
 const float GROUND_FOG_HEIGHT = 300;
-const float GROUND_FOG_DENSITY_SCALE = 10;
+const float GROUND_FOG_DENSITY_SCALE = 2;
+const float MIE_PHASE_COEFFICIENT = 0.6;
 
 const float PI = acos(-1.0);
 
@@ -531,7 +532,8 @@ float hazeForDistance(float dist)
 }
 
 
-vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir, out vec3 fog_color)
+vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir,
+    out vec3 fog_color, out vec3 mie_color)
 {
   float d = air_dist / (atmosphereVisibility);
 //   float v = 25 * 1000 * 1000;
@@ -578,25 +580,25 @@ vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir, out vec3
   rayleighColor *= calcOpacity(15 * d);
   rayleighColor = mix(rayleighColor, diffuseScatteringColorDark, calcOpacity(4 * d));
   rayleighColor = mix(rayleighColor, diffuseScatteringColorBright, calcOpacity(2 * d));
+  rayleighColor *= smoothstep(-0.5, 0.0, sunDir.z);
 
-  float mie = 1.5 * miePhase(viewDir, sunDir, 0.6);
-  mie *= hazeForDistance(haze_dist); //1 - exp(-3 * (haze_dist/HAZE_VISIBILITY));
+  float mie_phase = miePhase(viewDir, sunDir, MIE_PHASE_COEFFICIENT);
 
   vec3 mieColor = mix(vec3(1.0, 0.9, 0.5), vec3(1), smoothstep(0.0, 0.25, sunDir.z));
   mieColor = mix(mieColor * vec3(1.0, 0.8, 0.6), mieColor, smoothstep(-0.2, 0.1, sunDir.z));
   mieColor = mix(mieColor * vec3(1.0, 0.8, 0.6), mieColor, smoothstep(-0.5, -0.1, sunDir.z));
 
-  mieColor *= mie;
+  const float MIE_SCALE = 2;
 
-  rayleighColor *= smoothstep(-0.5, 0.0, sunDir.z);
   fog_color *= smoothstep(-0.5, 0.0, sunDir.z);
-  fog_color = mix(fog_color, vec3(1),
-    1.5 * 1.5 * smoothstep(-0.6, 0.4, sunDir.z) * mieColor * miePhase(viewDir, sunDir, 0.6));
+  mieColor *= mie_phase;
+  mieColor *= MIE_SCALE;
+  mieColor *= hazeForDistance(haze_dist);
 
-  mieColor *= smoothstep(-0.6, 0.4, sunDir.z);
-  mieColor *= 1.5;
 
-  rayleighColor = mix(rayleighColor, vec3(1), mieColor);
+  fog_color = mix(fog_color, vec3(1), smoothstep(-0.5, 0.4, sunDir.z) * mieColor);
+
+  mie_color = mieColor;
 
   return vec4(rayleighColor, opacity);
 }
@@ -748,11 +750,12 @@ void apply_fog()
 
   vec3 fog_color;
 
-  vec4 atmosphereColor = calcAtmosphereColor(t.x, t.y, viewDir, fog_color);
-
   float fog_dist = 0;
   fog_dist += calcHazeDistance(passObjectPos, passObjectPosFlat);
   fog_dist += t.y;
+
+  vec3 mie_color = vec3(0);
+  vec4 atmosphereColor = calcAtmosphereColor(t.x, fog_dist, viewDir, fog_color, mie_color);
 
   float fog = hazeForDistance(fog_dist);
 
