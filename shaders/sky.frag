@@ -24,7 +24,7 @@ bool intersectsGround(vec3 rayStart, vec3 rayDir);
 float getCircleIntersectionDistFromOutside(vec2 rayStart, vec2 rayDir, float radius);
 void resetDebugColor();
 vec3 getDebugColor();
-float calcHazeDistance(vec3 obj_pos);
+float calcHazeDistance(vec3 obj_pos, vec3 obj_pos_flat);
 float hazeForDistance(float dist);
 
 varying vec3 passObjectPosWorld;
@@ -64,11 +64,11 @@ void main(void)
 
   vec3 fog_color;
   vec4 atmosphere_color = calcAtmosphereColor(t.x, t.y, viewDir, fog_color);
- 
-  vec3 obj_pos = cameraPosWorld + viewDir * 9000000;
+
+  vec3 obj_pos = cameraPosWorld + viewDir * 100000;
 
   float fog_distance = 0;
-  fog_distance += calcHazeDistance(obj_pos);
+  fog_distance += calcHazeDistance(obj_pos, obj_pos);
   fog_distance += t.y;
 
   float fog = hazeForDistance(fog_distance);
