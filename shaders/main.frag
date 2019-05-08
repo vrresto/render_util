@@ -20,6 +20,11 @@
 
 
 uniform vec3 sunDir;
+uniform vec3 cameraPosWorld;
+
+
+const float PI = acos(-1.0);
+
 
 // uniform ivec2 typeMapSize;
 
@@ -76,8 +81,9 @@ vec3 calcIncomingDirectLight()
 
 void calcLightParams(vec3 normal, out vec3 ambientLightColor, out vec3 directLightColor)
 {
-  float directLight = 1.2;
+  float directLight = 1.0;
   directLight *= clamp(dot(normalize(normal), sunDir), 0.0, 2.0);
+
   directLightColor = calcIncomingDirectLight() * directLight;
 
   float ambientLight = 0.6 * smoothstep(0.0, 0.3, sunDir.z);
@@ -126,4 +132,32 @@ vec3 calcLightWithSpecular(vec3 input_color, vec3 normal, float shinyness, vec3 
   }
 
   return (light * input_color) + specular;
+}
+
+
+vec3 saturation(vec3 rgb, float adjustment)
+{
+    // Algorithm from Chapter 16 of OpenGL Shading Language
+    const vec3 W = vec3(0.2125, 0.7154, 0.0721);
+    vec3 intensity = vec3(dot(rgb, W));
+    return mix(intensity, rgb, adjustment);
+}
+
+vec3 applyColorCorrection(vec3 color)
+{
+  return color;
+//   return color * vec3(1.0, 0.98, 0.95);
+}
+
+vec3 brightnessContrast(vec3 value, float brightness, float contrast)
+{
+    return (value - 0.5) * contrast + 0.5 + brightness;
+}
+
+vec3 textureColorCorrection(vec3 color)
+{
+  color = brightnessContrast(color, 0.0, 1.1);
+  color = saturation(color, 1.05);
+
+  return color;
 }

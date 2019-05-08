@@ -40,6 +40,7 @@
 #define ENABLE_TERRAIN3 @enable_terrain3:0@
 
 
+vec3 textureColorCorrection(vec3 color);
 float getDetailMapBlend(vec2 pos);
 float genericNoise(vec2 coord);
 vec3 calcLight(vec3 pos, vec3 normal, float direct_scale, float ambient_scale);
@@ -480,6 +481,8 @@ float bank_amount = 0;
 #if ENABLE_FOREST
   color = applyForest(color, pos.xy, view_dir, dist);
 #endif
+
+  color.xyz = textureColorCorrection(color.xyz);
 
   color.xyz *= light;
 
