@@ -42,7 +42,7 @@
 
 float getDetailMapBlend(vec2 pos);
 float genericNoise(vec2 coord);
-vec3 calcLight(vec3 pos, vec3 normal);
+vec3 calcLight(vec3 pos, vec3 normal, float direct_scale, float ambient_scale);
 vec4 getForestFarColor(vec2 pos);
 vec4 getForestFarColorSimple(vec2 pos);
 vec4 getForestColor(vec2 pos, int layer);
@@ -416,7 +416,7 @@ vec4 getTerrainColor(vec3 pos)
 
   normal.y *= -1;
 
-  vec3 light = calcLight(pos, normal); 
+  vec3 light = calcLight(pos, normal, 1, 1);
 
   float shallow_sea_amount = 0;
   float river_amount = 0;

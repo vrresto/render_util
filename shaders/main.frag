@@ -59,9 +59,12 @@ vec2 rotate(vec2 v, float a)
 
 vec3 calcIncomingDirectLight()
 {
-  vec3 directLightColor = vec3(1.0, 1.0, 0.9);
+  vec3 directLightColor = vec3(1.0, 1.0, 0.95);
   vec3 directLightColorLow = directLightColor * vec3(1.0, 0.9, 0.6);
-  vec3 directLightColorVeryLow = vec3(1.0, 0.6, 0.2);
+
+  directLightColorLow *= 0.8;
+
+  vec3 directLightColorVeryLow = directLightColorLow * vec3(1.0, 0.67, 0.37);
 
   directLightColor = mix(directLightColorLow, directLightColor, smoothstep(0.0, 0.3, sunDir.z));
   directLightColor = mix(directLightColorVeryLow, directLightColor, smoothstep(-0.02, 0.1, sunDir.z));
@@ -86,25 +89,26 @@ void calcLightParams(vec3 normal, out vec3 ambientLightColor, out vec3 directLig
 }
 
 
-vec3 calcLight(vec3 pos, vec3 normal)
+vec3 calcLight(vec3 pos, vec3 normal, float direct_scale, float ambient_scale)
 {
   vec3 ambientLightColor;
   vec3 directLightColor;
   calcLightParams(normal, ambientLightColor, directLightColor);
 
-  vec3 light = directLightColor + ambientLightColor;
+  vec3 light = direct_scale * directLightColor + ambient_scale * ambientLightColor;
 
   return light;
 }
 
 
-vec3 calcLightWithSpecular(vec3 input_color, vec3 normal, float shinyness, vec3 specular_amount, vec3 viewDir)
+vec3 calcLightWithSpecular(vec3 input_color, vec3 normal, float shinyness, vec3 specular_amount,
+    float direct_scale, float ambient_scale, vec3 viewDir)
 {
   vec3 ambientLightColor;
   vec3 directLightColor;
   calcLightParams(normal, ambientLightColor, directLightColor);
 
-  vec3 light = directLightColor + ambientLightColor;
+  vec3 light = direct_scale * directLightColor + ambient_scale * ambientLightColor;
 
   vec3 specular = vec3(0);
 
