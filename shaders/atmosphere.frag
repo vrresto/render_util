@@ -60,9 +60,9 @@ const float atmosphereVisibility = 600000.0;
 // const float hazyness = 0.05;
 const float hazyness = 0.0;
 
-const float HAZE_VISIBILITY = 80000;
+const float HAZE_VISIBILITY = 40000;
 const float GROUND_FOG_HEIGHT = 300;
-const float GROUND_FOG_DENSITY_SCALE = 3;
+const float GROUND_FOG_DENSITY_SCALE = 1;
 const float MIE_PHASE_COEFFICIENT = 0.6;
 
 const float PI = acos(-1.0);
