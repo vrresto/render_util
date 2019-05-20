@@ -689,12 +689,14 @@ ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
   vector<ImageRGBA::Ptr> mipmaps(textures.size());
   for (size_t i = 0; i < mipmaps.size(); i++)
   {
-    mipmaps[i] = downSample(textures[i], textures[i]->w() / tile_size_pixels);
-//     stringstream path;
-//     path << "dump/" << i << ".tga";
-//     saveImageToFile(path.str(), mipmaps[i].get());
+    if (textures[i])
+    {
+      mipmaps[i] = downSample(textures[i], textures[i]->w() / tile_size_pixels);
+      //     stringstream path;
+      //     path << "dump/" << i << ".tga";
+      //     saveImageToFile(path.str(), mipmaps[i].get());
+    }
   }
-  
 
   for (int y = 0; y < texture->h(); y++)
   {
@@ -711,9 +713,13 @@ ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
         if (type >= mipmaps.size())
           type = 0;
 
-        ivec2 tile_coords = ivec2(x,y);
-        tile_coords %= tile_size_pixels;
-        color = mipmaps[type]->get(tile_coords, i);
+        auto mipmap = mipmaps[type];
+        if (mipmap)
+        {
+          ivec2 tile_coords = ivec2(x,y);
+          tile_coords %= tile_size_pixels;
+          color = mipmap->get(tile_coords, i);
+        }
 
         texture->at(x,y,i) = color;
       }

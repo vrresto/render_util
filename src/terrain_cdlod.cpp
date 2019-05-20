@@ -110,7 +110,7 @@ void createTextureArrays(const std::vector<ImageRGBA::ConstPtr> &textures_in,
 
   std::unordered_map<int, int> array_index_for_size;
   for (size_t i = 0; i < texture_sizes.size(); i++)
-    array_index_for_size[texture_sizes[i]] = i;
+    array_index_for_size[texture_sizes.at(i)] = i;
 
   for (int i = 0; i < textures_in.size(); i++)
   {
@@ -123,6 +123,8 @@ void createTextureArrays(const std::vector<ImageRGBA::ConstPtr> &textures_in,
     assert(scale <= 255);
 
     auto image = textures_in.at(i);
+    if (!image)
+      continue;
 
     while (image->w() < smallest_size)
     {
