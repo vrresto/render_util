@@ -282,10 +282,10 @@ int getMaxWidth(const std::vector<T> &images)
 
 
 template <typename T>
-std::vector<typename image::TypeFromPtr<T>::ConstPtr>
+std::vector<typename image::TypeFromPtr<T>::Type::ConstPtr>
 resampleImages(const std::vector<T> &images, int new_width)
 {
-  std::vector<typename image::TypeFromPtr<T>::ConstPtr> resampled;
+  std::vector<typename image::TypeFromPtr<T>::Type::ConstPtr> resampled;
 
   for (auto image : images)
   {

@@ -41,17 +41,36 @@ template <typename T>
 struct TypeFromPtr
 {
   using Type = typename std::remove_const<typename T::element_type>::type;
-  using Ptr = typename Type::Ptr;
-  using ConstPtr = typename Type::ConstPtr;
 };
 
 
 template <typename T>
-typename TypeFromPtr<T>::Ptr
+typename TypeFromPtr<T>::Type::Ptr
 clone(T image)
 {
   return std::make_shared<typename TypeFromPtr<T>::Type>(image->getSize(),
                                                          image->getDataContainer());
+}
+
+
+template <typename T>
+std::shared_ptr<Image<typename TypeFromPtr<T>::Type::ComponentType>>
+getChannel(T image, int channel)
+{
+  assert(channel < image->numComponents());
+
+  auto channel_image =
+    std::make_shared<Image<typename TypeFromPtr<T>::Type::ComponentType>>(image->getSize());
+
+  for (int y = 0; y < channel_image->h(); y++)
+  {
+    for (int x = 0; x < channel_image->w(); x++)
+    {
+      channel_image->at(x,y) = image->get(x, y, channel);
+    }
+  }
+
+  return channel_image;
 }
 
 
