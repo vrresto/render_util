@@ -31,9 +31,6 @@
 
 namespace render_util
 {
-  //FIXME use ImageRGB
-  ImageRGBA::Ptr createNormalMap(ImageGreyScale::ConstPtr bump_map, float bump_height_scale);
-
   TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_pixel, bool mipmaps);
   TexturePtr createFloatTexture1D(const float *data, size_t size, int num_components);
   TexturePtr createFloatTexture(const float *data, int w, int h, int num_components, bool mipmaps = false);
@@ -146,6 +143,8 @@ namespace render_util
   ImageGreyScale::Ptr createTerrainLightMap(const ElevationMap&);
 
   Image<Normal>::Ptr createNormalMap(ElevationMap::ConstPtr elevation_map, float grid_scale);
+  ImageRGB::Ptr createNormalMap(ImageGreyScale::ConstPtr bump_map, float bump_height_scale);
+
 }
 
 #endif

@@ -39,6 +39,11 @@
 #define ENABLE_TERRAIN2 @enable_terrain2:0@
 #define ENABLE_TERRAIN3 @enable_terrain3:0@
 
+#define ENABLE_TERRAIN_DETAIL_NM0 @enable_terrain_detail_nm0:0@
+#define ENABLE_TERRAIN_DETAIL_NM1 @enable_terrain_detail_nm1:0@
+#define ENABLE_TERRAIN_DETAIL_NM2 @enable_terrain_detail_nm2:0@
+#define ENABLE_TERRAIN_DETAIL_NM3 @enable_terrain_detail_nm3:0@
+
 
 vec3 textureColorCorrection(vec3 color);
 float getDetailMapBlend(vec2 pos);
@@ -70,6 +75,7 @@ uniform vec2 height_map_base_origin;
 
 uniform sampler1D sampler_terrain_scale_map;
 uniform sampler2D sampler_type_map;
+uniform sampler2D sampler_type_map_normals;
 uniform sampler2D sampler_type_map_base;
 uniform sampler2D sampler_terrain_noise;
 uniform sampler2D sampler_terrain_far;
@@ -203,6 +209,30 @@ vec4 sampleTerrain(vec3 type)
   return color;
 }
 
+vec3 sampleTerrainDetailNormal(vec3 type)
+{
+  float sampler_nr = type.x * 255;
+  uint index = uint(type.y * 255);
+  float scale = (type.z * 255) - 128;
+  if (scale < 0)
+    scale = 1 / -scale;
+  vec4 color = vec4(0);
+
+#if ENABLE_TERRAIN_DETAIL_NM0
+  color += texture(sampler_terrain_detail_nm0, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 0);
+#endif
+#if ENABLE_TERRAIN_DETAIL_NM1
+  color += texture(sampler_terrain_detail_nm1, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 1);
+#endif
+#if ENABLE_TERRAIN_DETAIL_NM2
+  color += texture(sampler_terrain_detail_nm2, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 2);
+#endif
+#if ENABLE_TERRAIN_DETAIL_NM3
+  color += texture(sampler_terrain_detail_nm3, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 3);
+#endif
+
+  return color.xyz;
+}
 
 vec4 sampleTerrainTextures(vec2 pos)
 {
@@ -218,6 +248,26 @@ vec4 sampleTerrainTextures(vec2 pos)
   vec4 c01 = sampleTerrain(types[1]);
   vec4 c10 = sampleTerrain(types[2]);
   vec4 c11 = sampleTerrain(types[3]);
+
+  return
+    c00 * weights[0] +
+    c01 * weights[1] +
+    c10 * weights[2] +
+    c11 * weights[3];
+}
+
+
+vec3 getTerrainDetailNormal(vec2 pos)
+{
+  vec3 types[4];
+  float weights[4];
+
+  sampleTypeMap(sampler_type_map_normals, typeMapSize, pass_type_map_coord, types, weights);
+
+  vec3 c00 = sampleTerrainDetailNormal(types[0]);
+  vec3 c01 = sampleTerrainDetailNormal(types[1]);
+  vec3 c10 = sampleTerrainDetailNormal(types[2]);
+  vec3 c11 = sampleTerrainDetailNormal(types[3]);
 
   return
     c00 * weights[0] +
@@ -417,8 +467,6 @@ vec4 getTerrainColor(vec3 pos)
 
   normal.y *= -1;
 
-  vec3 light = calcLight(pos, normal, 1, 1);
-
   float shallow_sea_amount = 0;
   float river_amount = 0;
 
@@ -433,9 +481,12 @@ vec4 getTerrainColor(vec3 pos)
 
 //   float lod = mip_map_level(pos.xy / 200);
 
+  vec3 detail_normal = vec3(0,0,1);
+
 #if ENABLE_TYPE_MAP
 #if !LOW_DETAIL
     color = sampleTerrainTextures(pos.xy);
+    detail_normal = getTerrainDetailNormal(pos.xy);
 
 #if ENABLE_BASE_MAP
   color = mix(sampleBaseTerrainTextures(pos.xy), color, detail_blend);
@@ -444,7 +495,15 @@ vec4 getTerrainColor(vec3 pos)
   color.w = 1;
 #endif
 
-//   color.xyz = vec3(1.0);
+
+
+  //FIXME
+  return vec4(detail_normal, 1);
+
+
+//   vec3 light = calcLight(pos, normal, 1, 1);
+  vec3 light = calcLight(pos, detail_normal, 1, 1);
+
 
 #if ENABLE_WATER
 float waterDepth = 0;

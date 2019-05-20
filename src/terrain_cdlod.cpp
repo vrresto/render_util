@@ -204,14 +204,17 @@ class TerrainTextures
   const TextureManager &m_texture_manager;
   glm::ivec2 m_type_map_size = glm::ivec2(0);
   TexturePtr m_type_map_texture;
+  TexturePtr m_type_map_texture_nm;
   ShaderParameters m_shader_params;
   std::array<TexturePtr, render_util::MAX_TERRAIN_TEXUNITS> m_textures;
+  std::array<TexturePtr, render_util::MAX_TERRAIN_TEXUNITS> m_textures_nm;
 
 public:
   static constexpr float MAX_TERRAIN_TEXTURE_SCALE = 8;
 
   TerrainTextures(const TextureManager &texture_manager,
                   const std::vector<ImageRGBA::ConstPtr> &textures,
+                  const std::vector<ImageRGBA::ConstPtr> &textures_nm,
                   const std::vector<float> &texture_scale,
                   TerrainBase::TypeMap::ConstPtr type_map);
 
@@ -228,6 +231,7 @@ public:
 
 TerrainTextures::TerrainTextures(const TextureManager &texture_manager,
                                       const std::vector<ImageRGBA::ConstPtr> &textures,
+                                      const std::vector<ImageRGBA::ConstPtr> &textures_nm,
                                       const std::vector<float> &texture_scale,
                                       TerrainBase::TypeMap::ConstPtr type_map_) :
   m_texture_manager(texture_manager),
@@ -238,8 +242,14 @@ TerrainTextures::TerrainTextures(const TextureManager &texture_manager,
   using namespace render_util;
   using TextureArray = vector<ImageRGBA::ConstPtr>;
 
+  assert(textures.size() == textures_nm.size());
+  assert(textures.size() == texture_scale.size());
+
   createTextureArrays(textures, texture_scale, type_map_, MAX_TERRAIN_TEXTURE_SCALE,
                       m_textures, m_type_map_texture);
+
+  createTextureArrays(textures_nm, texture_scale, type_map_, MAX_TERRAIN_TEXTURE_SCALE,
+                      m_textures_nm, m_type_map_texture_nm);
 
   for (int i = 0; i < m_textures.size(); i++)
   {
@@ -249,6 +259,16 @@ TerrainTextures::TerrainTextures(const TextureManager &texture_manager,
       continue;
 
     m_shader_params.set(string( "enable_terrain") + to_string(i), true);
+  }
+
+  for (int i = 0; i < m_textures_nm.size(); i++)
+  {
+    CHECK_GL_ERROR();
+
+    if (!m_textures_nm.at(i))
+      continue;
+
+    m_shader_params.set(string( "enable_terrain_detail_nm") + to_string(i), true);
   }
 }
 
@@ -268,6 +288,24 @@ void TerrainTextures::bind(TextureManager &tm)
       continue;
 
     auto texunit = TEXUNIT_TERRAIN + i;
+    assert(texunit < TEXUNIT_NUM);
+
+    tm.bind(texunit, textures);
+
+    CHECK_GL_ERROR();
+  }
+
+  tm.bind(TEXUNIT_TYPE_MAP, m_type_map_texture_nm);
+
+  for (int i = 0; i < m_textures_nm.size(); i++)
+  {
+    CHECK_GL_ERROR();
+
+    auto textures = m_textures_nm.at(i);
+    if (!textures)
+      continue;
+
+    auto texunit = TEXUNIT_TERRAIN_DETAIL_NM0 + i;
     assert(texunit < TEXUNIT_NUM);
 
     tm.bind(texunit, textures);
@@ -615,7 +653,7 @@ class TerrainCDLOD : public TerrainCDLODBase
   vec2 height_map_size_px = vec2(0);
 
   TexturePtr height_map_base_texture;
-  TexturePtr normal_map_base_texture;
+//   TexturePtr normal_map_base_texture;
   vec2 height_map_base_size_px = vec2(0);
 
   std::unordered_map<unsigned int, std::unique_ptr<Material>> materials;
@@ -633,7 +671,9 @@ public:
   ~TerrainCDLOD() override;
 
   void build(ElevationMap::ConstPtr, MaterialMap::ConstPtr, TypeMap::ConstPtr type_map,
-             const std::vector<ImageRGBA::ConstPtr>&, const std::vector<float>&) override;
+             const std::vector<ImageRGBA::ConstPtr>&,
+             const std::vector<ImageRGBA::ConstPtr>&,
+             const std::vector<float>&) override;
   void draw(TerrainBase::Client *client) override;
   void update(const Camera &camera, bool low_detail) override;
   void setDrawDistance(float dist) override;
@@ -842,6 +882,7 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map,
                          MaterialMap::ConstPtr material_map,
                          TypeMap::ConstPtr type_map,
                          const std::vector<ImageRGBA::ConstPtr> &textures,
+                         const std::vector<ImageRGBA::ConstPtr> &textures_nm,
                          const std::vector<float> &texture_scale)
 {
   CHECK_GL_ERROR();
@@ -855,7 +896,7 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map,
   CHECK_GL_ERROR();
 
   m_terrain_textures =
-    std::make_unique<TerrainTextures>(texture_manager, textures, texture_scale, type_map);
+    std::make_unique<TerrainTextures>(texture_manager, textures, textures_nm, texture_scale, type_map);
 
   cout<<"TerrainCDLOD: creating nodes ..."<<endl;
   root_node = createNode(*map, root_node_pos, MAX_LOD, processMaterialMap(material_map));
@@ -941,10 +982,11 @@ void TerrainCDLOD::draw(Client *client)
   texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP, normal_map_texture);
   texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP, height_map_texture);
 
-  if (normal_map_base_texture)
-    texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, normal_map_base_texture);
-  if (height_map_base_texture)
-    texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, height_map_base_texture);
+  //FIXME
+//   if (normal_map_base_texture)
+//     texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, normal_map_base_texture);
+//   if (height_map_base_texture)
+//     texture_manager.bind(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, height_map_base_texture);
 
   assert(client);
 
@@ -996,9 +1038,11 @@ void TerrainCDLOD::setDrawDistance(float dist)
 
 void TerrainCDLOD::setBaseElevationMap(ElevationMap::ConstPtr map)
 {
-  height_map_base_size_px = map->size();
-  height_map_base_texture = createHeightMapTexture(map);
-  normal_map_base_texture = createNormalMapTexture(map, HEIGHT_MAP_BASE_METERS_PER_PIXEL);
+  //FIXME
+  assert(0);
+//   height_map_base_size_px = map->size();
+//   height_map_base_texture = createHeightMapTexture(map);
+//   normal_map_base_texture = createNormalMapTexture(map, HEIGHT_MAP_BASE_METERS_PER_PIXEL);
 }
 
 

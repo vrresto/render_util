@@ -214,7 +214,7 @@ downSample(std::shared_ptr<const T> src, int factor)
         for (int y_sample = 0; y_sample < sampling_area_size; y_sample++)
         {
           int y_src = y * factor + y_sample;
-          
+
           for (int x_sample = 0; x_sample < sampling_area_size; x_sample++)
           {
             int x_src = x * factor + x_sample;
@@ -282,10 +282,10 @@ int getMaxWidth(const std::vector<T> &images)
 
 
 template <typename T>
-std::vector<typename image::TypeFromPtr<T>::ConstPtr>
+std::vector<typename image::TypeFromPtr<T>::Type::ConstPtr>
 resampleImages(const std::vector<T> &images, int new_width)
 {
-  std::vector<typename image::TypeFromPtr<T>::ConstPtr> resampled;
+  std::vector<typename image::TypeFromPtr<T>::Type::ConstPtr> resampled;
 
   for (auto image : images)
   {

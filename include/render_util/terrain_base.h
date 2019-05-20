@@ -61,6 +61,7 @@ namespace render_util
                        MaterialMap::ConstPtr,
                        TypeMap::ConstPtr,
                        const std::vector<ImageRGBA::ConstPtr> &textures,
+                       const std::vector<ImageRGBA::ConstPtr> &textures_nm,
                        const std::vector<float> &texture_scale) = 0;
 
     virtual void draw(Client *client = nullptr) = 0;
