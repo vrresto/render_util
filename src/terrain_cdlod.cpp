@@ -74,6 +74,131 @@ using MaterialID = render_util::TerrainBase::MaterialID;
 using BoundingBox = render_util::Box;
 
 
+
+void createTextureArrays(const std::vector<ImageRGBA::ConstPtr> &textures_in,
+    const std::vector<float> &texture_scale_in,
+    TerrainBase::TypeMap::ConstPtr type_map_in,
+    double max_texture_scale,
+    std::array<TexturePtr, render_util::MAX_TERRAIN_TEXUNITS> &arrays_out,
+    TexturePtr &type_map_texture_out)
+{
+  using namespace glm;
+  using namespace std;
+  using namespace render_util;
+  using TextureArray = vector<ImageRGBA::ConstPtr>;
+
+  std::array<TextureArray, MAX_TERRAIN_TEXUNITS> texture_arrays;
+  map<unsigned, glm::uvec3> mapping;
+
+  std::set<size_t> all_texture_sizes;
+  for (auto texture : textures_in)
+  {
+    if (!texture)
+      continue;
+    assert(texture->w() == texture->h());
+    all_texture_sizes.insert(texture->w());
+  }
+
+  std::deque<size_t> texture_sizes;
+  for (auto size : all_texture_sizes)
+    texture_sizes.push_back(size);
+
+  while (texture_sizes.size() > MAX_TERRAIN_TEXUNITS)
+    texture_sizes.pop_front();
+
+  auto smallest_size = texture_sizes.front();
+
+  std::unordered_map<int, int> array_index_for_size;
+  for (size_t i = 0; i < texture_sizes.size(); i++)
+    array_index_for_size[texture_sizes[i]] = i;
+
+  for (int i = 0; i < textures_in.size(); i++)
+  {
+    float scale = texture_scale_in.at(i);
+    assert(scale != 0);
+    assert(fract(scale) == 0);
+    assert(scale <= max_texture_scale);
+    scale += 128;
+    assert(scale >= 0);
+    assert(scale <= 255);
+
+    auto image = textures_in.at(i);
+
+    while (image->w() < smallest_size)
+    {
+//       auto biggest_size = texture_sizes.back();
+//       cout<<"image->w(): "<<image->w()<<", smallest_size: "
+//         <<smallest_size<<", biggest_size: "<<biggest_size<<endl;
+      image = render_util::upSample(image, 2);
+    }
+
+    auto index = array_index_for_size.at(image->w());
+
+    texture_arrays.at(index).push_back(image);
+    mapping.insert(make_pair(i, glm::uvec3{index, texture_arrays[index].size()-1, scale}));
+  }
+
+  auto type_map = make_shared<ImageRGBA>(type_map_in->getSize());
+
+  for (int y = 0; y < type_map->h(); y++)
+  {
+    for (int x = 0; x < type_map->w(); x++)
+    {
+      unsigned int orig_index = type_map_in->get(x,y) & 0x1F;
+
+      uvec3 new_index{0};
+
+      try
+      {
+        new_index = mapping.at(orig_index);
+      }
+      catch(...)
+      {
+        for (int i = 0; i < 4; i++)
+        {
+          try
+          {
+            new_index = mapping.at(orig_index - (orig_index % 4) + i);
+            break;
+          }
+          catch(...) {}
+        }
+      }
+
+      assert(new_index.y <= 0x1F+1);
+      type_map->at(x,y,0) = new_index.x;
+      type_map->at(x,y,1) = new_index.y;
+      type_map->at(x,y,2) = new_index.z;
+      type_map->at(x,y,3) = 255;
+    }
+  }
+
+  {
+    TexturePtr t = render_util::createTexture<ImageRGBA>(type_map, false);
+    TextureParameters<int> params;
+    params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    params.set(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    params.set(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    params.apply(t);
+    type_map_texture_out = t;
+  }
+
+  for (int i = 0; i < texture_arrays.size(); i++)
+  {
+    CHECK_GL_ERROR();
+
+    auto &textures = texture_arrays.at(i);
+    if (textures.empty())
+      continue;
+
+    arrays_out.at(i) = render_util::createTextureArray<ImageRGBA>(textures);
+
+    CHECK_GL_ERROR();
+  }
+}
+
+
 class TerrainTextures
 {
   const TextureManager &m_texture_manager;
@@ -113,116 +238,18 @@ TerrainTextures::TerrainTextures(const TextureManager &texture_manager,
   using namespace render_util;
   using TextureArray = vector<ImageRGBA::ConstPtr>;
 
-  std::array<TextureArray, MAX_TERRAIN_TEXUNITS> texture_arrays;
-  map<unsigned, glm::uvec3> mapping;
+  createTextureArrays(textures, texture_scale, type_map_, MAX_TERRAIN_TEXTURE_SCALE,
+                      m_textures, m_type_map_texture);
 
-  std::set<size_t> all_texture_sizes;
-  for (auto texture : textures)
-  {
-    assert(texture->w() == texture->h());
-    all_texture_sizes.insert(texture->w());
-  }
-
-  std::deque<size_t> texture_sizes;
-  for (auto size : all_texture_sizes)
-    texture_sizes.push_back(size);
-
-  while (texture_sizes.size() > MAX_TERRAIN_TEXUNITS)
-    texture_sizes.pop_front();
-
-  auto smallest_size = texture_sizes.front();
-
-  std::unordered_map<int, int> array_index_for_size;
-  for (size_t i = 0; i < texture_sizes.size(); i++)
-    array_index_for_size[texture_sizes[i]] = i;
-
-  for (int i = 0; i < textures.size(); i++)
-  {
-    float scale = texture_scale.at(i);
-    assert(scale != 0);
-    assert(fract(scale) == 0);
-    assert(scale <= MAX_TERRAIN_TEXTURE_SCALE);
-    scale += 128;
-    assert(scale >= 0);
-    assert(scale <= 255);
-
-    auto image = textures.at(i);
-
-    while (image->w() < smallest_size)
-    {
-//       auto biggest_size = texture_sizes.back();
-//       cout<<"image->w(): "<<image->w()<<", smallest_size: "
-//         <<smallest_size<<", biggest_size: "<<biggest_size<<endl;
-      image = render_util::upSample(image, 2);
-    }
-
-    auto index = array_index_for_size.at(image->w());
-
-    texture_arrays.at(index).push_back(image);
-    mapping.insert(make_pair(i, glm::uvec3{index, texture_arrays[index].size()-1, scale}));
-  }
-
-  auto type_map = make_shared<ImageRGBA>(type_map_->getSize());
-
-  for (int y = 0; y < type_map->h(); y++)
-  {
-    for (int x = 0; x < type_map->w(); x++)
-    {
-      unsigned int orig_index = type_map_->get(x,y) & 0x1F;
-
-      uvec3 new_index{0};
-
-      try
-      {
-        new_index = mapping.at(orig_index);
-      }
-      catch(...)
-      {
-        for (int i = 0; i < 4; i++)
-        {
-          try
-          {
-            new_index = mapping.at(orig_index - (orig_index % 4) + i);
-            break;
-          }
-          catch(...) {}
-        }
-      }
-
-      assert(new_index.y <= 0x1F+1);
-      type_map->at(x,y,0) = new_index.x;
-      type_map->at(x,y,1) = new_index.y;
-      type_map->at(x,y,2) = new_index.z;
-      type_map->at(x,y,3) = 255;
-    }
-  }
-
-  {
-    TexturePtr t = render_util::createTexture<ImageRGBA>(type_map, false);
-    TextureParameters<int> params;
-    params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    params.set(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    params.set(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    params.apply(t);
-    m_type_map_texture = t;
-  }
-
-  for (int i = 0; i < texture_arrays.size(); i++)
+  for (int i = 0; i < m_textures.size(); i++)
   {
     CHECK_GL_ERROR();
 
-    auto &textures = texture_arrays.at(i);
-    if (textures.empty())
+    if (!m_textures.at(i))
       continue;
 
     m_shader_params.set(string( "enable_terrain") + to_string(i), true);
-
-    m_textures.at(i) = render_util::createTextureArray<ImageRGBA>(textures);
-
-    CHECK_GL_ERROR();
   }
-
 }
 
 
