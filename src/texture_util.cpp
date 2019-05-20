@@ -733,30 +733,31 @@ ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
 }
 
 
-ImageRGB::Ptr createNormalMap(ImageGreyScale::ConstPtr bump_map, float bump_height_scale)
+ImageRGB::Ptr createNormalMap(ImageGreyScale::ConstPtr height_map,
+                              float max_height_m,
+                              float height_map_width_m)
 {
-  assert(bump_map);
-//   auto bump_map_upsampled = upSample(bump_map, 4);
-  auto bump_map_upsampled = bump_map;
+  assert(height_map);
+//   auto height_map_upsampled = upSample(height_map, 4);
+  auto height_map_upsampled = height_map;
   
-  assert(bump_map_upsampled);
+  assert(height_map_upsampled);
 
-  auto elevation_map = make_shared<ElevationMap>(bump_map_upsampled->size());
+  auto elevation_map = make_shared<ElevationMap>(height_map_upsampled->size());
 
   for (int y = 0; y < elevation_map->h(); y++)
   {
     for (int x = 0; x < elevation_map->w(); x++)
     {
-      auto value = bump_map_upsampled->get(x,y);
-//       elevation_map->at(x,y) = pow(value / 255.f, 3) * bump_height_scale;
-      elevation_map->at(x,y) = (value / 255.f) * bump_height_scale;
+      auto value = height_map_upsampled->get(x,y);
+//       elevation_map->at(x,y) = pow(value / 255.f, 3) * max_height_m;
+      elevation_map->at(x,y) = (value / 255.f) * max_height_m;
     }
   }
 
-  
-  constexpr float GRID_SCALE = 1;
-  
-  auto normal_map = createNormalMap(elevation_map, GRID_SCALE);
+  const float grid_scale = height_map_width_m / height_map->w();
+
+  auto normal_map = createNormalMap(elevation_map, grid_scale);
 
   auto normal_map_rgb = make_shared<ImageRGB>(normal_map->size());
   

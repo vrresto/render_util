@@ -143,7 +143,9 @@ namespace render_util
   ImageGreyScale::Ptr createTerrainLightMap(const ElevationMap&);
 
   Image<Normal>::Ptr createNormalMap(ElevationMap::ConstPtr elevation_map, float grid_scale);
-  ImageRGB::Ptr createNormalMap(ImageGreyScale::ConstPtr bump_map, float bump_height_scale);
+  ImageRGB::Ptr createNormalMap(ImageGreyScale::ConstPtr height_map,
+                                float max_height_m,
+                                float height_map_width_m);
 
 }
 
