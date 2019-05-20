@@ -22,6 +22,7 @@ texunit terrain_detail_nm1
 texunit terrain_detail_nm2
 texunit terrain_detail_nm3
 texunit type_map
+texunit type_map_normals
 texunit curvature_map
 texunit atmosphere_thickness_map
 #texunit water_map_base

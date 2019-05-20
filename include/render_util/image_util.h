@@ -152,6 +152,32 @@ convert(T_ptr_src src)
 }
 
 
+template<class T_pixel_dst, int N_components_dst, class T_ptr_src>
+std::shared_ptr<Image<T_pixel_dst, N_components_dst>>
+convert(T_ptr_src src)
+{
+  using T_src = typename TypeFromPtr<T_ptr_src>::Type;
+
+  auto dst = std::make_shared<Image<T_pixel_dst, N_components_dst>>(src->size());
+
+  for (int y = 0; y < src->h(); y++)
+  {
+    for (int x = 0; x < src->w(); x++)
+    {
+      for (int i = 0; i < dst->numComponents(); i++)
+      {
+        if (i < src->numComponents())
+          dst->at(x,y,i) = src->get(x,y,i);
+        else
+          dst->at(x,y,i) = 0;
+      }
+    }
+  }
+
+  return dst;
+}
+
+
 template <typename T>
 typename T::Ptr
 flipX(typename T::ConstPtr src)

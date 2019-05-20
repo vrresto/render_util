@@ -297,7 +297,7 @@ void TerrainTextures::bind(TextureManager &tm)
     CHECK_GL_ERROR();
   }
 
-  tm.bind(TEXUNIT_TYPE_MAP, m_type_map_texture_nm);
+  tm.bind(TEXUNIT_TYPE_MAP_NORMALS, m_type_map_texture_nm);
 
   for (int i = 0; i < m_textures_nm.size(); i++)
   {

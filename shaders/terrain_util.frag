@@ -91,6 +91,11 @@ uniform sampler2DArray sampler_terrain1;
 uniform sampler2DArray sampler_terrain2;
 uniform sampler2DArray sampler_terrain3;
 
+uniform sampler2DArray sampler_terrain_detail_nm0;
+uniform sampler2DArray sampler_terrain_detail_nm1;
+uniform sampler2DArray sampler_terrain_detail_nm2;
+uniform sampler2DArray sampler_terrain_detail_nm3;
+
 varying vec2 pass_texcoord;
 varying vec2 pass_type_map_coord;
 
@@ -231,7 +236,10 @@ vec3 sampleTerrainDetailNormal(vec3 type)
   color += texture(sampler_terrain_detail_nm3, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 3);
 #endif
 
-  return color.xyz;
+  vec3 normal = color.xyz * 2 - 1;
+  normal.y *= -1;
+
+  return normal;
 }
 
 vec4 sampleTerrainTextures(vec2 pos)
@@ -498,11 +506,13 @@ vec4 getTerrainColor(vec3 pos)
 
 
   //FIXME
-  return vec4(detail_normal, 1);
+//   return vec4(detail_normal, 1);
 
 
 //   vec3 light = calcLight(pos, normal, 1, 1);
   vec3 light = calcLight(pos, detail_normal, 1, 1);
+
+//   return vec4(0.5 * light, 1);
 
 
 #if ENABLE_WATER
