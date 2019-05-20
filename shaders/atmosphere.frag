@@ -163,7 +163,7 @@ float sphericalFogDistance(vec3 ray_origin, vec3 ray_dir, float ray_length, vec3
 
     if (!intersection)
     {
-      return 0;
+      return 0.f;
     }
 
     t0 = max(0, t0);
