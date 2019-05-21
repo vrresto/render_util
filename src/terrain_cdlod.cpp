@@ -75,13 +75,15 @@ using BoundingBox = render_util::Box;
 
 
 
-void createTextureArrays(const std::vector<ImageRGBA::ConstPtr> &textures_in,
+void createTextureArrays(std::vector<ImageRGBA::Ptr> &textures_in,
     const std::vector<float> &texture_scale_in,
     TerrainBase::TypeMap::ConstPtr type_map_in,
     double max_texture_scale,
     std::array<TexturePtr, render_util::MAX_TERRAIN_TEXUNITS> &arrays_out,
     TexturePtr &type_map_texture_out)
 {
+  cout<<"createTextureArrays<<"<<endl;
+  
   using namespace glm;
   using namespace std;
   using namespace render_util;
@@ -138,6 +140,8 @@ void createTextureArrays(const std::vector<ImageRGBA::ConstPtr> &textures_in,
 
     texture_arrays.at(index).push_back(image);
     mapping.insert(make_pair(i, glm::uvec3{index, texture_arrays[index].size()-1, scale}));
+
+    textures_in.at(i).reset();
   }
 
   auto type_map = make_shared<ImageRGBA>(type_map_in->getSize());
@@ -189,6 +193,7 @@ void createTextureArrays(const std::vector<ImageRGBA::ConstPtr> &textures_in,
     type_map_texture_out = t;
   }
 
+  
   for (int i = 0; i < texture_arrays.size(); i++)
   {
     CHECK_GL_ERROR();
@@ -197,7 +202,10 @@ void createTextureArrays(const std::vector<ImageRGBA::ConstPtr> &textures_in,
     if (textures.empty())
       continue;
 
+    
+    cout<<"array: "<<i<<endl;
     arrays_out.at(i) = render_util::createTextureArray<ImageRGBA>(textures);
+    textures.clear();
 
     CHECK_GL_ERROR();
   }
@@ -218,8 +226,8 @@ public:
   static constexpr float MAX_TERRAIN_TEXTURE_SCALE = 8;
 
   TerrainTextures(const TextureManager &texture_manager,
-                  const std::vector<ImageRGBA::ConstPtr> &textures,
-                  const std::vector<ImageRGBA::ConstPtr> &textures_nm,
+                  std::vector<ImageRGBA::Ptr> &textures,
+                  std::vector<ImageRGBA::Ptr> &textures_nm,
                   const std::vector<float> &texture_scale,
                   TerrainBase::TypeMap::ConstPtr type_map);
 
@@ -235,8 +243,8 @@ public:
 
 
 TerrainTextures::TerrainTextures(const TextureManager &texture_manager,
-                                      const std::vector<ImageRGBA::ConstPtr> &textures,
-                                      const std::vector<ImageRGBA::ConstPtr> &textures_nm,
+                                      std::vector<ImageRGBA::Ptr> &textures,
+                                      std::vector<ImageRGBA::Ptr> &textures_nm,
                                       const std::vector<float> &texture_scale,
                                       TerrainBase::TypeMap::ConstPtr type_map_) :
   m_texture_manager(texture_manager),
@@ -676,8 +684,8 @@ public:
   ~TerrainCDLOD() override;
 
   void build(ElevationMap::ConstPtr, MaterialMap::ConstPtr, TypeMap::ConstPtr type_map,
-             const std::vector<ImageRGBA::ConstPtr>&,
-             const std::vector<ImageRGBA::ConstPtr>&,
+             std::vector<ImageRGBA::Ptr>&,
+             std::vector<ImageRGBA::Ptr>&,
              const std::vector<float>&) override;
   void draw(TerrainBase::Client *client) override;
   void update(const Camera &camera, bool low_detail) override;
@@ -886,8 +894,8 @@ void TerrainCDLOD::processNode(Node *node, int lod_level, const Camera &camera, 
 void TerrainCDLOD::build(ElevationMap::ConstPtr map,
                          MaterialMap::ConstPtr material_map,
                          TypeMap::ConstPtr type_map,
-                         const std::vector<ImageRGBA::ConstPtr> &textures,
-                         const std::vector<ImageRGBA::ConstPtr> &textures_nm,
+                         std::vector<ImageRGBA::Ptr> &textures,
+                         std::vector<ImageRGBA::Ptr> &textures_nm,
                          const std::vector<float> &texture_scale)
 {
   CHECK_GL_ERROR();
