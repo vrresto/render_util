@@ -148,7 +148,7 @@ void createTextureArrays(const std::vector<ImageRGBA::ConstPtr> &textures_in,
     {
       unsigned int orig_index = type_map_in->get(x,y) & 0x1F;
 
-      uvec3 new_index{0};
+      uvec3 new_index(0);
 
       try
       {
@@ -163,7 +163,10 @@ void createTextureArrays(const std::vector<ImageRGBA::ConstPtr> &textures_in,
             new_index = mapping.at(orig_index - (orig_index % 4) + i);
             break;
           }
-          catch(...) {}
+          catch(...)
+          {
+            new_index.x = 255;
+          }
         }
       }
 

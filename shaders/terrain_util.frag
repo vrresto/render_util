@@ -45,6 +45,7 @@
 #define ENABLE_TERRAIN_DETAIL_NM3 @enable_terrain_detail_nm3:0@
 
 
+vec3 calcLightWithDetail(vec3 normal, vec3 normal_detail, float direct_scale, float ambient_scale);
 vec3 textureColorCorrection(vec3 color);
 float getDetailMapBlend(vec2 pos);
 float genericNoise(vec2 coord);
@@ -238,6 +239,13 @@ vec3 sampleTerrainDetailNormal(vec3 type)
 
   vec3 normal = color.xyz * 2 - 1;
   normal.y *= -1;
+
+  //FIXME HACK
+//   if (length(normal) == 0)
+//     normal = vec3(0,0,1);
+
+  if (sampler_nr == 255)
+    normal = vec3(0,0,1);
 
   return normal;
 }
@@ -489,12 +497,12 @@ vec4 getTerrainColor(vec3 pos)
 
 //   float lod = mip_map_level(pos.xy / 200);
 
-  vec3 detail_normal = vec3(0,0,1);
+  vec3 normal_detail = vec3(0,0,1);
 
 #if ENABLE_TYPE_MAP
 #if !LOW_DETAIL
     color = sampleTerrainTextures(pos.xy);
-    detail_normal = getTerrainDetailNormal(pos.xy);
+    normal_detail = getTerrainDetailNormal(pos.xy);
 
 #if ENABLE_BASE_MAP
   color = mix(sampleBaseTerrainTextures(pos.xy), color, detail_blend);
@@ -506,13 +514,17 @@ vec4 getTerrainColor(vec3 pos)
 
 
   //FIXME
-//   return vec4(detail_normal, 1);
+//   return vec4(normal_detail, 1);
 
 
 //   vec3 light = calcLight(pos, normal, 1, 1);
-  vec3 light = calcLight(pos, detail_normal, 1, 1);
+//   vec3 light_detail = 1.2 * calcLight(pos, normal_detail, 1, 1);
 
-//   return vec4(0.5 * light, 1);
+  vec3 light = calcLightWithDetail(normal, normal_detail, 1, 1);
+
+//   light *= light_detail;
+
+//   return vec4(light, 1);
 
 
 #if ENABLE_WATER

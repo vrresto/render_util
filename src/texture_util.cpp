@@ -738,7 +738,7 @@ ImageRGB::Ptr createNormalMap(ImageGreyScale::ConstPtr height_map,
                               float height_map_width_m)
 {
   assert(height_map);
-//   auto height_map_upsampled = upSample(height_map, 4);
+//   auto height_map_upsampled = upSample(height_map, 2);
   auto height_map_upsampled = height_map;
   
   assert(height_map_upsampled);

@@ -79,6 +79,44 @@ vec3 calcIncomingDirectLight()
 }
 
 
+
+// see http://blog.selfshadow.com/publications/blending-in-detail/
+vec3 blend_rnm_(vec3 n1, vec3 n2)
+{
+  n1 = (n1 + vec3(1)) / 2;
+  n2 = (n2 + vec3(1)) / 2;
+
+  vec3 t = n1.xyz*vec3( 2,  2, 2) + vec3(-1, -1,  0);
+  vec3 u = n2.xyz*vec3(-2, -2, 2) + vec3( 1,  1, -1);
+  vec3 r = t*dot(t, u) - u*t.z;
+
+  return normalize(r);
+}
+
+void calcLightParamsWithDetail(vec3 normal, vec3 normal_detail,
+    out vec3 ambientLightColor, out vec3 directLightColor)
+{
+  float directLight = 1.0;
+  
+  if (gl_FragCoord.x < 900)
+    normal = blend_rnm_(normal, normal_detail);
+  
+  directLight *= clamp(dot(normalize(normal), sunDir), 0.0, 2.0);
+
+//   if (gl_FragCoord.x < 900)
+//     directLight *= clamp(dot(normalize(normal_detail), sunDir), 0.0, 2.0);
+
+  directLightColor = calcIncomingDirectLight() * directLight;
+
+  float ambientLight = 0.6 * smoothstep(0.0, 0.3, sunDir.z);
+  ambientLightColor = vec3(0.95, 0.98, 1.0);
+  ambientLightColor *= 0.6;
+  vec3 ambientLightColorLow = ambientLightColor * 0.6;
+  ambientLightColor = mix(ambientLightColorLow, ambientLightColor, smoothstep(0.0, 0.3, sunDir.z));
+  ambientLightColor *= smoothstep(-0.4, 0.0, sunDir.z);
+}
+
+
 void calcLightParams(vec3 normal, out vec3 ambientLightColor, out vec3 directLightColor)
 {
   float directLight = 1.0;
@@ -100,6 +138,18 @@ vec3 calcLight(vec3 pos, vec3 normal, float direct_scale, float ambient_scale)
   vec3 ambientLightColor;
   vec3 directLightColor;
   calcLightParams(normal, ambientLightColor, directLightColor);
+
+  vec3 light = direct_scale * directLightColor + ambient_scale * ambientLightColor;
+
+  return light;
+}
+
+
+vec3 calcLightWithDetail(vec3 normal, vec3 normal_detail, float direct_scale, float ambient_scale)
+{
+  vec3 ambientLightColor;
+  vec3 directLightColor;
+  calcLightParamsWithDetail(normal, normal_detail, ambientLightColor, directLightColor);
 
   vec3 light = direct_scale * directLightColor + ambient_scale * ambientLightColor;
 
