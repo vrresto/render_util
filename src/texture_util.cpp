@@ -59,22 +59,12 @@ void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
 
   const unsigned texture_size = texture_width * texture_width * bytes_per_pixel;
   const size_t num_textures = min(textures.size(), max_levels);
+  const float array_size_mb = num_textures * texture_size / 1024.f / 1024.f;
 
-  std::vector<char> texture_array_data;
-  texture_array_data.resize(texture_size * num_textures);
-  
   cout<<"num_textures: "<<num_textures<<endl;
   cout<<"texture_size: "<<texture_size<<endl;
   cout<<"texture_width: "<<texture_width<<endl;
   cout<<"bytes_per_pixel: "<<bytes_per_pixel<<endl;
-  cout<<"texture_array_data.size(): "<<(float)texture_array_data.size()/1024/1024<<" MB"<<endl;
-
-
-  for (unsigned i = 0; i < num_textures; i++)
-  {
-    unsigned array_offset = i * texture_size;
-    memcpy(texture_array_data.data() + array_offset, textures[i], texture_size);
-  }
 
   GLint internal_format = -1;
   GLint format = -1;
@@ -98,10 +88,29 @@ void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
       abort();
   }
 
-  gl::TexImage3D(GL_TEXTURE_2D_ARRAY, 0, internal_format, texture_width, texture_width, num_textures,
-            0, format, GL_UNSIGNED_BYTE, texture_array_data.data());
-  
-  CHECK_GL_ERROR();  
+  cout<<"reserving gl memory (" << array_size_mb << " MB) ..."<<endl;
+  gl::TexImage3D(GL_TEXTURE_2D_ARRAY, 0, internal_format,
+            texture_width, texture_width, num_textures,
+            0, format, GL_UNSIGNED_BYTE, nullptr);
+  cout<<"reserving gl memory ... done - checking for error ..."<<endl;
+  FORCE_CHECK_GL_ERROR();
+  cout<<"reserving gl memory ... done - checking for error ... done"<<endl;
+
+  for (unsigned i = 0; i < num_textures; i++)
+  {
+    auto data = textures.at(i);
+
+    cout<<"calling gl::TexSubImage3D() ..."<<endl;
+    gl::TexSubImage3D(GL_TEXTURE_2D_ARRAY, 0,
+            0, 0, i,
+            texture_width, texture_width, 1,
+            format, GL_UNSIGNED_BYTE, data);
+    cout<<"calling gl::TexSubImage3D() ... done - checking for error ..."<<endl;
+    FORCE_CHECK_GL_ERROR();
+    cout<<"calling gl::TexSubImage3D() ... done - checking for error ... done"<<endl;
+  }
+
+  FORCE_CHECK_GL_ERROR();
 }
 
 
