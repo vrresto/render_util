@@ -51,7 +51,7 @@ void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
   using namespace std;
   using std::min;
 
-  CHECK_GL_ERROR();
+  FORCE_CHECK_GL_ERROR();
 
   size_t max_levels = 0;
   gl::GetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, (int*) &max_levels);
@@ -65,6 +65,7 @@ void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
   cout<<"texture_size: "<<texture_size<<endl;
   cout<<"texture_width: "<<texture_width<<endl;
   cout<<"bytes_per_pixel: "<<bytes_per_pixel<<endl;
+  cout<<"array_size_mb: "<<array_size_mb<<endl;
 
   GLint internal_format = -1;
   GLint format = -1;
@@ -88,6 +89,11 @@ void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
       abort();
   }
 
+
+  GLuint buffer_id = 0;
+  gl::GenBuffers(1, &buffer_id);
+
+#if 0
   cout<<"reserving gl memory (" << array_size_mb << " MB) ..."<<endl;
   gl::TexImage3D(GL_TEXTURE_2D_ARRAY, 0, internal_format,
             texture_width, texture_width, num_textures,
@@ -95,20 +101,68 @@ void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
   cout<<"reserving gl memory ... done - checking for error ..."<<endl;
   FORCE_CHECK_GL_ERROR();
   cout<<"reserving gl memory ... done - checking for error ... done"<<endl;
+#endif
+
+  cout<<"calling gl::BindBuffer() ..."<<endl;
+  gl::BindBuffer(GL_PIXEL_UNPACK_BUFFER, buffer_id);
+  FORCE_CHECK_GL_ERROR();
+  cout<<"calling gl::BindBuffer() ... done"<<endl;
+  
+  
+  cout<<"reserving buffer - calling gl::BufferData() ..."<<endl;
+  gl::BufferData(GL_PIXEL_UNPACK_BUFFER, texture_size * num_textures, nullptr, GL_STATIC_DRAW);
+  FORCE_CHECK_GL_ERROR();
+  cout<<"calling gl::BufferData() ... done"<<endl;
 
   for (unsigned i = 0; i < num_textures; i++)
   {
     auto data = textures.at(i);
 
+#if 0
+    cout<<"calling gl::BufferData() ..."<<endl;
+    gl::BufferData(GL_PIXEL_UNPACK_BUFFER, texture_size, data, GL_DYNAMIC_DRAW);
+    FORCE_CHECK_GL_ERROR();
+    cout<<"calling gl::BufferData() ... done"<<endl;
+#endif
+
+//     cout<<"calling gl::BufferSubData() ..."<<endl;
+//     gl::BufferSubData(GL_PIXEL_UNPACK_BUFFER, i * texture_size, texture_size, data);
+//     FORCE_CHECK_GL_ERROR();
+//     cout<<"calling gl::BufferSubData() ... done"<<endl;
+    
+    cout<<"calling gl::MapBufferRange() ..."<<endl;
+    void *buffer =
+      gl::MapBufferRange(GL_PIXEL_UNPACK_BUFFER, i * texture_size, texture_size, GL_MAP_WRITE_BIT);
+    FORCE_CHECK_GL_ERROR();
+    assert(buffer);
+    cout<<"calling gl::MapBufferRange() ... done"<<endl;
+
+    buffer = nullptr;
+
+    gl::UnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+    FORCE_CHECK_GL_ERROR();
+
+#if 0
     cout<<"calling gl::TexSubImage3D() ..."<<endl;
     gl::TexSubImage3D(GL_TEXTURE_2D_ARRAY, 0,
             0, 0, i,
             texture_width, texture_width, 1,
-            format, GL_UNSIGNED_BYTE, data);
+            format, GL_UNSIGNED_BYTE, 0);
     cout<<"calling gl::TexSubImage3D() ... done - checking for error ..."<<endl;
     FORCE_CHECK_GL_ERROR();
     cout<<"calling gl::TexSubImage3D() ... done - checking for error ... done"<<endl;
+#endif
   }
+
+  cout<<"calling gl::TexImage3D() ..."<<endl;
+  gl::TexImage3D(GL_TEXTURE_2D_ARRAY, 0, internal_format,
+            texture_width, texture_width, num_textures,
+            0, format, GL_UNSIGNED_BYTE, nullptr);
+  FORCE_CHECK_GL_ERROR();
+  cout<<"calling gl::TexImage3D() ... done"<<endl;
+
+  gl::BindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+  gl::DeleteBuffers(1, &buffer_id);
 
   FORCE_CHECK_GL_ERROR();
 }
