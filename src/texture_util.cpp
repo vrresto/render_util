@@ -740,26 +740,49 @@ ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
 }
 
 
-// ImageRGBA::Ptr createNormalMap(ImageGreyScale::ConstPtr bump_map, float bump_height_scale)
-// {
-// //   ImageGreyScale::Ptr bump_map_upsampled = upSample(bump_map, 4);
-//   ImageGreyScale::ConstPtr bump_map_upsampled = bump_map;
-//   
-//   
-//   vector<float> elevation_data(bump_map_upsampled->w() * bump_map_upsampled->h());
-//   for (unsigned i = 0; i < elevation_data.size(); i++)
-//   {
-// //     reinterpret_cast<float>(value
-//     float value = bump_map_upsampled->data()[i];
-// //     cout<<value<<endl;
-// //     elevation_data[i] = pow(value / 255, 3) * bump_height_scale;
-//     elevation_data[i] = (value / 255) * bump_height_scale;
-// //     cout<<elevation_data[i]<<endl;
-//   }
-//   ElevationMap elevation_map(bump_map_upsampled->w(), bump_map_upsampled->h(), elevation_data);
-// 
-//   return createNormalMapFromElevationMap(&elevation_map);
-// }
+ImageRGB::Ptr createNormalMap(ImageGreyScale::ConstPtr height_map,
+                              float max_height_m,
+                              float height_map_width_m)
+{
+  assert(height_map);
+//   auto height_map_upsampled = upSample(height_map, 4);
+  auto height_map_upsampled = height_map;
+  assert(height_map_upsampled);
+
+  auto elevation_map = make_shared<ElevationMap>(height_map_upsampled->size());
+
+  for (int y = 0; y < elevation_map->h(); y++)
+  {
+    for (int x = 0; x < elevation_map->w(); x++)
+    {
+      auto value = height_map_upsampled->get(x,y);
+      elevation_map->at(x,y) = (value / 255.f) * max_height_m;
+    }
+  }
+
+  const float grid_scale = height_map_width_m / height_map->w();
+
+  auto normal_map = createNormalMap(elevation_map, grid_scale);
+
+  auto normal_map_rgb = make_shared<ImageRGB>(normal_map->size());
+
+  for (int y = 0; y < normal_map_rgb->h(); y++)
+  {
+    for (int x = 0; x < normal_map_rgb->w(); x++)
+    {
+      auto normal = normal_map->getPixel(x,y)[0].to_vec3();
+
+      for (int comp = 0; comp < normal_map_rgb->numComponents(); comp++)
+      {
+        normal_map_rgb->at(x,y,comp) = ((normal[comp] + 1.f) / 2.f) * 255.f;
+      }
+    }
+  }
+
+//   normal_map_rgb = downSample(normal_map_rgb, 4);
+
+  return normal_map_rgb;
+}
 
 
 Image<Normal>::Ptr createNormalMap(ElevationMap::ConstPtr elevation_map, float grid_scale)
