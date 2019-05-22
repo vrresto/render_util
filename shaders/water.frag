@@ -19,14 +19,10 @@
 /**
  *    Used techiques
  *
- *    Reoriented Normal Mapping:
- *    http://blog.selfshadow.com/publications/blending-in-detail/
- *
  *    Schlick's approximation:
  *    http://www.cs.virginia.edu/~jdl/bib/appearance/analytic%20models/schlick94b.pdf
  */
- 
- 
+
 #version 130
 
 #define LOW_DETAIL !@detailed_water:1@
@@ -57,6 +53,7 @@ vec3 calcLight(vec3 pos, vec3 normal);
 vec2 rotate(vec2 v, float a);
 float perlin(vec2 p, float dim);
 float genericNoise(vec2 coord);
+vec3 blend_rnm(vec3 n1, vec3 n2);
 
 
 uniform sampler2DArray sampler_beach;
@@ -268,20 +265,6 @@ float sampleShoreWave(vec2 pos, float waterDepth, float offset)
 //   float shore_wave_strength2_w = pow(1 - (clamp(waterDepth - 0.4, 0, 1) * 2), 2);
 //   shore_wave_strength2_w *= 2;
 //   return mix(shore_wave_strength, shore_wave_strength2, shore_wave_strength2_w);
-}
-
-
-// see http://blog.selfshadow.com/publications/blending-in-detail/
-vec3 blend_rnm(vec3 n1, vec3 n2)
-{
-  n1 = (n1 + vec3(1)) / 2;
-  n2 = (n2 + vec3(1)) / 2;
-
-  vec3 t = n1.xyz*vec3( 2,  2, 2) + vec3(-1, -1,  0);
-  vec3 u = n2.xyz*vec3(-2, -2, 2) + vec3( 1,  1, -1);
-  vec3 r = t*dot(t, u) - u*t.z;
-
-  return normalize(r);
 }
 
 

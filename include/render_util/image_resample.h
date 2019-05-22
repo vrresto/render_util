@@ -243,24 +243,25 @@ downSample(std::shared_ptr<T> src, int factor)
 
 
 template <typename T>
-std::shared_ptr<T>
-upSample(std::shared_ptr<const T> src, int factor)
+std::shared_ptr<typename image::TypeFromPtr<T>::Type>
+upSample(T src, int factor)
 {
+  using ImageType = typename image::TypeFromPtr<T>::Type;
   using namespace glm;
 
   assert(factor % 2 == 0);
   assert(src->size() % 2 == ivec2(0));
 
-  auto dst = std::make_shared<T>(src->size() * factor);
+  auto dst = std::make_shared<ImageType>(src->size() * factor);
 
-  Surface<T> surface(src);
+  Surface<ImageType> surface(src);
   surface.setSize(dst->size());
 
   for (int y = 0; y < dst->h(); y++)
   {
     for (int x = 0; x < dst->w(); x++)
     {
-      for (int i = 0; i < T::NUM_COMPONENTS; i++)
+      for (int i = 0; i < ImageType::NUM_COMPONENTS; i++)
       {
         dst->at(x,y,i) = surface.get(ivec2(x,y), i);
       }

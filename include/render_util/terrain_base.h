@@ -60,7 +60,8 @@ namespace render_util
     virtual void build(ElevationMap::ConstPtr map,
                        MaterialMap::ConstPtr,
                        TypeMap::ConstPtr,
-                       const std::vector<ImageRGBA::ConstPtr> &textures,
+                       std::vector<ImageRGBA::Ptr> &textures,
+                       std::vector<ImageRGB::Ptr> &textures_nm,
                        const std::vector<float> &texture_scale) = 0;
 
     virtual void draw(Client *client = nullptr) = 0;

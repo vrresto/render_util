@@ -93,7 +93,7 @@ public:
 
   void createTerrain(render_util::ElevationMap::ConstPtr elevation_map,
                      render_util::TerrainBase::MaterialMap::ConstPtr material_map,
-                     const render_util::MapLoaderBase::TerrainTextures &textures)
+                     render_util::MapLoaderBase::TerrainTextures &textures)
   {
 
     Terrain t = render_util::createTerrainRenderer(texture_manager,
@@ -111,6 +111,7 @@ public:
                           material_map,
                           textures.type_map,
                           textures.textures,
+                          textures.textures_nm,
                           textures.texture_scale);
 
     m_terrain = t;
