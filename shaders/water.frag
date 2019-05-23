@@ -28,7 +28,7 @@
 #define LOW_DETAIL !@detailed_water:1@
 #define ENABLE_WAVES !LOW_DETAIL
 #define ENABLE_WAVE_INTERPOLATION 1
-// #define ENABLE_WAVE_FOAM 1
+#define ENABLE_WAVE_FOAM !LOW_DETAIL
 #define ENABLE_WATER_MAP 1
 // #define ENABLE_SHORE_WAVES 1
 #define ENABLE_SKY_REFLECTION @enable_sky_reflection:1@
@@ -165,14 +165,14 @@ int getWaterAnimationPos(int offset, int layer)
 }
 
 
-// float getFoamAmount(vec2 coord, int animation_offset)
-// {
-//   vec3 texA = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(0 + animation_offset))).xyz;
-//   vec3 texB = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(1 + animation_offset))).xyz;
-//   vec3 texC = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(2 + animation_offset))).xyz;
-//
-//   return interpolateWaterAnimationFrames(texA, texB, texC).x;
-// }
+float getFoamAmount(vec2 coord, int animation_offset)
+{
+  vec3 texA = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(0 + animation_offset, 0))).xyz;
+  vec3 texB = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(1 + animation_offset, 0))).xyz;
+  vec3 texC = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(2 + animation_offset, 0))).xyz;
+
+  return interpolateWaterAnimationFrames(texA, texB, texC, 0).x;
+}
 
 
 float getNoise(vec2 coord)
@@ -228,6 +228,8 @@ float getFoamAmountWithNoise(vec2 coord)
 
   float amount = amount1 * noise;
 //   float amount = amount1;
+
+  amount *= amount;
   
 //   return noise;
   return amount;
