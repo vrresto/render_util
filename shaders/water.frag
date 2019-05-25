@@ -201,37 +201,15 @@ float getFoamAmountWithNoise(vec2 coord)
 #if ENABLE_WAVE_FOAM
   const float scale = 8;
 
-//   wave_foam_amount = mix(wave_foam_amount, getFoamAmount(mapCoords + 0.5), noise2D(mapCoords));
-  float noise = 1 *
-    perlin(vec2((shore_wave_scroll.x * 10 + coord * scale)), 1)
-//     *
-//     +
-//     noise2D(vec2(shore_wave_scroll.x * 1.5) + coord * 0.3)
-    ;
+  float noise = perlin(vec2((shore_wave_scroll.x * 10 + coord * scale)), 1);
 
-  noise += perlin(vec2(shore_wave_scroll.x + coord * scale) + vec2(0.8), 1) ;
-  noise += perlin(vec2(shore_wave_scroll.x + coord * scale) + vec2(1.5), 1) ;
-  noise *= 2.7;  
-  noise = clamp(noise, 0, 1);
-//   noise = 1-noise;
+  noise = smoothstep(0.4, 0.7, noise);
 
-  noise = getNoise(coord);
-  
-//   noise += getNoise(coord + 0.5);
-  
   float amount1 = getFoamAmount(coord, 0);
-  float amount2 = getFoamAmount(rotate(coord * 1.5, 0.2), 30);
-  
-//   amount2 = 0.0;
-  
-//   float amount = mix(amount1, amount2, noise);
+  float amount2 = getFoamAmount(coord + vec2(0.7), 0);
 
-  float amount = amount1 * noise;
-//   float amount = amount1;
+  float amount = mix(amount1, amount2, noise);
 
-  amount *= amount;
-  
-//   return noise;
   return amount;
 #else
   return 0.0;
