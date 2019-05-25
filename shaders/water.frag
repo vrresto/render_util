@@ -345,6 +345,17 @@ vec3 getWaterColorSimple(vec3 pos, vec3 viewDir, float dist)
   vec3 color = mix(refractionColor, envColor, fresnel);
   color += specular * incomingDirectLight;
 
+
+#if ENABLE_WAVE_FOAM
+  vec4 surfColor = texture(sampler_beach, vec3(pass_texcoord * 80, 1));
+
+  float wave_foam_amount = getFoamAmountWithNoise(pass_texcoord * 2);
+  wave_foam_amount *= smoothstep(0.6, 1.0, surfColor.a);
+  wave_foam_amount *= sea_roughness;
+
+  color = mix(color, vec3(1), wave_foam_amount);
+#endif
+
   return color;
 }
 
