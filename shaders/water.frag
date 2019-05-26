@@ -29,6 +29,7 @@
 #define ENABLE_WAVES !LOW_DETAIL
 #define ENABLE_WAVE_INTERPOLATION 1
 #define ENABLE_WAVE_FOAM !LOW_DETAIL
+// #define ENABLE_WAVE_FOAM 1
 #define ENABLE_WATER_MAP 1
 // #define ENABLE_SHORE_WAVES 1
 #define ENABLE_SKY_REFLECTION @enable_sky_reflection:1@
@@ -41,8 +42,9 @@
 const float water_map_chunk_size_m = 1600 * 4;
 const vec2 water_map_table_shift = vec2(0, 200);
 const float SPEC_HARDNESS = 256.0;
-// const float sea_roughness = 0.4;
-const float sea_roughness = 1.0;
+const float sea_roughness = 0.15;
+// const float sea_roughness = 1.0;
+// const float sea_roughness = 4.0;
 const float PI = 3.14159265359;
 const float ior_water = 1.333;
 const float schlick_r0_water = pow(ior_water - 1, 2) / pow(ior_water + 1, 2);
@@ -167,11 +169,15 @@ int getWaterAnimationPos(int offset, int layer)
 
 float getFoamAmount(vec2 coord, int animation_offset)
 {
-  vec3 texA = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(0 + animation_offset, 0))).xyz;
-  vec3 texB = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(1 + animation_offset, 0))).xyz;
-  vec3 texC = texture(sampler_foam_mask, vec3(coord * 2, getWaterAnimationPos(2 + animation_offset, 0))).xyz;
+  const float scale = 4;
+
+  vec3 texA = texture(sampler_foam_mask, vec3(coord * scale, getWaterAnimationPos(0 + animation_offset,0))).xyz;
+  vec3 texB = texture(sampler_foam_mask, vec3(coord * scale, getWaterAnimationPos(1 + animation_offset, 0))).xyz;
+  vec3 texC = texture(sampler_foam_mask, vec3(coord * scale, getWaterAnimationPos(2 + animation_offset, 0))).xyz;
 
   return interpolateWaterAnimationFrames(texA, texB, texC, 0).x;
+  
+//   return texA.x;
 }
 
 
@@ -199,18 +205,42 @@ float getNoise(vec2 coord)
 float getFoamAmountWithNoise(vec2 coord)
 {
 #if ENABLE_WAVE_FOAM
-  const float scale = 8;
+  const float scale = 4;
 
-  float noise = perlin(vec2((shore_wave_scroll.x * 10 + coord * scale)), 1);
+//   float noise = perlin(vec2((shore_wave_scroll.x * 10 + coord * scale)), 4);
+//   float noise = perlin(vec2((coord * scale)), shore_wave_scroll.x * 10);
 
-  noise = smoothstep(0.4, 0.7, noise);
+  float noise = 1.0 * genericNoise(vec2((shore_wave_scroll.x * 2 + coord * scale)));
+//   noise *= 1.0 * genericNoise(vec2((shore_wave_scroll.x * 2 + coord * scale * 4)));
 
-  float amount1 = getFoamAmount(coord, 0);
-  float amount2 = getFoamAmount(coord + vec2(0.7), 0);
 
-  float amount = mix(amount1, amount2, noise);
+  noise *= 8;
+
+  noise *= sea_roughness;
+  
+  noise = smoothstep(0.8, 1.0, noise);
+
+//   float amount1 = getFoamAmount(coord, 0);
+//   float amount2 = getFoamAmount(coord + vec2(0.7), 0);
+//   float amount = mix(amount1, amount2, noise);
+//   return amount;
+
+//   noise = 1;
+
+  float amount = getFoamAmount(coord, 0);
+//   if (gl_FragCoord.x < 900)
+//   {
+    amount *= noise;
+//     amount = smoothstep(0.5, 1.0, amount);
+//   }
+
+//   amount *= amount;
+//   amount *= amount;
 
   return amount;
+//   return noise;
+//   return 0;
+
 #else
   return 0.0;
 #endif
@@ -268,8 +298,6 @@ float sampleShoreWave(vec2 pos, float waterDepth, float offset)
 vec3 blendNormal(vec3 n1, vec3 n2, float dist, float vis, float strength)
 {
   float detailFactor = exp(-pow(3 * (dist/vis), 2));
-  
-//   float detailFactor = 1 - smoothstep(vis / 2, vis, dist);
 
   strength *= sea_roughness;
 
@@ -300,13 +328,12 @@ vec3 getWaterNormal(vec3 pos, float dist, vec2 coord)
 {
   vec3 normal = normalize(pos - earth_center);
 #if ENABLE_WAVES
-  const float bigWaveStrength = 0.01;
-  const float mediumWaveStrength = 0.1;
-  const float smallWaveStrength = 0.1;
+  const float mediumWaveStrength = 1.0;
+  const float smallWaveStrength = 1.0;
 
   normal = blendNormal(normal, sampleWaterNormalMap(4, coord, 0), dist, 30000, mediumWaveStrength);
   normal = blendNormal(normal, sampleWaterNormalMap(20, coord, 1), dist, 15000, smallWaveStrength);
-//     normal = blendNormal(normal, sampleWaterNormalMap(140, coord), dist, 500, 0.1);
+//   normal = blendNormal(normal, sampleWaterNormalMap(100, coord, 1), dist, 5000, smallWaveStrength);
 
   normal = normalize(normal);
 #endif
@@ -341,17 +368,15 @@ vec3 getWaterColorSimple(vec3 pos, vec3 viewDir, float dist)
   vec3 refractionColor = 0.9 * textureColorCorrection(water_color);
   refractionColor *= ambientLight + 0.5 * directLight;
 
-
   vec3 color = mix(refractionColor, envColor, fresnel);
   color += specular * incomingDirectLight;
-
 
 #if ENABLE_WAVE_FOAM
   vec4 surfColor = texture(sampler_beach, vec3(pass_texcoord * 80, 1));
 
-  float wave_foam_amount = getFoamAmountWithNoise(pass_texcoord * 2);
+  float wave_foam_amount = getFoamAmountWithNoise(pass_texcoord);
   wave_foam_amount *= smoothstep(0.6, 1.0, surfColor.a);
-  wave_foam_amount *= sea_roughness;
+//   wave_foam_amount *= sea_roughness;
 
   color = mix(color, vec3(1), wave_foam_amount);
 #endif
@@ -721,10 +746,9 @@ vec3 applyWater(in vec3 color_in,
   vec3 water_normal = getWaterNormal(pos, dist, mapCoords);
 
 #if ENABLE_WAVE_FOAM
-  float wave_foam_amount = getFoamAmountWithNoise(mapCoords * 2);
-//   wave_foam_amount = pow(wave_foam_amount, 1.25);
+  float wave_foam_amount = getFoamAmountWithNoise(mapCoords);
   wave_foam_amount *= smoothstep(0.6, 1.0, surfColor.a);
-  wave_foam_amount *= sea_roughness;
+//   wave_foam_amount *= sea_roughness;
   wave_foam_amount *= wave_strength;
   wave_foam_amount *= 1 - river_amount;
 #endif
