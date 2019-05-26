@@ -20,7 +20,7 @@
 #include <render_util/texunits.h>
 
 #include <iostream>
-#include <array>
+#include <vector>
 #include <cstdio>
 #include <cassert>
 #include <glm/gtc/type_ptr.hpp>
@@ -29,18 +29,9 @@
 #include <render_util/gl_binding/gl_functions.h>
 
 using namespace render_util::gl_binding;
-using std::array;
+using std::vector;
 using std::cout;
 using std::endl;
-
-
-namespace
-{
-  enum { MAX_UNITS = render_util::MAX_GL_TEXUNITS };
-}
-
-
-static_assert((int)render_util::TEXUNIT_NUM <= (int)MAX_UNITS);
 
 
 namespace render_util
@@ -98,7 +89,6 @@ TemporaryTextureBinding::TemporaryTextureBinding(TexturePtr texture) : m_texture
       cout<<std::hex<<texture->getTarget()<<endl;
       assert(0);
   }
-  
 
   m_texture->bind();
 }
@@ -145,9 +135,9 @@ namespace
     CHECK_GL_ERROR();
   }
 
-  void applyBindings(const array<Binding, MAX_UNITS> bindings, TextureManager &mgr)
+  void applyBindings(const vector<Binding> bindings, TextureManager &mgr)
   {
-    for (size_t i = 0; i < MAX_UNITS; i++)
+    for (size_t i = 0; i < bindings.size(); i++)
     {
       applyBinding(i, bindings[i], mgr);
     }
@@ -162,27 +152,40 @@ struct TextureManager::Private
 {
   unsigned int lowest_unit = 0;
   unsigned int highest_unit = 0;
+  unsigned int max_units = 0;
   bool is_active = false;
-  array<Binding, MAX_UNITS> bindings;
+  vector<Binding> bindings;
 };
 
 
 TextureManager::TextureManager(unsigned int lowest_unit, unsigned int highest_unit) : p(new Private)
 {
+  gl::GetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, (int*)&p->max_units);
+  cout << "max texunits: " << p->max_units << endl;
+
   if (!highest_unit)
-    highest_unit = MAX_UNITS - 1;
+    highest_unit = getMaxUnits() - 1;
 
   cout << "TEXUNIT_NUM: " << TEXUNIT_NUM << endl;
   cout << "highest_unit: " << highest_unit << endl;
   assert(TEXUNIT_NUM < highest_unit);
+  assert(highest_unit < getMaxUnits());
 
   p->lowest_unit = lowest_unit;
   p->highest_unit = highest_unit;
+
+  p->bindings.resize(p->max_units);
 }
 
 TextureManager::~TextureManager()
 {
   delete p;
+}
+
+
+int TextureManager::getMaxUnits() const
+{
+  return p->max_units;
 }
 
 
@@ -201,7 +204,7 @@ int TextureManager::getHighestUnit() const
 int TextureManager::getTexUnitNum(unsigned int unit) const
 {
   assert(!p->highest_unit || unit <= p->highest_unit);
-  assert(p->lowest_unit + unit < MAX_UNITS);
+  assert(p->lowest_unit + unit < getMaxUnits());
 
   return p->lowest_unit + unit;
 }
@@ -223,7 +226,7 @@ void TextureManager::setActive(bool active)
 void TextureManager::bind(unsigned int unit, TexturePtr texture)
 {
   assert(unit <= p->highest_unit);
-  assert(unit < MAX_UNITS);
+  assert(unit < getMaxUnits());
   Binding &binding = p->bindings[unit];
 
   binding.texture = texture->getID();

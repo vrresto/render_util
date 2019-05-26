@@ -104,6 +104,7 @@ public:
   int getTexUnitNum(unsigned int unit) const;
   int getLowestUnit() const;
   int getHighestUnit() const;
+  int getMaxUnits() const;
 };
 
 
