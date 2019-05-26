@@ -120,7 +120,7 @@ namespace
 
     cout<<"   |  yaw: "<<g_scene->camera.yaw;
 
-    cout<<"   |    azimuth: "<<g_scene->sun_azimuth;
+    cout<<"   |    azimuth: "<<g_scene->sun_elevation;
 
     cout.flush();
   }
@@ -177,17 +177,25 @@ namespace
     else if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS) {
       camera_move_speed /= 2;
     }
-    else if (key == GLFW_KEY_PAGE_UP && action == GLFW_PRESS) {
+    else if (key == GLFW_KEY_KP_8 && action == GLFW_PRESS) {
       if (mods & GLFW_MOD_SHIFT)
-        g_scene->sun_azimuth += 1;
+        g_scene->sun_elevation += 1;
       else
-        g_scene->sun_azimuth += 10;
+        g_scene->sun_elevation += 10;
     }
-    else if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_PRESS) {
+    else if (key == GLFW_KEY_KP_2 && action == GLFW_PRESS) {
       if (mods & GLFW_MOD_SHIFT)
-        g_scene->sun_azimuth -= 1;
+        g_scene->sun_elevation -= 1;
       else
-        g_scene->sun_azimuth -= 10;
+        g_scene->sun_elevation -= 10;
+    }
+    else if (key == GLFW_KEY_KP_4 && action == GLFW_PRESS)
+    {
+      g_scene->sun_azimuth += 10;
+    }
+    else if (key == GLFW_KEY_KP_6 && action == GLFW_PRESS)
+    {
+      g_scene->sun_azimuth -= 10;
     }
     else if (action == GLFW_PRESS && mods == GLFW_MOD_SHIFT)
     {

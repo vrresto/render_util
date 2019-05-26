@@ -78,7 +78,8 @@ public:
 #endif
 
   Camera camera;
-  float sun_azimuth = 90.0;
+  float sun_elevation = 90.0;
+  float sun_azimuth = 0.0;
   bool toggle_lod_morph = false;
   bool pause_animations = false;
 
@@ -86,9 +87,18 @@ public:
 
   glm::vec3 getSunDir()
   {
-    glm::vec2 sun_dir_h = glm::vec2(glm::cos(glm::radians(sun_azimuth)), glm::sin(glm::radians(sun_azimuth)));
+    glm::vec4 pitch_axis(1,0,0,0);
 
-    return glm::vec3(0, sun_dir_h.x, sun_dir_h.y);
+    glm::mat4 yaw = glm::rotate(glm::mat4(1), glm::radians(sun_azimuth), glm::vec3(0.0, 0.0, 1.0));
+
+    pitch_axis = yaw * pitch_axis;
+
+    glm::mat4 pitch = glm::rotate(glm::mat4(1), glm::radians(sun_elevation), glm::vec3(pitch_axis));
+
+    auto dir = yaw * glm::vec4(0,1,0,0);
+    dir = pitch * dir;
+
+    return glm::vec3(dir);
   }
 
   void createTerrain(render_util::ElevationMap::ConstPtr elevation_map,
