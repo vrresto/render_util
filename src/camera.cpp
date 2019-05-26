@@ -209,8 +209,6 @@ namespace render_util
     Vec3 pos(x,y,z);
     p->pos = pos;
 
-    Vec3 pos_terrain_space = pos / 200.0;
-
     Mat4 world_to_y_up(1);
     world_to_y_up = rotate(world_to_y_up, radians((Unit)90.0),
                           Vec3(0.0, 1.0, 0.0));
