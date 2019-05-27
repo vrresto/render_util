@@ -42,7 +42,6 @@
 const float water_map_chunk_size_m = 1600 * 4;
 const vec2 water_map_table_shift = vec2(0, 200);
 const float SPEC_HARDNESS = 256.0;
-const float sea_roughness = 0.15;
 // const float sea_roughness = 1.0;
 // const float sea_roughness = 4.0;
 const float PI = 3.14159265359;
@@ -84,6 +83,7 @@ uniform sampler2DArray sampler_water_map;
 uniform vec3 sunDir;
 uniform vec3 water_color;
 uniform vec2 map_size;
+uniform float sea_roughness = 0.1;
 
 uniform vec3 earth_center;
 uniform vec3 cameraPosWorld;
@@ -214,11 +214,11 @@ float getFoamAmountWithNoise(vec2 coord)
 //   noise *= 1.0 * genericNoise(vec2((shore_wave_scroll.x * 2 + coord * scale * 4)));
 
 
-  noise *= 8;
+//   noise *= 4;
 
   noise *= sea_roughness;
-  
-  noise = smoothstep(0.8, 1.0, noise);
+
+  noise = smoothstep(0.4, 0.6, noise);
 
 //   float amount1 = getFoamAmount(coord, 0);
 //   float amount2 = getFoamAmount(coord + vec2(0.7), 0);

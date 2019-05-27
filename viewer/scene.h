@@ -81,6 +81,7 @@ public:
   Camera camera;
   float sun_elevation = 90.0;
   float sun_azimuth = 0.0;
+  float sea_roughness = 0.1;
   bool toggle_lod_morph = false;
   bool pause_animations = false;
   int m_active_controller = 0;
@@ -95,6 +96,13 @@ public:
     m_controllers.push_back(Controller(name, get, set));
   }
 
+
+  void addController(std::string name, float &p)
+  {
+    addController(name,
+                  [&p] { return p; },
+                  [&p] (auto value) { p = value; });
+  }
 
   void addAtmosphereController(std::string name, Atmosphere::Parameter p)
   {
@@ -125,6 +133,8 @@ public:
     addAtmosphereController("uncharted2_e", Atmosphere::Parameter::UNCHARTED2_E);
     addAtmosphereController("uncharted2_f", Atmosphere::Parameter::UNCHARTED2_F);
     addAtmosphereController("uncharted2_w", Atmosphere::Parameter::UNCHARTED2_W);
+
+    addController("sea_roughness", sea_roughness);
   }
 
 
@@ -204,6 +214,7 @@ public:
   {
     program->setUniform("sunDir", getSunDir());
     program->setUniform("toggle_lod_morph", toggle_lod_morph);
+    program->setUniform("sea_roughness", sea_roughness);
 #if ENABLE_BASE_MAP
     program->setUniform("height_map_base_origin", base_map_origin);
 #endif
