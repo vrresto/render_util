@@ -534,6 +534,13 @@ float hazeForDistance(float dist)
 }
 
 
+const vec3 rgb_wavelengths = vec3(0.68, 0.55, 0.44);
+
+const vec3 rayleigh_rgb_proportion =
+  vec3((1.0/pow(rgb_wavelengths.r,4)) / (1.0/pow(rgb_wavelengths.b,4)),
+       (1.0/pow(rgb_wavelengths.g,4)) / (1.0/pow(rgb_wavelengths.b,4)),
+       1.0);
+
 vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir,
     out vec3 fog_color, out vec3 mie_color)
 {
@@ -543,11 +550,12 @@ vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir,
 
   float brightness = smoothstep(0.0, 0.25, sunDir.z);
 
-  vec3 rayleighColor = vec3(0.0, 0.225, 0.9);
+  vec3 rayleighColor = rayleigh_rgb_proportion * 0.9;
   vec3 rayleighColorLow = rayleighColor * vec3(1.0, 0.5, 0.4);
   rayleighColor = mix(rayleighColorLow, rayleighColor, brightness);
 
-  vec3 diffuseScatteringColorDark = vec3(0.15, 0.62, 1.0);
+  vec3 diffuseScatteringColorDark = vec3(0.2, 0.62, 1.0);
+
   vec3 diffuseScatteringColorDarkLow = diffuseScatteringColorDark * vec3(1.0, 0.5, 0.4);
   diffuseScatteringColorDark = mix(diffuseScatteringColorDarkLow, diffuseScatteringColorDark, brightness);
 
