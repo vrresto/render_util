@@ -91,6 +91,9 @@ TemporaryTextureBinding::TemporaryTextureBinding(TexturePtr texture, int texunit
     case GL_TEXTURE_2D_ARRAY:
       gl::GetIntegerv(GL_TEXTURE_BINDING_2D_ARRAY, (GLint*) &m_previous_binding);
       break;
+    case GL_TEXTURE_3D:
+      gl::GetIntegerv(GL_TEXTURE_BINDING_3D, (GLint*) &m_previous_binding);
+      break;
     default:
       LOG_INFO<<std::hex<<texture->getTarget()<<endl;
       assert(0);

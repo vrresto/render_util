@@ -107,9 +107,7 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
       else if (type == "texunit")
         texunits.push_back(name);
       else
-      {
         throw ShaderCreationError();
-      }
     }
   }
 

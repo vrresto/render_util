@@ -54,7 +54,7 @@ struct Terrain
 
     getTerrain()->draw(client);
 
-//     gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     CHECK_GL_ERROR();
   }
@@ -76,7 +76,7 @@ public:
   glm::vec2 base_map_size_m = glm::vec2(0);
 #endif
 
-  Camera camera;
+  Camera m_camera;
   float sun_elevation = 90.0;
   float sun_azimuth = 0.0;
   bool toggle_lod_morph = false;
@@ -189,7 +189,7 @@ public:
 
   render_util::TextureManager &getTextureManager() { return texture_manager; }
 
-  virtual void updateUniforms(render_util::ShaderProgramPtr program)
+  virtual void updateUniforms(render_util::ShaderProgramPtr program, const Camera &camera)
   {
     program->setUniform("sunDir", getSunDir());
     program->setUniform("toggle_lod_morph", toggle_lod_morph);
@@ -201,6 +201,7 @@ public:
   virtual void unmark() {}
   virtual void cursorPos(const glm::dvec2&) {}
   virtual void rebuild() {}
+  virtual void recompute() {}
 
   virtual void setup() = 0;
   virtual void render(float frame_delta) = 0;
@@ -210,23 +211,24 @@ public:
 class TerrainClient : public TerrainBase::Client
 {
   Scene *m_scene = nullptr;
+  const Camera &m_camera;
 
 public:
-  TerrainClient(Scene *scene) : m_scene(scene) {}
+  TerrainClient(Scene *scene, const Camera &camera) : m_scene(scene), m_camera(camera) {}
 
   void setActiveProgram(ShaderProgramPtr p) override
   {
     render_util::getCurrentGLContext()->setCurrentProgram(p);
-    m_scene->updateUniforms(p);
+    m_scene->updateUniforms(p, m_camera);
   }
 };
 
 
-inline void Scene::drawTerrain()
-{
-  TerrainClient client(this);
-  m_terrain.draw(camera, &client);
-}
+// inline void Scene::drawTerrain()
+// {
+//   TerrainClient client(this);
+//   m_terrain.draw(camera, &client);
+// }
 
 
 } // namespace render_util::viewer

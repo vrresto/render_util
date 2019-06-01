@@ -145,15 +145,15 @@ namespace
     out << fps << "   |   ";
 
     out<<"pos: ";
-    printDistance(g_scene->camera.x/1000, " ", out);
-    printDistance(g_scene->camera.y/1000, " ", out);
-    printDistance(g_scene->camera.z/1000, " ", out);
+    printDistance(g_scene->m_camera.x/1000, " ", out);
+    printDistance(g_scene->m_camera.y/1000, " ", out);
+    printDistance(g_scene->m_camera.z/1000, " ", out);
 
     out<<"    |    speed: ";
     printDistance(camera_move_speed / 1000, " ", out);
 
     out<<"   |  yaw: ";
-    printDistance(g_scene->camera.yaw, " ", out);
+    printDistance(g_scene->m_camera.yaw, " ", out);
 
     out<<"   |    sun elevation: ";
     printDistance(g_scene->sun_elevation, " ", out);
@@ -195,10 +195,13 @@ namespace
       glfwSetWindowShouldClose(window, true);
     }
     else if (key == GLFW_KEY_F2 && action == GLFW_PRESS) {
-      g_scene->camera.setFov(g_scene->camera.getFov() + 10);
+      g_scene->m_camera.setFov(g_scene->m_camera.getFov() + 10);
     }
     else if (key == GLFW_KEY_F3 && action == GLFW_PRESS) {
-      g_scene->camera.setFov(g_scene->camera.getFov() - 10);
+      g_scene->m_camera.setFov(g_scene->m_camera.getFov() - 10);
+    }
+    else if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+      g_scene->recompute();
     }
 
     else if (key == GLFW_KEY_F4 && action == GLFW_PRESS) {
@@ -399,8 +402,8 @@ namespace
 
         dvec2 rotation = cursor_delta * mouse_rotation_speed;
 
-        g_scene->camera.yaw += rotation.x;
-        g_scene->camera.pitch += rotation.y;
+        g_scene->m_camera.yaw += rotation.x;
+        g_scene->m_camera.pitch += rotation.y;
       }
     }
     else if (glfwGetMouseButton(window, 0) == GLFW_PRESS)
@@ -426,35 +429,36 @@ namespace
     float move_speed = camera_move_speed;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-      g_scene->camera.moveForward(frame_delta * move_speed);
+      g_scene->m_camera.moveForward(frame_delta * move_speed);
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-      g_scene->camera.moveForward(frame_delta * -move_speed);
+      g_scene->m_camera.moveForward(frame_delta * -move_speed);
     }
 
 //     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-//       g_scene->camera.pitch -= camera_rotation_speed * frame_delta;
+//       g_scene->m_camera.pitch -= camera_rotation_speed * frame_delta;
 //     }
 //     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-//       g_scene->camera.pitch += camera_rotation_speed * frame_delta;
+//       g_scene->m_camera.pitch += camera_rotation_speed * frame_delta;
 //     }
 //     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-//       g_scene->camera.yaw += camera_rotation_speed * frame_delta;
+//       g_scene->m_camera.yaw += camera_rotation_speed * frame_delta;
 //     }
 //     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-//       g_scene->camera.yaw -= camera_rotation_speed * frame_delta;
+//       g_scene->m_camera.yaw -= camera_rotation_speed * frame_delta;
 //     }
 
 //     vec4 direction = g_scene->camera.getDirection();
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-      g_scene->camera.roll += camera_rotation_speed * frame_delta;
+      g_scene->m_camera.roll += camera_rotation_speed * frame_delta;
     }
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-      g_scene->camera.roll -= camera_rotation_speed * frame_delta;
+      g_scene->m_camera.roll -= camera_rotation_speed * frame_delta;
     }
+//     vec4 direction = g_scene->m_camera.getDirection();
 //     cout<<direction.x<<" "<<direction.y<<" "<<direction.z<<endl;
 
-    g_scene->camera.updateTransform();
+    g_scene->m_camera.updateTransform();
   }
 
   void *getGLProcAddress(const char *name)
@@ -556,7 +560,7 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene, st
     gl::DepthMask(GL_TRUE);
     gl::Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    g_scene->camera.setViewportSize(width, height);
+    g_scene->m_camera.setViewportSize(width, height);
 
     g_scene->render((float)frame_delta.count() / 1000.0);
 
