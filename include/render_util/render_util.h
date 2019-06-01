@@ -22,11 +22,18 @@
 #include <render_util/camera.h>
 #include <render_util/shader.h>
 
+#include <optional>
+
 namespace render_util
 {
   bool createAtmosphereMap(const char *output_path);
   bool createCurvatureMap(const char *output_path);
-  void updateUniforms(ShaderProgramPtr program, const Camera &camera);
+  void updateUniforms(ShaderProgramPtr program, const Camera &camera,
+                      const std::optional<Camera> prev_camera = {});
+
+  void setCameraUniforms(render_util::ShaderProgramPtr program,
+    const std::string &prefix,
+    const render_util::Camera &camera);
 }
 
 #endif

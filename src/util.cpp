@@ -26,6 +26,29 @@
 #include <ctime>
 #include <sstream>
 
+namespace render_util
+{
+
+
+void setCameraUniforms(render_util::ShaderProgramPtr program,
+    const std::string &prefix,
+    const render_util::Camera &camera)
+{
+  program->setUniform(prefix + "cameraPosWorld", camera.getPos());
+  program->setUniform(prefix + "projectionMatrixFar", camera.getProjectionMatrixFar());
+  program->setUniform(prefix + "world2ViewMatrix", camera.getWorld2ViewMatrix());
+  program->setUniform(prefix + "view2WorldMatrix", camera.getView2WorldMatrix());
+  program->setUniform(prefix + "view_to_world_rotation", camera.getViewToWorldRotation());
+  program->setUniform(prefix + "world_to_view_rotation", camera.getWorldToViewRotation());
+
+  program->setUniform<float>(prefix + "fov", camera.getFov());
+  program->setUniform<float>(prefix + "z_near", camera.getZNear());
+  program->setUniform<float>(prefix + "z_far", camera.getZFar());
+}
+
+
+}
+
 #ifdef RENDER_UTIL_USE_MSVCRT
 
 #include <direct.h>
@@ -84,9 +107,14 @@ std::string util::makeTimeStampString()
 }
 
 
-void render_util::updateUniforms(render_util::ShaderProgramPtr program, const render_util::Camera &camera)
+void render_util::updateUniforms(render_util::ShaderProgramPtr program,
+                                 const render_util::Camera &camera,
+                                 const std::optional<Camera> prev_camera)
 {
   using Vec3 = render_util::Camera::Vec3;
+
+  if (prev_camera)
+    setCameraUniforms(program, "prev_", *prev_camera);
 
   glm::mat4 mvp(camera.getProjectionMatrixFarD() * camera.getWorld2ViewMatrixD());
 
@@ -95,7 +123,15 @@ void render_util::updateUniforms(render_util::ShaderProgramPtr program, const re
   program->setUniform("world2ViewMatrix", camera.getWorld2ViewMatrix());
   program->setUniform("view2WorldMatrix", camera.getView2WorldMatrix());
   program->setUniform("world_to_view_rotation", camera.getWorldToViewRotation());
-  program->setUniform("ndc_to_view", camera.getNDCToView());
+
+  program->setUniform("ndc_to_view", camera.getNDCToViewMatrix());
+  program->setUniform("ndc_xy_to_view", camera.getNDCToView());
+
+  program->setUniform("view_to_world_rotation", camera.getViewToWorldRotation());
+  program->setUniform<glm::vec2>("viewport_size", camera.getViewportSize());
+  program->setUniform<float>("fov", camera.getFov());
+  program->setUniform<float>("z_near", camera.getZNear());
+  program->setUniform<float>("z_far", camera.getZFar());
 
   Vec3 terrain_scale(glm::ivec2(TerrainBase::GRID_RESOLUTION_M), 1);
 
@@ -106,7 +142,12 @@ void render_util::updateUniforms(render_util::ShaderProgramPtr program, const re
 
   auto earth_center =
     glm::vec3(camera.getPos().x, camera.getPos().y, -physics::EARTH_RADIUS);
+
+  auto earth_center_view = glm::vec3(camera.getWorld2ViewMatrix() * glm::vec4(earth_center, 1));
+
   program->setUniform("earth_center", earth_center);
+  program->setUniform("earth_center_view", earth_center_view);
+  program->setUniform<float>("earth_radius", physics::EARTH_RADIUS);
 
   program->setUniform("sun_size", glm::vec2(tan(physics::SUN_ANGULAR_RADIUS),
                                             cos(physics::SUN_ANGULAR_RADIUS )));

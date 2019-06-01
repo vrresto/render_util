@@ -2,6 +2,7 @@ vert terrain_cdlod
 vert noise
 vert util
 vert terrain_geometry_util
+frag frustum
 frag terrain
 frag atmosphere
 frag noise
