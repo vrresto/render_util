@@ -3,6 +3,7 @@ set(CXX_SRCS
   terrain/terrain_cdlod.cpp
   terrain/terrain_util.cpp
   terrain/land_textures.cpp
+  aerial_perspective.cpp
   atmosphere.cpp
   camera.cpp
   texunits.cpp

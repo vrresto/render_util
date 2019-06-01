@@ -21,7 +21,11 @@
 vec3 adjustSaturation(vec3 rgb, float adjustment);
 vec3 toneMap(vec3 color);
 vec3 getSkyRadiance(vec3 camera_pos, vec3 view_direction);
+vec3 getSunRadiance(vec3 camera_pos, vec3 view_direction);
+vec4 sampleAerialPerpective(vec3 pos_world);
 
+uniform vec3 sunDir;
+uniform vec2 sun_size;
 uniform vec3 cameraPosWorld;
 uniform float blue_saturation;
 
@@ -33,6 +37,14 @@ vec3 getSkyColor(vec3 view_direction)
   vec3 radiance = getSkyRadiance(cameraPosWorld, view_direction);
 
   float blue_ratio = radiance.b / dot(vec3(1), radiance);
+
+  vec4 aerial_perspective = sampleAerialPerpective(cameraPosWorld + (view_direction * 1000 * 1000));
+
+//   if (gl_FragCoord.x < 900)
+  {
+    radiance = aerial_perspective.rgb;
+    radiance += getSunRadiance(cameraPosWorld, view_direction);
+  }
 
   vec3 color = toneMap(radiance);
   color = adjustSaturation(color, mix(1, blue_saturation, blue_ratio));

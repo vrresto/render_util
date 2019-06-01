@@ -7,4 +7,5 @@ frag util
 frag lighting
 frag functions
 frag tonemap
+frag aerial_perspective
 texunit atmosphere_thickness_map

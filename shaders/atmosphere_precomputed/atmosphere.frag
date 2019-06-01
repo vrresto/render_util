@@ -20,6 +20,10 @@
 
 #define USE_LUMINANCE @use_luminance@
 
+#include definitions.glsl
+#include constants.glsl
+
+
 vec3 adjustSaturation(vec3 rgb, float adjustment);
 
 uniform vec3 cameraPosWorld;
@@ -27,6 +31,8 @@ uniform vec3 sunDir;
 uniform vec3 earth_center;
 uniform vec2 sun_size;
 uniform float blue_saturation;
+
+uniform sampler2D transmittance_texture;
 
 varying vec3 passObjectPos;
 
@@ -38,18 +44,45 @@ vec3 GetSkyRadianceToPoint(vec3 camera, vec3 point, float shadow_length,
     vec3 sun_direction, out vec3 transmittance);
 
 vec3 toneMap(vec3 color);
-
+vec4 sampleAerialPerpective(vec3 pos_world);
 
 vec3 fogAndToneMap(vec3 in_color, bool no_inscattering)
 {
   vec3 view_direction = normalize(passObjectPos - cameraPosWorld);
   float dist = distance(passObjectPos, cameraPosWorld);
 
+  
+  vec3 camera_pos = cameraPosWorld - earth_center;
+  vec3 view_ray = view_direction;
+  
+  Length r = length(camera_pos);
+  Length rmu = dot(camera_pos, view_ray);
+  Number mu = rmu / r;
+  Number mu_s = dot(camera_pos, sunDir) / r;
+  Number nu = dot(view_ray, sunDir);
+  bool ray_r_mu_intersects_ground = RayIntersectsGround(ATMOSPHERE, r, mu);
+
+  
   float shadow_length = 0;
   vec3 transmittance = vec3(1);
+  vec3 in_scatter = vec3(0);
 
-  vec3 in_scatter = GetSkyRadianceToPoint(cameraPosWorld - earth_center,
-      passObjectPos - earth_center, shadow_length, sunDir, transmittance);
+  vec4 aerial_perspective = sampleAerialPerpective(passObjectPos);
+
+//   vec3 in_scatter = GetSkyRadianceToPoint(cameraPosWorld - earth_center,
+//       passObjectPos - earth_center, shadow_length, sunDir, transmittance);
+
+
+//   transmittance *= 1-aerial_perspective.r;
+
+  transmittance = GetTransmittance(ATMOSPHERE,
+      transmittance_texture, r, mu, dist,
+      ray_r_mu_intersects_ground);
+
+
+  in_scatter = aerial_perspective.rgb;
+  
+//   in_scatter *= 500;
 
   if (no_inscattering)
     in_scatter = vec3(0);
@@ -87,21 +120,21 @@ vec3 fogAndToneMap(vec3 radiance, vec3 in_scatter, vec3 transmittance)
 }
 
 
-void fogAndToneMap(in vec3 in_color0, in vec3 in_color1,
-                   out vec3 out_color0, out vec3 out_color1)
-{
-  vec3 view_direction = normalize(passObjectPos - cameraPosWorld);
-  vec3 normal = normalize(passObjectPos - earth_center);
-
-  float shadow_length = 0;
-  vec3 transmittance;
-
-  vec3 in_scatter = GetSkyRadianceToPoint(cameraPosWorld - earth_center,
-      passObjectPos - earth_center, shadow_length, sunDir, transmittance);
-
-  out_color0 = fogAndToneMap(in_color0, in_scatter, transmittance);
-  out_color1 = fogAndToneMap(in_color1, in_scatter, transmittance);
-}
+// void fogAndToneMap(in vec3 in_color0, in vec3 in_color1,
+//                    out vec3 out_color0, out vec3 out_color1)
+// {
+//   vec3 view_direction = normalize(passObjectPos - cameraPosWorld);
+//   vec3 normal = normalize(passObjectPos - earth_center);
+// 
+//   float shadow_length = 0;
+//   vec3 transmittance;
+// 
+//   vec3 in_scatter = GetSkyRadianceToPoint(cameraPosWorld - earth_center,
+//       passObjectPos - earth_center, shadow_length, sunDir, transmittance);
+// 
+//   out_color0 = fogAndToneMap(in_color0, in_scatter, transmittance);
+//   out_color1 = fogAndToneMap(in_color1, in_scatter, transmittance);
+// }
 
 
 vec3 apply_fog(vec3 in_color)

@@ -73,6 +73,13 @@ string getParameterValue(const string &parameter, const ShaderParameters &params
     else
     {
       LOG_ERROR << "unset parameter: " << parameter_name << endl;
+
+      LOG_ERROR << "set parameters: " << endl;
+      for (auto &p : params.getAll())
+      {
+        LOG_ERROR << "name: " << p.first << ", value: " << p.second << endl;
+      }
+
       throw ShaderCreationError();
     }
   }
@@ -404,6 +411,7 @@ ShaderProgram::ShaderProgram(const std::string &name,
   assertIsValid();
 }
 
+
 ShaderProgram::~ShaderProgram()
 {
   LOG_TRACE<<"~ShaderProgram()"<<endl;
@@ -417,6 +425,12 @@ ShaderProgram::~ShaderProgram()
 
 void ShaderProgram::link()
 {
+  if (shaders.empty())
+  {
+    printf("Error linking program: %s\n%s\n", name.c_str(), "no shader objects");
+    return;
+  }
+
   gl::LinkProgram(id);
   CHECK_GL_ERROR();
 
@@ -454,6 +468,8 @@ void ShaderProgram::create()
   assert(id != 0);
 
   LOG_TRACE<<name<<": num fragment shaders: "<<fragment_shaders.size()<<endl;
+  LOG_TRACE<<name<<": num compute shaders: "<<compute_shaders.size()<<endl;
+
   for (auto name : fragment_shaders)
   {
     shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_FRAGMENT_SHADER,
@@ -557,7 +573,8 @@ void ShaderProgram::assertIsValid()
 void ShaderProgram::assertUniformsAreSet()
 {
   // slow - enable only for debugging
-#if RENDER_UTIL_ENABLE_DEBUG
+// #if RENDER_UTIL_ENABLE_DEBUG
+#if 1
   int num_unset = 0;
   int num_active = 0;
   gl::GetProgramiv(id, GL_ACTIVE_UNIFORMS, &num_active);
@@ -601,6 +618,12 @@ void ShaderProgram::setUniformi(GLint location, GLint value)
   set_uniforms.insert(location);
 }
 
+void ShaderProgram::setUniform(GLint location, const GLuint &value)
+{
+  gl::ProgramUniform1ui(id, location, value);
+  set_uniforms.insert(location);
+}
+
 void ShaderProgram::setUniform(int location, const bool &value)
 {
   gl::ProgramUniform1i(id, location, value);
@@ -634,6 +657,12 @@ void ShaderProgram::setUniform(GLint location, const glm::vec4 &value)
 void ShaderProgram::setUniform(GLint location, const glm::ivec2 &value)
 {
   gl::ProgramUniform2iv(id, location, 1, value_ptr(value));
+  set_uniforms.insert(location);
+}
+
+void ShaderProgram::setUniform(GLint location, const glm::ivec3 &value)
+{
+  gl::ProgramUniform3iv(id, location, 1, value_ptr(value));
   set_uniforms.insert(location);
 }
 
