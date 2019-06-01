@@ -54,6 +54,7 @@ vec3 calcLight(vec3 pos, vec3 normal, float direct_scale, float ambient_scale);
 vec4 getForestFarColor(vec2 pos);
 vec4 getForestFarColorSimple(vec2 pos);
 vec4 getForestColor(vec2 pos, int layer);
+vec4 getForestColorFloat(vec2 pos, float layer);
 float getWaterDepth(vec2 pos);
 void sampleWaterType(vec2 pos, out float shallow_sea_amount, out float river_amount);
 vec4 applyWater(vec4 color,
@@ -84,6 +85,10 @@ uniform sampler2D sampler_terrain_far;
 uniform sampler2D sampler_shallow_water;
 uniform sampler2DArray sampler_beach;
 
+uniform sampler2D sampler_terrain_cdlod_height_map;
+uniform float terrain_resolution_m;
+uniform vec2 height_map_size_m;
+
 uniform ivec2 typeMapSize;
 uniform vec2 map_size;
 uniform vec3 cameraPosWorld;
@@ -103,6 +108,17 @@ varying vec2 pass_type_map_coord;
 
 const ivec2 type_map_base_size_px = ivec2(4096);
 const ivec2 type_map_base_meters_per_pixel = ivec2(400);
+
+
+//FIXME duplication
+float getTerrainHeight(vec2 world_coord)
+{
+  vec2 height_map_coord = (world_coord + vec2(0, terrain_resolution_m)) / height_map_size_m;
+  height_map_coord.y = 1.0 - height_map_coord.y;
+
+  return textureLod(sampler_terrain_cdlod_height_map, height_map_coord, 0).x;
+}
+
 
 float sampleNoise(vec2 coord)
 {
@@ -332,7 +348,19 @@ vec4 sampleBaseTerrainTextures(vec2 pos)
 #endif
 
 
-vec4 applyForest(vec4 color, vec2 pos, vec3 view_dir, float dist)
+//FIXME also in atmosphere.frag
+vec3 intersect__(vec3 lineP,
+               vec3 lineN,
+               vec3 planeN,
+               float  planeD,
+               float max_dist,
+               out float dist)
+{
+    dist = (planeD - dot(planeN, lineP)) / dot(lineN, planeN);
+    return lineP + lineN * min(dist, max_dist);
+}
+
+vec4 applyForest(vec4 color, vec3 pos, vec3 view_dir, float dist, vec3 normal)
 {
   vec4 forest_far_simple = getForestFarColorSimple(pos.xy);
 
@@ -366,26 +394,90 @@ vec4 applyForest(vec4 color, vec2 pos, vec3 view_dir, float dist)
 #endif
   {
     vec4 forest_floor = getForestColor(pos.xy, 0);
-    color.xyz = mix(color.xyz, forest_floor.xyz, forest_floor.a);
+//     color.xyz = mix(color.xyz, forest_floor.xyz, forest_floor.a);
 
     if (dist > 5000.0 || !DETAILED_FOREST)
     {
-      vec2 offset = 3 * (view_dir - vec3(0,0,1)).xy;
-
-//     const float forest_layer_height = 3.0;    
-  //       vec2 offset = abs(1 / view_dir.z) * view_dir.xy * forest_layer_height;
-  //       offset = clamp(offset, vec2(-8), vec2(8));
-
+      const int num_steps = 20;
+      const float step_size = 4.0;
+    
       const int num_layers = 5;
 
-      for (int i = 1; i < num_layers; i++)
+      vec2 offset = 3 * (view_dir - vec3(0,0,1)).xy;
+
+      const float forest_layer_height = 3.0;
+      const float forest_height = num_layers * forest_layer_height;
+//       vec2 offset = abs(1 / view_dir.z) * view_dir.xy * forest_layer_height;
+  //       offset = clamp(offset, vec2(-8), vec2(8));
+
+  
+      vec3 forest_top = pos;
+      forest_top.z = getTerrainHeight(pos.xy);
+
+//       const float max_dist = 50;
+//       float dist;
+//       intersect__(cameraPosWorld, view_dir, normal, height, max_dist, dist);
+
+      vec3 combined_transparency = vec3(1);
+      vec3 combined_color = vec3(0);
+
+      for (int i = 0; i < num_steps; i++)
       {
-        vec2 coords = pos.xy + (float(i) * offset);
+        vec3 step_pos = forest_top + (normalize(view_dir) * i * step_size);
+        float forest_bottom = getTerrainHeight(step_pos.xy) - forest_height;
+//         float forest_bottom = forest_top.z - forest_height;
+        
+        float height = step_pos.z - forest_bottom;
+        
+        if (height < 0)
+          break;
+        if (step_pos.z > forest_top.z)
+          break;
 
-        vec4 layer = getForestColor(coords, i);
 
-        color.xyz = mix(color.xyz, layer.xyz, layer.a);
+        vec3 c = vec3(1,0,0);
+        c = mix(c, vec3(0,1,0), step(3, height));
+        c = mix(c, vec3(0,0,1), step(6, height));
+        c = mix(c, vec3(1,1,0), step(9, height));
+        c = mix(c, vec3(0,1,1), step(12, height));
+      
+        float layer_num = (height / forest_height) * num_layers;
+//         layer_num = 1;
+
+//         vec2 coords = pos.xy + (float(i) * offset);
+        
+        
+//         float height = pos.z + i * forest_layer_height;
+        
+//         
+        
+//         float dist;
+//         vec3 coords = intersect__(cameraPosWorld, view_dir, normal, height, max_dist, dist);
+        
+
+        vec4 layer = getForestColorFloat(step_pos.xy, layer_num);
+
+//         layer.xyz = c;
+
+//         combined_color = mix(layer.xyz, combined_color, combined_alpha);
+        combined_color = mix(layer.xyz, combined_color, vec3(1) - combined_transparency);
+        
+        combined_transparency *= 1-layer.a;
+        
+//         color.xyz = mix(color.xyz, vec3(1), layer.a);
+
+//         combined_alpha = mix(combined_alpha, vec3(1), layer.xyz * layer.a);
+//         combined_alpha = clamp(combined_alpha + layer.xyz * layer.a, vec3(0), vec3(1));
+//         combined_alpha = clamp(combined_alpha + vec3(layer.a), vec3(0), vec3(1));
+        
+        
+//         color.xyz = mix(color.xyz, layer.xyz, layer.a);
+        
       }
+      
+//       color.xyz = mix(color.xyz, combined_color, combined_alpha);
+//       color.xyz = mix(color.xyz, vec3(1), vec3(1) - combined_transparency);
+      color.xyz = mix(color.xyz, combined_color, vec3(1) - combined_transparency);
     }
 
 #if ENABLE_FAR_FOREST
@@ -456,7 +548,7 @@ vec4 applyFarTexture(vec4 color, vec2 pos, float dist)
 vec4 getTerrainColor(vec3 pos)
 {
   float dist = distance(cameraPosWorld, pos);
-  vec3 view_dir = normalize(cameraPosWorld - pos);
+  vec3 view_dir = -normalize(cameraPosWorld - pos);
 
   float detail_blend = 1.0;
 
@@ -554,7 +646,7 @@ float bank_amount = 0;
 #endif
 
 #if ENABLE_FOREST
-  color = applyForest(color, pos.xy, view_dir, dist);
+//   color = applyForest(color, pos.xyz, view_dir, dist, normal);
 #endif
 
   color.xyz = textureColorCorrection(color.xyz);

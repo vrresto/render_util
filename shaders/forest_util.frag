@@ -130,3 +130,35 @@ vec4 getForestColor(vec2 pos, int layer)
 
   return color;
 }
+
+vec4 getForestColorFloat(vec2 pos, float layer)
+{
+  vec2 typeMapCoords = pos.xy / 200.0;
+
+  vec2 forestCoords = pos.xy / 200;
+
+  float forest_alpha = getForestAlpha(typeMapCoords, pos);
+
+//   float forest_alpha = texture2D(sampler_forest_map, (typeMapCoords + vec2(0.5)) / typeMapSize).x;
+// 
+//   float forest_noise = genericNoise(forestCoords * 1.0);
+// //   forest_noise += 0.5 * genericNoise(forestCoords * 2);
+//   float forest_noise_detail = genericNoise(forestCoords * 5.0);
+// //   forest_noise_detail = 0;
+//   forest_noise_detail += 0.5 * genericNoise(forestCoords * 10.0);
+// 
+//   float forest_alpha_threshold = 0.2;
+//   forest_alpha_threshold += forest_noise * 0.6;
+//   forest_alpha_threshold += forest_noise_detail * 0.3;
+// 
+//   forest_alpha = smoothstep(forest_alpha_threshold, forest_alpha_threshold + 0.05, forest_alpha);
+
+  vec4 color0 = texture(sampler_forest_layers, vec3(forestCoords, floor(layer)));
+  vec4 color1 = texture(sampler_forest_layers, vec3(forestCoords, ceil(layer)));
+  
+  vec4 color = mix(color0, color1, fract(layer));
+  
+  color.a *= forest_alpha;
+
+  return color;
+}
