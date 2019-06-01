@@ -55,6 +55,7 @@ uniform Terrain terrain;
 varying vec3 passObjectPosFlat;
 varying vec3 passObjectPos;
 varying vec3 passObjectPosView;
+varying vec3 pass_position;
 varying float vertexHorizontalDist;
 varying vec3 passLight;
 varying vec3 passNormal;
@@ -74,6 +75,8 @@ vec2 getDiff(float dist, float height)
 
 float getHeight(vec2 world_coord, float approx_dist)
 {
+//   return 0.0;
+
   vec2 height_map_texture_coord = getHeightMapTextureCoords(terrain.detail_layer, world_coord);
 
   ivec2 height_map_texture_coord_px =
@@ -192,6 +195,7 @@ void main(void)
   gl_Position = world_to_view_rotation * vec4(pos,1);
   passObjectPosView = gl_Position.xyz;
   gl_Position = projectionMatrixFar * gl_Position;
+  pass_position = gl_Position.xyz;
 
   passNormal = gl_Normal.xyz;
 }

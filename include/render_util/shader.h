@@ -85,6 +85,7 @@ namespace render_util
     bool is_far_camera = false;
 
     ShaderProgram() {}
+
     ShaderProgram(const std::string &name,
                   const std::vector<std::string> &vertex_shaders,
                   const std::vector<std::string> &fragment_shaders,
@@ -173,6 +174,7 @@ namespace render_util
     void setUniform(int location, const glm::vec3&);
     void setUniform(int location, const glm::vec4&);
     void setUniform(int location, const glm::ivec2&);
+    void setUniform(int location, const glm::ivec3&);
     void setUniform(int location, const glm::mat3&);
     void setUniform(int location, const glm::mat4&);
   };

@@ -48,12 +48,14 @@ namespace render_util
     ~Camera();
 
     const Mat4 &getWorldToViewRotationD() const;
+    const Mat4 &getViewToWorldRotationD() const;
     const Mat4 &getView2WorldMatrixD() const;
     const Mat4 &getWorld2ViewMatrixD() const;
     const Mat4 &getProjectionMatrixFarD() const;
     const Vec3 &getPosD() const;
     const glm::ivec2 &getViewportSize() const;
     const glm::vec2 &getNDCToView() const;
+    const glm::mat4 &getNDCToViewMatrix() const;
     bool cull(const Box &box) const;
     Unit getFov() const;
     Unit getZNear() const;
@@ -63,6 +65,11 @@ namespace render_util
     glm::mat4 getWorldToViewRotation() const
     {
       return glm::mat4(getWorldToViewRotationD());
+    }
+
+    glm::mat4 getViewToWorldRotation() const
+    {
+      return glm::mat4(getViewToWorldRotationD());
     }
 
     Mat4 getVP() const
