@@ -110,7 +110,7 @@ be compiled either with a GLSL compiler or with a C++ compiler (see the
 values slightly outside their theoretical bounds:
 */
 
-#version 330
+#version 430
 
 #include definitions.glsl
 #include constants.glsl

@@ -30,7 +30,7 @@ vec3 getTerrainColor(vec3 pos_curved, vec3 pos_flat);
 vec3 fogAndToneMap(vec3);
 void fogAndToneMap(in vec3 in_color0, in vec3 in_color1,
                    out vec3 out_color0, out vec3 out_color0);
-
+vec4 sampleAerialPerpective(vec3 pos_world);
 
 layout(location = 0) out vec4 out_color0;
 #if ENABLE_UNLIT_OUTPUT
@@ -38,7 +38,6 @@ layout(location = 1) out vec4 out_color1;
 #endif
 
 uniform float curvature_map_max_distance;
-uniform vec3 cameraPosWorld;
 
 varying float vertexHorizontalDist;
 varying vec3 passObjectPosFlat;
@@ -55,25 +54,17 @@ void main(void)
   out_color1 = vec4(0.5, 0.5, 0.5, 1.0);
 #endif
 
-//   resetDebugColor();
-#if ONLY_WATER
-  float dist = distance(cameraPosWorld, passObjectPosFlat);
-  vec3 view_dir = normalize(passObjectPosFlat - cameraPosWorld);
-  vec3 view_dir_curved = normalize(passObjectPos - cameraPosWorld);
-  out_color0.xyz = getWaterColorSimple(passObjectPos, view_dir_curved, dist);
-#else
-  #if ENABLE_UNLIT_OUTPUT
-    getTerrainColor(passObjectPos, passObjectPosFlat, out_color0.xyz, out_color1.xyz);
-  #else
-    out_color0.xyz = getTerrainColor(passObjectPos, passObjectPosFlat);
-  #endif
-#endif
 
-#if ENABLE_UNLIT_OUTPUT
-  fogAndToneMap(out_color0.xyz, out_color1.xyz, out_color0.xyz, out_color1.xyz);
-#else
-  out_color0.xyz = fogAndToneMap(out_color0.xyz);
-#endif
+  vec3 terrain_color = getTerrainColor(passObjectPos, passObjectPosFlat);
+  
+  out_color0.rgb = terrain_color;
+
+//   out_color0.rgb *= 0;
+  
+  out_color0.rgb = fogAndToneMap(out_color0.rgb);
+  
+//   vec4 aerial_perspective = sampleAerialPerpective(passObjectPos);
+//   out_color0.rgb = mix(terrain_color, vec3(1), aerial_perspective.r);
 
 //   if (getDebugColor() != vec3(0))
 //     out_color0.xyz = getDebugColor();

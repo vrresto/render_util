@@ -97,6 +97,9 @@ void render_util::updateUniforms(render_util::ShaderProgramPtr program, const re
   program->setUniform("world_to_view_rotation", camera.getWorldToViewRotation());
   program->setUniform("ndc_to_view", camera.getNDCToView());
 
+  program->setUniform<float>("z_near", camera.getZNear());
+  program->setUniform<float>("z_far", camera.getZFar());
+
   Vec3 terrain_scale(glm::ivec2(TerrainBase::GRID_RESOLUTION_M), 1);
 
   program->setUniform("camera_pos_terrain_floor",

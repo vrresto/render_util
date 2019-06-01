@@ -301,7 +301,8 @@ class Model {
       GLuint transmittance_texture_unit,
       GLuint scattering_texture_unit,
       GLuint irradiance_texture_unit,
-      GLuint optional_single_mie_scattering_texture_unit = 0) const;
+      GLuint optional_single_mie_scattering_texture_unit,
+      GLuint scattering_density_texture_unit) const;
 
   // Utility method to convert a function of the wavelength to linear sRGB.
   // 'wavelengths' and 'spectrum' must have the same size. The integral of
@@ -342,6 +343,7 @@ class Model {
   GLuint transmittance_texture_;
   GLuint scattering_texture_;
   GLuint optional_single_mie_scattering_texture_;
+  GLuint scattering_density_texture_ = 0;
   GLuint irradiance_texture_;
   GLuint full_screen_quad_vao_;
   GLuint full_screen_quad_vbo_;

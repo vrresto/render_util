@@ -1,5 +1,6 @@
 frag sky
 vert sky
+frag aerial_perspective
 frag lighting
 frag functions
 frag tonemap
