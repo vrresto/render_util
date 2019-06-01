@@ -56,6 +56,8 @@ namespace render_util
     {
       set(name, std::to_string(value));
     }
+
+    const std::unordered_map<std::string, std::string> &getAll() const { return m_map; }
   };
 
 
@@ -92,6 +94,7 @@ namespace render_util
     bool is_far_camera = false;
 
     ShaderProgram() {}
+
     ShaderProgram(const std::string &name,
                   const std::vector<std::string> &vertex_shaders,
                   const std::vector<std::string> &fragment_shaders,
@@ -173,6 +176,7 @@ namespace render_util
     void create();
     void assertIsValid();
     void setUniformi(int location, int);
+    void setUniform(int location, const unsigned int&);
     void setUniform(int location, const int&);
     void setUniform(int location, const bool&);
     void setUniform(int location, const float&);
@@ -180,6 +184,7 @@ namespace render_util
     void setUniform(int location, const glm::vec3&);
     void setUniform(int location, const glm::vec4&);
     void setUniform(int location, const glm::ivec2&);
+    void setUniform(int location, const glm::ivec3&);
     void setUniform(int location, const glm::mat3&);
     void setUniform(int location, const glm::mat4&);
   };
