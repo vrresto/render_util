@@ -200,6 +200,9 @@ namespace
     else if (key == GLFW_KEY_F3 && action == GLFW_PRESS) {
       g_scene->camera.setFov(g_scene->camera.getFov() - 10);
     }
+    else if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+      g_scene->recompute();
+    }
 
     else if (key == GLFW_KEY_F4 && action == GLFW_PRESS) {
       g_scene->setActiveParameter(0);

@@ -2,5 +2,6 @@ frag main
 frag atmosphere
 frag util
 frag sky
+frag frustum
 vert sky
 texunit atmosphere_thickness_map

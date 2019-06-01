@@ -28,6 +28,8 @@ vec3 getDebugColor();
 float calcHazeDistance(vec3 obj_pos, vec3 obj_pos_flat);
 float hazeForDistance(float dist);
 vec3 getSkyColor(vec3 camera_pos, vec3 viewDir);
+vec4 sampleFrustumTexture(vec3 pos_world);
+
 
 varying vec3 passObjectPosWorld;
 uniform vec3 cameraPosWorld;
@@ -59,6 +61,9 @@ void main(void)
   vec3 viewDir = normalize(passObjectPosWorld - cameraPosWorld);
 
   gl_FragColor.xyz = getSkyColor(cameraPosWorld, viewDir);
+
+  vec4 frustum_color = sampleFrustumTexture(cameraPosWorld + (viewDir * 1000 * 1000));
+  gl_FragColor.xyz = mix(gl_FragColor.xyz, vec3(1), frustum_color.r);
 
   if (getDebugColor() != vec3(0)) {
     gl_FragColor.xyz = getDebugColor();

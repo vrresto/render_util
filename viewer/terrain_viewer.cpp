@@ -69,18 +69,119 @@ namespace
 {
 
 
-// constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
-constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
+constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
+// constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
 constexpr auto PRECOMPUTED_LUMINANCE = true;
 constexpr auto HAZINESS = 1.0;
 constexpr auto SINGLE_MIE_HORIZON_HACK = false;
+constexpr auto g_terrain_use_lod = true;
+constexpr auto cache_path = RENDER_UTIL_CACHE_DIR;
+constexpr auto shader_path = RENDER_UTIL_SHADER_DIR;
 
-const bool g_terrain_use_lod = true;
+const auto shore_wave_hz = vec4(0.05, 0.07, 0, 0);
 
-const string cache_path = RENDER_UTIL_CACHE_DIR;
-const string shader_path = RENDER_UTIL_SHADER_DIR;
+struct FrustumTextureFrame
+{
+  const unsigned int texunit = 0;
+  glm::vec3 sample_offset = glm::vec3(0);
+  TexturePtr texture;
+  render_util::Camera camera;
+};
 
-const vec4 shore_wave_hz = vec4(0.05, 0.07, 0, 0);
+
+std::vector<FrustumTextureFrame> g_frustum_texture_frames;
+
+
+constexpr int frustum_texture_scale = 1;
+constexpr int frustum_texture_depth_scale = 1;
+
+constexpr glm::ivec3 frustum_texture_res = glm::ivec3(160 * frustum_texture_scale,
+                                                      90 * frustum_texture_scale,
+                                                      128 * frustum_texture_depth_scale);
+
+
+inline TexturePtr createFrustumTexture()
+{
+  auto texture = Texture::create(GL_TEXTURE_3D);
+
+  TemporaryTextureBinding binding(texture);
+
+  int tex_w = frustum_texture_res.x, tex_h = frustum_texture_res.y;
+  int tex_depth = frustum_texture_res.z;
+
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+  gl::TexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA32F, tex_w, tex_h, tex_depth);
+
+  return texture;
+}
+
+
+void createFrustumTextureFrames(std::vector<FrustumTextureFrame> &frames)
+{
+  int subdivisions = 2;
+//   auto overall_offset = glm::vec3(-0.25);
+  auto overall_offset = glm::vec3(0);
+
+  for (int x = 0; x < subdivisions; x++)
+  {
+    for (int y = 0; y < subdivisions; y++)
+    {
+      for (int z = 0; z < subdivisions; z++)
+      {
+        auto texunit = TEXUNIT_AERIAL_PERSPECTIVE_0 + frames.size();
+        assert(texunit <= TEXUNIT_AERIAL_PERSPECTIVE_7);
+
+        auto offset = glm::vec3(x,y,z) / glm::vec3(subdivisions);
+        offset += overall_offset;
+
+        FrustumTextureFrame frame
+        {
+          .texunit = texunit,
+          .sample_offset = offset,
+          .texture = createFrustumTexture(),
+          .camera = {},
+        };
+
+        frames.push_back(frame);
+      }
+    }
+  }
+
+  assert (frames.size() == 8);
+}
+
+
+void bindFrustumTextureFrames(const std::vector<FrustumTextureFrame> &frames,
+                                     TextureManager &txmgr)
+{
+  for (auto &frame : frames)
+  {
+    txmgr.bind(frame.texunit, frame.texture);
+  }
+}
+
+
+void setFrustumTextureCameraUniforms(render_util::ShaderProgramPtr program,
+                              const std::string &prefix,
+                              const render_util::Camera &camera)
+{
+  program->setUniform(prefix +  "ndc_xy_to_view", camera.getNDCToView());
+
+  program->setUniform(prefix + "camera_pos", camera.getPos());
+  program->setUniform(prefix + "projection_matrix", camera.getProjectionMatrixFar());
+  program->setUniform(prefix + "world_to_view_matrix", camera.getWorld2ViewMatrix());
+  program->setUniform(prefix + "view_to_world_rotation_matrix", camera.getViewToWorldRotation());
+
+  program->setUniform<float>(prefix + "fov", camera.getFov());
+  program->setUniform<float>(prefix + "z_near", camera.getZNear());
+  program->setUniform<float>(prefix + "z_far", camera.getZFar());
+}
 
 
 glm::dvec3 hitGround(const Beam &beam_)
@@ -147,10 +248,14 @@ class TerrainViewerScene : public Scene
 
   render_util::ShaderProgramPtr sky_program;
 //   render_util::ShaderProgramPtr forest_program;
+  render_util::ShaderProgramPtr compute_program;
 
   shared_ptr<MapLoaderBase> m_map_loader;
 
   unique_ptr<CirrusClouds> m_cirrus_clouds;
+
+  bool m_manual_compute_trigger = false;
+  unsigned int m_current_frustum_texture_frame = 0;
 
 #if ENABLE_BASE_MAP
   render_util::ImageGreyScale::Ptr m_base_map_land;
@@ -159,8 +264,10 @@ class TerrainViewerScene : public Scene
 #endif
 
   void updateUniforms(render_util::ShaderProgramPtr program) override;
+
   void updateBaseWaterMapTexture();
   void buildBaseMap();
+  void computeStep();
 
 public:
   TerrainViewerScene(CreateMapLoaderFunc&);
@@ -172,6 +279,7 @@ public:
   void unmark() override;
   void cursorPos(const glm::dvec2&) override;
   void rebuild() override { buildBaseMap(); }
+  void recompute() override;
 };
 
 
@@ -194,6 +302,11 @@ TerrainViewerScene::~TerrainViewerScene()
 #endif
 }
 
+
+void TerrainViewerScene::recompute()
+{
+  computeStep();
+}
 
 void TerrainViewerScene::buildBaseMap()
 {
@@ -287,8 +400,17 @@ void TerrainViewerScene::setup()
 
   auto shader_params = m_atmosphere->getShaderParameters();
 
+  createFrustumTextureFrames(g_frustum_texture_frames);
+  assert(!g_frustum_texture_frames.empty());
+  shader_params.set("frustum_texture_frames_num", g_frustum_texture_frames.size());
+  bindFrustumTextureFrames(g_frustum_texture_frames, getTextureManager());
+
   sky_program = render_util::createShaderProgram("sky", getTextureManager(),
                                                  shader_search_path, {}, shader_params);
+
+  compute_program =
+    render_util::createShaderProgram("compute_aerial_perspective", getTextureManager(), shader_search_path, {}, shader_params);
+
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
 //   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
@@ -347,6 +469,46 @@ void TerrainViewerScene::setup()
   camera.z = 10000;
 
   createControllers();
+
+  camera.setProjection(90, 1.0, 1000.0 * 1000.0);
+
+  {
+    std::vector<bool> values = { false, true };
+    auto apply = [this] (bool value) { m_manual_compute_trigger = value; };
+    m_parameters.addMultipleChoice<bool>("manual_compute_trigger", apply, values);
+  }
+}
+
+
+void TerrainViewerScene::computeStep()
+{
+  m_current_frustum_texture_frame =
+    (m_current_frustum_texture_frame + 1) % g_frustum_texture_frames.size();
+
+  g_frustum_texture_frames[m_current_frustum_texture_frame].camera = camera;
+
+  auto &frame = g_frustum_texture_frames[m_current_frustum_texture_frame];
+
+  gl::MemoryBarrier(GL_ALL_BARRIER_BITS);
+
+  bool layered = true;
+  int layer = 0;
+  gl::BindImageTexture(0, frame.texture->getID(),
+                       0, layered, layer, GL_WRITE_ONLY, GL_RGBA32F);
+
+  getCurrentGLContext()->setCurrentProgram(compute_program);
+
+  updateUniforms(compute_program);
+  compute_program->setUniform("texture_size", frustum_texture_res);
+  compute_program->setUniformi("img_output", 0);
+  compute_program->assertUniformsAreSet();
+
+  gl::DispatchCompute(frustum_texture_res.x, frustum_texture_res.y, 1);
+
+  // make sure writing to image has finished before read
+  gl::MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+  gl::MemoryBarrier(GL_ALL_BARRIER_BITS);
+  FORCE_CHECK_GL_ERROR();
 }
 
 
@@ -366,6 +528,23 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
   program->setUniform("shore_wave_scroll", shore_wave_pos);
   program->setUniform("terrain_height_offset", 0.f);
   program->setUniform("terrain_base_map_height", 0.f);
+  program->setUniform("map_size", map_size);
+
+  for (auto i = 0; i < g_frustum_texture_frames.size(); i++)
+  {
+    auto prefix = string("fustum_texture_frames[") + to_string(i) + "].";
+    setFrustumTextureCameraUniforms(program, prefix, g_frustum_texture_frames[i].camera);
+  }
+  program->setUniform<unsigned int>("current_frustum_texture_frame", m_current_frustum_texture_frame);
+  program->setUniform("frustum_texture_size", frustum_texture_res);
+  for (auto i = 0; i < g_frustum_texture_frames.size(); i++)
+  {
+    auto prefix = string("fustum_texture_frames[") + to_string(i) + "].";
+    auto real_texunit = getTextureManager().getTexUnitNum(g_frustum_texture_frames[i].texunit);
+
+    program->setUniform(prefix + "sample_offset", g_frustum_texture_frames[i].sample_offset);
+    program->setUniformi(prefix + "sampler", real_texunit);
+  }
 
   CHECK_GL_ERROR();
 }
@@ -381,6 +560,9 @@ void TerrainViewerScene::render(float frame_delta)
     shore_wave_pos.y = shore_wave_pos.y + (frame_delta * shore_wave_hz.y);
     m_map->getWaterAnimation().update();
   }
+
+  if (!m_manual_compute_trigger)
+    computeStep();
 
   CHECK_GL_ERROR();
 
@@ -406,6 +588,7 @@ void TerrainViewerScene::render(float frame_delta)
   drawTerrain();
   CHECK_GL_ERROR();
 
+#if 0
   {
     const auto original_state = State::fromCurrent();
     StateModifier state(original_state);
@@ -420,6 +603,7 @@ void TerrainViewerScene::render(float frame_delta)
     m_cirrus_clouds->getProgram()->setUniform("is_far_camera", false);
     m_cirrus_clouds->draw(state, camera);
   }
+#endif
 
   // forest
 #if 0
