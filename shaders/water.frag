@@ -54,6 +54,7 @@ vec2 rotate(vec2 v, float a);
 float perlin(vec2 p, float dim);
 float genericNoise(vec2 coord);
 vec3 blend_rnm(vec3 n1, vec3 n2);
+vec3 textureColorCorrection(vec3 color);
 
 
 uniform sampler2DArray sampler_beach;
@@ -349,7 +350,7 @@ vec3 getWaterColorSimple(vec3 viewDir, float dist)
 
   vec3 envColor = calcEnvColor();
 
-  vec3 refractionColor = 0.9 * water_color;
+  vec3 refractionColor = 0.9 * textureColorCorrection(water_color);
   refractionColor *= ambientLightColor + 0.5 * directLightColor;
 
   vec3 color = mix(refractionColor, envColor, fresnel);
@@ -382,7 +383,7 @@ vec3 getWaterColor(vec3 viewDir, float dist, vec2 coord, float waterDepth, vec3 
 
   vec3 envColor = calcEnvColor();
 
-  vec3 refractionColor = 0.9 * water_color;
+  vec3 refractionColor = 0.9 * textureColorCorrection(water_color);
   refractionColor *= ambientLightColor  + 0.5 * directLightColor;
 
   //extinction
