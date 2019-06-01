@@ -19,6 +19,7 @@
 #include "viewer_main.h"
 #include "scene.h"
 #include "camera.h"
+#include <render_util/aerial_perspective.h>
 #include <render_util/viewer.h>
 #include <render_util/render_util.h>
 #include <render_util/water.h>
@@ -69,8 +70,8 @@ namespace
 {
 
 
-// constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
-constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
+constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
+// constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
 constexpr auto PRECOMPUTED_LUMINANCE = true;
 constexpr auto HAZINESS = 1.0;
 constexpr auto SINGLE_MIE_HORIZON_HACK = false;
@@ -151,6 +152,9 @@ class TerrainViewerScene : public Scene
 
   unique_ptr<CirrusClouds> m_cirrus_clouds;
 
+  std::unique_ptr<aerial_perspective::AerialPerspective> m_aerial_perspective;
+  bool m_manual_compute_trigger = false;
+
 #if ENABLE_BASE_MAP
   render_util::ImageGreyScale::Ptr m_base_map_land;
   render_util::TexturePtr m_base_map_land_texture;
@@ -160,6 +164,7 @@ class TerrainViewerScene : public Scene
   void updateUniforms(render_util::ShaderProgramPtr program) override;
   void updateBaseWaterMapTexture();
   void buildBaseMap();
+  void computeStep();
 
 public:
   TerrainViewerScene(CreateMapLoaderFunc&);
@@ -171,6 +176,7 @@ public:
   void unmark() override;
   void cursorPos(const glm::dvec2&) override;
   void rebuild() override { buildBaseMap(); }
+  void recompute() override;
 };
 
 
@@ -191,6 +197,12 @@ TerrainViewerScene::~TerrainViewerScene()
   s<<"BaseMapOriginX="<<base_map_origin.x<<endl;
   s<<"BaseMapOriginY="<<base_map_origin.y<<endl;
 #endif
+}
+
+
+void TerrainViewerScene::recompute()
+{
+  m_aerial_perspective->computeStep(camera, getTextureManager());
 }
 
 
@@ -286,6 +298,18 @@ void TerrainViewerScene::setup()
 
   auto shader_params = m_atmosphere->getShaderParameters();
 
+  {
+    auto update_uniforms = [this] (ShaderProgramPtr program)
+    {
+      updateUniforms(program);
+    };
+    m_aerial_perspective =
+      std::make_unique<aerial_perspective::AerialPerspective>(update_uniforms,
+                                                              shader_search_path,
+                                                              getTextureManager());
+  }
+  shader_params.add(m_aerial_perspective->getShaderParameters());
+
   sky_program = render_util::createShaderProgram("sky", getTextureManager(),
                                                  shader_search_path, {}, shader_params);
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
@@ -341,11 +365,21 @@ void TerrainViewerScene::setup()
   m_map->getTextures().bind(getTextureManager());
   CHECK_GL_ERROR();
 
+  m_aerial_perspective->bindTextures(getTextureManager());
+
   camera.x = map_size.x / 2;
   camera.y = map_size.y / 2;
   camera.z = 10000;
 
   createControllers();
+
+  camera.setProjection(90, 1.0, 1000.0 * 1000.0);
+
+  {
+    std::vector<bool> values = { false, true };
+    auto apply = [this] (bool value) { m_manual_compute_trigger = value; };
+    m_parameters.addMultipleChoice<bool>("manual_compute_trigger", apply, values);
+  }
 }
 
 
@@ -361,10 +395,13 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
 
   CHECK_GL_ERROR();
 
+  m_aerial_perspective->updateUniforms(program, getTextureManager());
+
   m_map->getTextures().setUniforms(program);
   program->setUniform("shore_wave_scroll", shore_wave_pos);
   program->setUniform("terrain_height_offset", 0.f);
   program->setUniform("terrain_base_map_height", 0.f);
+  program->setUniform("map_size", map_size);
 
   CHECK_GL_ERROR();
 }
@@ -380,6 +417,9 @@ void TerrainViewerScene::render(float frame_delta)
     shore_wave_pos.y = shore_wave_pos.y + (frame_delta * shore_wave_hz.y);
     m_map->getWaterAnimation().update();
   }
+
+  if (!m_manual_compute_trigger)
+    m_aerial_perspective->computeStep(camera, getTextureManager());
 
   CHECK_GL_ERROR();
 
@@ -405,6 +445,7 @@ void TerrainViewerScene::render(float frame_delta)
   drawTerrain();
   CHECK_GL_ERROR();
 
+#if 0
   {
     const auto original_state = State::fromCurrent();
     StateModifier state(original_state);
@@ -419,6 +460,7 @@ void TerrainViewerScene::render(float frame_delta)
     m_cirrus_clouds->getProgram()->setUniform("is_far_camera", false);
     m_cirrus_clouds->draw(state, camera);
   }
+#endif
 
   // forest
 #if 0

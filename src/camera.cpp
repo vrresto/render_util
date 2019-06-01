@@ -47,6 +47,8 @@ namespace render_util
     Mat4 projection_far;
     Mat4 world_to_view_rotation;
     Mat4 view_to_world_rot;
+    
+    glm::mat4 ndc_to_view_matrix;
 
     Vec3 pos;
     ivec2 viewport_size;
@@ -100,6 +102,8 @@ namespace render_util
     const auto right = m_z_near * tan(radians(m_fov) / (Unit)2.0);
     const auto top = right / aspect;
     projection_far = frustum(-right, right, -top, top, m_z_near, m_z_far);
+    
+    ndc_to_view_matrix = affineInverse(projection_far);
 
     calcFrustumPlanes();
 
@@ -163,6 +167,7 @@ namespace render_util
 
   Camera::~Camera() {}
 
+  const Mat4 &Camera::getViewToWorldRotationD() const { return p->view_to_world_rot; }
   const Mat4 &Camera::getWorldToViewRotationD() const { return p->world_to_view_rotation; }
   const Mat4 &Camera::getProjectionMatrixFarD() const { return p->projection_far; }
   const Mat4 &Camera::getWorld2ViewMatrixD() const { return p->world_to_view; }
@@ -278,6 +283,12 @@ namespace render_util
     beam.direction = beam_dir_world;
 
     return beam;
+  }
+  
+  
+  const glm::mat4 &Camera::getNDCToViewMatrix() const
+  {
+    return p->ndc_to_view_matrix;
   }
 
 }

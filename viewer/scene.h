@@ -201,6 +201,7 @@ public:
   virtual void unmark() {}
   virtual void cursorPos(const glm::dvec2&) {}
   virtual void rebuild() {}
+  virtual void recompute() {}
 
   virtual void setup() = 0;
   virtual void render(float frame_delta) = 0;
