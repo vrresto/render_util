@@ -61,6 +61,7 @@ uniform float max_terrain_texture_scale;
 varying vec3 passObjectPosFlat;
 varying vec3 passObjectPos;
 varying vec3 passObjectPosView;
+varying vec3 pass_position;
 varying float vertexHorizontalDist;
 varying vec3 passLight;
 varying vec3 passNormal;
@@ -174,6 +175,7 @@ void main(void)
   float height_diff = 0;
 
   // curvature
+  if (false)
   {
     vec2 pos_xy_camera_relative = pos.xy - camera_pos_terrain_floor.xy;
     pos_xy_camera_relative *= terrain_resolution_m;
@@ -208,6 +210,7 @@ void main(void)
   gl_Position = world_to_view_rotation * vec4(pos,1);
   passObjectPosView = gl_Position.xyz;
   gl_Position = projectionMatrixFar * gl_Position;
+  pass_position = gl_Position.xyz;
 
   passNormal = gl_Normal.xyz;
 }

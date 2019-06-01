@@ -43,6 +43,11 @@ void render_util::updateUniforms(render_util::ShaderProgramPtr program, const re
   program->setUniform("world2ViewMatrix", camera.getWorld2ViewMatrix());
   program->setUniform("view2WorldMatrix", camera.getView2WorldMatrix());
   program->setUniform("world_to_view_rotation", camera.getWorldToViewRotation());
+  program->setUniform("view_to_world_rotation", camera.getViewToWorldRotation());
+  program->setUniform<glm::vec2>("viewport_size", camera.getViewportSize());
+  program->setUniform<float>("fov", camera.getFov());
+  program->setUniform<float>("z_near", camera.getZNear());
+  program->setUniform<float>("z_far", camera.getZFar());
 
   Vec3 terrain_scale(glm::ivec2(TerrainBase::GRID_RESOLUTION_M), 1);
 

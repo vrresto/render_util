@@ -126,6 +126,7 @@ string preProcessShader(const vector<char> &in, const ShaderParameters &params)
     }
   }
 
+  cout<<"state: "<<state<<endl;
   assert(state == NONE);
 
   return move(out);
@@ -150,8 +151,16 @@ string readShaderFile(const string &name,
     ext = ".vert";
     type_str = "vertex";
   }
+  else if (type == GL_COMPUTE_SHADER)
+  {
+    ext = ".glsl";
+    type_str = "compute";
+  }
   else
+  {
+    assert(0);
     abort();
+  }
 
   vector<char> data;
 
@@ -286,6 +295,27 @@ ShaderProgram::ShaderProgram( const string &name,
   assertIsValid();
 }
 
+ShaderProgram::ShaderProgram( const string &name,
+                              const std::vector<std::string> &vertex_shaders,
+                              const std::vector<std::string> &fragment_shaders,
+                              const std::vector<std::string> &compute_shaders,
+                              const std::string &path,
+                              bool must_be_valid,
+                              const std::map<unsigned int, std::string> &attribute_locations,
+                              const ShaderParameters &parameters)
+  : m_parameters(parameters),
+    name(name),
+    vertex_shaders(vertex_shaders),
+    fragment_shaders(fragment_shaders),
+    compute_shaders(compute_shaders),
+    must_be_valid(must_be_valid),
+    attribute_locations(attribute_locations)
+{
+  paths.push_back(path);
+  create();
+  assertIsValid();
+}
+
 ShaderProgram::~ShaderProgram()
 {
   cout<<"~ShaderProgram()"<<endl;
@@ -307,6 +337,12 @@ ShaderProgram::~ShaderProgram()
 
 void ShaderProgram::link()
 {
+  if (shader_objects.empty())
+  {
+    printf("Error linking program: %s\n%s\n", name.c_str(), "no shader objects");
+    return;
+  }
+
   gl::LinkProgram(id);
   CHECK_GL_ERROR();
 
@@ -343,6 +379,21 @@ void ShaderProgram::create()
 
   id = gl::CreateProgram();
   assert(id != 0);
+
+  cerr<<name<<": num compute shaders: "<<compute_shaders.size()<<endl;
+  for (auto name : compute_shaders)
+  {
+    GLuint shader = createShader(name, paths, GL_COMPUTE_SHADER, m_parameters);
+    if (!shader)
+    {
+      cerr<<"failed to create shader: "<<name<<endl;
+      return;
+    }
+    else
+    {
+      shader_objects.push_back(shader);
+    }
+  }
 
   cerr<<name<<": num fragment shaders: "<<fragment_shaders.size()<<endl;
   for (auto name : fragment_shaders)

@@ -48,6 +48,7 @@ namespace render_util
     bool is_far_camera = false;
 
     ShaderProgram() {}
+
     ShaderProgram(const std::string &name,
                   const std::vector<std::string> &vertex_shaders,
                   const std::vector<std::string> &fragment_shaders,
@@ -59,6 +60,15 @@ namespace render_util
     ShaderProgram(const std::string &name,
                   const std::vector<std::string> &vertex_shaders,
                   const std::vector<std::string> &fragment_shaders,
+                  const std::string &path,
+                  bool must_be_valid = true,
+                  const std::map<unsigned int, std::string> &attribute_locations = {},
+                  const ShaderParameters &parameters = {});
+
+    ShaderProgram(const std::string &name,
+                  const std::vector<std::string> &vertex_shaders,
+                  const std::vector<std::string> &fragment_shaders,
+                  const std::vector<std::string> &compute_shaders,
                   const std::string &path,
                   bool must_be_valid = true,
                   const std::map<unsigned int, std::string> &attribute_locations = {},
@@ -118,6 +128,7 @@ namespace render_util
     std::string name;
     std::vector<std::string> paths;
 
+    std::vector<std::string> compute_shaders;
     std::vector<std::string> vertex_shaders;
     std::vector<std::string> fragment_shaders;
 

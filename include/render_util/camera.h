@@ -45,6 +45,7 @@ namespace render_util
     Camera(const Camera &other);
 
     const Mat4 &getWorldToViewRotationD() const;
+    const Mat4 &getViewToWorldRotationD() const;
     const Mat4 &getView2WorldMatrixD() const;
     const Mat4 &getWorld2ViewMatrixD() const;
     const Mat4 &getProjectionMatrixFarD() const;
@@ -59,6 +60,11 @@ namespace render_util
     glm::mat4 getWorldToViewRotation() const
     {
       return glm::mat4(getWorldToViewRotationD());
+    }
+
+    glm::mat4 getViewToWorldRotation() const
+    {
+      return glm::mat4(getViewToWorldRotationD());
     }
 
     Mat4 getVP() const

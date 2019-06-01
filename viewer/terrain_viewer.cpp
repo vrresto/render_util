@@ -131,11 +131,14 @@ class TerrainViewerScene : public Scene
 
   unique_ptr<terrain_viewer::Map> m_map;
 
+  render_util::TexturePtr frustum_texture;
   render_util::TexturePtr curvature_map;
   render_util::TexturePtr atmosphere_map;
 
   render_util::ShaderProgramPtr sky_program;
 //   render_util::ShaderProgramPtr forest_program;
+
+  render_util::ShaderProgramPtr compute_program;
 
   shared_ptr<render_util::MapLoaderBase> m_map_loader;
 
@@ -247,6 +250,32 @@ void TerrainViewerScene::updateBaseWaterMapTexture()
 }
 
 
+constexpr int frustum_texture_res = 128;
+
+inline TexturePtr createFrustumTexture()
+{
+  auto texture = Texture::create(GL_TEXTURE_3D);
+
+  TemporaryTextureBinding binding(texture);
+
+  // dimensions of the image
+  int tex_w = frustum_texture_res, tex_h = frustum_texture_res;
+  int tex_depth = frustum_texture_res;
+
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  gl::TexImage3D(GL_TEXTURE_3D, 0, GL_RGBA32F, tex_w, tex_h, tex_depth,
+                 0, GL_RGBA, GL_FLOAT, nullptr);
+
+  FORCE_CHECK_GL_ERROR();
+
+  return texture;
+}
+
+
 void TerrainViewerScene::setup()
 {
   cout<<"void TerrainViewerScene::setup()"<<endl;
@@ -257,6 +286,17 @@ void TerrainViewerScene::setup()
   atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), cache_path);
 
   sky_program = createSkyProgram(getTextureManager());
+  frustum_texture = createFrustumTexture();
+  bool layered = true;
+  int layer = 0;
+  gl::BindImageTexture(0, frustum_texture->getID(), 0, layered, layer, GL_WRITE_ONLY, GL_RGBA32F);
+  FORCE_CHECK_GL_ERROR();
+  getTextureManager().bind(TEXUNIT_AERIAL_PERSPECTIVE, frustum_texture);
+
+  compute_program =
+    render_util::createShaderProgram("compute_aerial_perspective", getTextureManager(), shader_path);
+
+
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
 //   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
@@ -309,6 +349,9 @@ void TerrainViewerScene::setup()
   camera.x = map_size.x / 2;
   camera.y = map_size.y / 2;
   camera.z = 10000;
+  
+  camera.setProjection(90, 1.0, 130000.0);
+//   camera.setProjection(90, 10000, 530000.0);
 }
 
 
@@ -329,6 +372,15 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
   program->setUniform("terrain_height_offset", 0.f);
   program->setUniform("map_size", map_size);
 
+  program->setUniformi("sampler_aerial_perspective",
+                        getTextureManager().getTexUnitNum(TEXUNIT_AERIAL_PERSPECTIVE));
+  CHECK_GL_ERROR();
+
+  float z_far = camera.getZFar();
+  program->setUniform("z_far", z_far);
+  CHECK_GL_ERROR();
+
+
 #if ENABLE_BASE_MAP
   auto base_map_size =
     m_elevation_map_base->w() * HEIGHT_MAP_BASE_METERS_PER_PIXEL;
@@ -348,6 +400,17 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
 
 void TerrainViewerScene::render(float frame_delta)
 {
+  gl::MemoryBarrier(GL_ALL_BARRIER_BITS);
+  getCurrentGLContext()->setCurrentProgram(compute_program);
+  updateUniforms(compute_program);
+//   compute_program->assertUniformsAreSet();
+  gl::DispatchCompute(frustum_texture_res, frustum_texture_res, 1);
+  FORCE_CHECK_GL_ERROR();
+  // make sure writing to image has finished before read
+  gl::MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+  gl::MemoryBarrier(GL_ALL_BARRIER_BITS);
+  FORCE_CHECK_GL_ERROR();
+
   gl::Enable(GL_CULL_FACE);
 
   if (!pause_animations)

@@ -38,8 +38,16 @@ uniform vec2 cursor_pos_ground;
 uniform float land_map_meters_per_pixel;
 uniform vec3 cameraPosWorld;
 
+uniform mat4 projectionMatrixFar;
+
+uniform float z_far = 2300000;
+
+uniform sampler3D sampler_aerial_perspective;
+
 varying float vertexHorizontalDist;
 varying vec3 passObjectPosFlat;
+varying vec3 passObjectPosView;
+varying vec3 pass_position;
 
 
 void main(void)
@@ -81,7 +89,27 @@ void main(void)
   }
 #endif
 
-  apply_fog();
+//   apply_fog();
+
+//   gl_FragColor.xyz = vec3(gl_FragCoord.x * gl_FragCoord.w);
+
+  vec4 ndc = projectionMatrixFar * vec4(passObjectPosView,1);
+  ndc.xy /= ndc.w;
+  ndc.z /= z_far;
+  
+  ndc.xy = (ndc.xy + vec2(1)) / 2;
+
+//   gl_FragColor.xyz = vec3((ndc.x / ndc.w + 1) / 2 );
+//   gl_FragColor.xyz = vec3((ndc.z / z_far) );
+
+
+//   ndc.xyz = vec3(0.5);
+
+  vec3 frustum_color = texture(sampler_aerial_perspective, ndc.xyz).xyz;
+
+//   gl_FragColor.xyz = ndc.xyz;
+//   if (gl_FragCoord.x < 900)
+    gl_FragColor.xyz = frustum_color;
 
 //   if (getDebugColor() != vec3(0))
 //     gl_FragColor.xyz = getDebugColor();

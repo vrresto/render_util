@@ -155,6 +155,7 @@ namespace render_util
 
   Camera::Camera(const Camera &other) : p(new Private(*other.p)) {}
 
+  const Mat4 &Camera::getViewToWorldRotationD() const { return p->view_to_world_rot; }
   const Mat4 &Camera::getWorldToViewRotationD() const { return p->world_to_view_rotation; }
   const Mat4 &Camera::getProjectionMatrixFarD() const { return p->projection_far; }
   const Mat4 &Camera::getWorld2ViewMatrixD() const { return p->world_to_view; }

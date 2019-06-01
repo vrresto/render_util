@@ -41,6 +41,7 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
 
   vector<string> vertex_shaders;
   vector<string> fragment_shaders;
+  vector<string> compute_shaders;
   vector<string> texunits;
 
   {
@@ -77,6 +78,8 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
         vertex_shaders.push_back(name);
       else if (type == "frag")
         fragment_shaders.push_back(name);
+      else if (type == "compute")
+        compute_shaders.push_back(name);
       else if (type == "texunit")
         texunits.push_back(name);
       else
@@ -86,9 +89,11 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
     }
   }
 
-  assert(!fragment_shaders.empty());
+//   assert(!fragment_shaders.empty());
 
-  ShaderProgramPtr program = make_shared<ShaderProgram>(definition, vertex_shaders, fragment_shaders, shader_path, true, attribute_locations, params);
+  ShaderProgramPtr program =
+    make_shared<ShaderProgram>(definition, vertex_shaders, fragment_shaders, compute_shaders,
+                               shader_path, true, attribute_locations, params);
 
   for (auto name : texunits)
   {
