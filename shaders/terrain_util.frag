@@ -370,7 +370,7 @@ vec4 applyForest(vec4 color, vec2 pos, vec3 view_dir, float dist)
 
     if (dist > 5000.0 || !DETAILED_FOREST)
     {
-      vec2 offset = 3 * (view_dir - vec3(0,0,1)).xy;
+      vec2 offset = 3 * (vec3(0,0,1) - view_dir).xy;
 
 //     const float forest_layer_height = 3.0;    
   //       vec2 offset = abs(1 / view_dir.z) * view_dir.xy * forest_layer_height;
@@ -456,7 +456,7 @@ vec4 applyFarTexture(vec4 color, vec2 pos, float dist)
 vec4 getTerrainColor(vec3 pos)
 {
   float dist = distance(cameraPosWorld, pos);
-  vec3 view_dir = normalize(cameraPosWorld - pos);
+  vec3 view_dir = normalize(pos - cameraPosWorld);
 
   float detail_blend = 1.0;
 
