@@ -250,7 +250,7 @@ void TerrainViewerScene::updateBaseWaterMapTexture()
 }
 
 
-constexpr int frustum_texture_res = 128;
+constexpr glm::ivec3 frustum_texture_res = glm::ivec3(64, 64, 128);
 
 inline TexturePtr createFrustumTexture()
 {
@@ -259,14 +259,19 @@ inline TexturePtr createFrustumTexture()
   TemporaryTextureBinding binding(texture);
 
   // dimensions of the image
-  int tex_w = frustum_texture_res, tex_h = frustum_texture_res;
-  int tex_depth = frustum_texture_res;
+  int tex_w = frustum_texture_res.x, tex_h = frustum_texture_res.y;
+  int tex_depth = frustum_texture_res.z;
 
   gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+  
   gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  
+//   gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//   gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  
   gl::TexImage3D(GL_TEXTURE_3D, 0, GL_RGBA32F, tex_w, tex_h, tex_depth,
                  0, GL_RGBA, GL_FLOAT, nullptr);
 
@@ -350,6 +355,7 @@ void TerrainViewerScene::setup()
   camera.y = map_size.y / 2;
   camera.z = 10000;
   
+//   camera.setProjection(90, 1.0, 30000.0);
   camera.setProjection(90, 1.0, 130000.0);
 //   camera.setProjection(90, 10000, 530000.0);
 }
@@ -404,7 +410,7 @@ void TerrainViewerScene::render(float frame_delta)
   getCurrentGLContext()->setCurrentProgram(compute_program);
   updateUniforms(compute_program);
 //   compute_program->assertUniformsAreSet();
-  gl::DispatchCompute(frustum_texture_res, frustum_texture_res, 1);
+  gl::DispatchCompute(frustum_texture_res.x, frustum_texture_res.y, 1);
   FORCE_CHECK_GL_ERROR();
   // make sure writing to image has finished before read
   gl::MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

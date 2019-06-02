@@ -25,12 +25,13 @@ float distance_to_plane(vec3 lineP,
 
 float calcHazeDensityAtHeight(float height)
 {
-//   return exp(-(height/2000));
-  return 1-smoothstep(0, 2000, height);
+  return exp(-(height/2000));
+//   return 1-smoothstep(0, 2000, height);
+//   return 1-smoothstep(500, 500, height);
 }
 
 
-const vec3 texture_size = vec3(128);
+const vec3 texture_size = vec3(64, 64, 128);
 
 void main(void)
 {
@@ -39,8 +40,10 @@ void main(void)
   // get index in global work group i.e x,y position
   ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
 
-  vec2 frustum_pos = (2 * (vec2(gl_GlobalInvocationID.xy) / texture_size.xy)) - vec2(1);
 
+  
+//   vec2 frustum_pos = (2 * (vec2(gl_GlobalInvocationID.xy) / texture_size.xy)) - vec2(1);
+  vec2 frustum_pos = (2 * ((vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / texture_size.xy)) - vec2(1);
   
   const float aspect = viewport_size.x / viewport_size.y;
 //   const vec2 half_size = vec2(z_near * tan(fov / 2.0), (z_near * tan(fov / 2.0)) / aspect);
@@ -56,13 +59,25 @@ void main(void)
 //   pixel.r = 1-height;
 
   const float step_size = (ray_length / texture_size.z);
+  
+  float haze_density_sum = 0;
 
   for (int i = 0; i < texture_size.z; i++)
   {
-    float dist = i * step_size;
+    float dist =
+//       (0.5 * step_size) + 
+      (i * step_size);
     vec3 pos = cameraPosWorld + dist * ray_dir;
 
-    pixel.r = calcHazeDensityAtHeight(max(pos.z, 0));
+//     pixel.rgb = vec3(calcHazeDensityAtHeight(max(pos.z, 0)));
+    
+    haze_density_sum += calcHazeDensityAtHeight(max(pos.z, 0));
+    
+    float haze_dist = (haze_density_sum / float(i)) * dist;
+    
+    float haze_opacity = 1 - exp(-3.0 * (haze_dist / 20000));
+    
+    pixel.rgb = vec3(haze_opacity);
 
 //     pixel.r = smoothstep(160, 160, pos.z);
 //     pixel.r = smoothstep(000, 6000, i * step_size);
@@ -72,6 +87,8 @@ void main(void)
 //     pixel.r = float(i) / texture_size.z;
     
 //     pixel.r = float(i) / texture_size.z;
+
+//     pixel.rgb = vec3(pixel_coords, i) / texture_size;
 
 
     // output to a specific pixel in the image
