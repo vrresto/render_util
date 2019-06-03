@@ -30,6 +30,11 @@
 
 namespace render_util
 {
+  enum class ImageType
+  {
+    TGA,
+    PNG
+  };
 
 
   bool loadImageFromMemory(const std::vector<char> &data_in,
@@ -50,7 +55,8 @@ namespace render_util
                  int width,
                  int height,
                  const unsigned char* image_data,
-                 size_t image_data_size);
+                 size_t image_data_size,
+                 ImageType type = ImageType::TGA);
 
   template <typename T>
   std::shared_ptr<T> loadImageFromMemory(const std::vector<char> &data)
@@ -94,14 +100,15 @@ namespace render_util
   }
 
   template <typename T>
-  void saveImageToFile(const std::string &file_path, const T *image)
+  void saveImageToFile(const std::string &file_path, const T *image, ImageType type = ImageType::TGA)
   {
     saveImage(file_path,
               T::BYTES_PER_PIXEL,
               image->w(),
               image->h(),
               image->getData(),
-              image->dataSize());
+              image->dataSize(),
+              type);
   }
 
 

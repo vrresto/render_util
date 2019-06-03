@@ -20,6 +20,11 @@
 #include <render_util/render_util.h>
 #include <render_util/terrain_base.h>
 
+#include <iostream>
+#include <iomanip>
+#include <ctime>
+#include <sstream>
+
 #ifdef RENDER_UTIL_USE_MSVCRT
 
 #include <direct.h>
@@ -31,6 +36,19 @@ bool util::mkdir(const char *name)
 }
 
 #endif
+
+
+std::string util::makeTimeStampString()
+{
+  auto t = std::time(nullptr);
+  auto tm = *std::localtime(&t);
+
+  std::ostringstream oss;
+  oss << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S");
+
+  return oss.str();
+}
+
 
 void render_util::updateUniforms(render_util::ShaderProgramPtr program, const render_util::Camera &camera)
 {

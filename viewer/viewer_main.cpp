@@ -150,6 +150,7 @@ namespace
     }
   }
 
+
   void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
   {
 #if ENABLE_BASE_MAP
@@ -170,6 +171,24 @@ namespace
       g_scene->camera.z = 0;
 
       camera_move_speed = camera_move_speed_default;
+    }
+    else if (key == GLFW_KEY_F12 && action == GLFW_PRESS) {
+      constexpr int num_channels = 3;
+
+      int width, height;
+      glfwGetFramebufferSize(window, &width, &height);
+
+      vector<unsigned char> data(width * height * num_channels);
+      gl::ReadnPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data.size(), data.data());
+
+      auto image = make_shared<ImageRGB>(ivec2(width, height), move(data));
+      image = image::flipY(image);
+
+      if (util::mkdir("il2ge_map_viewer"))
+      {
+        string path = "il2ge_map_viewer/screenshot_" + util::makeTimeStampString() + ".png";
+        saveImageToFile(path, image.get(), ImageType::PNG);
+      }
     }
     else if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS) {
       camera_move_speed *= 2;

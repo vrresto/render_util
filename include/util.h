@@ -244,6 +244,8 @@ inline bool writeFile(const std::string &path, const char *data, size_t data_siz
 
 bool mkdir(const char *name);
 
+std::string makeTimeStampString();
+
 
 } // namespace util
 

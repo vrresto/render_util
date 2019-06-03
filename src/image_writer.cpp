@@ -22,16 +22,30 @@
 
 #include "stb_image_write.h"
 
-int stbi_write_tga(char const *filename, int w, int h, int comp, const void *data);
-
 bool render_util::saveImage(const std::string &file_path,
                  int num_channels,
                  int width,
                  int height,
                  const unsigned char* image_data,
-                 size_t image_data_size)
+                 size_t image_data_size,
+                 ImageType type)
 {
   assert(image_data_size == width * height * num_channels);
-  auto res = stbi_write_tga(file_path.c_str(), width, height, num_channels, image_data);
+
+  int res = 0;
+
+  switch (type)
+  {
+    case ImageType::TGA:
+      res = stbi_write_tga(file_path.c_str(), width, height, num_channels, image_data);
+      break;
+    case ImageType::PNG:
+      res = stbi_write_png(file_path.c_str(), width, height, num_channels, image_data, 0);
+      break;
+    default:
+      assert(0);
+      abort();
+  }
+
   return res != 0;
 }
