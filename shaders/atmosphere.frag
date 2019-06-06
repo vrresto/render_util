@@ -542,7 +542,7 @@ const vec3 rayleigh_rgb_proportion =
        1.0);
 
 vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir,
-    out vec3 fog_color, out vec3 mie_color)
+    out vec3 fog_color, out vec3 mie_color, bool is_sky)
 {
   float d = air_dist / (atmosphereVisibility);
 //   float v = 25 * 1000 * 1000;
@@ -606,6 +606,20 @@ vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir,
   mieColor *= mie_phase;
   mieColor *= MIE_SCALE;
   mieColor *= hazeForDistance(haze_dist);
+
+  if (!is_sky)
+  {
+    vec3 mieColorSky = mieColor;
+    mieColor *= mix(smoothstep(-0.05, 0.05, sunDir.z),
+      mix(smoothstep(-0.05, 0.05, sunDir.z), 1, smoothstep(-0.1, 0.1, sunDir.z)),
+      smoothstep(0, 5000, cameraPosWorld.z));
+
+    float dist_to_horizon = getDistanceToHorizon(cameraPosWorld.z + planet_radius);
+    float dist_to_object = length(cameraPosWorld - passObjectPos);
+
+    mieColor = mix(mieColor, mieColorSky,
+        smoothstep(dist_to_horizon - dist_to_horizon * 0.9, dist_to_horizon, dist_to_object));
+  }
 
 
   fog_color = mix(fog_color, vec3(1), smoothstep(-0.5, 0.4, sunDir.z) * mieColor);
@@ -770,7 +784,7 @@ void apply_fog()
   fog_dist += t.y;
 
   vec3 mie_color = vec3(0);
-  vec4 atmosphereColor = calcAtmosphereColor(t.x, fog_dist, viewDir, fog_color, mie_color);
+  vec4 atmosphereColor = calcAtmosphereColor(t.x, fog_dist, viewDir, fog_color, mie_color, false);
 
   float fog = hazeForDistance(fog_dist);
 

@@ -19,7 +19,7 @@
 #version 130
 
 vec4 calcAtmosphereColor(float dist_air, float dist_haze, vec3 viewDir,
-    out vec3 fog_color, out vec3 mie_color);
+    out vec3 fog_color, out vec3 mie_color, bool is_sky);
 vec2 getMaxAtmosphereThickness(vec2 cameraPos, vec2 viewDir);
 bool intersectsGround(vec3 rayStart, vec3 rayDir);
 float getCircleIntersectionDistFromOutside(vec2 rayStart, vec2 rayDir, float radius);
@@ -74,7 +74,7 @@ void main(void)
 
 
   vec3 mie_color = vec3(0);
-  vec4 atmosphere_color = calcAtmosphereColor(t.x, fog_distance, viewDir, fog_color, mie_color);
+  vec4 atmosphere_color = calcAtmosphereColor(t.x, fog_distance, viewDir, fog_color, mie_color, true);
 
   float fog = hazeForDistance(fog_distance);
 
