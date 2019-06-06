@@ -595,8 +595,9 @@ vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir,
   float mie_phase = miePhase(viewDir, sunDir, MIE_PHASE_COEFFICIENT);
 
   vec3 mieColor = mix(vec3(1.0, 0.9, 0.5), vec3(1), smoothstep(0.0, 0.25, sunDir.z));
-  mieColor = mix(mieColor * vec3(1.0, 0.65, 0.2), mieColor, smoothstep(0.0, 0.2, sunDir.z));
-  mieColor = mix(mieColor * vec3(1.0, 0.7, 0.0), mieColor, mie_phase*mie_phase);
+  mieColor = mix(mieColor * vec3(1.0, 0.6, 0.1), mieColor, smoothstep(0.0, 0.2, sunDir.z));
+  mieColor = mix(mieColor * vec3(1.0, 0.7, 0.0), mieColor, mie_phase*mie_phase *
+      (smoothstep(-0.1, 0.0, sunDir.z)));
   mieColor = mix(mieColor * vec3(1.0, 0.6, 0.0), mieColor, smoothstep(-0.5, -0.1, sunDir.z));
 
   const float MIE_SCALE = 1.3;
