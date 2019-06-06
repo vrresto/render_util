@@ -551,12 +551,12 @@ vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir,
   float brightness = smoothstep(0.0, 0.25, sunDir.z);
 
   vec3 rayleighColor = rayleigh_rgb_proportion * 0.9;
-  vec3 rayleighColorLow = rayleighColor * vec3(1.0, 0.5, 0.4);
+  vec3 rayleighColorLow = rayleighColor * vec3(1.0, 0.6, 0.5);
   rayleighColor = mix(rayleighColorLow, rayleighColor, brightness);
 
   vec3 diffuseScatteringColorDark = vec3(0.2, 0.62, 1.0);
 
-  vec3 diffuseScatteringColorDarkLow = diffuseScatteringColorDark * vec3(1.0, 0.5, 0.4);
+  vec3 diffuseScatteringColorDarkLow = diffuseScatteringColorDark * vec3(1.0, 0.5, 0.3);
   diffuseScatteringColorDark = mix(diffuseScatteringColorDarkLow, diffuseScatteringColorDark, brightness);
 
   rayleighColor = mix(rayleighColor, vec3(1), hazyness);
@@ -567,15 +567,15 @@ vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir,
   diffuseScatteringColorBright = mix(diffuseScatteringColorBright, vec3(1), 0.5);
 
   fog_color = vec3(0.8, 0.93, 1.0);
-  vec3 fog_color_low = fog_color * 0.6 * vec3(0.84, 0.88, 0.95);
+  vec3 fog_color_low = fog_color * 0.6 * vec3(1.0, 0.83, 0.75);
   fog_color = mix(fog_color_low, fog_color, brightness);
 
   vec3 fog_color_low_alt = vec3(0.76, 0.87, 0.98);
-  vec3 fog_color_low_alt_low = fog_color_low_alt * 0.6 * vec3(0.84, 0.88, 0.95);
+  vec3 fog_color_low_alt_low = fog_color_low_alt * 0.6 * vec3(0.8, 0.7, 0.64);
   fog_color_low_alt = mix(fog_color_low_alt_low, fog_color_low_alt, brightness);
   fog_color = mix(fog_color_low_alt, fog_color, smoothstep(0, 5000, cameraPosWorld.z));
 
-  vec3 diffuseScatteringColorBrightLow = diffuseScatteringColorBright * 0.6;
+  vec3 diffuseScatteringColorBrightLow = diffuseScatteringColorBright * vec3(0.79, 0.57, 0.5);
   diffuseScatteringColorBright = mix(diffuseScatteringColorBrightLow,
     diffuseScatteringColorBright, brightness);
 
@@ -595,8 +595,8 @@ vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir,
   float mie_phase = miePhase(viewDir, sunDir, MIE_PHASE_COEFFICIENT);
 
   vec3 mieColor = mix(vec3(1.0, 0.9, 0.5), vec3(1), smoothstep(0.0, 0.25, sunDir.z));
-  mieColor = mix(mieColor * vec3(1.0, 0.8, 0.6), mieColor, smoothstep(-0.2, 0.1, sunDir.z));
-  mieColor = mix(mieColor * vec3(1.0, 0.8, 0.6), mieColor, smoothstep(-0.5, -0.1, sunDir.z));
+  mieColor = mix(mieColor * vec3(1.0, 0.6, 0.3), mieColor, smoothstep(-0.2, 0.1, sunDir.z));
+  mieColor = mix(mieColor * vec3(1.0, 0.6, 0.0), mieColor, smoothstep(-0.5, -0.1, sunDir.z));
 
   const float MIE_SCALE = 2;
 
