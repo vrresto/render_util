@@ -26,88 +26,14 @@
 using namespace render_util;
 using namespace std;
 
-namespace
-{
-
-
-ShaderProgramPtr createTerrainProgram(const TextureManager &tex_mgr, bool cdlod, const string &shader_path,
-                                      const string &shader_program_name,
-                                      bool enable_base_map,
-                                      bool enable_base_water_map,
-                                      bool is_editor,
-                                      bool low_detail)
-{
-  string name = shader_program_name;
-  if (name.empty())
-    name = "terrain";
-
-  if (cdlod)
-    name += "_cdlod";
-
-  ShaderProgramPtr terrain_program;
-
-  CHECK_GL_ERROR();
-
-  map<unsigned int, string> attribute_locations;
-
-  if (cdlod)
-    attribute_locations = { { 4, "attrib_pos" } };
-
-
-  ShaderParameters params;
-  params.set("enable_base_map", enable_base_map);
-  params.set("enable_base_water_map", enable_base_water_map);
-  params.set("is_editor", is_editor);
-  params.set("low_detail", low_detail);
-
-  terrain_program = createShaderProgram(name, tex_mgr, shader_path, attribute_locations, params);
-
-  CHECK_GL_ERROR();
-
-  return terrain_program;
-}
-
-
-} // namespace
 
 namespace render_util
 {
 
 
-TerrainRenderer::TerrainRenderer(std::shared_ptr<TerrainBase> terrain,
-                                 ShaderProgramPtr program,
-                                 ShaderProgramPtr low_detail_program) :
-  m_terrain(terrain),
-  m_program(program),
-  m_low_detail_program(low_detail_program)
+std::shared_ptr<TerrainBase> createTerrain(TextureManager &tex_mgr, bool use_lod,
+                                           const string &shader_path)
 {
-}
-
-
-TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr, bool use_lod, const string &shader_path,
-                                      const string &shader_program_name,
-                                      bool enable_base_map,
-                                      bool enable_base_water_map,
-                                      bool is_editor)
-{
-  auto program = createTerrainProgram(tex_mgr,
-                                      use_lod,
-                                      shader_path,
-                                      shader_program_name,
-                                      enable_base_map,
-                                      enable_base_water_map,
-                                      is_editor,
-                                      false);
-
-  auto low_detail_program = createTerrainProgram(tex_mgr,
-                                                 use_lod,
-                                                 shader_path,
-                                                 shader_program_name,
-                                                 enable_base_map,
-                                                 enable_base_water_map,
-                                                 is_editor,
-                                                 true);
-
   assert(use_lod);
   auto terrain = g_terrain_cdlod_factory(tex_mgr, shader_path);
 
@@ -115,7 +41,7 @@ TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr, bool use_lod, con
 //     g_terrain_cdlod_factory() :
 //     g_terrain_factory();
 
-  return TerrainRenderer(terrain, program, low_detail_program);
+  return terrain;
 }
 
 

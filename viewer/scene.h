@@ -35,13 +35,10 @@ namespace render_util::viewer
 using namespace gl_binding;
 
 
-struct Terrain : public render_util::TerrainRenderer
+struct Terrain
 {
-  Terrain() {}
-  Terrain(const render_util::TerrainRenderer &other)
-  {
-    *static_cast<render_util::TerrainRenderer*>(this) = other;
-  }
+  std::shared_ptr<TerrainBase> m_terrain;
+  std::shared_ptr<TerrainBase> getTerrain() { return m_terrain; }
 
   void draw(const Camera &camera, TerrainBase::Client *client)
   {
@@ -106,25 +103,19 @@ public:
                      render_util::MapLoaderBase::TerrainTextures &textures)
   {
 
-    Terrain t = render_util::createTerrainRenderer(texture_manager,
-      true,
-      RENDER_UTIL_SHADER_DIR, "terrain",
-      false,
-      false,
-      false);
+    m_terrain.m_terrain = render_util::createTerrain(texture_manager, true, RENDER_UTIL_SHADER_DIR);
 
     assert(textures.type_map);
     assert(!textures.textures.empty());
     assert(textures.texture_scale.size() == textures.textures.size());
 
-    t.getTerrain()->build(elevation_map,
+    m_terrain.getTerrain()->build(elevation_map,
                           material_map,
                           textures.type_map,
                           textures.textures,
                           textures.textures_nm,
                           textures.texture_scale);
 
-    m_terrain = t;
   }
 
   void updateTerrain(const render_util::ElevationMap::ConstPtr elevation_map_base)

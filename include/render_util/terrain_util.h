@@ -29,27 +29,8 @@ namespace render_util
 {
 
 
-class TerrainRenderer
-{
-  std::shared_ptr<TerrainBase> m_terrain;
-  ShaderProgramPtr m_program;
-  ShaderProgramPtr m_low_detail_program;
-
-public:
-  TerrainRenderer() {}
-  TerrainRenderer(std::shared_ptr<TerrainBase>, ShaderProgramPtr, ShaderProgramPtr);
-  std::shared_ptr<TerrainBase> getTerrain() { return m_terrain; }
-  ShaderProgramPtr getProgram() { return m_program; }
-  ShaderProgramPtr getLowDetailProgram() { return m_low_detail_program; }
-};
-
-TerrainRenderer createTerrainRenderer(TextureManager &tex_mgr,
-                                      bool use_lod,
-                                      const std::string &shader_path,
-                                      const std::string &shader_program_name = {},
-                                      bool enable_base_map = false,
-                                      bool enable_base_water_map = false,
-                                      bool is_editor = false);
+std::shared_ptr<TerrainBase>
+createTerrain(TextureManager &tex_mgr, bool use_lod, const std::string &shader_path);
 
 
 } // namespace render_util
