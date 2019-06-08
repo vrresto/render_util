@@ -74,9 +74,10 @@ const string shader_path = RENDER_UTIL_SHADER_DIR;
 
 const vec4 shore_wave_hz = vec4(0.05, 0.07, 0, 0);
 
-render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager &tex_mgr)
+render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager &tex_mgr,
+                                               render_util::ShaderSearchPath &search_path)
 {
-  return render_util::createSkyProgram(tex_mgr, shader_path);
+   return render_util::createShaderProgram("sky", tex_mgr, search_path);
 }
 
 
@@ -256,11 +257,15 @@ void TerrainViewerScene::setup()
   curvature_map = render_util::createCurvatureTexture(getTextureManager(), cache_path);
   atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), cache_path);
 
-  sky_program = createSkyProgram(getTextureManager());
+  m_atmosphere = make_shared<Atmosphere>();
+
+  ShaderSearchPath shader_search_path;
+  shader_search_path.push_back(RENDER_UTIL_SHADER_DIR);
+  shader_search_path.push_back(string(RENDER_UTIL_SHADER_DIR) + "/" + m_atmosphere->getShaderPath());
+
+  sky_program = createSkyProgram(getTextureManager(), shader_search_path);
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
 //   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
-
-  m_atmosphere = make_shared<Atmosphere>();
 
   m_map = make_unique<terrain_viewer::Map>(getTextureManager());
 
@@ -284,9 +289,6 @@ void TerrainViewerScene::setup()
 
   m_map->getTextures().setTexture(TEXUNIT_TERRAIN_FAR, terrain_textures.far_texture);
 
-  ShaderSearchPath shader_search_path;
-  shader_search_path.push_back(RENDER_UTIL_SHADER_DIR);
-  shader_search_path.push_back(string(RENDER_UTIL_SHADER_DIR) + "/" + m_atmosphere->getShaderPath());
 
   createTerrain(elevation_map, m_map->getMaterialMap(), terrain_textures, shader_search_path);
 

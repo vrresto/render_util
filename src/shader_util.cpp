@@ -124,21 +124,5 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
   return program;
 }
 
-ShaderProgramPtr createShaderProgram(const std::string &definition,
-  const render_util::TextureManager &tex_mgr,
-  const std::string &shader_path,
-  const std::map<unsigned int, std::string> &attribute_locations,
-  const ShaderParameters &params)
-{
-  ShaderSearchPath search_path { shader_path };
-  return createShaderProgram(definition, tex_mgr, search_path, attribute_locations, params);
-}
-
-
-ShaderProgramPtr createSkyProgram(const render_util::TextureManager &tex_mgr, const string &shader_path)
-{
-  return createShaderProgram("sky", tex_mgr, shader_path);
-}
-
 
 } // namespace
