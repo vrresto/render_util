@@ -27,13 +27,40 @@
 
 using namespace std;
 
+namespace
+{
+
+
+ifstream openDefinition(const std::string &definition, const render_util::ShaderSearchPath &search_path)
+{
+  for (auto &dir : search_path)
+  {
+    string path = dir + '/' + definition + ".program";
+    ifstream in(path);
+
+    if (!in.good())
+    {
+      cout<<"failed to open "<<path<<endl;
+    }
+    else
+      return in;
+  }
+
+  assert(0);
+  abort();
+}
+
+
+}
+
+
 namespace render_util
 {
 
 
 ShaderProgramPtr createShaderProgram(const std::string &definition,
                                      const render_util::TextureManager &tex_mgr,
-                                     const std::string &shader_path,
+                                     const ShaderSearchPath &search_path,
                                      const std::map<unsigned int, std::string> &attribute_locations,
                                      const ShaderParameters &params)
 {
@@ -43,15 +70,9 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
   vector<string> fragment_shaders;
   vector<string> texunits;
 
-  {
-    string path = shader_path + '/' + definition + ".program";
-    ifstream in(path);
-    if (!in.good())
-    {
-      cout<<"failed to open "<<path<<endl;
-    }
-    assert(in.good());
+  auto in = openDefinition(definition, search_path);
 
+  {
     while (in.good())
     {
       string line;
@@ -88,7 +109,7 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
 
   assert(!fragment_shaders.empty());
 
-  ShaderProgramPtr program = make_shared<ShaderProgram>(definition, vertex_shaders, fragment_shaders, shader_path, true, attribute_locations, params);
+  ShaderProgramPtr program = make_shared<ShaderProgram>(definition, vertex_shaders, fragment_shaders, search_path, true, attribute_locations, params);
 
   for (auto name : texunits)
   {
@@ -102,6 +123,17 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
 
   return program;
 }
+
+ShaderProgramPtr createShaderProgram(const std::string &definition,
+  const render_util::TextureManager &tex_mgr,
+  const std::string &shader_path,
+  const std::map<unsigned int, std::string> &attribute_locations,
+  const ShaderParameters &params)
+{
+  ShaderSearchPath search_path { shader_path };
+  return createShaderProgram(definition, tex_mgr, search_path, attribute_locations, params);
+}
+
 
 ShaderProgramPtr createSkyProgram(const render_util::TextureManager &tex_mgr, const string &shader_path)
 {

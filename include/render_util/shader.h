@@ -31,6 +31,7 @@
 
 namespace render_util
 {
+  using ShaderSearchPath = std::vector<std::string>;
 
   class ShaderParameters
   {

@@ -25,6 +25,7 @@
 #include <render_util/map_loader_base.h>
 #include <render_util/shader.h>
 #include <render_util/terrain_util.h>
+#include <render_util/atmosphere.h>
 #include <render_util/globals.h>
 #include <render_util/gl_binding/gl_functions.h>
 
@@ -81,6 +82,7 @@ public:
   bool pause_animations = false;
 
   Terrain m_terrain;
+  std::shared_ptr<Atmosphere> m_atmosphere;
 
   glm::vec3 getSunDir()
   {
@@ -100,10 +102,10 @@ public:
 
   void createTerrain(render_util::ElevationMap::ConstPtr elevation_map,
                      render_util::TerrainBase::MaterialMap::ConstPtr material_map,
-                     render_util::MapLoaderBase::TerrainTextures &textures)
+                     render_util::MapLoaderBase::TerrainTextures &textures,
+                     const ShaderSearchPath &shader_search_path)
   {
-
-    m_terrain.m_terrain = render_util::createTerrain(texture_manager, true, RENDER_UTIL_SHADER_DIR);
+    m_terrain.m_terrain = render_util::createTerrain(texture_manager, true, shader_search_path);
 
     assert(textures.type_map);
     assert(!textures.textures.empty());

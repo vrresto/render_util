@@ -22,6 +22,7 @@
 #include <render_util/shader.h>
 #include <render_util/terrain_base.h>
 #include <render_util/texture_manager.h>
+#include <render_util/shader.h>
 
 #include <string>
 
@@ -30,7 +31,7 @@ namespace render_util
 
 
 std::shared_ptr<TerrainBase>
-createTerrain(TextureManager &tex_mgr, bool use_lod, const std::string &shader_path);
+createTerrain(TextureManager &tex_mgr, bool use_lod, const ShaderSearchPath&);
 
 
 } // namespace render_util

@@ -392,7 +392,7 @@ size_t getDetailLevelAtDistance(double dist)
 render_util::ShaderProgramPtr createProgram(unsigned int material,
                                             size_t detail_level,
                                             render_util::TextureManager &tex_mgr,
-                                            std::string shader_path,
+                                            const render_util::ShaderSearchPath &shader_search_path,
                                             const render_util::ShaderParameters &params_)
 {
   using namespace std;
@@ -435,7 +435,7 @@ render_util::ShaderProgramPtr createProgram(unsigned int material,
   params.set("detailed_water", detail_options & DetailOption::WATER);
   params.set("detailed_forest", detail_options & DetailOption::FOREST);
 
-  auto program = createShaderProgram(name, tex_mgr, shader_path, attribute_locations, params);
+  auto program = createShaderProgram(name, tex_mgr, shader_search_path, attribute_locations, params);
 
   CHECK_GL_ERROR();
 
@@ -505,13 +505,14 @@ class Material
 
 public:
   Material(unsigned int id, render_util::TextureManager &tm,
-           std::string shader_path, const render_util::ShaderParameters &params)
+           const render_util::ShaderSearchPath &shader_search_path,
+           const render_util::ShaderParameters &params)
   {
     assert(m_batches.size() == NUM_DETAIL_LEVELS);
     for (size_t i = 0; i < m_batches.size(); i++)
     {
       assert(i < m_batches.size());
-      auto program = createProgram(id, i, tm, shader_path, params);
+      auto program = createProgram(id, i, tm, shader_search_path, params);
       m_batches[i] = std::make_unique<RenderBatch>(program);
     }
   }
@@ -656,7 +657,7 @@ class TerrainCDLOD : public TerrainCDLODBase
 {
   TextureManager &texture_manager;
 
-  std::string shader_path;
+  ShaderSearchPath shader_search_path;
 
   NodeAllocator node_allocator;
   RenderList render_list;
@@ -690,7 +691,7 @@ class TerrainCDLOD : public TerrainCDLODBase
   Material *getMaterial(unsigned int id);
 
 public:
-  TerrainCDLOD(TextureManager&, std::string);
+  TerrainCDLOD(TextureManager&, const ShaderSearchPath&);
   ~TerrainCDLOD() override;
 
   void build(ElevationMap::ConstPtr, MaterialMap::ConstPtr, TypeMap::ConstPtr type_map,
@@ -722,9 +723,9 @@ TerrainCDLOD::~TerrainCDLOD()
 }
 
 
-TerrainCDLOD::TerrainCDLOD(TextureManager &tm, std::string shader_path) :
+TerrainCDLOD::TerrainCDLOD(TextureManager &tm, const ShaderSearchPath &shader_search_path) :
   texture_manager(tm),
-  shader_path(shader_path)
+  shader_search_path(shader_search_path)
 {
   GridMesh mesh(MESH_GRID_SIZE+1, MESH_GRID_SIZE+1);
   mesh.createTriangleDataIndexed();
@@ -779,7 +780,7 @@ Material *TerrainCDLOD::getMaterial(unsigned int id)
 
   assert(m_terrain_textures);
 
-  materials[id] = std::make_unique<Material>(id, texture_manager, shader_path,
+  materials[id] = std::make_unique<Material>(id, texture_manager, shader_search_path,
                                              m_terrain_textures->getShaderParameters());
 
   return materials[id].get();

@@ -260,6 +260,8 @@ void TerrainViewerScene::setup()
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
 //   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
+  m_atmosphere = make_shared<Atmosphere>();
+
   m_map = make_unique<terrain_viewer::Map>(getTextureManager());
 
   auto elevation_map = m_map_loader->createElevationMap();
@@ -282,7 +284,11 @@ void TerrainViewerScene::setup()
 
   m_map->getTextures().setTexture(TEXUNIT_TERRAIN_FAR, terrain_textures.far_texture);
 
-  createTerrain(elevation_map, m_map->getMaterialMap(), terrain_textures);
+  ShaderSearchPath shader_search_path;
+  shader_search_path.push_back(RENDER_UTIL_SHADER_DIR);
+  shader_search_path.push_back(string(RENDER_UTIL_SHADER_DIR) + "/" + m_atmosphere->getShaderPath());
+
+  createTerrain(elevation_map, m_map->getMaterialMap(), terrain_textures, shader_search_path);
 
   map_size = glm::vec2(elevation_map->getSize() * m_map_loader->getHeightMapMetersPerPixel());
 

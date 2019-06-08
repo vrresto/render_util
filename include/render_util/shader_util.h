@@ -32,6 +32,13 @@ namespace render_util
     const std::map<unsigned int, std::string> &attribute_locations = {},
     const ShaderParameters &params = {});
 
+  ShaderProgramPtr createShaderProgram(const std::string &definition,
+    const render_util::TextureManager &tex_mgr,
+    const ShaderSearchPath &search_path,
+    const std::map<unsigned int, std::string> &attribute_locations = {},
+    const ShaderParameters &params = {});
+
+
   ShaderProgramPtr createSkyProgram(const render_util::TextureManager &tex_mgr,
                                     const std::string &shader_path);
 }

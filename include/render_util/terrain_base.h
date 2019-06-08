@@ -72,14 +72,14 @@ namespace render_util
     virtual TexturePtr getNormalMapTexture() { return nullptr; }
   };
 
-  using TerrainFactory = util::Factory<TerrainBase, TextureManager&, std::string>;
+  using TerrainFactory = util::Factory<TerrainBase, TextureManager&, const ShaderSearchPath&>;
 
   template <class T>
   TerrainFactory makeTerrainFactory()
   {
-    return [] (TextureManager &tm, std::string shader_path)
+    return [] (TextureManager &tm, const ShaderSearchPath &shader_search_path)
     {
-      return std::make_shared<T>(tm, shader_path);
+      return std::make_shared<T>(tm, shader_search_path);
     };
   }
 }
