@@ -42,6 +42,31 @@ namespace render_util
   };
 
 
+  class Shader
+  {
+    unsigned int m_id = 0;
+    unsigned int m_type = 0;
+    std::string m_preprocessed_source;
+    std::string m_name;
+    std::string m_filename;
+
+  public:
+    Shader(const std::string &name,
+                     const std::vector<std::string> &paths,
+                     unsigned int type,
+                     const ShaderParameters &params);
+
+    ~Shader();
+
+    void preProcess(const std::vector<char> &in, const ShaderParameters &params,
+                        const std::vector<std::string> &paths);
+    void compile();
+    unsigned int getID() { return m_id; }
+    const std::string &getName() { return m_name; }
+    const std::string &getFileName() { return m_filename; }
+  };
+
+
   class ShaderProgram
   {
   public:
@@ -122,7 +147,7 @@ namespace render_util
     std::vector<std::string> vertex_shaders;
     std::vector<std::string> fragment_shaders;
 
-    std::vector<unsigned int> shader_objects;
+    std::vector<std::unique_ptr<Shader>> shaders;
 
     const std::map<unsigned int, std::string> attribute_locations;
     std::unordered_map<std::string, int> uniform_locations;

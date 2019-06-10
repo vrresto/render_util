@@ -78,7 +78,102 @@ string getParameterValue(const string &parameter, const ShaderParameters &params
 }
 
 
-string preProcessShader(const vector<char> &in, const ShaderParameters &params)
+} // namespace
+
+
+namespace render_util
+{
+
+
+Shader::Shader(const std::string &name,
+                     const std::vector<std::string> &paths_,
+                     GLenum type,
+                     const ShaderParameters &params) :
+  m_name(name),
+  m_type(type)
+{
+  string ext;
+  string type_str;
+  if (type == GL_FRAGMENT_SHADER)
+  {
+    ext = ".frag";
+    type_str = "fragment";
+  }
+  else if (type == GL_VERTEX_SHADER)
+  {
+    ext = ".vert";
+    type_str = "vertex";
+  }
+  else
+    abort();
+
+  vector<char> data;
+
+  vector<string> paths;
+
+  for (auto &path : paths_)
+  {
+    paths.push_back(path + '/' + name + ext);
+    paths.push_back(path + '/' + name + ".glsl");
+  }
+
+  for (auto p : paths)
+  {
+    if (util::readFile(p, data, true))
+    {
+      cout << "sucessully read shader: " << p << endl;
+      m_filename = p;
+      preProcess(data, params, paths_);
+      return;
+    }
+  }
+
+  cerr << "Failed to read " << type_str << " shader file: " << name << endl;
+}
+
+
+Shader::~Shader()
+{
+  if (m_id)
+    gl::DeleteShader(m_id);
+}
+
+
+void Shader::compile()
+{
+  if (m_preprocessed_source.empty())
+    return;
+
+  GLuint id = gl::CreateShader(m_type);
+  assert(id);
+
+  const GLchar *sources[1] = { m_preprocessed_source.c_str() };
+
+  gl::ShaderSource(id, 1, sources, 0);
+  gl::CompileShader(id);
+
+  GLint success = 0;
+  gl::GetShaderiv(id, GL_COMPILE_STATUS, &success);
+  if (success !=  GL_TRUE) {
+    GLint maxLength = 0;
+    gl::GetShaderiv(id, GL_INFO_LOG_LENGTH, &maxLength);
+
+    GLchar *infoLog = (GLchar*) malloc(maxLength);
+    gl::GetShaderInfoLog(id, maxLength, &maxLength, infoLog);
+
+    printf("Error compiling shader: %s\n%s\n", m_filename.c_str(), infoLog);
+
+    free(infoLog);
+
+    exit(1);
+  }
+
+  m_id = id;
+}
+
+
+void Shader::preProcess(const vector<char> &in, const ShaderParameters &params,
+                        const std::vector<std::string> &paths_)
 {
   string out;
 
@@ -128,104 +223,8 @@ string preProcessShader(const vector<char> &in, const ShaderParameters &params)
 
   assert(state == NONE);
 
-  return move(out);
+  m_preprocessed_source = move(out);
 }
-
-
-string readShaderFile(const string &name,
-                     const std::vector<std::string> &paths_,
-                     GLenum type,
-                     const ShaderParameters &params,
-                     string &filename)
-{
-  string ext;
-  string type_str;
-  if (type == GL_FRAGMENT_SHADER)
-  {
-    ext = ".frag";
-    type_str = "fragment";
-  }
-  else if (type == GL_VERTEX_SHADER)
-  {
-    ext = ".vert";
-    type_str = "vertex";
-  }
-  else
-    abort();
-
-  vector<char> data;
-
-  vector<string> paths;
-
-  for (auto &path : paths_)
-  {
-    paths.push_back(path + '/' + name + ext);
-    paths.push_back(path + '/' + name + ".glsl");
-  }
-
-  for (auto p : paths)
-  {
-    if (util::readFile(p, data, true))
-    {
-      filename = p;
-      return preProcessShader(data, params);
-    }
-  }
-
-  cerr << "Failed to read " << type_str << " shader file: " << name << endl;
-
-  return {};
-}
-
-
-GLuint createShader(const string &name,
-                    const std::vector<std::string> &paths,
-                    GLenum type,
-                    const ShaderParameters &params)
-{
-  string filename;
-  string source = readShaderFile(name, paths, type, params, filename);
-  if (source.empty()) {
-    return 0;
-  }
-
-  GLuint id = gl::CreateShader(type);
-  assert(id);
-
-//     const int num_sources = 2;
-
-  const GLchar *sources[1] = { source.c_str() };
-//     const GLchar *sources[num_sources] = { header.c_str(),  source.c_str() };
-
-  gl::ShaderSource(id, 1, sources, 0);
-//     glShaderSource(id, num_sources, sources, 0);
-  gl::CompileShader(id);
-
-  GLint success = 0;
-  gl::GetShaderiv(id, GL_COMPILE_STATUS, &success);
-  if (success !=  GL_TRUE) {
-    GLint maxLength = 0;
-    gl::GetShaderiv(id, GL_INFO_LOG_LENGTH, &maxLength);
-
-    GLchar *infoLog = (GLchar*) malloc(maxLength);
-    gl::GetShaderInfoLog(id, maxLength, &maxLength, infoLog);
-
-    printf("Error compiling shader: %s\n%s\n", filename.c_str(), infoLog);
-
-    free(infoLog);
-
-    exit(1);
-  }
-
-  return id;
-}
-
-
-} // namespace
-
-
-namespace render_util
-{
 
 
 int ShaderParameters::get(const std::string &name) const
@@ -291,14 +290,6 @@ ShaderProgram::~ShaderProgram()
   cout<<"~ShaderProgram()"<<endl;
   CHECK_GL_ERROR();
 
-  for (auto shader : shader_objects)
-  {
-    if (id)
-      gl::DetachShader(id, shader);
-    gl::DeleteShader(shader);
-    CHECK_GL_ERROR();
-  }
-
   if (id)
     gl::DeleteProgram(id);
 
@@ -347,44 +338,36 @@ void ShaderProgram::create()
   cerr<<name<<": num fragment shaders: "<<fragment_shaders.size()<<endl;
   for (auto name : fragment_shaders)
   {
-    GLuint shader = createShader(name, paths, GL_FRAGMENT_SHADER, m_parameters);
-    if (!shader)
-    {
-      cerr<<"failed to create shader: "<<name<<endl;
-      return;
-    }
-    else
-    {
-      shader_objects.push_back(shader);
-    }
+    shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_FRAGMENT_SHADER,
+                                                         m_parameters)));
   }
 
   cerr<<name<<": num vertex shaders: "<<vertex_shaders.size()<<endl;
   for (auto name : vertex_shaders)
   {
-    GLuint shader = createShader(name, paths, GL_VERTEX_SHADER, m_parameters);
-    if (!shader)
-    {
-      cerr<<"failed to create shader: "<<name<<endl;
-      return;
-    }
-    else
-    {
-      shader_objects.push_back(shader);
-    }
+    shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_VERTEX_SHADER,
+                                                         m_parameters)));
   }
 
   FORCE_CHECK_GL_ERROR();
 
-  for (auto shader : shader_objects)
+  for (auto &shader : shaders)
   {
-    gl::AttachShader(id, shader);
+    shader->compile();
+  }
+
+  for (auto &shader : shaders)
+  {
+    if (!shader->getID())
+      continue;
+
+    gl::AttachShader(id, shader->getID());
 
     gl::Finish();
     GLenum error = gl::GetError();
     if (error != GL_NO_ERROR)
     {
-      cerr<<"glAttachShader() failed for program "<<name<<endl;
+      cerr<<"glAttachShader() failed for program "<<name<<", shader: "<<shader->getFileName()<<endl;
       cerr<<"gl error: "<<gl_binding::getGLErrorString(error)<<endl;
       abort();
     }
