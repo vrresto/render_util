@@ -49,6 +49,7 @@ namespace render_util
     std::string m_preprocessed_source;
     std::string m_name;
     std::string m_filename;
+    std::vector<std::string> m_includes;
 
   public:
     Shader(const std::string &name,

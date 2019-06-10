@@ -78,6 +78,25 @@ string getParameterValue(const string &parameter, const ShaderParameters &params
 }
 
 
+string readInclude(string include_file, vector<string> search_path, string &path_out)
+{
+  for (auto &dir : search_path)
+  {
+    vector<char> content;
+    string path = dir + "/" + include_file;
+    if (util::readFile(path, content, true))
+    {
+      path_out = path;
+      return string(content.data(), content.size());
+    }
+  }
+
+  cout << "failed to read include file: " << include_file << endl;
+  assert(0);
+  abort();
+}
+
+
 } // namespace
 
 
@@ -162,6 +181,10 @@ void Shader::compile()
     gl::GetShaderInfoLog(id, maxLength, &maxLength, infoLog);
 
     printf("Error compiling shader: %s\n%s\n", m_filename.c_str(), infoLog);
+    for (int i = 0; i < m_includes.size(); i++)
+      cout << "include " << i+1 << ": " << m_includes[i] << endl;
+
+    cout << endl;
 
     free(infoLog);
 
@@ -172,9 +195,12 @@ void Shader::compile()
 }
 
 
-void Shader::preProcess(const vector<char> &in, const ShaderParameters &params,
+void Shader::preProcess(const vector<char> &data_in, const ShaderParameters &params,
                         const std::vector<std::string> &paths_)
 {
+  string in_str(data_in.data(), data_in.size());
+
+  istringstream in(in_str);
   string out;
 
   enum State
@@ -184,41 +210,81 @@ void Shader::preProcess(const vector<char> &in, const ShaderParameters &params,
   };
 
   State state = NONE;
+  int line_num = 1;
 
   string parsed;
-
-  for (char c : in)
+  while (in.good())
   {
-    switch (state)
+    string line;
+    getline(in, line);
+
+    string trimmed = util::trim(line);
+    if (trimmed.empty())
     {
-      case NONE:
-        assert(parsed.empty());
-        if (c == '@')
-        {
-          state = PARSE;
-        }
-        else
-        {
-          out.push_back(c);
-        }
-        break;
-      case PARSE:
-        if (c == '@')
-        {
-          assert(!parsed.empty());
-
-          out += getParameterValue(parsed, params);
-
-          parsed.clear();
-
-          state = NONE;
-        }
-        else
-        {
-          parsed.push_back(c);
-        }
-        break;
+      out += '\n';
+      line_num++;
+      continue;
     }
+
+    if (util::isPrefix("#include", trimmed))
+    {
+      auto tokens = util::tokenize(trimmed);
+      assert(tokens.size() == 2);
+      assert(tokens.at(0) == "#include");
+
+      auto include_file = tokens.at(1);
+
+      string include_file_path;
+      auto include_file_content = readInclude(include_file, paths_, include_file_path);
+      m_includes.push_back(include_file_path);
+      include_file_content = string("#line 1 ") + to_string(m_includes.size()) + "\n" + include_file_content;
+
+      out += include_file_content;
+      out += '\n';
+      out += "#line " + to_string(line_num) + " 0 \n";
+
+      line_num++;
+      continue;
+    }
+
+    for (char c : line)
+    {
+      switch (state)
+      {
+        case NONE:
+          assert(parsed.empty());
+          if (c == '@')
+          {
+            state = PARSE;
+          }
+          else
+          {
+            out.push_back(c);
+          }
+          break;
+        case PARSE:
+          if (c == '@')
+          {
+            assert(!parsed.empty());
+
+            out += getParameterValue(parsed, params);
+
+            parsed.clear();
+
+            state = NONE;
+          }
+          else
+          {
+            parsed.push_back(c);
+          }
+          break;
+      }
+    }
+
+    assert(state == NONE);
+
+    out += '\n';
+    line_num++;
   }
 
   assert(state == NONE);
