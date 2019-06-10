@@ -260,8 +260,8 @@ void TerrainViewerScene::setup()
   m_atmosphere = make_shared<Atmosphere>();
 
   ShaderSearchPath shader_search_path;
-  shader_search_path.push_back(RENDER_UTIL_SHADER_DIR);
   shader_search_path.push_back(string(RENDER_UTIL_SHADER_DIR) + "/" + m_atmosphere->getShaderPath());
+  shader_search_path.push_back(RENDER_UTIL_SHADER_DIR);
 
   sky_program = createSkyProgram(getTextureManager(), shader_search_path);
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
