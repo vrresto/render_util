@@ -19,7 +19,7 @@
 #include "viewer_main.h"
 #include "scene.h"
 #include "camera.h"
-// #include "texture.h"
+#include "text_renderer/text_renderer.h"
 #include <render_util/render_util.h>
 #include <render_util/map.h>
 #include <render_util/map_textures.h>
@@ -43,7 +43,6 @@
 #include <sstream>
 #include <chrono>
 #include <memory>
-
 
 using namespace glm;
 using namespace std;
@@ -88,42 +87,41 @@ namespace
   dvec2 last_cursor_pos(-1, -1);
   bool g_shift_active = false;
 
-  void printDistance (float distance, const char *suffix)
+
+  void printDistance (float distance, const char *suffix, ostream &out)
   {
-    cout.width(10);
-    cout<<distance<<suffix;
+    out.width(8);
+    out << distance << suffix;
   }
 
-  void printStats(int frame_delta_ms)
+
+  void printStats(int frame_delta_ms, ostream &out)
   {
+    out.precision(3);
+    out.setf(ios_base::fixed);
+    out.setf(ios_base::right);
+
     float fps = 1000.0 / frame_delta_ms;
 
-    cout<<fixed;
-    cout.fill(' ');
+    out << "fps: ";
+    out.width(8);
+    out << fps << "   |   ";
 
-    // clear line (well - the 40 first characters)
-    cout<<'\r';
-    cout.width(40);
-    cout<<"\r";
+    out<<"pos: ";
+    printDistance(g_scene->camera.x/1000, " ", out);
+    printDistance(g_scene->camera.y/1000, " ", out);
+    printDistance(g_scene->camera.z/1000, " ", out);
 
-    cout.precision(3);
+    out<<"    |    speed: ";
+    printDistance(camera_move_speed / 1000, " ", out);
 
-    cout<<"fps: "<<fps<< "   |   ";
+    out<<"   |  yaw: ";
+    printDistance(g_scene->camera.yaw, " ", out);
 
-    cout<<"pos: ";
-    printDistance(g_scene->camera.x/1000, " ");
-    printDistance(g_scene->camera.y/1000, " ");
-    printDistance(g_scene->camera.z/1000, " ");
-
-    cout<<"    |    speed: ";
-    printDistance(camera_move_speed / 1000, " ");
-
-    cout<<"   |  yaw: "<<g_scene->camera.yaw;
-
-    cout<<"   |    azimuth: "<<g_scene->sun_elevation;
-
-    cout.flush();
+    out<<"   |    sun elevation: ";
+    printDistance(g_scene->sun_elevation, " ", out);
   }
+
 
   void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
   {
@@ -410,6 +408,8 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
   glfwMaximizeWindow(window);
 #endif
 
+  auto text_renderer = make_unique<TextRenderer>();
+
   Clock::time_point last_frame_time = Clock::now();
   Clock::time_point last_stats_time = Clock::now();
 
@@ -433,13 +433,6 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
       break;
     }
 
-    std::chrono::milliseconds stats_delta =
-      std::chrono::duration_cast<std::chrono::milliseconds>(current_frame_time - last_stats_time);
-    if (stats_delta.count() > 100) {
-      last_stats_time = current_frame_time;
-      printStats(frame_delta.count());
-    }
-
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
     gl::Viewport(0, 0, width, height);
@@ -449,6 +442,14 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
     g_scene->camera.setViewportSize(width, height);
 
     g_scene->render((float)frame_delta.count() / 1000.0);
+
+    ostringstream stats;
+    printStats(frame_delta.count(), stats);
+
+    text_renderer->SetColor(0,0,0);
+    text_renderer->DrawText(stats.str(), 1, 1);
+    text_renderer->SetColor(1.0, 1.0, 1.0);
+    text_renderer->DrawText(stats.str(), 0, 0);
 
     CHECK_GL_ERROR();
 
@@ -460,6 +461,8 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
   cout<<endl;
 
   CHECK_GL_ERROR();
+
+  text_renderer.reset();
 
   g_scene.reset();
   globals.reset();

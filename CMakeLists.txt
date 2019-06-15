@@ -94,6 +94,11 @@ install(FILES LICENSE
   RENAME LICENSE.txt
 )
 
+install(FILES viewer/text_renderer/LICENSE
+  DESTINATION ${renderutil_base_dir}
+  RENAME text_renderer_LICENSE.txt
+)
+
 install(FILES _modules/FastNoise/LICENSE
   DESTINATION ${renderutil_base_dir}
   RENAME FastNoise_LICENSE.txt

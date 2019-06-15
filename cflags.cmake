@@ -24,6 +24,8 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wreturn-type -Werror -Wmissing-field-initializers")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_REENTRANT")
 
+# disable win32 defines
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNODRAWTEXT")
 
 
 # -fdata-sections -ffunction-sections
