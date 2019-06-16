@@ -35,10 +35,17 @@ namespace render_util
 
   class ShaderParameters
   {
-    std::unordered_map<std::string, int> m_map;
+    std::unordered_map<std::string, std::string> m_map;
+
   public:
-    int get(const std::string &name) const;
-    void set(const std::string &name, int value);
+    const std::string &get(const std::string &name) const;
+    void set(const std::string &name, const std::string &value);
+
+    template <typename T>
+    void set(const std::string &name, const T &value)
+    {
+      set(name, std::to_string(value));
+    }
   };
 
 

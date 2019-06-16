@@ -61,7 +61,7 @@ string getParameterValue(const string &parameter, const ShaderParameters &params
 
   try
   {
-    return std::to_string(params.get(parameter_name));
+    return params.get(parameter_name);
   }
   catch (...)
   {
@@ -298,7 +298,7 @@ void Shader::preProcess(const vector<char> &data_in, const ShaderParameters &par
 }
 
 
-int ShaderParameters::get(const std::string &name) const
+const string &ShaderParameters::get(const std::string &name) const
 {
   auto it = m_map.find(name);
   if (it != m_map.end())
@@ -312,7 +312,7 @@ int ShaderParameters::get(const std::string &name) const
 }
 
 
-void ShaderParameters::set(const std::string &name, int value)
+void ShaderParameters::set(const std::string &name, const std::string &value)
 {
   m_map[name] = value;
 }
