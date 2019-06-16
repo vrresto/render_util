@@ -27,7 +27,6 @@ void resetDebugColor();
 vec3 getDebugColor();
 float calcHazeDistance(vec3 obj_pos, vec3 obj_pos_flat);
 float hazeForDistance(float dist);
-vec3 applyColorCorrection(vec3 color);
 
 varying vec3 passObjectPosWorld;
 uniform vec3 cameraPosWorld;
@@ -86,8 +85,6 @@ void main(void)
 
   float sunDisc = smoothstep(0.9999, 0.99995, dot(viewDir, sunDir));
   gl_FragColor.xyz += vec3(sunDisc);
-
-  gl_FragColor.xyz = applyColorCorrection(gl_FragColor.xyz);
 
   if (getDebugColor() != vec3(0)) {
     gl_FragColor.xyz = getDebugColor();

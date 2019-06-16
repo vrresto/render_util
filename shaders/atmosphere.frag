@@ -30,8 +30,6 @@
 
 #define ENABLE_FOG 1
 
-vec3 applyColorCorrection(vec3 color);
-
 vec3 debugColor;
 
 uniform sampler2D sampler_atmosphere_thickness_map;
@@ -626,9 +624,6 @@ vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir,
 
   mie_color = mieColor;
 
-  fog_color = applyColorCorrection(fog_color);
-  rayleighColor = applyColorCorrection(rayleighColor);
-
   return vec4(rayleighColor, opacity);
 }
 
@@ -804,8 +799,6 @@ void apply_fog()
   gl_FragColor.xyz = mix(gl_FragColor.xyz, vec3(1), atmosphereColor.xyz);
 
   gl_FragColor.xyz = mix(gl_FragColor.xyz, fog_color, fog);
-
-  gl_FragColor.xyz = applyColorCorrection(gl_FragColor.xyz);
 
 #if 0
   if (t == -1.0) {

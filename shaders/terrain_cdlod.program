@@ -9,6 +9,8 @@ frag terrain_util
 frag water
 frag util
 frag main
+frag lighting
+frag tonemap
 texunit terrain_cdlod_height_map
 texunit terrain_cdlod_normal_map
 #texunit terrain_cdlod_height_map_base
