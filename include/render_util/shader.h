@@ -78,6 +78,7 @@ namespace render_util
     ShaderProgram(const std::string &name,
                   const std::vector<std::string> &vertex_shaders,
                   const std::vector<std::string> &fragment_shaders,
+                  const std::vector<std::string> &geometry_shaders,
                   const std::vector<std::string> &paths,
                   bool must_be_valid = true,
                   const std::map<unsigned int, std::string> &attribute_locations = {},
@@ -139,6 +140,7 @@ namespace render_util
 
     std::vector<std::string> vertex_shaders;
     std::vector<std::string> fragment_shaders;
+    std::vector<std::string> geometry_shaders;
 
     std::vector<std::unique_ptr<Shader>> shaders;
 

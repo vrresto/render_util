@@ -123,6 +123,11 @@ Shader::Shader(const std::string &name,
     ext = ".vert";
     type_str = "vertex";
   }
+  else if (type == GL_GEOMETRY_SHADER)
+  {
+    ext = ".geom";
+    type_str = "geometry";
+  }
   else
     abort();
 
@@ -313,17 +318,19 @@ void ShaderParameters::set(const std::string &name, int value)
 }
 
 
-ShaderProgram::ShaderProgram( const string &name,
-                              const std::vector<std::string> &vertex_shaders,
-                              const std::vector<std::string> &fragment_shaders,
-                              const std::vector<std::string> &paths,
-                              bool must_be_valid,
-                              const std::map<unsigned int, std::string> &attribute_locations,
-                              const ShaderParameters &parameters)
+ShaderProgram::ShaderProgram(const std::string &name,
+      const std::vector<std::string> &vertex_shaders,
+      const std::vector<std::string> &fragment_shaders,
+      const std::vector<std::string> &geometry_shaders,
+      const std::vector<std::string> &paths,
+      bool must_be_valid,
+      const std::map<unsigned int, std::string> &attribute_locations,
+      const ShaderParameters &parameters)
   : m_parameters(parameters),
     name(name),
     vertex_shaders(vertex_shaders),
     fragment_shaders(fragment_shaders),
+    geometry_shaders(geometry_shaders),
     paths(paths),
     must_be_valid(must_be_valid),
     attribute_locations(attribute_locations)
@@ -396,6 +403,13 @@ void ShaderProgram::create()
                                                          m_parameters)));
   }
 
+  cerr<<name<<": num geometry shaders: "<<geometry_shaders.size()<<endl;
+  for (auto name : geometry_shaders)
+  {
+    shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_GEOMETRY_SHADER,
+                                                         m_parameters)));
+  }
+
   FORCE_CHECK_GL_ERROR();
 
   for (auto &shader : shaders)
@@ -403,12 +417,15 @@ void ShaderProgram::create()
     shader->compile();
   }
 
+  int num_attached = 0;
+
   for (auto &shader : shaders)
   {
     if (!shader->getID())
       continue;
 
     gl::AttachShader(id, shader->getID());
+    num_attached++;
 
     gl::Finish();
     GLenum error = gl::GetError();
@@ -435,7 +452,8 @@ void ShaderProgram::create()
     }
   }
 
-  link();
+  if (num_attached)
+    link();
 
   gl::Finish();
   auto error = gl::GetError();
