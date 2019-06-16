@@ -103,7 +103,8 @@ public:
   void createTerrain(render_util::ElevationMap::ConstPtr elevation_map,
                      render_util::TerrainBase::MaterialMap::ConstPtr material_map,
                      render_util::MapLoaderBase::TerrainTextures &textures,
-                     const ShaderSearchPath &shader_search_path)
+                     const ShaderSearchPath &shader_search_path,
+                     const ShaderParameters &shader_params)
   {
     m_terrain.m_terrain = render_util::createTerrain(texture_manager, true, shader_search_path);
 
@@ -116,7 +117,8 @@ public:
                           textures.type_map,
                           textures.textures,
                           textures.textures_nm,
-                          textures.texture_scale);
+                          textures.texture_scale,
+                          shader_params);
 
   }
 

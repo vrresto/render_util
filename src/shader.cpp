@@ -318,6 +318,15 @@ void ShaderParameters::set(const std::string &name, const std::string &value)
 }
 
 
+void ShaderParameters::add(const ShaderParameters &other)
+{
+  for (auto &entry : other.m_map)
+  {
+    m_map[entry.first] = entry.second;
+  }
+}
+
+
 ShaderProgram::ShaderProgram(const std::string &name,
       const std::vector<std::string> &vertex_shaders,
       const std::vector<std::string> &fragment_shaders,

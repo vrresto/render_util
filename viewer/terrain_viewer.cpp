@@ -289,8 +289,9 @@ void TerrainViewerScene::setup()
 
   m_map->getTextures().setTexture(TEXUNIT_TERRAIN_FAR, terrain_textures.far_texture);
 
+  createTerrain(elevation_map, m_map->getMaterialMap(), terrain_textures,
+                shader_search_path, {});
 
-  createTerrain(elevation_map, m_map->getMaterialMap(), terrain_textures, shader_search_path);
 
   map_size = glm::vec2(elevation_map->getSize() * m_map_loader->getHeightMapMetersPerPixel());
 

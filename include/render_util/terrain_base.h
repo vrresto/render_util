@@ -62,7 +62,8 @@ namespace render_util
                        TypeMap::ConstPtr,
                        std::vector<ImageRGBA::Ptr> &textures,
                        std::vector<ImageRGB::Ptr> &textures_nm,
-                       const std::vector<float> &texture_scale) = 0;
+                       const std::vector<float> &texture_scale,
+                       const ShaderParameters&) = 0;
 
     virtual void draw(Client *client = nullptr) = 0;
     virtual void setBaseElevationMap(ElevationMap::ConstPtr map) {}

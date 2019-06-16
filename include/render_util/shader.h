@@ -38,6 +38,8 @@ namespace render_util
     std::unordered_map<std::string, std::string> m_map;
 
   public:
+    void add(const ShaderParameters &other);
+
     const std::string &get(const std::string &name) const;
     void set(const std::string &name, const std::string &value);
 

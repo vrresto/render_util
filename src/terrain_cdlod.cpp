@@ -684,6 +684,8 @@ class TerrainCDLOD : public TerrainCDLODBase
 
   std::unique_ptr<TerrainTextures> m_terrain_textures;
 
+  render_util::ShaderParameters m_shader_params;
+
   void processNode(Node *node, int lod_level, const Camera &camera, bool low_detail);
   void drawInstanced(TerrainBase::Client *client);
   Node *createNode(const render_util::ElevationMap &map, dvec2 pos, int lod_level, MaterialMap::ConstPtr material_map);
@@ -697,7 +699,8 @@ public:
   void build(ElevationMap::ConstPtr, MaterialMap::ConstPtr, TypeMap::ConstPtr type_map,
              std::vector<ImageRGBA::Ptr>&,
              std::vector<ImageRGB::Ptr>&,
-             const std::vector<float>&) override;
+             const std::vector<float>&,
+             const ShaderParameters&) override;
   void draw(TerrainBase::Client *client) override;
   void update(const Camera &camera, bool low_detail) override;
   void setDrawDistance(float dist) override;
@@ -780,8 +783,11 @@ Material *TerrainCDLOD::getMaterial(unsigned int id)
 
   assert(m_terrain_textures);
 
+  auto shader_params = m_shader_params;
+  shader_params.add(m_terrain_textures->getShaderParameters());
+
   materials[id] = std::make_unique<Material>(id, texture_manager, shader_search_path,
-                                             m_terrain_textures->getShaderParameters());
+                                             shader_params);
 
   return materials[id].get();
 }
@@ -907,13 +913,16 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map,
                          TypeMap::ConstPtr type_map,
                          std::vector<ImageRGBA::Ptr> &textures,
                          std::vector<ImageRGB::Ptr> &textures_nm,
-                         const std::vector<float> &texture_scale)
+                         const std::vector<float> &texture_scale,
+                         const ShaderParameters &shader_params)
 {
   CHECK_GL_ERROR();
 
   assert(material_map);
   assert(!root_node);
   assert(!normal_map_texture);
+
+  m_shader_params = shader_params;
 
   normal_map_texture = createNormalMapTexture(map, HEIGHT_MAP_METERS_PER_GRID);
 
