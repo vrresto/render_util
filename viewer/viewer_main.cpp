@@ -195,13 +195,17 @@ namespace
       camera_move_speed /= 2;
     }
     else if (key == GLFW_KEY_KP_8 && action == GLFW_PRESS) {
-      if (mods & GLFW_MOD_SHIFT)
+      if (mods & GLFW_MOD_CONTROL)
+        g_scene->sun_elevation += 0.1;
+      else if (mods & GLFW_MOD_SHIFT)
         g_scene->sun_elevation += 1;
       else
         g_scene->sun_elevation += 10;
     }
     else if (key == GLFW_KEY_KP_2 && action == GLFW_PRESS) {
-      if (mods & GLFW_MOD_SHIFT)
+      if (mods & GLFW_MOD_CONTROL)
+        g_scene->sun_elevation -= 0.1;
+      else if (mods & GLFW_MOD_SHIFT)
         g_scene->sun_elevation -= 1;
       else
         g_scene->sun_elevation -= 10;
