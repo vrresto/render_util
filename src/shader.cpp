@@ -332,25 +332,6 @@ ShaderProgram::ShaderProgram( const string &name,
   assertIsValid();
 }
 
-ShaderProgram::ShaderProgram( const string &name,
-                              const std::vector<std::string> &vertex_shaders,
-                              const std::vector<std::string> &fragment_shaders,
-                              const std::string &path,
-                              bool must_be_valid,
-                              const std::map<unsigned int, std::string> &attribute_locations,
-                              const ShaderParameters &parameters)
-  : m_parameters(parameters),
-    name(name),
-    vertex_shaders(vertex_shaders),
-    fragment_shaders(fragment_shaders),
-    must_be_valid(must_be_valid),
-    attribute_locations(attribute_locations)
-{
-  paths.push_back(path);
-  create();
-  assertIsValid();
-}
-
 ShaderProgram::~ShaderProgram()
 {
   cout<<"~ShaderProgram()"<<endl;

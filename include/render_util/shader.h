@@ -83,14 +83,6 @@ namespace render_util
                   const std::map<unsigned int, std::string> &attribute_locations = {},
                   const ShaderParameters &parameters = {});
 
-    ShaderProgram(const std::string &name,
-                  const std::vector<std::string> &vertex_shaders,
-                  const std::vector<std::string> &fragment_shaders,
-                  const std::string &path,
-                  bool must_be_valid = true,
-                  const std::map<unsigned int, std::string> &attribute_locations = {},
-                  const ShaderParameters &parameters = {});
-
     ~ShaderProgram();
 
     void assertUniformsAreSet();
@@ -118,10 +110,10 @@ namespace render_util
       }
     }
 
+
     template <typename T>
     void setUniform(const std::string &name, const T &value)
     {
-  //     assert(isActive());
       int location = getUniformLocation(name);
       if (location != -1)
       {
