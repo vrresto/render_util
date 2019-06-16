@@ -51,6 +51,16 @@ power and luminous power (wavelength is also a length, but we distinguish the
 two for increased clarity).
 */
 
+
+#define COMBINED_SCATTERING_TEXTURES @combine_scattering_textures@
+
+#define IN(x) const in x
+#define OUT(x) out x
+#define TEMPLATE(x)
+#define TEMPLATE_ARGUMENT(x)
+#define assert(x)
+
+
 #define Length float
 #define Wavelength float
 #define Angle float
@@ -253,3 +263,41 @@ struct AtmosphereParameters {
   // Earth case, 102 degrees is a good choice - yielding mu_s_min = -0.2).
   Number mu_s_min;
 };
+
+
+DimensionlessSpectrum
+  ComputeTransmittanceToTopAtmosphereBoundaryTexture(IN(AtmosphereParameters) atmosphere,
+                                                     IN(vec2) frag_coord);
+
+IrradianceSpectrum ComputeDirectIrradianceTexture(
+    IN(AtmosphereParameters) atmosphere,
+    IN(TransmittanceTexture) transmittance_texture,
+    IN(vec2) frag_coord);
+
+void ComputeSingleScatteringTexture(IN(AtmosphereParameters) atmosphere,
+    IN(TransmittanceTexture) transmittance_texture, IN(vec3) frag_coord,
+    OUT(IrradianceSpectrum) rayleigh, OUT(IrradianceSpectrum) mie);
+
+RadianceDensitySpectrum ComputeScatteringDensityTexture(
+    IN(AtmosphereParameters) atmosphere,
+    IN(TransmittanceTexture) transmittance_texture,
+    IN(ReducedScatteringTexture) single_rayleigh_scattering_texture,
+    IN(ReducedScatteringTexture) single_mie_scattering_texture,
+    IN(ScatteringTexture) multiple_scattering_texture,
+    IN(IrradianceTexture) irradiance_texture,
+    IN(vec3) frag_coord, int scattering_order);
+
+IrradianceSpectrum ComputeIndirectIrradianceTexture(
+    IN(AtmosphereParameters) atmosphere,
+    IN(ReducedScatteringTexture) single_rayleigh_scattering_texture,
+    IN(ReducedScatteringTexture) single_mie_scattering_texture,
+    IN(ScatteringTexture) multiple_scattering_texture,
+    IN(vec2) frag_coord, int scattering_order);
+
+RadianceSpectrum ComputeMultipleScatteringTexture(
+    IN(AtmosphereParameters) atmosphere,
+    IN(TransmittanceTexture) transmittance_texture,
+    IN(ScatteringDensityTexture) scattering_density_texture,
+    IN(vec3) frag_coord, OUT(Number) nu);
+
+InverseSolidAngle RayleighPhaseFunction(Number nu);

@@ -17,7 +17,9 @@ set(CXX_SRCS
   terrain_util.cpp
   gl_context.cpp
   globals.cpp
+  atmosphere_precomputed.cpp
   ${PROJECT_SOURCE_DIR}/_modules/FastNoise/FastNoise.cpp
+  ${PROJECT_SOURCE_DIR}/precomputed_precomputed_atmospheric_scattering/atmosphere/model.cc
 )
 
 set_source_files_properties(

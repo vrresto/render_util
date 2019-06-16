@@ -35,9 +35,10 @@ public:
   enum Type
   {
     DEFAULT,
+    PRECOMPUTED
   };
 
-  virtual std::string getShaderPath() { return "atmosphere_simple"; }
+  virtual std::string getShaderPath() { return "atmosphere_default"; }
   virtual ShaderParameters getShaderParameters() { return {}; }
   virtual void setUniforms(ShaderProgramPtr program, const Camera&, glm::vec3 sun_direction) {}
 };

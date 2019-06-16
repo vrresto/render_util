@@ -55,6 +55,7 @@ float perlin(vec2 p, float dim);
 float genericNoise(vec2 coord);
 vec3 blend_rnm(vec3 n1, vec3 n2);
 vec3 textureColorCorrection(vec3 color);
+vec3 calcWaterEnvColor();
 
 
 uniform sampler2DArray sampler_beach;
@@ -319,18 +320,6 @@ vec3 getWaterNormal(float dist, vec2 coord)
 }
 
 
-vec3 calcEnvColor()
-{
-  vec3 envColor = vec3(0.65, 0.85, 1.0);
-  envColor = mix(envColor, vec3(0.7), 0.6);
-  vec3 envColorLow = envColor * vec3(0.8, 0.7, 0.5) * 0.5;
-  envColor =  mix(envColorLow, envColor, smoothstep(0.0, 0.4, sunDir.z));
-  envColor *= smoothstep(-0.4, 0.2, sunDir.z);
-
-  return envColor;
-}
-
-
 vec3 getWaterColorSimple(vec3 viewDir, float dist)
 {
   vec3 normal = getWaterNormal(dist, pass_texcoord);
@@ -348,7 +337,7 @@ vec3 getWaterColorSimple(vec3 viewDir, float dist)
   float specular = calcSpecular(viewDir, normal, specHardness);
   specular = mix(specular * 0.5, specular, specularDetailFactor);
 
-  vec3 envColor = calcEnvColor();
+  vec3 envColor = calcWaterEnvColor();
 
   vec3 refractionColor = 0.9 * textureColorCorrection(water_color);
   refractionColor *= ambientLightColor + 0.5 * directLightColor;
@@ -381,7 +370,7 @@ vec3 getWaterColor(vec3 viewDir, float dist, vec2 coord, float waterDepth, vec3 
   float specular = calcSpecular(-viewDir, normal, specHardness);
   specular = mix(specular * 0.5, specular, specularDetailFactor);
 
-  vec3 envColor = calcEnvColor();
+  vec3 envColor = calcWaterEnvColor();
 
   vec3 refractionColor = 0.9 * textureColorCorrection(water_color);
   refractionColor *= ambientLightColor  + 0.5 * directLightColor;

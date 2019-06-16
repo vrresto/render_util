@@ -111,7 +111,7 @@ vec3 calcLightWithDetail(vec3 normal, vec3 normal_detail, float direct_scale, fl
 }
 
 
-vec3 saturation(vec3 rgb, float adjustment)
+vec3 adjustSaturation(vec3 rgb, float adjustment)
 {
     // Algorithm from Chapter 16 of OpenGL Shading Language
     const vec3 W = vec3(0.2125, 0.7154, 0.0721);

@@ -149,7 +149,10 @@ parameter):
 #ifndef ATMOSPHERE_MODEL_H_
 #define ATMOSPHERE_MODEL_H_
 
-#include <glad/glad.h>
+#include <render_util/shader.h>
+#include <render_util/texture_manager.h>
+#include <render_util/gl_binding/gl_functions.h>
+
 #include <array>
 #include <functional>
 #include <string>
@@ -278,16 +281,18 @@ class Model {
     // Whether to use half precision floats (16 bits) or single precision floats
     // (32 bits) for the precomputed textures. Half precision is sufficient for
     // most cases, except for very high exposure values.
-    bool half_precision);
+    bool half_precision,
+    std::string shader_dir,
+    const render_util::TextureManager&);
 
   ~Model();
 
   void Init(unsigned int num_scattering_orders = 4);
 
-  GLuint shader() const { return atmosphere_shader_; }
+  render_util::ShaderParameters getShaderParameters();
 
   void SetProgramUniforms(
-      GLuint program,
+      render_util::ShaderProgramPtr program,
       GLuint transmittance_texture_unit,
       GLuint scattering_texture_unit,
       GLuint irradiance_texture_unit,
@@ -323,17 +328,23 @@ class Model {
       bool blend,
       unsigned int num_scattering_orders);
 
+  render_util::ShaderProgramPtr createShaderProgram(std::string name,
+                                                    const render_util::ShaderParameters&);
+
   unsigned int num_precomputed_wavelengths_;
   bool half_precision_;
   bool rgb_format_supported_;
-  std::function<std::string(const vec3&)> glsl_header_factory_;
   GLuint transmittance_texture_;
   GLuint scattering_texture_;
   GLuint optional_single_mie_scattering_texture_;
   GLuint irradiance_texture_;
-  GLuint atmosphere_shader_;
   GLuint full_screen_quad_vao_;
   GLuint full_screen_quad_vbo_;
+
+  std::function<render_util::ShaderParameters(const vec3&)> m_shader_parameter_factory;
+  render_util::ShaderParameters m_shader_params;
+  render_util::ShaderSearchPath m_shader_search_path;
+  const render_util::TextureManager &m_texture_manager;
 };
 
 }  // namespace atmosphere

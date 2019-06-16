@@ -89,9 +89,31 @@ if(NOT renderutil_base_dir)
   set(renderutil_base_dir "render_util")
 endif()
 
+
+install(DIRECTORY shaders
+  DESTINATION ${renderutil_base_dir}
+)
+
+install(FILES
+  precomputed_precomputed_atmospheric_scattering/atmosphere/definitions.glsl
+  precomputed_precomputed_atmospheric_scattering/atmosphere/constants.glsl
+  precomputed_precomputed_atmospheric_scattering/atmosphere/functions.glsl
+  DESTINATION ${renderutil_base_dir}/shaders/atmosphere_precomputed
+)
+
 install(FILES LICENSE
   DESTINATION ${renderutil_base_dir}
   RENAME LICENSE.txt
+)
+
+install(FILES precomputed_precomputed_atmospheric_scattering/LICENSE
+  DESTINATION ${renderutil_base_dir}
+  RENAME precomputed_precomputed_atmospheric_scattering_LICENSE.txt
+)
+
+install(FILES precomputed_precomputed_atmospheric_scattering/README.md
+  DESTINATION ${renderutil_base_dir}
+  RENAME precomputed_precomputed_atmospheric_scattering_README.md
 )
 
 install(FILES viewer/text_renderer/LICENSE

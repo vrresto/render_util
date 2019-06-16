@@ -16,26 +16,21 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#version 330
 
-#include <render_util/atmosphere.h>
-#include "atmosphere_precomputed.h"
+uniform vec3 white_point;
+uniform float gamma;
+uniform float exposure;
+uniform float texture_brightness;
 
-namespace render_util
+
+vec3 textureColorCorrection(vec3 color)
 {
-
-
-std::unique_ptr<Atmosphere> createAtmosphere(Atmosphere::Type type,
-                                             render_util::TextureManager &tex_mgr,
-                                             std::string shader_dir)
-{
-  switch (type)
-  {
-    case Atmosphere::PRECOMPUTED:
-      return std::make_unique<AtmospherePrecomputed>(tex_mgr, shader_dir);
-    default:
-      return std::make_unique<Atmosphere>();
-  }
+  return pow(color, vec3(gamma)) * texture_brightness;
 }
 
 
+vec3 toneMap(vec3 color)
+{
+  return  pow(vec3(1.0) - exp(-color / white_point * exposure), vec3(1.0 / gamma));
 }

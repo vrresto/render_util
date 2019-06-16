@@ -110,3 +110,15 @@ vec3 calcLightWithSpecular(vec3 input_color, vec3 normal, float shinyness, vec3 
 
   return (light * input_color) + specular;
 }
+
+
+vec3 calcWaterEnvColor()
+{
+  vec3 envColor = vec3(0.65, 0.85, 1.0);
+  envColor = mix(envColor, vec3(0.7), 0.6);
+  vec3 envColorLow = envColor * vec3(0.8, 0.7, 0.5) * 0.5;
+  envColor =  mix(envColorLow, envColor, smoothstep(0.0, 0.4, sunDir.z));
+  envColor *= smoothstep(-0.4, 0.2, sunDir.z);
+
+  return envColor;
+}

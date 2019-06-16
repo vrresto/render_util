@@ -41,16 +41,26 @@ described in Algorithm 4.1 of
 of the following C++ code.
 */
 
-#include "atmosphere/model.h"
 
-#include <glad/glad.h>
+#include "model.h"
 
+#include "constants.h"
+#include <render_util/shader_util.h>
+#include <render_util/image_loader.h>
+
+#include <glm/gtc/type_ptr.hpp>
 #include <cassert>
 #include <cmath>
 #include <iostream>
 #include <memory>
 
-#include "atmosphere/constants.h"
+#include <render_util/gl_binding/gl_functions.h>
+
+
+using namespace render_util::gl_binding;
+using std::cout;
+using std::endl;
+
 
 /*
 <p>The rest of this file is organized in 3 parts:
@@ -71,349 +81,76 @@ and we render a full quad in this FBO. For this we need a basic vertex shader:
 
 namespace atmosphere {
 
-namespace {
+namespace
+{
 
-const char kVertexShader[] = R"(
-    #version 330
-    layout(location = 0) in vec2 vertex;
-    void main() {
-      gl_Position = vec4(vertex, 0.0, 1.0);
-    })";
 
-/*
-<p>a basic geometry shader (only for 3D textures, to specify in which layer we
-want to write):
-*/
+struct TexUnits
+{
+  enum : unsigned int
+  {
+    TRANSMITTANCE = 0,
+    IRRADIANCE,
+    SINGLE_RAYLEIGH_SCATTERING,
+    SINGLE_MIE_SCATTERING,
+    MULTIPLE_SCATTERING,
+    SCATTERING_DENSITY
+  };
+};
 
-const char kGeometryShader[] = R"(
-    #version 330
-    layout(triangles) in;
-    layout(triangle_strip, max_vertices = 3) out;
-    uniform int layer;
-    void main() {
-      gl_Position = gl_in[0].gl_Position;
-      gl_Layer = layer;
-      EmitVertex();
-      gl_Position = gl_in[1].gl_Position;
-      gl_Layer = layer;
-      EmitVertex();
-      gl_Position = gl_in[2].gl_Position;
-      gl_Layer = layer;
-      EmitVertex();
-      EndPrimitive();
-    })";
 
-/*
-<p>and a fragment shader, which depends on the texture we want to compute. This
-is the role of the following shaders, which simply wrap the precomputation
-functions from <a href="functions.glsl.html">functions.glsl</a> in complete
-shaders (with a <code>main</code> function and a proper declaration of the
-shader inputs and outputs). Note that these strings must be concatenated with
-<code>definitions.glsl</code> and <code>functions.glsl</code> (provided as C++
-string literals by the generated <code>.glsl.inc</code> files), as well as with
-a definition of the <code>ATMOSPHERE</code> constant - containing the atmosphere
-parameters, to really get a complete shader. Note also the
-<code>luminance_from_radiance</code> uniforms: these are used in precomputed
-illuminance mode to convert the radiance values computed by the
-<code>functions.glsl</code> functions to luminance values (see the
-<code>Init</code> method for more details).
-*/
+void dumpScatteringTexture(unsigned id, std::string name_prefix)
+{
+  FORCE_CHECK_GL_ERROR();
+  auto slice_size = SCATTERING_TEXTURE_WIDTH * SCATTERING_TEXTURE_HEIGHT * 3;
+  auto size = slice_size * SCATTERING_TEXTURE_DEPTH;
+  std::vector<unsigned char> data(size);
+  gl::GetTextureImage(id, 0, GL_RGB, GL_UNSIGNED_BYTE,
+                      data.size(), data.data());
+  FORCE_CHECK_GL_ERROR();
 
-#include "atmosphere/definitions.glsl.inc"
-#include "atmosphere/functions.glsl.inc"
+  for (int i = 0; i < SCATTERING_TEXTURE_DEPTH; i++)
+  {
+    std::string name = name_prefix;
+    name += std::to_string(i) + ".png";
+    render_util::saveImage(name, 3,
+                           SCATTERING_TEXTURE_WIDTH,
+                           SCATTERING_TEXTURE_HEIGHT,
+                           data.data() + i * slice_size, slice_size,
+                           render_util::ImageType::PNG);
+  }
+}
 
-const char kComputeTransmittanceShader[] = R"(
-    layout(location = 0) out vec3 transmittance;
-    void main() {
-      transmittance = ComputeTransmittanceToTopAtmosphereBoundaryTexture(
-          ATMOSPHERE, gl_FragCoord.xy);
-    })";
 
-const char kComputeDirectIrradianceShader[] = R"(
-    layout(location = 0) out vec3 delta_irradiance;
-    layout(location = 1) out vec3 irradiance;
-    uniform sampler2D transmittance_texture;
-    void main() {
-      delta_irradiance = ComputeDirectIrradianceTexture(
-          ATMOSPHERE, transmittance_texture, gl_FragCoord.xy);
-      irradiance = vec3(0.0);
-    })";
+glm::mat3 make_glm_mat3(const std::array<float, 9> &in)
+{
+  return glm::transpose(glm::make_mat3(in.data()));
+}
 
-const char kComputeSingleScatteringShader[] = R"(
-    layout(location = 0) out vec3 delta_rayleigh;
-    layout(location = 1) out vec3 delta_mie;
-    layout(location = 2) out vec4 scattering;
-    layout(location = 3) out vec3 single_mie_scattering;
-    uniform mat3 luminance_from_radiance;
-    uniform sampler2D transmittance_texture;
-    uniform int layer;
-    void main() {
-      ComputeSingleScatteringTexture(
-          ATMOSPHERE, transmittance_texture, vec3(gl_FragCoord.xy, layer + 0.5),
-          delta_rayleigh, delta_mie);
-      scattering = vec4(luminance_from_radiance * delta_rayleigh.rgb,
-          (luminance_from_radiance * delta_mie).r);
-      single_mie_scattering = luminance_from_radiance * delta_mie;
-    })";
 
-const char kComputeScatteringDensityShader[] = R"(
-    layout(location = 0) out vec3 scattering_density;
-    uniform sampler2D transmittance_texture;
-    uniform sampler3D single_rayleigh_scattering_texture;
-    uniform sampler3D single_mie_scattering_texture;
-    uniform sampler3D multiple_scattering_texture;
-    uniform sampler2D irradiance_texture;
-    uniform int scattering_order;
-    uniform int layer;
-    void main() {
-      scattering_density = ComputeScatteringDensityTexture(
-          ATMOSPHERE, transmittance_texture, single_rayleigh_scattering_texture,
-          single_mie_scattering_texture, multiple_scattering_texture,
-          irradiance_texture, vec3(gl_FragCoord.xy, layer + 0.5),
-          scattering_order);
-    })";
+void bindTexture2D(unsigned int unit, unsigned int texture)
+{
+  gl::ActiveTexture(GL_TEXTURE0 + unit);
+  gl::BindTexture(GL_TEXTURE_2D, texture);
+}
 
-const char kComputeIndirectIrradianceShader[] = R"(
-    layout(location = 0) out vec3 delta_irradiance;
-    layout(location = 1) out vec3 irradiance;
-    uniform mat3 luminance_from_radiance;
-    uniform sampler3D single_rayleigh_scattering_texture;
-    uniform sampler3D single_mie_scattering_texture;
-    uniform sampler3D multiple_scattering_texture;
-    uniform int scattering_order;
-    void main() {
-      delta_irradiance = ComputeIndirectIrradianceTexture(
-          ATMOSPHERE, single_rayleigh_scattering_texture,
-          single_mie_scattering_texture, multiple_scattering_texture,
-          gl_FragCoord.xy, scattering_order);
-      irradiance = luminance_from_radiance * delta_irradiance;
-    })";
+void bindTexture3D(unsigned int unit, unsigned int texture)
+{
+  gl::ActiveTexture(GL_TEXTURE0 + unit);
+  gl::BindTexture(GL_TEXTURE_3D, texture);
+}
 
-const char kComputeMultipleScatteringShader[] = R"(
-    layout(location = 0) out vec3 delta_multiple_scattering;
-    layout(location = 1) out vec4 scattering;
-    uniform mat3 luminance_from_radiance;
-    uniform sampler2D transmittance_texture;
-    uniform sampler3D scattering_density_texture;
-    uniform int layer;
-    void main() {
-      float nu;
-      delta_multiple_scattering = ComputeMultipleScatteringTexture(
-          ATMOSPHERE, transmittance_texture, scattering_density_texture,
-          vec3(gl_FragCoord.xy, layer + 0.5), nu);
-      scattering = vec4(
-          luminance_from_radiance *
-              delta_multiple_scattering.rgb / RayleighPhaseFunction(nu),
-          0.0);
-    })";
 
-/*
-<p>We finally need a shader implementing the GLSL functions exposed in our API,
-which can be done by calling the corresponding functions in
-<a href="functions.glsl.html#rendering">functions.glsl</a>, with the precomputed
-texture arguments taken from uniform variables (note also the
-*<code>_RADIANCE_TO_LUMINANCE</code> conversion constants in the last functions:
-they are computed in the <a href="#utilities">second part</a> below, and their
-definitions are concatenated to this GLSL code to get a fully functional
-shader).
-*/
+void useProgram(render_util::ShaderProgramPtr program, bool assert_uniforms_are_set = true)
+{
+  gl::UseProgram(program->getId());
+  if (assert_uniforms_are_set)
+    program->assertUniformsAreSet();
+}
 
-const char kAtmosphereShader[] = R"(
-    uniform sampler2D transmittance_texture;
-    uniform sampler3D scattering_texture;
-    uniform sampler3D single_mie_scattering_texture;
-    uniform sampler2D irradiance_texture;
-    #ifdef RADIANCE_API_ENABLED
-    RadianceSpectrum GetSolarRadiance() {
-      return ATMOSPHERE.solar_irradiance /
-          (PI * ATMOSPHERE.sun_angular_radius * ATMOSPHERE.sun_angular_radius);
-    }
-    RadianceSpectrum GetSkyRadiance(
-        Position camera, Direction view_ray, Length shadow_length,
-        Direction sun_direction, out DimensionlessSpectrum transmittance) {
-      return GetSkyRadiance(ATMOSPHERE, transmittance_texture,
-          scattering_texture, single_mie_scattering_texture,
-          camera, view_ray, shadow_length, sun_direction, transmittance);
-    }
-    RadianceSpectrum GetSkyRadianceToPoint(
-        Position camera, Position point, Length shadow_length,
-        Direction sun_direction, out DimensionlessSpectrum transmittance) {
-      return GetSkyRadianceToPoint(ATMOSPHERE, transmittance_texture,
-          scattering_texture, single_mie_scattering_texture,
-          camera, point, shadow_length, sun_direction, transmittance);
-    }
-    IrradianceSpectrum GetSunAndSkyIrradiance(
-       Position p, Direction normal, Direction sun_direction,
-       out IrradianceSpectrum sky_irradiance) {
-      return GetSunAndSkyIrradiance(ATMOSPHERE, transmittance_texture,
-          irradiance_texture, p, normal, sun_direction, sky_irradiance);
-    }
-    #endif
-    Luminance3 GetSolarLuminance() {
-      return ATMOSPHERE.solar_irradiance /
-          (PI * ATMOSPHERE.sun_angular_radius * ATMOSPHERE.sun_angular_radius) *
-          SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
-    }
-    Luminance3 GetSkyLuminance(
-        Position camera, Direction view_ray, Length shadow_length,
-        Direction sun_direction, out DimensionlessSpectrum transmittance) {
-      return GetSkyRadiance(ATMOSPHERE, transmittance_texture,
-          scattering_texture, single_mie_scattering_texture,
-          camera, view_ray, shadow_length, sun_direction, transmittance) *
-          SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
-    }
-    Luminance3 GetSkyLuminanceToPoint(
-        Position camera, Position point, Length shadow_length,
-        Direction sun_direction, out DimensionlessSpectrum transmittance) {
-      return GetSkyRadianceToPoint(ATMOSPHERE, transmittance_texture,
-          scattering_texture, single_mie_scattering_texture,
-          camera, point, shadow_length, sun_direction, transmittance) *
-          SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
-    }
-    Illuminance3 GetSunAndSkyIlluminance(
-       Position p, Direction normal, Direction sun_direction,
-       out IrradianceSpectrum sky_irradiance) {
-      IrradianceSpectrum sun_irradiance = GetSunAndSkyIrradiance(
-          ATMOSPHERE, transmittance_texture, irradiance_texture, p, normal,
-          sun_direction, sky_irradiance);
-      sky_irradiance *= SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
-      return sun_irradiance * SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
-    })";
 
 /*<h3 id="utilities">Utility classes and functions</h3>
 
-<p>To compile and link these shaders into programs, and to set their uniforms,
-we use the following utility class:
-*/
-
-class Program {
- public:
-  Program(
-      const std::string& vertex_shader_source,
-      const std::string& fragment_shader_source)
-    : Program(vertex_shader_source, "", fragment_shader_source) {
-  }
-
-  Program(
-      const std::string& vertex_shader_source,
-      const std::string& geometry_shader_source,
-      const std::string& fragment_shader_source) {
-    program_ = glCreateProgram();
-
-    const char* source;
-    source = vertex_shader_source.c_str();
-    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &source, NULL);
-    glCompileShader(vertex_shader);
-    CheckShader(vertex_shader);
-    glAttachShader(program_, vertex_shader);
-
-    GLuint geometry_shader = 0;
-    if (!geometry_shader_source.empty()) {
-      source = geometry_shader_source.c_str();
-      geometry_shader = glCreateShader(GL_GEOMETRY_SHADER);
-      glShaderSource(geometry_shader, 1, &source, NULL);
-      glCompileShader(geometry_shader);
-      CheckShader(geometry_shader);
-      glAttachShader(program_, geometry_shader);
-    }
-
-    source = fragment_shader_source.c_str();
-    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &source, NULL);
-    glCompileShader(fragment_shader);
-    CheckShader(fragment_shader);
-    glAttachShader(program_, fragment_shader);
-
-    glLinkProgram(program_);
-    CheckProgram(program_);
-
-    glDetachShader(program_, vertex_shader);
-    glDeleteShader(vertex_shader);
-    if (!geometry_shader_source.empty()) {
-      glDetachShader(program_, geometry_shader);
-      glDeleteShader(geometry_shader);
-    }
-    glDetachShader(program_, fragment_shader);
-    glDeleteShader(fragment_shader);
-  }
-
-  ~Program() {
-    glDeleteProgram(program_);
-  }
-
-  void Use() const {
-    glUseProgram(program_);
-  }
-
-  void BindMat3(const std::string& uniform_name,
-      const std::array<float, 9>& value) const {
-    glUniformMatrix3fv(glGetUniformLocation(program_, uniform_name.c_str()),
-        1, true /* transpose */, value.data());
-  }
-
-  void BindInt(const std::string& uniform_name, int value) const {
-    glUniform1i(glGetUniformLocation(program_, uniform_name.c_str()), value);
-  }
-
-  void BindTexture2d(const std::string& sampler_uniform_name, GLuint texture,
-      GLuint texture_unit) const {
-    glActiveTexture(GL_TEXTURE0 + texture_unit);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    BindInt(sampler_uniform_name, texture_unit);
-  }
-
-  void BindTexture3d(const std::string& sampler_uniform_name, GLuint texture,
-      GLuint texture_unit) const {
-    glActiveTexture(GL_TEXTURE0 + texture_unit);
-    glBindTexture(GL_TEXTURE_3D, texture);
-    BindInt(sampler_uniform_name, texture_unit);
-  }
-
- private:
-  static void CheckShader(GLuint shader) {
-    GLint compile_status;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &compile_status);
-    if (compile_status == GL_FALSE) {
-      PrintShaderLog(shader);
-    }
-    assert(compile_status == GL_TRUE);
-  }
-
-  static void PrintShaderLog(GLuint shader) {
-    GLint log_length;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
-    if (log_length > 0) {
-      std::unique_ptr<char[]> log_data(new char[log_length]);
-      glGetShaderInfoLog(shader, log_length, &log_length, log_data.get());
-      std::cerr << "compile log = "
-                << std::string(log_data.get(), log_length) << std::endl;
-    }
-  }
-
-  static void CheckProgram(GLuint program) {
-    GLint link_status;
-    glGetProgramiv(program, GL_LINK_STATUS, &link_status);
-    if (link_status == GL_FALSE) {
-      PrintProgramLog(program);
-    }
-    assert(link_status == GL_TRUE);
-    assert(glGetError() == 0);
-  }
-
-  static void PrintProgramLog(GLuint program) {
-    GLint log_length;
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_length);
-    if (log_length > 0) {
-      std::unique_ptr<char[]> log_data(new char[log_length]);
-      glGetProgramInfoLog(program, log_length, &log_length, log_data.get());
-      std::cerr << "link log = "
-                << std::string(log_data.get(), log_length) << std::endl;
-    }
-  }
-
-  GLuint program_;
-};
 
 /*
 <p>We also need functions to allocate the precomputed textures on GPU:
@@ -421,37 +158,39 @@ class Program {
 
 GLuint NewTexture2d(int width, int height) {
   GLuint texture;
-  glGenTextures(1, &texture);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, texture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+  gl::GenTextures(1, &texture);
+  gl::ActiveTexture(GL_TEXTURE0);
+  gl::BindTexture(GL_TEXTURE_2D, texture);
+  gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  gl::BindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
   // 16F precision for the transmittance gives artifacts.
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0,
+  gl::TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0,
       GL_RGBA, GL_FLOAT, NULL);
+  gl::BindTexture(GL_TEXTURE_2D, 0);
   return texture;
 }
 
 GLuint NewTexture3d(int width, int height, int depth, GLenum format,
     bool half_precision) {
   GLuint texture;
-  glGenTextures(1, &texture);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_3D, texture);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-  glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+  gl::GenTextures(1, &texture);
+  gl::ActiveTexture(GL_TEXTURE0);
+  gl::BindTexture(GL_TEXTURE_3D, texture);
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  gl::TexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+  gl::BindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
   GLenum internal_format = format == GL_RGBA ?
       (half_precision ? GL_RGBA16F : GL_RGBA32F) :
       (half_precision ? GL_RGB16F : GL_RGB32F);
-  glTexImage3D(GL_TEXTURE_3D, 0, internal_format, width, height, depth, 0,
+  gl::TexImage3D(GL_TEXTURE_3D, 0, internal_format, width, height, depth, 0,
       format, GL_FLOAT, NULL);
+  gl::BindTexture(GL_TEXTURE_3D, 0);
   return texture;
 }
 
@@ -463,20 +202,20 @@ formats, but not for the RGB ones):
 
 bool IsFramebufferRgbFormatSupported(bool half_precision) {
   GLuint test_fbo = 0;
-  glGenFramebuffers(1, &test_fbo);
-  glBindFramebuffer(GL_FRAMEBUFFER, test_fbo);
+  gl::GenFramebuffers(1, &test_fbo);
+  gl::BindFramebuffer(GL_FRAMEBUFFER, test_fbo);
   GLuint test_texture = 0;
-  glGenTextures(1, &test_texture);
-  glBindTexture(GL_TEXTURE_2D, test_texture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, half_precision ? GL_RGB16F : GL_RGB32F,
+  gl::GenTextures(1, &test_texture);
+  gl::BindTexture(GL_TEXTURE_2D, test_texture);
+  gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  gl::TexImage2D(GL_TEXTURE_2D, 0, half_precision ? GL_RGB16F : GL_RGB32F,
                1, 1, 0, GL_RGB, GL_FLOAT, NULL);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+  gl::FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                          GL_TEXTURE_2D, test_texture, 0);
   bool rgb_format_supported =
-      glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
-  glDeleteTextures(1, &test_texture);
-  glDeleteFramebuffers(1, &test_fbo);
+      gl::CheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+  gl::DeleteTextures(1, &test_texture);
+  gl::DeleteFramebuffers(1, &test_fbo);
   return rgb_format_supported;
 }
 
@@ -488,16 +227,16 @@ blending separately enabled or disabled for each color attachment):
 void DrawQuad(const std::vector<bool>& enable_blend, GLuint quad_vao) {
   for (unsigned int i = 0; i < enable_blend.size(); ++i) {
     if (enable_blend[i]) {
-      glEnablei(GL_BLEND, i);
+      gl::Enablei(GL_BLEND, i);
     }
   }
 
-  glBindVertexArray(quad_vao);
-  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-  glBindVertexArray(0);
+  gl::BindVertexArray(quad_vao);
+  gl::DrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+  gl::BindVertexArray(0);
 
   for (unsigned int i = 0; i < enable_blend.size(); ++i) {
-    glDisablei(GL_BLEND, i);
+    gl::Disablei(GL_BLEND, i);
   }
 }
 
@@ -629,10 +368,17 @@ Model::Model(
     double length_unit_in_meters,
     unsigned int num_precomputed_wavelengths,
     bool combine_scattering_textures,
-    bool half_precision) :
+    bool half_precision,
+    std::string shader_dir,
+    const render_util::TextureManager &tex_mgr) :
         num_precomputed_wavelengths_(num_precomputed_wavelengths),
         half_precision_(half_precision),
-        rgb_format_supported_(IsFramebufferRgbFormatSupported(half_precision)) {
+        rgb_format_supported_(IsFramebufferRgbFormatSupported(half_precision)),
+        m_texture_manager(tex_mgr)
+{
+  m_shader_search_path.push_back(shader_dir + "/internal");
+  m_shader_search_path.push_back(shader_dir);
+
   auto to_string = [&wavelengths](const std::vector<double>& v,
       const vec3& lambdas, double scale) {
     double r = Interpolate(wavelengths, v, lambdas[0]) * scale;
@@ -685,63 +431,6 @@ Model::Model(
   ComputeSpectralRadianceToLuminanceFactors(wavelengths, solar_irradiance,
       0 /* lambda_power */, &sun_k_r, &sun_k_g, &sun_k_b);
 
-  // A lambda that creates a GLSL header containing our atmosphere computation
-  // functions, specialized for the given atmosphere parameters and for the 3
-  // wavelengths in 'lambdas'.
-  glsl_header_factory_ = [=](const vec3& lambdas) {
-    return
-      "#version 330\n"
-      "#define IN(x) const in x\n"
-      "#define OUT(x) out x\n"
-      "#define TEMPLATE(x)\n"
-      "#define TEMPLATE_ARGUMENT(x)\n"
-      "#define assert(x)\n"
-      "const int TRANSMITTANCE_TEXTURE_WIDTH = " +
-          std::to_string(TRANSMITTANCE_TEXTURE_WIDTH) + ";\n" +
-      "const int TRANSMITTANCE_TEXTURE_HEIGHT = " +
-          std::to_string(TRANSMITTANCE_TEXTURE_HEIGHT) + ";\n" +
-      "const int SCATTERING_TEXTURE_R_SIZE = " +
-          std::to_string(SCATTERING_TEXTURE_R_SIZE) + ";\n" +
-      "const int SCATTERING_TEXTURE_MU_SIZE = " +
-          std::to_string(SCATTERING_TEXTURE_MU_SIZE) + ";\n" +
-      "const int SCATTERING_TEXTURE_MU_S_SIZE = " +
-          std::to_string(SCATTERING_TEXTURE_MU_S_SIZE) + ";\n" +
-      "const int SCATTERING_TEXTURE_NU_SIZE = " +
-          std::to_string(SCATTERING_TEXTURE_NU_SIZE) + ";\n" +
-      "const int IRRADIANCE_TEXTURE_WIDTH = " +
-          std::to_string(IRRADIANCE_TEXTURE_WIDTH) + ";\n" +
-      "const int IRRADIANCE_TEXTURE_HEIGHT = " +
-          std::to_string(IRRADIANCE_TEXTURE_HEIGHT) + ";\n" +
-      (combine_scattering_textures ?
-          "#define COMBINED_SCATTERING_TEXTURES\n" : "") +
-      definitions_glsl +
-      "const AtmosphereParameters ATMOSPHERE = AtmosphereParameters(\n" +
-          to_string(solar_irradiance, lambdas, 1.0) + ",\n" +
-          std::to_string(sun_angular_radius) + ",\n" +
-          std::to_string(bottom_radius / length_unit_in_meters) + ",\n" +
-          std::to_string(top_radius / length_unit_in_meters) + ",\n" +
-          density_profile(rayleigh_density) + ",\n" +
-          to_string(
-              rayleigh_scattering, lambdas, length_unit_in_meters) + ",\n" +
-          density_profile(mie_density) + ",\n" +
-          to_string(mie_scattering, lambdas, length_unit_in_meters) + ",\n" +
-          to_string(mie_extinction, lambdas, length_unit_in_meters) + ",\n" +
-          std::to_string(mie_phase_function_g) + ",\n" +
-          density_profile(absorption_density) + ",\n" +
-          to_string(
-              absorption_extinction, lambdas, length_unit_in_meters) + ",\n" +
-          to_string(ground_albedo, lambdas, 1.0) + ",\n" +
-          std::to_string(cos(max_sun_zenith_angle)) + ");\n" +
-      "const vec3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE = vec3(" +
-          std::to_string(sky_k_r) + "," +
-          std::to_string(sky_k_g) + "," +
-          std::to_string(sky_k_b) + ");\n" +
-      "const vec3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE = vec3(" +
-          std::to_string(sun_k_r) + "," +
-          std::to_string(sun_k_g) + "," +
-          std::to_string(sun_k_b) + ");\n" +
-      functions_glsl;
-  };
 
   // Allocate the precomputed textures, but don't precompute them yet.
   transmittance_texture_ = NewTexture2d(
@@ -765,21 +454,15 @@ Model::Model(
   irradiance_texture_ = NewTexture2d(
       IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT);
 
-  // Create and compile the shader providing our API.
-  std::string shader =
-      glsl_header_factory_({kLambdaR, kLambdaG, kLambdaB}) +
-      (precompute_illuminance ? "" : "#define RADIANCE_API_ENABLED\n") +
-      kAtmosphereShader;
-  const char* source = shader.c_str();
-  atmosphere_shader_ = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(atmosphere_shader_, 1, &source, NULL);
-  glCompileShader(atmosphere_shader_);
+//   unsigned int prev_vertex_array_binding = 0;
+//   gl::GetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint*)&prev_vertex_array_binding);
+//   FORCE_CHECK_GL_ERROR();
 
   // Create a full screen quad vertex array and vertex buffer objects.
-  glGenVertexArrays(1, &full_screen_quad_vao_);
-  glBindVertexArray(full_screen_quad_vao_);
-  glGenBuffers(1, &full_screen_quad_vbo_);
-  glBindBuffer(GL_ARRAY_BUFFER, full_screen_quad_vbo_);
+  gl::GenVertexArrays(1, &full_screen_quad_vao_);
+  gl::BindVertexArray(full_screen_quad_vao_);
+  gl::GenBuffers(1, &full_screen_quad_vbo_);
+  gl::BindBuffer(GL_ARRAY_BUFFER, full_screen_quad_vbo_);
   const GLfloat vertices[] = {
     -1.0, -1.0,
     +1.0, -1.0,
@@ -787,11 +470,68 @@ Model::Model(
     +1.0, +1.0,
   };
   constexpr int kCoordsPerVertex = 2;
-  glBufferData(GL_ARRAY_BUFFER, sizeof vertices, vertices, GL_STATIC_DRAW);
+  gl::BufferData(GL_ARRAY_BUFFER, sizeof vertices, vertices, GL_STATIC_DRAW);
   constexpr GLuint kAttribIndex = 0;
-  glVertexAttribPointer(kAttribIndex, kCoordsPerVertex, GL_FLOAT, false, 0, 0);
-  glEnableVertexAttribArray(kAttribIndex);
-  glBindVertexArray(0);
+  gl::VertexAttribPointer(kAttribIndex, kCoordsPerVertex, GL_FLOAT, false, 0, 0);
+  gl::EnableVertexAttribArray(kAttribIndex);
+  gl::BindVertexArray(0);
+  gl::BindBuffer(GL_ARRAY_BUFFER, 0);
+
+//   gl::BindVertexArray(prev_vertex_array_binding);
+
+  auto sky_k = std::string("vec3(") +
+          std::to_string(sky_k_r) + "," +
+          std::to_string(sky_k_g) + "," +
+          std::to_string(sky_k_b) + ")";
+
+  auto sun_k = std::string("vec3(") +
+          std::to_string(sun_k_r) + "," +
+          std::to_string(sun_k_g) + "," +
+          std::to_string(sun_k_b) + ")";
+
+  m_shader_parameter_factory = [=](const vec3& lambdas)
+  {
+    render_util::ShaderParameters params;
+
+    params.set("sky_k", sky_k);
+    params.set("sun_k", sun_k);
+
+    params.set("precompute_illuminance", precompute_illuminance);
+    params.set("solar_irradiance", to_string(solar_irradiance, lambdas, 1.0));
+    params.set("bottom_radius", std::to_string(bottom_radius / length_unit_in_meters));
+    params.set("top_radius", std::to_string(top_radius / length_unit_in_meters));
+    params.set("rayleigh_density", density_profile(rayleigh_density));
+    params.set("rayleigh_scattering",
+                        to_string(rayleigh_scattering, lambdas, length_unit_in_meters));
+    params.set("mie_density", density_profile(mie_density));
+    params.set("mie_scattering", to_string(mie_scattering, lambdas, length_unit_in_meters));
+    params.set("mie_extinction", to_string(mie_extinction, lambdas, length_unit_in_meters));
+    params.set("mie_phase_function_g", std::to_string(mie_phase_function_g));
+    params.set("absorption_density", density_profile(absorption_density));
+    params.set("absorption_extinction",
+                        to_string(absorption_extinction, lambdas, length_unit_in_meters));
+    params.set("ground_albedo", to_string(ground_albedo, lambdas, 1.0));
+    params.set("mu_s_min", std::to_string(cos(max_sun_zenith_angle)));
+
+    params.set("transmittance_texture_width", TRANSMITTANCE_TEXTURE_WIDTH);
+    params.set("transmittance_texture_height", TRANSMITTANCE_TEXTURE_HEIGHT);
+    params.set("scattering_texture_r_size", SCATTERING_TEXTURE_R_SIZE);
+    params.set("scattering_texture_mu_size", SCATTERING_TEXTURE_MU_SIZE);
+    params.set("scattering_texture_mu_s_size", SCATTERING_TEXTURE_MU_S_SIZE);
+    params.set("scattering_texture_nu_size", SCATTERING_TEXTURE_NU_SIZE);
+    params.set("irradiance_texture_width", IRRADIANCE_TEXTURE_WIDTH);
+    params.set("irradiance_texture_height", IRRADIANCE_TEXTURE_HEIGHT);
+
+    params.set("combine_scattering_textures", combine_scattering_textures);
+
+    params.set("sun_angular_radius", sun_angular_radius);
+
+    return params;
+  };
+
+  vec3 lambdas = {kLambdaR, kLambdaG, kLambdaB};
+
+  m_shader_params = m_shader_parameter_factory(lambdas);
 }
 
 /*
@@ -799,15 +539,14 @@ Model::Model(
 */
 
 Model::~Model() {
-  glDeleteBuffers(1, &full_screen_quad_vbo_);
-  glDeleteVertexArrays(1, &full_screen_quad_vao_);
-  glDeleteTextures(1, &transmittance_texture_);
-  glDeleteTextures(1, &scattering_texture_);
+  gl::DeleteBuffers(1, &full_screen_quad_vbo_);
+  gl::DeleteVertexArrays(1, &full_screen_quad_vao_);
+  gl::DeleteTextures(1, &transmittance_texture_);
+  gl::DeleteTextures(1, &scattering_texture_);
   if (optional_single_mie_scattering_texture_ != 0) {
-    glDeleteTextures(1, &optional_single_mie_scattering_texture_);
+    gl::DeleteTextures(1, &optional_single_mie_scattering_texture_);
   }
-  glDeleteTextures(1, &irradiance_texture_);
-  glDeleteShader(atmosphere_shader_);
+  gl::DeleteTextures(1, &irradiance_texture_);
 }
 
 /*
@@ -863,7 +602,8 @@ want to store precomputed irradiance or illuminance values:
 <p>This yields the following implementation:
 */
 
-void Model::Init(unsigned int num_scattering_orders) {
+void Model::Init(unsigned int num_scattering_orders)
+{
   // The precomputations require temporary textures, in particular to store the
   // contribution of one scattering order, which is needed to compute the next
   // order of scattering (the final precomputed textures store the sum of all
@@ -899,8 +639,8 @@ void Model::Init(unsigned int num_scattering_orders) {
   // The precomputations also require a temporary framebuffer object, created
   // here (and destroyed at the end of this method).
   GLuint fbo;
-  glGenFramebuffers(1, &fbo);
-  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  gl::GenFramebuffers(1, &fbo);
+  gl::BindFramebuffer(GL_FRAMEBUFFER, fbo);
 
   // The actual precomputations depend on whether we want to store precomputed
   // irradiance or illuminance values.
@@ -916,7 +656,9 @@ void Model::Init(unsigned int num_scattering_orders) {
     constexpr double kLambdaMax = 830.0;
     int num_iterations = (num_precomputed_wavelengths_ + 2) / 3;
     double dlambda = (kLambdaMax - kLambdaMin) / (3 * num_iterations);
-    for (int i = 0; i < num_iterations; ++i) {
+
+    for (int i = 0; i < num_iterations; ++i)
+    {
       vec3 lambdas{
         kLambdaMin + (3 * i + 0.5) * dlambda,
         kLambdaMin + (3 * i + 1.5) * dlambda,
@@ -952,26 +694,34 @@ void Model::Init(unsigned int num_scattering_orders) {
     // transmittance for the 3 wavelengths used at the last iteration. But we
     // want the transmittance at kLambdaR, kLambdaG, kLambdaB instead, so we
     // must recompute it here for these 3 wavelengths:
-    std::string header = glsl_header_factory_({kLambdaR, kLambdaG, kLambdaB});
-    Program compute_transmittance(
-        kVertexShader, header + kComputeTransmittanceShader);
-    glFramebufferTexture(
-        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, transmittance_texture_, 0);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    glViewport(0, 0, TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT);
-    compute_transmittance.Use();
-    DrawQuad({}, full_screen_quad_vao_);
+    {
+      auto program = createShaderProgram("compute_transmittance", m_shader_params);
+
+      gl::FramebufferTexture(
+          GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, transmittance_texture_, 0);
+      gl::DrawBuffer(GL_COLOR_ATTACHMENT0);
+      gl::Viewport(0, 0, TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT);
+      useProgram(program);
+      program->assertUniformsAreSet();
+      DrawQuad({}, full_screen_quad_vao_);
+    }
   }
 
   // Delete the temporary resources allocated at the begining of this method.
-  glUseProgram(0);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glDeleteFramebuffers(1, &fbo);
-  glDeleteTextures(1, &delta_scattering_density_texture);
-  glDeleteTextures(1, &delta_mie_scattering_texture);
-  glDeleteTextures(1, &delta_rayleigh_scattering_texture);
-  glDeleteTextures(1, &delta_irradiance_texture);
-  assert(glGetError() == 0);
+  gl::UseProgram(0);
+  gl::BindFramebuffer(GL_FRAMEBUFFER, 0);
+  gl::DeleteFramebuffers(1, &fbo);
+  gl::DeleteTextures(1, &delta_scattering_density_texture);
+  gl::DeleteTextures(1, &delta_mie_scattering_texture);
+  gl::DeleteTextures(1, &delta_rayleigh_scattering_texture);
+  gl::DeleteTextures(1, &delta_irradiance_texture);
+  assert(gl::GetError() == 0);
+
+  gl::DrawBuffer(GL_BACK);
+  FORCE_CHECK_GL_ERROR();
+
+//   dumpScatteringTexture(scattering_texture_, "scattering");
+//   dumpScatteringTexture(optional_single_mie_scattering_texture_, "single_mie_scattering");
 }
 
 /*
@@ -982,32 +732,34 @@ texture units.
 */
 
 void Model::SetProgramUniforms(
-    GLuint program,
+    render_util::ShaderProgramPtr program,
     GLuint transmittance_texture_unit,
     GLuint scattering_texture_unit,
     GLuint irradiance_texture_unit,
-    GLuint single_mie_scattering_texture_unit) const {
-  glActiveTexture(GL_TEXTURE0 + transmittance_texture_unit);
-  glBindTexture(GL_TEXTURE_2D, transmittance_texture_);
-  glUniform1i(glGetUniformLocation(program, "transmittance_texture"),
-      transmittance_texture_unit);
+    GLuint single_mie_scattering_texture_unit) const
+{
+  GLenum active_unit_save;
+  gl::GetIntegerv(GL_ACTIVE_TEXTURE, reinterpret_cast<GLint*>(&active_unit_save));
 
-  glActiveTexture(GL_TEXTURE0 + scattering_texture_unit);
-  glBindTexture(GL_TEXTURE_3D, scattering_texture_);
-  glUniform1i(glGetUniformLocation(program, "scattering_texture"),
-      scattering_texture_unit);
+  gl::ActiveTexture(GL_TEXTURE0 + transmittance_texture_unit);
+  gl::BindTexture(GL_TEXTURE_2D, transmittance_texture_);
+  program->setUniformi("transmittance_texture", transmittance_texture_unit);
 
-  glActiveTexture(GL_TEXTURE0 + irradiance_texture_unit);
-  glBindTexture(GL_TEXTURE_2D, irradiance_texture_);
-  glUniform1i(glGetUniformLocation(program, "irradiance_texture"),
-      irradiance_texture_unit);
+  gl::ActiveTexture(GL_TEXTURE0 + scattering_texture_unit);
+  gl::BindTexture(GL_TEXTURE_3D, scattering_texture_);
+  program->setUniformi("scattering_texture", scattering_texture_unit);
+
+  gl::ActiveTexture(GL_TEXTURE0 + irradiance_texture_unit);
+  gl::BindTexture(GL_TEXTURE_2D, irradiance_texture_);
+  program->setUniformi("irradiance_texture", irradiance_texture_unit);
 
   if (optional_single_mie_scattering_texture_ != 0) {
-    glActiveTexture(GL_TEXTURE0 + single_mie_scattering_texture_unit);
-    glBindTexture(GL_TEXTURE_3D, optional_single_mie_scattering_texture_);
-    glUniform1i(glGetUniformLocation(program, "single_mie_scattering_texture"),
-        single_mie_scattering_texture_unit);
+    gl::ActiveTexture(GL_TEXTURE0 + single_mie_scattering_texture_unit);
+    gl::BindTexture(GL_TEXTURE_3D, optional_single_mie_scattering_texture_);
+    program->setUniformi("single_mie_scattering_texture", single_mie_scattering_texture_unit);
   }
+
+  gl::ActiveTexture(active_unit_save);
 }
 
 /*
@@ -1055,23 +807,32 @@ void Model::Precompute(
     const vec3& lambdas,
     const mat3& luminance_from_radiance,
     bool blend,
-    unsigned int num_scattering_orders) {
-  // The precomputations require specific GLSL programs, for each precomputation
-  // step. We create and compile them here (they are automatically destroyed
-  // when this method returns, via the Program destructor).
-  std::string header = glsl_header_factory_(lambdas);
-  Program compute_transmittance(
-      kVertexShader, header + kComputeTransmittanceShader);
-  Program compute_direct_irradiance(
-      kVertexShader, header + kComputeDirectIrradianceShader);
-  Program compute_single_scattering(kVertexShader, kGeometryShader,
-      header + kComputeSingleScatteringShader);
-  Program compute_scattering_density(kVertexShader, kGeometryShader,
-      header + kComputeScatteringDensityShader);
-  Program compute_indirect_irradiance(
-      kVertexShader, header + kComputeIndirectIrradianceShader);
-  Program compute_multiple_scattering(kVertexShader, kGeometryShader,
-      header + kComputeMultipleScatteringShader);
+    unsigned int num_scattering_orders)
+{
+  FORCE_CHECK_GL_ERROR();
+
+  auto shader_params = m_shader_parameter_factory(lambdas);
+
+  auto createProgram = [this, shader_params] (std::string name)
+  {
+    return createShaderProgram(name, shader_params);
+  };
+
+  auto compute_transmittance = createProgram("compute_transmittance");
+  auto compute_direct_irradiance = createProgram("compute_direct_irradiance");
+  auto compute_single_scattering = createProgram("compute_single_scattering");
+  auto compute_scattering_density = createProgram("compute_scattering_density");
+  auto compute_indirect_irradiance = createProgram("compute_indirect_irradiance");
+  auto compute_multiple_scattering = createProgram("compute_multiple_scattering");
+
+  bindTexture2D(TexUnits::TRANSMITTANCE, transmittance_texture_);
+  bindTexture3D(TexUnits::SINGLE_RAYLEIGH_SCATTERING, delta_rayleigh_scattering_texture);
+  bindTexture3D(TexUnits::SINGLE_MIE_SCATTERING, delta_mie_scattering_texture);
+  bindTexture3D(TexUnits::MULTIPLE_SCATTERING, delta_multiple_scattering_texture);
+  bindTexture2D(TexUnits::IRRADIANCE, delta_irradiance_texture);
+  bindTexture3D(TexUnits::SCATTERING_DENSITY, delta_scattering_density_texture);
+
+  FORCE_CHECK_GL_ERROR();
 
   const GLuint kDrawBuffers[4] = {
     GL_COLOR_ATTACHMENT0,
@@ -1079,139 +840,140 @@ void Model::Precompute(
     GL_COLOR_ATTACHMENT2,
     GL_COLOR_ATTACHMENT3
   };
-  glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-  glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
+  gl::BlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+  gl::BlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
 
   // Compute the transmittance, and store it in transmittance_texture_.
-  glFramebufferTexture(
+  gl::FramebufferTexture(
       GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, transmittance_texture_, 0);
-  glDrawBuffer(GL_COLOR_ATTACHMENT0);
-  glViewport(0, 0, TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT);
-  compute_transmittance.Use();
+  gl::DrawBuffer(GL_COLOR_ATTACHMENT0);
+  gl::Viewport(0, 0, TRANSMITTANCE_TEXTURE_WIDTH, TRANSMITTANCE_TEXTURE_HEIGHT);
+  useProgram(compute_transmittance);
   DrawQuad({}, full_screen_quad_vao_);
 
   // Compute the direct irradiance, store it in delta_irradiance_texture and,
   // depending on 'blend', either initialize irradiance_texture_ with zeros or
   // leave it unchanged (we don't want the direct irradiance in
   // irradiance_texture_, but only the irradiance from the sky).
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+  gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       delta_irradiance_texture, 0);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
+  gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
       irradiance_texture_, 0);
-  glDrawBuffers(2, kDrawBuffers);
-  glViewport(0, 0, IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT);
-  compute_direct_irradiance.Use();
-  compute_direct_irradiance.BindTexture2d(
-      "transmittance_texture", transmittance_texture_, 0);
+  gl::DrawBuffers(2, kDrawBuffers);
+  gl::Viewport(0, 0, IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT);
+  useProgram(compute_direct_irradiance);
   DrawQuad({false, blend}, full_screen_quad_vao_);
 
   // Compute the rayleigh and mie single scattering, store them in
   // delta_rayleigh_scattering_texture and delta_mie_scattering_texture, and
   // either store them or accumulate them in scattering_texture_ and
   // optional_single_mie_scattering_texture_.
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+  gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       delta_rayleigh_scattering_texture, 0);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
+  gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
       delta_mie_scattering_texture, 0);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2,
+  gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2,
       scattering_texture_, 0);
   if (optional_single_mie_scattering_texture_ != 0) {
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3,
+    gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3,
         optional_single_mie_scattering_texture_, 0);
-    glDrawBuffers(4, kDrawBuffers);
+    gl::DrawBuffers(4, kDrawBuffers);
   } else {
-    glDrawBuffers(3, kDrawBuffers);
+    gl::DrawBuffers(3, kDrawBuffers);
   }
-  glViewport(0, 0, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT);
-  compute_single_scattering.Use();
-  compute_single_scattering.BindMat3(
-      "luminance_from_radiance", luminance_from_radiance);
-  compute_single_scattering.BindTexture2d(
-      "transmittance_texture", transmittance_texture_, 0);
+  gl::Viewport(0, 0, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT);
+  compute_single_scattering->setUniform("luminance_from_radiance",
+                                        make_glm_mat3(luminance_from_radiance));
+  useProgram(compute_single_scattering, false);
   for (unsigned int layer = 0; layer < SCATTERING_TEXTURE_DEPTH; ++layer) {
-    compute_single_scattering.BindInt("layer", layer);
+    compute_single_scattering->setUniformi("layer", layer);
+    compute_single_scattering->assertUniformsAreSet();
     DrawQuad({false, false, blend, blend}, full_screen_quad_vao_);
   }
 
   // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
   for (unsigned int scattering_order = 2;
        scattering_order <= num_scattering_orders;
-       ++scattering_order) {
+       ++scattering_order)
+  {
     // Compute the scattering density, and store it in
     // delta_scattering_density_texture.
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+    gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
         delta_scattering_density_texture, 0);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 0, 0);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, 0, 0);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, 0, 0);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    glViewport(0, 0, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT);
-    compute_scattering_density.Use();
-    compute_scattering_density.BindTexture2d(
-        "transmittance_texture", transmittance_texture_, 0);
-    compute_scattering_density.BindTexture3d(
-        "single_rayleigh_scattering_texture",
-        delta_rayleigh_scattering_texture,
-        1);
-    compute_scattering_density.BindTexture3d(
-        "single_mie_scattering_texture", delta_mie_scattering_texture, 2);
-    compute_scattering_density.BindTexture3d(
-        "multiple_scattering_texture", delta_multiple_scattering_texture, 3);
-    compute_scattering_density.BindTexture2d(
-        "irradiance_texture", delta_irradiance_texture, 4);
-    compute_scattering_density.BindInt("scattering_order", scattering_order);
-    for (unsigned int layer = 0; layer < SCATTERING_TEXTURE_DEPTH; ++layer) {
-      compute_scattering_density.BindInt("layer", layer);
+    gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 0, 0);
+    gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, 0, 0);
+    gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, 0, 0);
+    gl::DrawBuffer(GL_COLOR_ATTACHMENT0);
+    gl::Viewport(0, 0, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT);
+    compute_scattering_density->setUniformi("scattering_order", scattering_order);
+    useProgram(compute_scattering_density, false);
+    for (unsigned int layer = 0; layer < SCATTERING_TEXTURE_DEPTH; ++layer)
+    {
+      compute_scattering_density->setUniformi("layer", layer);
+      compute_scattering_density->assertUniformsAreSet();
       DrawQuad({}, full_screen_quad_vao_);
     }
 
     // Compute the indirect irradiance, store it in delta_irradiance_texture and
     // accumulate it in irradiance_texture_.
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+    gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
         delta_irradiance_texture, 0);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
+    gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
         irradiance_texture_, 0);
-    glDrawBuffers(2, kDrawBuffers);
-    glViewport(0, 0, IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT);
-    compute_indirect_irradiance.Use();
-    compute_indirect_irradiance.BindMat3(
-        "luminance_from_radiance", luminance_from_radiance);
-    compute_indirect_irradiance.BindTexture3d(
-        "single_rayleigh_scattering_texture",
-        delta_rayleigh_scattering_texture,
-        0);
-    compute_indirect_irradiance.BindTexture3d(
-        "single_mie_scattering_texture", delta_mie_scattering_texture, 1);
-    compute_indirect_irradiance.BindTexture3d(
-        "multiple_scattering_texture", delta_multiple_scattering_texture, 2);
-    compute_indirect_irradiance.BindInt("scattering_order",
-        scattering_order - 1);
+    gl::DrawBuffers(2, kDrawBuffers);
+    gl::Viewport(0, 0, IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT);
+    compute_indirect_irradiance->setUniform("luminance_from_radiance", 
+                                            make_glm_mat3(luminance_from_radiance));
+    compute_indirect_irradiance->setUniformi("scattering_order", scattering_order - 1);
+    useProgram(compute_indirect_irradiance);
     DrawQuad({false, true}, full_screen_quad_vao_);
 
     // Compute the multiple scattering, store it in
     // delta_multiple_scattering_texture, and accumulate it in
     // scattering_texture_.
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+    gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
         delta_multiple_scattering_texture, 0);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
+    gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
         scattering_texture_, 0);
-    glDrawBuffers(2, kDrawBuffers);
-    glViewport(0, 0, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT);
-    compute_multiple_scattering.Use();
-    compute_multiple_scattering.BindMat3(
-        "luminance_from_radiance", luminance_from_radiance);
-    compute_multiple_scattering.BindTexture2d(
-        "transmittance_texture", transmittance_texture_, 0);
-    compute_multiple_scattering.BindTexture3d(
-        "scattering_density_texture", delta_scattering_density_texture, 1);
+    gl::DrawBuffers(2, kDrawBuffers);
+    gl::Viewport(0, 0, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT);
+    compute_multiple_scattering->setUniform("luminance_from_radiance",
+                                            make_glm_mat3(luminance_from_radiance));
+    useProgram(compute_multiple_scattering, false);
     for (unsigned int layer = 0; layer < SCATTERING_TEXTURE_DEPTH; ++layer) {
-      compute_multiple_scattering.BindInt("layer", layer);
+      compute_multiple_scattering->setUniformi("layer", layer);
+      compute_multiple_scattering->assertUniformsAreSet();
       DrawQuad({false, true}, full_screen_quad_vao_);
     }
   }
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 0, 0);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, 0, 0);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, 0, 0);
+
+  gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 0, 0);
+  gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, 0, 0);
+  gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, 0, 0);
 }
+
+
+render_util::ShaderParameters Model::getShaderParameters()
+{
+  return m_shader_params;
+}
+
+
+render_util::ShaderProgramPtr Model::createShaderProgram(std::string name,
+                                                         const render_util::ShaderParameters &params)
+{
+  auto program = render_util::createShaderProgram(name, m_texture_manager,
+                                                  m_shader_search_path, {}, params);
+
+  program->setUniformi("transmittance_texture", TexUnits::TRANSMITTANCE);
+  program->setUniformi("irradiance_texture", TexUnits::IRRADIANCE);
+  program->setUniformi("single_rayleigh_scattering_texture", TexUnits::SINGLE_RAYLEIGH_SCATTERING);
+  program->setUniformi("single_mie_scattering_texture", TexUnits::SINGLE_MIE_SCATTERING);
+  program->setUniformi("multiple_scattering_texture", TexUnits::MULTIPLE_SCATTERING);
+  program->setUniformi("scattering_density_texture", TexUnits::SCATTERING_DENSITY);
+
+  return program;
+}
+
 
 }  // namespace atmosphere
