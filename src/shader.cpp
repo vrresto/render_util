@@ -78,6 +78,75 @@ string getParameterValue(const string &parameter, const ShaderParameters &params
 }
 
 
+string resolveParameters(string source, const ShaderParameters &params)
+{
+  istringstream in(source);
+  string out;
+
+  while (in.good())
+  {
+    string line;
+    getline(in, line);
+
+    string trimmed = util::trim(line);
+    if (trimmed.empty())
+    {
+      out += '\n';
+      continue;
+    }
+
+    enum State
+    {
+      NONE,
+      PARSE
+    };
+
+    State state = NONE;
+
+    string parsed;
+    for (char c : line)
+    {
+      switch (state)
+      {
+        case NONE:
+          assert(parsed.empty());
+          if (c == '@')
+          {
+            state = PARSE;
+          }
+          else
+          {
+            out.push_back(c);
+          }
+          break;
+        case PARSE:
+          if (c == '@')
+          {
+            assert(!parsed.empty());
+
+            out += getParameterValue(parsed, params);
+
+            parsed.clear();
+
+            state = NONE;
+          }
+          else
+          {
+            parsed.push_back(c);
+          }
+          break;
+      }
+    }
+
+    assert(state == NONE);
+
+    out += '\n';
+  }
+
+  return out;
+}
+
+
 string readInclude(string include_file, vector<string> search_path, string &path_out)
 {
   for (auto &dir : search_path)
@@ -203,21 +272,16 @@ void Shader::compile()
 void Shader::preProcess(const vector<char> &data_in, const ShaderParameters &params,
                         const std::vector<std::string> &paths_)
 {
-  string in_str(data_in.data(), data_in.size());
+  string source(data_in.data(), data_in.size());
 
-  istringstream in(in_str);
+
+  source = resolveParameters(source, params);
+
+  istringstream in(source);
   string out;
 
-  enum State
-  {
-    NONE,
-    PARSE
-  };
-
-  State state = NONE;
   int line_num = 1;
 
-  string parsed;
   while (in.good())
   {
     string line;
@@ -242,57 +306,23 @@ void Shader::preProcess(const vector<char> &data_in, const ShaderParameters &par
       string include_file_path;
       auto include_file_content = readInclude(include_file, paths_, include_file_path);
       m_includes.push_back(include_file_path);
+
+      include_file_content = resolveParameters(include_file_content, params);
       include_file_content = string("#line 1 ") + to_string(m_includes.size()) + "\n" + include_file_content;
 
       out += include_file_content;
       out += '\n';
-      out += "#line " + to_string(line_num) + " 0 \n";
+      out += "#line " + to_string(line_num+1) + " 0 \n";
 
       line_num++;
       continue;
     }
 
-    for (char c : line)
-    {
-      switch (state)
-      {
-        case NONE:
-          assert(parsed.empty());
-          if (c == '@')
-          {
-            state = PARSE;
-          }
-          else
-          {
-            out.push_back(c);
-          }
-          break;
-        case PARSE:
-          if (c == '@')
-          {
-            assert(!parsed.empty());
-
-            out += getParameterValue(parsed, params);
-
-            parsed.clear();
-
-            state = NONE;
-          }
-          else
-          {
-            parsed.push_back(c);
-          }
-          break;
-      }
-    }
-
-    assert(state == NONE);
-
+    out += line;
     out += '\n';
     line_num++;
   }
 
-  assert(state == NONE);
 
   m_preprocessed_source = move(out);
 }
