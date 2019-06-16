@@ -74,12 +74,6 @@ const string shader_path = RENDER_UTIL_SHADER_DIR;
 
 const vec4 shore_wave_hz = vec4(0.05, 0.07, 0, 0);
 
-render_util::ShaderProgramPtr createSkyProgram(const render_util::TextureManager &tex_mgr,
-                                               render_util::ShaderSearchPath &search_path)
-{
-   return render_util::createShaderProgram("sky", tex_mgr, search_path);
-}
-
 
 glm::dvec3 hitGround(const Beam &beam_)
 {
@@ -263,7 +257,10 @@ void TerrainViewerScene::setup()
   shader_search_path.push_back(string(RENDER_UTIL_SHADER_DIR) + "/" + m_atmosphere->getShaderPath());
   shader_search_path.push_back(RENDER_UTIL_SHADER_DIR);
 
-  sky_program = createSkyProgram(getTextureManager(), shader_search_path);
+  auto shader_params = m_atmosphere->getShaderParameters();
+
+  sky_program = render_util::createShaderProgram("sky", getTextureManager(),
+                                                 shader_search_path, {}, shader_params);
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
 //   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
@@ -290,8 +287,7 @@ void TerrainViewerScene::setup()
   m_map->getTextures().setTexture(TEXUNIT_TERRAIN_FAR, terrain_textures.far_texture);
 
   createTerrain(elevation_map, m_map->getMaterialMap(), terrain_textures,
-                shader_search_path, {});
-
+                shader_search_path, shader_params);
 
   map_size = glm::vec2(elevation_map->getSize() * m_map_loader->getHeightMapMetersPerPixel());
 

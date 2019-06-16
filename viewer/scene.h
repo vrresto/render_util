@@ -145,6 +145,7 @@ public:
     program->setUniform("height_map_base_origin", base_map_origin);
 #endif
     render_util::updateUniforms(program, camera);
+    m_atmosphere->setUniforms(program, camera, getSunDir());
   }
 
   virtual void mark() {}

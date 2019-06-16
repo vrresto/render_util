@@ -19,6 +19,9 @@
 #ifndef RENDER_UTIL_ATMOSPHERE_H
 #define RENDER_UTIL_ATMOSPHERE_H
 
+#include <render_util/shader.h>
+#include <render_util/camera.h>
+
 #include <string>
 
 namespace render_util
@@ -29,6 +32,8 @@ class Atmosphere
 {
 public:
   virtual std::string getShaderPath() { return "atmosphere_simple"; }
+  virtual ShaderParameters getShaderParameters() { return {}; }
+  virtual void setUniforms(ShaderProgramPtr program, const Camera&, glm::vec3 sun_direction) {}
 };
 
 
