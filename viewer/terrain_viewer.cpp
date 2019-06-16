@@ -246,7 +246,7 @@ void TerrainViewerScene::setup()
 {
   cout<<"void TerrainViewerScene::setup()"<<endl;
 
-  m_atmosphere = createAtmosphere(Atmosphere::DEFAULT, getTextureManager(), RENDER_UTIL_SHADER_DIR);
+  m_atmosphere = createAtmosphere(Atmosphere::PRECOMPUTED, getTextureManager(), RENDER_UTIL_SHADER_DIR);
 
   getTextureManager().setActive(true);
 

@@ -18,6 +18,7 @@
 
 
 #include <render_util/atmosphere.h>
+#include "atmosphere_precomputed.h"
 
 namespace render_util
 {
@@ -29,6 +30,8 @@ std::unique_ptr<Atmosphere> createAtmosphere(Atmosphere::Type type,
 {
   switch (type)
   {
+    case Atmosphere::PRECOMPUTED:
+      return std::make_unique<AtmospherePrecomputed>(tex_mgr, shader_dir);
     default:
       return std::make_unique<Atmosphere>();
   }

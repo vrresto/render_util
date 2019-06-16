@@ -1,0 +1,3 @@
+vert compute
+frag compute_direct_irradiance
+frag functions

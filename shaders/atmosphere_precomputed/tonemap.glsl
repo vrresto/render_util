@@ -16,38 +16,21 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef RENDER_UTIL_ATMOSPHERE_H
-#define RENDER_UTIL_ATMOSPHERE_H
+#version 330
 
-#include <render_util/shader.h>
-#include <render_util/texture_manager.h>
-#include <render_util/camera.h>
+uniform vec3 white_point;
+uniform float gamma;
+uniform float exposure;
+uniform float texture_brightness;
 
-#include <string>
 
-namespace render_util
+vec3 textureColorCorrection(vec3 color)
 {
-
-
-class Atmosphere
-{
-public:
-  enum Type
-  {
-    DEFAULT,
-    PRECOMPUTED
-  };
-
-  virtual std::string getShaderPath() { return "atmosphere_default"; }
-  virtual ShaderParameters getShaderParameters() { return {}; }
-  virtual void setUniforms(ShaderProgramPtr program, const Camera&) {}
-};
-
-
-std::unique_ptr<Atmosphere> createAtmosphere(Atmosphere::Type,
-                                             render_util::TextureManager&, std::string shader_dir);
-
-
+  return pow(color, vec3(gamma)) * texture_brightness;
 }
 
-#endif
+
+vec3 toneMap(vec3 color)
+{
+  return  pow(vec3(1.0) - exp(-color / white_point * exposure), vec3(1.0 / gamma));
+}
