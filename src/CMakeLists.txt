@@ -1,5 +1,6 @@
 set(CXX_SRCS
 #   terrain.cpp
+  atmosphere.cpp
   terrain_cdlod_base.cpp
   terrain_cdlod.cpp
   camera.cpp

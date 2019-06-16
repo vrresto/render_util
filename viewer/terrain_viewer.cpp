@@ -246,12 +246,12 @@ void TerrainViewerScene::setup()
 {
   cout<<"void TerrainViewerScene::setup()"<<endl;
 
+  m_atmosphere = createAtmosphere(Atmosphere::DEFAULT, getTextureManager(), RENDER_UTIL_SHADER_DIR);
+
   getTextureManager().setActive(true);
 
   curvature_map = render_util::createCurvatureTexture(getTextureManager(), cache_path);
   atmosphere_map = render_util::createAmosphereThicknessTexture(getTextureManager(), cache_path);
-
-  m_atmosphere = make_shared<Atmosphere>();
 
   ShaderSearchPath shader_search_path;
   shader_search_path.push_back(string(RENDER_UTIL_SHADER_DIR) + "/" + m_atmosphere->getShaderPath());

@@ -16,37 +16,23 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef RENDER_UTIL_ATMOSPHERE_H
-#define RENDER_UTIL_ATMOSPHERE_H
 
-#include <render_util/shader.h>
-#include <render_util/texture_manager.h>
-#include <render_util/camera.h>
-
-#include <string>
+#include <render_util/atmosphere.h>
 
 namespace render_util
 {
 
 
-class Atmosphere
+std::unique_ptr<Atmosphere> createAtmosphere(Atmosphere::Type type,
+                                             render_util::TextureManager &tex_mgr,
+                                             std::string shader_dir)
 {
-public:
-  enum Type
+  switch (type)
   {
-    DEFAULT,
-  };
-
-  virtual std::string getShaderPath() { return "atmosphere_simple"; }
-  virtual ShaderParameters getShaderParameters() { return {}; }
-  virtual void setUniforms(ShaderProgramPtr program, const Camera&, glm::vec3 sun_direction) {}
-};
-
-
-std::unique_ptr<Atmosphere> createAtmosphere(Atmosphere::Type,
-                                             render_util::TextureManager&, std::string shader_dir);
+    default:
+      return std::make_unique<Atmosphere>();
+  }
+}
 
 
 }
-
-#endif

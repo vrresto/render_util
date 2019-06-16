@@ -82,7 +82,7 @@ public:
   bool pause_animations = false;
 
   Terrain m_terrain;
-  std::shared_ptr<Atmosphere> m_atmosphere;
+  std::unique_ptr<Atmosphere> m_atmosphere;
 
   glm::vec3 getSunDir()
   {
