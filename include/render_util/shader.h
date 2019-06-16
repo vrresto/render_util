@@ -33,6 +33,7 @@ namespace render_util
 {
   using ShaderSearchPath = std::vector<std::string>;
 
+
   class ShaderParameters
   {
     std::unordered_map<std::string, std::string> m_map;
@@ -120,7 +121,6 @@ namespace render_util
       }
     }
 
-
     template <typename T>
     void setUniform(const std::string &name, const T &value)
     {
@@ -135,6 +135,7 @@ namespace render_util
         exit(1);
       }
     }
+
 
     bool error_fail = false;
 

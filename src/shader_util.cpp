@@ -110,7 +110,6 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
     }
   }
 
-
   ShaderProgramPtr program = make_shared<ShaderProgram>(definition,
                                                         vertex_shaders,
                                                         fragment_shaders,
