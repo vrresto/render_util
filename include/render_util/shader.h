@@ -170,6 +170,7 @@ namespace render_util
     void setUniform(int location, const glm::vec3&);
     void setUniform(int location, const glm::vec4&);
     void setUniform(int location, const glm::ivec2&);
+    void setUniform(int location, const glm::mat3&);
     void setUniform(int location, const glm::mat4&);
   };
 

@@ -574,10 +574,17 @@ void ShaderProgram::setUniform(GLint location, const glm::ivec2 &value)
   set_uniforms.insert(location);
 }
 
-void ShaderProgram::setUniform(GLint location, const glm::mat4 &value)
+void ShaderProgram::setUniform(int location, const glm::mat3 &value)
 {
-  gl::ProgramUniformMatrix4fv(id, location, 1, GL_FALSE, value_ptr(value));
+  gl::ProgramUniformMatrix3fv(id, location, 1, false, value_ptr(value));
   set_uniforms.insert(location);
 }
+
+void ShaderProgram::setUniform(GLint location, const glm::mat4 &value)
+{
+  gl::ProgramUniformMatrix4fv(id, location, 1, false, value_ptr(value));
+  set_uniforms.insert(location);
+}
+
 
 } // namespace render_util
