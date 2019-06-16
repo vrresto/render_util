@@ -471,7 +471,7 @@ void ShaderProgram::create()
 
   if (isValid())
   {
-    setUniform("planet_radius", planet_radius);
+    setUniform<float>("planet_radius", planet_radius);
     setUniform("atmosphereVisibility", atmosphere_visibility);
     setUniform("atmosphereHeight", atmosphere_height);
     setUniform("max_elevation", max_elevation);

@@ -20,10 +20,13 @@
 
 #include <distances.h>
 #include <util.h>
+#include <render_util/physics.h>
 
 namespace
 {
   using util::PI;
+
+  constexpr auto planet_radius = render_util::physics::EARTH_RADIUS;
 
   const int curvature_map_width = 2048;
   const int curvature_map_height = 2048;

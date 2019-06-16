@@ -31,6 +31,7 @@
 #include <util.h>
 #include <atmosphere_map.h>
 #include <render_util/render_util.h>
+#include <render_util/physics.h>
 
 #include <iostream>
 #include <fstream>
@@ -47,8 +48,7 @@ namespace
 //     cout<<buffer;
 //   }
 
-//   const double planet_radius = 6371 * 1000;
-//   const float atmosphereHeight = 400.0 * 1000.0;
+  constexpr auto planet_radius = render_util::physics::EARTH_RADIUS;
   const double max_atmosphere_distance = 1800.0 * 1000.0; //FIXME calculate the correct value
 
   const glm::ivec2 &map_size = atmosphere_map_dimensions;

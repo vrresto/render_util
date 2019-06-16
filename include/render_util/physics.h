@@ -1,6 +1,6 @@
 /**
  *    Rendering utilities
- *    Copyright (C) 2018  Jan Lepper
+ *    Copyright (C) 2019  Jan Lepper
  *
  *    This program is free software: you can redistribute it and/or modify
  *    it under the terms of the GNU Lesser General Public License as published by
@@ -16,14 +16,12 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef DISTANCES_H
-#define DISTANCES_H
+#ifndef RENDER_UTIL_PHYSICS_H
+#define RENDER_UTIL_PHYSICS_H
 
-namespace
+namespace render_util::physics
 {
-    const float atmosphere_visibility = 150.0 * 1000.0;
-    const float atmosphere_height = 60.0 * 1000.0;
-    const float max_elevation = 20.0 * 1000.0;
+  constexpr double EARTH_RADIUS = 6371000;
 }
 
 #endif
