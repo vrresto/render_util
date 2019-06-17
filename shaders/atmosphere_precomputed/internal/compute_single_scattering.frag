@@ -51,4 +51,7 @@ void main()
       (luminance_from_radiance * delta_mie).r);
 
   single_mie_scattering = luminance_from_radiance * delta_mie;
+  
+  scattering = vec4(0);
+  single_mie_scattering = vec3(0);
 }

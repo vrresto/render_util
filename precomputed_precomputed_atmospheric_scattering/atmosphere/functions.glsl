@@ -735,6 +735,43 @@ void ComputeSingleScattering(
   mie = mie_sum * dx * atmosphere.solar_irradiance * atmosphere.mie_scattering;
 }
 
+
+void ComputeSingleScatteringFast(
+    float dist,
+    IN(AtmosphereParameters) atmosphere,
+    IN(TransmittanceTexture) transmittance_texture,
+    Length r, Number mu, Number mu_s, Number nu,
+    bool ray_r_mu_intersects_ground,
+    OUT(IrradianceSpectrum) rayleigh, OUT(IrradianceSpectrum) mie) {
+  assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
+  assert(mu >= -1.0 && mu <= 1.0);
+  assert(mu_s >= -1.0 && mu_s <= 1.0);
+  assert(nu >= -1.0 && nu <= 1.0);
+
+  // Number of intervals for the numerical integration.
+  const int SAMPLE_COUNT = 10;
+  // The integration step, i.e. the length of each integration interval.
+  Length dx = dist / Number(SAMPLE_COUNT);
+  // Integration loop.
+  DimensionlessSpectrum rayleigh_sum = DimensionlessSpectrum(0.0);
+  DimensionlessSpectrum mie_sum = DimensionlessSpectrum(0.0);
+  for (int i = 0; i <= SAMPLE_COUNT; ++i) {
+    Length d_i = Number(i) * dx;
+    // The Rayleigh and Mie single scattering at the current sample point.
+    DimensionlessSpectrum rayleigh_i;
+    DimensionlessSpectrum mie_i;
+    ComputeSingleScatteringIntegrand(atmosphere, transmittance_texture,
+        r, mu, mu_s, nu, d_i, ray_r_mu_intersects_ground, rayleigh_i, mie_i);
+    // Sample weight (from the trapezoidal rule).
+    Number weight_i = (i == 0 || i == SAMPLE_COUNT) ? 0.5 : 1.0;
+    rayleigh_sum += rayleigh_i * weight_i;
+    mie_sum += mie_i * weight_i;
+  }
+  rayleigh = rayleigh_sum * dx * atmosphere.solar_irradiance *
+      atmosphere.rayleigh_scattering;
+  mie = mie_sum * dx * atmosphere.solar_irradiance * atmosphere.mie_scattering;
+}
+
 /*
 <p>Note that we added the solar irradiance and the scattering coefficient terms
 that we omitted in <code>ComputeSingleScatteringIntegrand</code>, but not the
@@ -1762,6 +1799,27 @@ RadianceSpectrum GetSkyRadiance(
     scattering = scattering * shadow_transmittance;
     single_mie_scattering = single_mie_scattering * shadow_transmittance;
   }
+
+
+  
+#if 1
+  single_mie_scattering *= 0;
+      
+  vec3 single_scattering;
+
+  ComputeSingleScatteringFast(
+    DistanceToNearestAtmosphereBoundary(atmosphere, r, mu, ray_r_mu_intersects_ground),
+    atmosphere, transmittance_texture, r, mu, mu_s, nu,
+    ray_r_mu_intersects_ground,
+    single_scattering, single_mie_scattering);
+    
+    scattering += single_scattering;
+#endif
+
+//   return scattering;
+//   return scattering * RayleighPhaseFunction(nu);
+
+
   return scattering * RayleighPhaseFunction(nu) + single_mie_scattering *
       MiePhaseFunction(atmosphere.mie_phase_function_g, nu);
 }
@@ -1814,7 +1872,7 @@ RadianceSpectrum GetSkyRadianceToPoint(
 
   transmittance = GetTransmittance(atmosphere, transmittance_texture,
       r, mu, d, ray_r_mu_intersects_ground);
-
+#if 1
   IrradianceSpectrum single_mie_scattering;
   IrradianceSpectrum scattering = GetCombinedScattering(
       atmosphere, scattering_texture, single_mie_scattering_texture,
@@ -1856,8 +1914,37 @@ RadianceSpectrum GetSkyRadianceToPoint(
   single_mie_scattering = single_mie_scattering *
       smoothstep(Number(0.0), Number(0.01), mu_s);
 
+      
+      
+#if 1
+  single_mie_scattering *= 0;
+      
+  vec3 single_scattering;
+
+  ComputeSingleScatteringFast(length(point - camera),
+    atmosphere, transmittance_texture, r, mu, mu_s, nu,
+    ray_r_mu_intersects_ground,
+    single_scattering, single_mie_scattering);
+    
+    scattering += single_scattering;
+#endif
+    
+      
+      
   return scattering * RayleighPhaseFunction(nu) + single_mie_scattering *
       MiePhaseFunction(atmosphere.mie_phase_function_g, nu);
+#else
+
+  vec3 scattering;
+  vec3 single_mie_scattering;
+  ComputeSingleScatteringFast(length(point - camera),
+    atmosphere, transmittance_texture, r, mu, mu_s, nu,
+    ray_r_mu_intersects_ground,
+    scattering, single_mie_scattering);
+
+  return scattering * RayleighPhaseFunction(nu) + single_mie_scattering *
+      MiePhaseFunction(atmosphere.mie_phase_function_g, nu);
+#endif
 }
 
 /*
