@@ -265,6 +265,40 @@ struct AtmosphereParameters {
 };
 
 
+Length SafeSqrt(Area a);
+Number ClampCosine(Number mu);
+Length ClampDistance(Length d);
+Length ClampRadius(IN(AtmosphereParameters) atmosphere, Length r);
+
+bool RayIntersectsGround(IN(AtmosphereParameters) atmosphere,
+    Length r, Number mu);
+
+Length DistanceToTopAtmosphereBoundary(IN(AtmosphereParameters) atmosphere,
+    Length r, Number mu);
+
+Length DistanceToBottomAtmosphereBoundary(IN(AtmosphereParameters) atmosphere,
+    Length r, Number mu);
+
+vec2 GetTransmittanceTextureUvFromRMu(IN(AtmosphereParameters) atmosphere,
+    Length r, Number mu);
+
+void GetRMuFromTransmittanceTextureUv(IN(AtmosphereParameters) atmosphere,
+    IN(vec2) uv, OUT(Length) r, OUT(Number) mu);
+
+vec4 GetScatteringTextureUvwzFromRMuMuSNu(IN(AtmosphereParameters) atmosphere,
+    Length r, Number mu, Number mu_s, Number nu,
+    bool ray_r_mu_intersects_ground);
+
+void GetRMuMuSNuFromScatteringTextureUvwz(IN(AtmosphereParameters) atmosphere,
+    IN(vec4) uvwz, OUT(Length) r, OUT(Number) mu, OUT(Number) mu_s,
+    OUT(Number) nu, OUT(bool) ray_r_mu_intersects_ground);
+
+vec2 GetIrradianceTextureUvFromRMuS(IN(AtmosphereParameters) atmosphere,
+    Length r, Number mu_s);
+
+void GetRMuSFromIrradianceTextureUv(IN(AtmosphereParameters) atmosphere,
+    IN(vec2) uv, OUT(Length) r, OUT(Number) mu_s);
+
 DimensionlessSpectrum
   ComputeTransmittanceToTopAtmosphereBoundaryTexture(IN(AtmosphereParameters) atmosphere,
                                                      IN(vec2) frag_coord);

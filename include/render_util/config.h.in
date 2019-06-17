@@ -6,4 +6,6 @@
 
 #define ENABLE_GL_DEBUG_CALLBACK (${enable_gl_debug_callback} || RENDER_UTIL_ENABLE_DEBUG)
 
+#define ENABLE_ATMOSPHERE_PRECOMPUTED_PLOT_PARAMETERISATION ${enable_atmosphere_precomputed_plot_parameterisation}
+
 #endif

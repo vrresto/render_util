@@ -28,6 +28,10 @@ if (NOT enable_gl_debug_callback)
   set(enable_gl_debug_callback 0)
 endif()
 
+if (NOT DEFINED enable_atmosphere_precomputed_plot_parameterisation)
+  set(enable_atmosphere_precomputed_plot_parameterisation 0)
+endif()
+
 configure_file(include/render_util/config.h.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/render_util/config.h
 )

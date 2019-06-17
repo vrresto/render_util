@@ -149,6 +149,7 @@ parameter):
 #ifndef ATMOSPHERE_MODEL_H_
 #define ATMOSPHERE_MODEL_H_
 
+#include <render_util/config.h>
 #include <render_util/shader.h>
 #include <render_util/texture_manager.h>
 #include <render_util/gl_binding/gl_functions.h>
@@ -327,6 +328,10 @@ class Model {
 
   render_util::ShaderProgramPtr createShaderProgram(std::string name,
                                                     const render_util::ShaderParameters&);
+
+#if ENABLE_ATMOSPHERE_PRECOMPUTED_PLOT_PARAMETERISATION
+  void plotScatteringTextureParameterisation(std::string program_name);
+#endif
 
   unsigned int num_precomputed_wavelengths_;
   bool half_precision_;

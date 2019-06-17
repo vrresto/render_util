@@ -45,6 +45,7 @@ of the following C++ code.
 #include "model.h"
 
 #include "constants.h"
+#include <render_util/config.h>
 #include <render_util/shader_util.h>
 #include <render_util/image_loader.h>
 
@@ -83,6 +84,30 @@ namespace atmosphere {
 
 namespace {
 
+
+#if ENABLE_ATMOSPHERE_PRECOMPUTED_PLOT_PARAMETERISATION
+render_util::TexturePtr createPlotTexture(glm::ivec2 size)
+{
+  auto texture = render_util::Texture::create(GL_TEXTURE_2D);
+
+  render_util::TemporaryTextureBinding binding(texture);
+
+  gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+//   gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+//   gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+//   gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//   gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+//   gl::TexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+  gl::TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, size.x, size.y, 0, GL_RGBA, GL_FLOAT, nullptr);
+
+  FORCE_CHECK_GL_ERROR();
+
+  return texture;
+}
+#endif
 
 
 struct TexUnits
@@ -535,6 +560,12 @@ Model::Model(
   vec3 lambdas = {rgb_lambdas.r, rgb_lambdas.g, rgb_lambdas.b};
 
   m_shader_params = m_shader_parameter_factory(lambdas);
+
+#if ENABLE_ATMOSPHERE_PRECOMPUTED_PLOT_PARAMETERISATION
+  plotScatteringTextureParameterisation("plot_parameterisation");
+  plotScatteringTextureParameterisation("plot_inverse_parameterisation");
+  FORCE_CHECK_GL_ERROR();
+#endif
 }
 
 /*
@@ -972,6 +1003,62 @@ render_util::ShaderProgramPtr Model::createShaderProgram(std::string name,
 
   return program;
 }
+
+
+#if ENABLE_ATMOSPHERE_PRECOMPUTED_PLOT_PARAMETERISATION
+void Model::plotScatteringTextureParameterisation(std::string program_name)
+{
+  const glm::ivec2 plot_size = glm::ivec2(1000);
+
+  auto program = createShaderProgram(program_name, m_shader_params);
+  FORCE_CHECK_GL_ERROR();
+  assert(program->isValid());
+  auto texture = createPlotTexture(plot_size);
+  FORCE_CHECK_GL_ERROR();
+
+  gl::BindImageTexture(0, texture->getID(), 0, false, 0, GL_WRITE_ONLY, GL_RGBA32F);
+  FORCE_CHECK_GL_ERROR();
+
+  program->setUniform("texture_size", plot_size);
+  FORCE_CHECK_GL_ERROR();
+
+  program->setUniformi("img_output", 0);
+  FORCE_CHECK_GL_ERROR();
+
+  gl::MemoryBarrier(GL_ALL_BARRIER_BITS);
+  FORCE_CHECK_GL_ERROR();
+
+  useProgram(program);
+  FORCE_CHECK_GL_ERROR();
+
+  gl::DispatchCompute(plot_size.x, 1, 1);
+  FORCE_CHECK_GL_ERROR();
+
+  // make sure writing to image has finished before read
+  gl::MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+  FORCE_CHECK_GL_ERROR();
+
+  gl::MemoryBarrier(GL_ALL_BARRIER_BITS);
+  FORCE_CHECK_GL_ERROR();
+
+  // todo read texture here
+  auto data_size = plot_size.x * plot_size.y * 4;
+  std::vector<unsigned char> data(data_size);
+  gl::GetTextureImage(texture->getID(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                      data.size(), data.data());
+  FORCE_CHECK_GL_ERROR();
+
+  render_util::saveImage(program_name + ".png", 4,
+                        plot_size.x,
+                        plot_size.y,
+                        data.data(), data.size(),
+                        render_util::ImageType::PNG);
+
+  gl::BindImageTexture(0, 0, 0, false, 0, GL_WRITE_ONLY, GL_RGBA32F);
+  FORCE_CHECK_GL_ERROR();
+
+}
+#endif
 
 
 }  // namespace atmosphere

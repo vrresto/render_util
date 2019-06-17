@@ -1,0 +1,49 @@
+// based on http://antongerdelan.net/opengl/compute.html
+
+#version 430
+
+#include definitions.glsl
+#include constants.glsl
+
+
+layout(local_size_x = 1, local_size_y = 1) in;
+// layout(local_size_x = 32, local_size_y = 32) in;
+layout(rgba32f, binding = 0) uniform image2D img_output;
+
+
+uniform ivec2 texture_size;
+
+
+void main(void)
+{
+
+  for (int y = 0; y < texture_size.y; y++)
+  {
+    imageStore(img_output, ivec2(gl_GlobalInvocationID.x, y), vec4(0,0,0,1));
+  }
+  
+  
+  float x = float(gl_GlobalInvocationID.x) / float(texture_size.x);
+  
+  float r;
+  float mu;
+  float mu_s;
+  float nu;
+  bool ray_r_mu_intersects_ground;
+
+  vec4 uvwz = vec4(x, x, x, 0.5);
+
+  GetRMuMuSNuFromScatteringTextureUvwz(ATMOSPHERE, uvwz, r, mu, mu_s, nu,
+                                       ray_r_mu_intersects_ground);
+
+  vec4 y_coords = (1 - clamp(0.5 + 0.5 * vec4(r, mu, mu_s, nu), vec4(0), vec4(1))) * texture_size.y;
+
+//   y_coords = vec3(100, 200, 300);
+
+  imageStore(img_output, ivec2(gl_GlobalInvocationID.x, y_coords.x), vec4(1,0,0,1));
+  imageStore(img_output, ivec2(gl_GlobalInvocationID.x, y_coords.y), vec4(0,1,0,1));
+  imageStore(img_output, ivec2(gl_GlobalInvocationID.x, y_coords.z), vec4(0,0,1,1));
+  imageStore(img_output, ivec2(gl_GlobalInvocationID.x, y_coords.w), vec4(0,1,1,1));
+
+//   imageStore(img_output, ivec2(gl_GlobalInvocationID.x, 100), vec4(100));
+}
