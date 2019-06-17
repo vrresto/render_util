@@ -197,6 +197,11 @@ Shader::Shader(const std::string &name,
     ext = ".geom";
     type_str = "geometry";
   }
+  else if (type == GL_COMPUTE_SHADER)
+  {
+    ext = ".compute";
+    type_str = "compute";
+  }
   else
     abort();
 
@@ -361,6 +366,7 @@ ShaderProgram::ShaderProgram(const std::string &name,
       const std::vector<std::string> &vertex_shaders,
       const std::vector<std::string> &fragment_shaders,
       const std::vector<std::string> &geometry_shaders,
+      const std::vector<std::string> &compute_shaders,
       const std::vector<std::string> &paths,
       bool must_be_valid,
       const std::map<unsigned int, std::string> &attribute_locations,
@@ -370,6 +376,7 @@ ShaderProgram::ShaderProgram(const std::string &name,
     vertex_shaders(vertex_shaders),
     fragment_shaders(fragment_shaders),
     geometry_shaders(geometry_shaders),
+    compute_shaders(compute_shaders),
     paths(paths),
     must_be_valid(must_be_valid),
     attribute_locations(attribute_locations)
@@ -446,6 +453,13 @@ void ShaderProgram::create()
   for (auto name : geometry_shaders)
   {
     shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_GEOMETRY_SHADER,
+                                                         m_parameters)));
+  }
+
+  cerr<<name<<": num compute shaders: "<<compute_shaders.size()<<endl;
+  for (auto name : compute_shaders)
+  {
+    shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_COMPUTE_SHADER,
                                                          m_parameters)));
   }
 
