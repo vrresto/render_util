@@ -35,7 +35,8 @@ public:
   enum Type
   {
     DEFAULT,
-    PRECOMPUTED
+    PRECOMPUTED,
+    PRECOMPUTED_REALTIME_SINGLE_SCATTERING
   };
 
   enum class Parameter

@@ -397,7 +397,8 @@ Model::Model(
     bool combine_scattering_textures,
     bool half_precision,
     std::string shader_dir,
-    const render_util::TextureManager &tex_mgr) :
+    const render_util::TextureManager &tex_mgr,
+    bool realtime_single_scattering) :
         rgb_lambdas(rgb_lambdas),
         num_precomputed_wavelengths_(num_precomputed_wavelengths),
         half_precision_(half_precision),
@@ -553,6 +554,8 @@ Model::Model(
     params.set("combine_scattering_textures", combine_scattering_textures);
 
     params.set("sun_angular_radius", sun_angular_radius);
+
+    params.set("enable_realtime_single_scattering", realtime_single_scattering);
 
     return params;
   };

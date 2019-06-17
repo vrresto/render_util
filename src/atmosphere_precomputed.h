@@ -56,7 +56,7 @@ private:
 
 public:
   AtmospherePrecomputed(render_util::TextureManager &tex_mgr, std::string shader_dir,
-                        float max_cirrus_albedo);
+                        float max_cirrus_albedo, bool realtime_single_scattering);
   ~AtmospherePrecomputed();
 
   std::string getShaderPath() override { return "atmosphere_precomputed"; }

@@ -116,6 +116,9 @@ values slightly outside their theoretical bounds:
 #include constants.glsl
 
 
+#define REALTIME_SINGLE_SCATTERING @enable_realtime_single_scattering@
+
+
 Number ClampCosine(Number mu) {
   return clamp(mu, Number(-1.0), Number(1.0));
 }
@@ -732,6 +735,48 @@ void ComputeSingleScattering(
   }
   rayleigh = rayleigh_sum * dx * atmosphere.solar_irradiance *
       atmosphere.rayleigh_scattering;
+  mie = mie_sum * dx * atmosphere.solar_irradiance * atmosphere.mie_scattering;
+}
+
+
+void ComputeSingleScatteringRealTime(
+    float dist,
+    IN(AtmosphereParameters) atmosphere,
+    IN(TransmittanceTexture) transmittance_texture,
+    Length r, Number mu, Number mu_s, Number nu,
+    bool ray_r_mu_intersects_ground,
+    OUT(IrradianceSpectrum) rayleigh, OUT(IrradianceSpectrum) mie)
+{
+  assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
+  assert(mu >= -1.0 && mu <= 1.0);
+  assert(mu_s >= -1.0 && mu_s <= 1.0);
+  assert(nu >= -1.0 && nu <= 1.0);
+
+  // Number of intervals for the numerical integration.
+  const int SAMPLE_COUNT = 10;
+  // The integration step, i.e. the length of each integration interval.
+  Length dx = dist / Number(SAMPLE_COUNT);
+  // Integration loop.
+  DimensionlessSpectrum rayleigh_sum = DimensionlessSpectrum(0.0);
+  DimensionlessSpectrum mie_sum = DimensionlessSpectrum(0.0);
+
+  for (int i = 0; i <= SAMPLE_COUNT; ++i)
+  {
+    Length d_i = Number(i) * dx;
+    // The Rayleigh and Mie single scattering at the current sample point.
+    DimensionlessSpectrum rayleigh_i;
+    DimensionlessSpectrum mie_i;
+    ComputeSingleScatteringIntegrand(atmosphere, transmittance_texture,
+        r, mu, mu_s, nu, d_i, ray_r_mu_intersects_ground, rayleigh_i, mie_i);
+    // Sample weight (from the trapezoidal rule).
+    Number weight_i = (i == 0 || i == SAMPLE_COUNT) ? 0.5 : 1.0;
+    rayleigh_sum += rayleigh_i * weight_i;
+    mie_sum += mie_i * weight_i;
+  }
+
+  rayleigh = rayleigh_sum * dx * atmosphere.solar_irradiance *
+      atmosphere.rayleigh_scattering;
+
   mie = mie_sum * dx * atmosphere.solar_irradiance * atmosphere.mie_scattering;
 }
 
@@ -1674,15 +1719,23 @@ IrradianceSpectrum GetCombinedScattering(
       texture(scattering_texture, uvw0) * (1.0 - lerp) +
       texture(scattering_texture, uvw1) * lerp;
   IrradianceSpectrum scattering = IrradianceSpectrum(combined_scattering);
-  single_mie_scattering =
-      GetExtrapolatedSingleMieScattering(atmosphere, combined_scattering);
+  #if REALTIME_SINGLE_SCATTERING
+    single_mie_scattering = IrradianceSpectrum(0);
+  #else
+    single_mie_scattering =
+        GetExtrapolatedSingleMieScattering(atmosphere, combined_scattering);
+  #endif
 #else
   IrradianceSpectrum scattering = IrradianceSpectrum(
       texture(scattering_texture, uvw0) * (1.0 - lerp) +
       texture(scattering_texture, uvw1) * lerp);
-  single_mie_scattering = IrradianceSpectrum(
-      texture(single_mie_scattering_texture, uvw0) * (1.0 - lerp) +
-      texture(single_mie_scattering_texture, uvw1) * lerp);
+  #if REALTIME_SINGLE_SCATTERING
+    single_mie_scattering = IrradianceSpectrum(0);
+  #else
+    single_mie_scattering = IrradianceSpectrum(
+        texture(single_mie_scattering_texture, uvw0) * (1.0 - lerp) +
+        texture(single_mie_scattering_texture, uvw1) * lerp);
+  #endif
 #endif
   return scattering;
 }
@@ -1762,6 +1815,18 @@ RadianceSpectrum GetSkyRadiance(
     scattering = scattering * shadow_transmittance;
     single_mie_scattering = single_mie_scattering * shadow_transmittance;
   }
+
+#if REALTIME_SINGLE_SCATTERING
+  vec3 single_scattering;
+  ComputeSingleScatteringRealTime(
+    DistanceToNearestAtmosphereBoundary(atmosphere, r, mu, ray_r_mu_intersects_ground),
+    atmosphere, transmittance_texture, r, mu, mu_s, nu,
+    ray_r_mu_intersects_ground,
+    single_scattering, single_mie_scattering);
+
+  scattering += single_scattering;
+#endif
+
   return scattering * RayleighPhaseFunction(nu) + single_mie_scattering *
       MiePhaseFunction(atmosphere.mie_phase_function_g, nu);
 }
@@ -1850,6 +1915,16 @@ RadianceSpectrum GetSkyRadianceToPoint(
 #if COMBINED_SCATTERING_TEXTURES
   single_mie_scattering = GetExtrapolatedSingleMieScattering(
       atmosphere, vec4(scattering, single_mie_scattering.r));
+#endif
+
+#if REALTIME_SINGLE_SCATTERING
+  vec3 single_scattering;
+  ComputeSingleScatteringRealTime(length(point - camera),
+    atmosphere, transmittance_texture, r, mu, mu_s, nu,
+    ray_r_mu_intersects_ground,
+    single_scattering, single_mie_scattering);
+
+  scattering += single_scattering;
 #endif
 
   // Hack to avoid rendering artifacts when the sun is below the horizon.

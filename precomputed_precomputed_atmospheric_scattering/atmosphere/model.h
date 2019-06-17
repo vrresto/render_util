@@ -285,7 +285,8 @@ class Model {
     // most cases, except for very high exposure values.
     bool half_precision,
     std::string shader_dir,
-    const render_util::TextureManager&);
+    const render_util::TextureManager&,
+    bool realtime_single_scattering);
 
   ~Model();
 

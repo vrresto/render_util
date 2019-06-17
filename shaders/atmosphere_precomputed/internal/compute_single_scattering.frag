@@ -32,6 +32,8 @@
 #include definitions.glsl
 #include constants.glsl
 
+#define REALTIME_SINGLE_SCATTERING @enable_realtime_single_scattering@
+
 layout(location = 0) out vec3 delta_rayleigh;
 layout(location = 1) out vec3 delta_mie;
 layout(location = 2) out vec4 scattering;
@@ -47,8 +49,13 @@ void main()
       ATMOSPHERE, transmittance_texture, vec3(gl_FragCoord.xy, layer + 0.5),
       delta_rayleigh, delta_mie);
 
+#if REALTIME_SINGLE_SCATTERING
+  scattering = vec4(0);
+  single_mie_scattering = vec3(0);
+#else
   scattering = vec4(luminance_from_radiance * delta_rayleigh.rgb,
       (luminance_from_radiance * delta_mie).r);
 
   single_mie_scattering = luminance_from_radiance * delta_mie;
+#endif
 }

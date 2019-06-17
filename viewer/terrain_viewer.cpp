@@ -70,7 +70,8 @@ namespace
 
 
 // constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
-constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
+// constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
+constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED_REALTIME_SINGLE_SCATTERING;
 
 const bool g_terrain_use_lod = true;
 
