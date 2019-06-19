@@ -1630,7 +1630,7 @@ scattering are extrapolated as described in our
 function:
 */
 
-#ifdef COMBINED_SCATTERING_TEXTURES
+#if COMBINED_SCATTERING_TEXTURES
 vec3 GetExtrapolatedSingleMieScattering(
     IN(AtmosphereParameters) atmosphere, IN(vec4) scattering) {
   if (scattering.r == 0.0) {
@@ -1669,7 +1669,7 @@ IrradianceSpectrum GetCombinedScattering(
       uvwz.z, uvwz.w);
   vec3 uvw1 = vec3((tex_x + 1.0 + uvwz.y) / Number(SCATTERING_TEXTURE_NU_SIZE),
       uvwz.z, uvwz.w);
-#ifdef COMBINED_SCATTERING_TEXTURES
+#if COMBINED_SCATTERING_TEXTURES
   vec4 combined_scattering =
       texture(scattering_texture, uvw0) * (1.0 - lerp) +
       texture(scattering_texture, uvw1) * lerp;
@@ -1847,7 +1847,7 @@ RadianceSpectrum GetSkyRadianceToPoint(
   scattering = scattering - shadow_transmittance * scattering_p;
   single_mie_scattering =
       single_mie_scattering - shadow_transmittance * single_mie_scattering_p;
-#ifdef COMBINED_SCATTERING_TEXTURES
+#if COMBINED_SCATTERING_TEXTURES
   single_mie_scattering = GetExtrapolatedSingleMieScattering(
       atmosphere, vec4(scattering, single_mie_scattering.r));
 #endif
