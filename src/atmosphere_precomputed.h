@@ -38,9 +38,9 @@ class AtmospherePrecomputed : public Atmosphere
   unsigned int m_single_mie_scattering_texture_unit = 0;
   glm::dvec3 m_white_point = glm::dvec3(1);
 
-  static constexpr float gamma = 2.2;
-  static constexpr float exposure = 20;
-  static constexpr float texture_brightness = 0.2;
+  float m_gamma = 2.2;
+  float m_exposure = 20;
+  float m_texture_brightness = 0.2;
 
 public:
   AtmospherePrecomputed(render_util::TextureManager &tex_mgr, std::string shader_dir);
@@ -48,6 +48,10 @@ public:
   std::string getShaderPath() override { return "atmosphere_precomputed"; }
   ShaderParameters getShaderParameters() override;
   void setUniforms(ShaderProgramPtr, const Camera&) override;
+
+  bool hasParameter(Parameter) override;
+  double getParameter(Parameter) override;
+  void setParameter(Parameter, double) override;
 };
 
 

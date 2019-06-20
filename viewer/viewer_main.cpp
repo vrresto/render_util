@@ -209,6 +209,17 @@ namespace
       g_scene->getActiveController().reset();
     }
 
+    else if (key == GLFW_KEY_F9 && action == GLFW_PRESS)
+    {
+      auto &out = cout;
+
+      out << endl;
+      for (auto &c : g_scene->m_controllers)
+      {
+        out << c.name << ": " << c.get() << endl;
+      }
+      out << endl;
+    }
 
     else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
       g_scene->camera.x = 0;

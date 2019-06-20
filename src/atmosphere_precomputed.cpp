@@ -225,16 +225,64 @@ void AtmospherePrecomputed::setUniforms(ShaderProgramPtr program, const Camera &
     m_irradiance_texture_unit,
     m_single_mie_scattering_texture_unit);
 
-  program->setUniform<float>("exposure", use_luminance_ != Luminance::NONE ? exposure * 1e-5 : exposure);
+  program->setUniform<float>("exposure",
+                             use_luminance_ != Luminance::NONE ? m_exposure * 1e-5 : m_exposure);
 
-  program->setUniform("gamma", gamma);
-  program->setUniform("texture_brightness", texture_brightness);
+  program->setUniform("gamma", m_gamma);
+  program->setUniform("texture_brightness", m_texture_brightness);
 
   program->setUniform("white_point", glm::vec3(m_white_point));
   auto earth_center =
     glm::vec3(camera.getPos().x, camera.getPos().y, -kBottomRadius / kLengthUnitInMeters);
   program->setUniform("earth_center", earth_center);
   program->setUniform("sun_size", glm::vec2(tan(kSunAngularRadius), cos(kSunAngularRadius)));
+}
+
+
+bool AtmospherePrecomputed::hasParameter(Parameter p)
+{
+  switch (p)
+  {
+    case Parameter::EXPOSURE:
+    case Parameter::TEXTURE_BRIGHTNESS:
+    case Parameter::GAMMA:
+      return true;
+    default:
+      return false;
+  }
+}
+
+
+double AtmospherePrecomputed::getParameter(Parameter p)
+{
+  switch (p)
+  {
+    case Parameter::EXPOSURE:
+      return m_exposure;
+    case Parameter::TEXTURE_BRIGHTNESS:
+      return m_texture_brightness;
+    case Parameter::GAMMA:
+      return m_gamma;
+    default:
+      return 0;
+  }
+}
+
+
+void AtmospherePrecomputed::setParameter(Parameter p, double value)
+{
+  switch (p)
+  {
+    case Parameter::EXPOSURE:
+      m_exposure = std::max(0.0, value);
+      break;
+    case Parameter::TEXTURE_BRIGHTNESS:
+      m_texture_brightness = std::max(0.0, value);
+      break;
+    case Parameter::GAMMA:
+      m_gamma = std::max(1.0, value);
+      break;
+  }
 }
 
 

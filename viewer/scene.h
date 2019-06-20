@@ -116,8 +116,21 @@ public:
   }
 
 
+  void addAtmosphereController(std::string name, Atmosphere::Parameter p)
+  {
+    if (m_atmosphere->hasParameter(p))
+    {
+      addController(name,
+                    [this,p] (auto value) { m_atmosphere->setParameter(p, value); },
+                    [this,p] { return m_atmosphere->getParameter(p); });
+    }
+  }
+
   void createControllers()
   {
+    addAtmosphereController("exposure", Atmosphere::Parameter::EXPOSURE);
+    addAtmosphereController("texture_brightness", Atmosphere::Parameter::TEXTURE_BRIGHTNESS);
+    addAtmosphereController("gamma", Atmosphere::Parameter::GAMMA);
   }
 
 
