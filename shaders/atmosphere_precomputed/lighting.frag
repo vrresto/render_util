@@ -63,7 +63,7 @@ void calcLightParamsWithDetail(vec3 normal, vec3 normal_detail,
 vec3 calcLightWithSpecular(vec3 input_color, vec3 normal, float shinyness, vec3 specular_amount,
     float direct_scale, float ambient_scale, vec3 viewDir)
 {
-  specular_amount *= texture_brightness;
+  shinyness *= 8;
 
   vec3 ambientLightColor;
   vec3 directLightColor;
