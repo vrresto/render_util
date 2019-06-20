@@ -31,7 +31,8 @@
 namespace util
 {
 
-constexpr long double PI = acosl((long double)-1.0);
+
+constexpr auto PI = acosl(-1);
 
 
 inline bool isPrefix(const std::string &prefix, const std::string &s)
