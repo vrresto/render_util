@@ -314,6 +314,8 @@ void TerrainViewerScene::setup()
   camera.x = map_size.x / 2;
   camera.y = map_size.y / 2;
   camera.z = 10000;
+
+  createControllers();
 }
 
 

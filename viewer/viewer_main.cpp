@@ -163,6 +163,53 @@ namespace
     else if (key == GLFW_KEY_F3 && action == GLFW_PRESS) {
       g_scene->camera.setFov(g_scene->camera.getFov() - 10);
     }
+
+    else if (key == GLFW_KEY_F4 && action == GLFW_PRESS) {
+      g_scene->setActiveController(0);
+    }
+    else if (key == GLFW_KEY_F5 && action == GLFW_PRESS) {
+      g_scene->setActiveController(1);
+    }
+    else if (key == GLFW_KEY_F6 && action == GLFW_PRESS) {
+      g_scene->setActiveController(2);
+    }
+    else if (key == GLFW_KEY_F7 && action == GLFW_PRESS) {
+      g_scene->setActiveController(3);
+    }
+    else if (key == GLFW_KEY_F8 && action == GLFW_PRESS) {
+      g_scene->setActiveController(4);
+    }
+    else if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
+      g_scene->setActiveController(g_scene->m_active_controller-1);
+    }
+    else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
+      g_scene->setActiveController(g_scene->m_active_controller+1);
+    }
+
+    else if (key == GLFW_KEY_PAGE_UP && action == GLFW_PRESS &&
+        g_scene->hasActiveController())
+    {
+      auto step_size = mods & GLFW_MOD_ALT ? 1.0 :
+          mods & GLFW_MOD_SHIFT ? 0.01 : 0.1;
+      auto value = g_scene->getActiveController().get();
+      g_scene->getActiveController().set(value + step_size);
+    }
+    else if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_PRESS &&
+        g_scene->hasActiveController()
+    )
+    {
+      auto step_size = mods & GLFW_MOD_ALT ? 1.0 :
+          mods & GLFW_MOD_SHIFT ? 0.01 : 0.1;
+      auto value = g_scene->getActiveController().get();
+      g_scene->getActiveController().set(value - step_size);
+    }
+    else if (key == GLFW_KEY_R && action == GLFW_PRESS && mods & GLFW_MOD_ALT &&
+        g_scene->hasActiveController())
+    {
+      g_scene->getActiveController().reset();
+    }
+
+
     else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
       g_scene->camera.x = 0;
       g_scene->camera.y = 0;
@@ -454,6 +501,28 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
     text_renderer->DrawText(stats.str(), 1, 1);
     text_renderer->SetColor(1.0, 1.0, 1.0);
     text_renderer->DrawText(stats.str(), 0, 0);
+
+
+    for (int i = 0; i < g_scene->m_controllers.size(); i++)
+    {
+      auto &controller = g_scene->m_controllers.at(i);
+
+      char buf[100];
+      snprintf(buf, sizeof(buf), "%.2f", controller.get());
+
+      auto controller_text = controller.name + ": " + buf;
+
+      float offset_y = i * 30;;
+
+      text_renderer->SetColor(0,0,0);
+      text_renderer->DrawText(controller_text, 1, 31 + offset_y);
+
+      if (i == g_scene->m_active_controller)
+        text_renderer->SetColor(1,1,1);
+      else
+        text_renderer->SetColor(0.6, 0.6, 0.6);
+      text_renderer->DrawText(controller_text, 0, 30 + offset_y);
+    }
 
     CHECK_GL_ERROR();
 

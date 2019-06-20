@@ -65,6 +65,29 @@ class Scene
   render_util::TextureManager texture_manager = render_util::TextureManager(0);
 
 public:
+  struct Controller
+  {
+    using SetFunc = std::function<void(float)>;
+    using GetFunc = std::function<float()>;
+
+    SetFunc set;
+    GetFunc get;
+
+    std::string name;
+    float default_value = 0;
+
+    Controller(std::string name_, SetFunc set_, GetFunc get_) : name(name_), set(set_), get(get_)
+    {
+      default_value = get();
+    }
+
+    void reset()
+    {
+      set(default_value);
+    }
+  };
+
+
   virtual ~Scene() {}
 
   const bool m_use_base_map = false;
@@ -80,9 +103,39 @@ public:
   float sun_azimuth = 0.0;
   bool toggle_lod_morph = false;
   bool pause_animations = false;
+  int m_active_controller = 0;
+  std::vector<Controller> m_controllers;
 
   Terrain m_terrain;
   std::unique_ptr<Atmosphere> m_atmosphere;
+
+
+  void addController(std::string name, Controller::SetFunc set, Controller::GetFunc get)
+  {
+    m_controllers.push_back(Controller(name, set, get));
+  }
+
+
+  void createControllers()
+  {
+  }
+
+
+  bool hasActiveController()
+  {
+    return m_active_controller >= 0 && m_active_controller < m_controllers.size();
+  }
+
+  Controller &getActiveController() { return m_controllers.at(m_active_controller); }
+
+  void setActiveController(int index)
+  {
+    if (index < 0)
+      index += m_controllers.size();
+    index = index % m_controllers.size();
+    m_active_controller = index;
+  }
+
 
   glm::vec3 getSunDir()
   {
