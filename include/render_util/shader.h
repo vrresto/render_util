@@ -75,6 +75,7 @@ namespace render_util
     unsigned int getID() { return m_id; }
     const std::string &getName() { return m_name; }
     const std::string &getFileName() { return m_filename; }
+    std::string getPreprocessedSource() { return m_preprocessed_source; }
   };
 
 

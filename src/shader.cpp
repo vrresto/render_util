@@ -40,6 +40,84 @@ namespace
 {
 
 
+string stripMultiLineComments(const string &in)
+{
+  string out;
+
+  bool comment = false;
+
+  for (int pos = 0; pos < in.size(); pos++)
+  {
+    if (comment)
+    {
+      assert(pos >= 1);
+      if (in[pos-1] == '*' && in[pos] == '/')
+      {
+        comment = false;
+      }
+    }
+    else
+    {
+      int remaining_chars = in.size() - pos;
+      if (remaining_chars >= 2)
+      {
+        if (in[pos] == '/' && in[pos+1] == '*')
+        {
+          comment = true;
+        }
+        else
+        {
+          out += in[pos];
+        }
+      }
+      else
+      {
+        out += in[pos];
+      }
+    }
+
+  }
+
+
+  return out;
+}
+
+
+string stripInlineComments(const string &in_)
+{
+  istringstream in(in_);
+  string out;
+
+  while (in.good())
+  {
+    string line;
+    string line_out;
+    getline(in, line);
+//     line = util::trim(line);
+    if (line.empty())
+      continue;
+
+    for (int pos = 0; pos < line.size(); pos++)
+    {
+      int remaining_chars = line.size() - pos;
+      if (remaining_chars >= 2)
+      {
+        if (line[pos] == '/' && line[pos+1] == '/')
+        {
+          break;
+        }
+      }
+      line_out += line[pos];
+    }
+
+    if (!line_out.empty())
+      out += line + '\n';
+  }
+
+  return out;
+}
+
+
 string getParameterValue(const string &parameter, const ShaderParameters &params)
 {
   auto pos = parameter.find(':');
@@ -259,6 +337,11 @@ void Shader::compile()
     GLchar *infoLog = (GLchar*) malloc(maxLength);
     gl::GetShaderInfoLog(id, maxLength, &maxLength, infoLog);
 
+  cout<<endl<<"source after preprocessing:"<<endl<<endl;
+  cout<<m_preprocessed_source;
+  cout<<endl<<endl;
+
+    
     printf("Error compiling shader: %s\n%s\n", m_filename.c_str(), infoLog);
     for (int i = 0; i < m_includes.size(); i++)
       cout << "include " << i+1 << ": " << m_includes[i] << endl;
@@ -279,6 +362,10 @@ void Shader::preProcess(const vector<char> &data_in, const ShaderParameters &par
 {
   string source(data_in.data(), data_in.size());
 
+//   in_str = stripMultiLineComments(in_str);
+//   in_str = stripInlineComments(in_str);
+//   cout<<endl<<"comments stripped:"<<endl;
+//   cout<<in_str<<endl<<endl;
 
   source = resolveParameters(source, params);
 
@@ -328,8 +415,13 @@ void Shader::preProcess(const vector<char> &data_in, const ShaderParameters &par
     line_num++;
   }
 
+//   assert(state == NONE);
 
   m_preprocessed_source = move(out);
+
+//   cout<<endl<<"source after preprocessing:"<<endl<<endl;
+//   cout<<m_preprocessed_source;
+//   cout<<endl<<endl;
 }
 
 
@@ -477,6 +569,13 @@ void ShaderProgram::create()
     if (!shader->getID())
       continue;
 
+#if 1
+    string dump_name = name + "." + shader->getName();
+    string dump_path = "il2ge_shader_dump/" + dump_name;
+    string src = shader->getPreprocessedSource();
+    util::writeFile(dump_path, src.data(), src.length());
+#endif
+
     gl::AttachShader(id, shader->getID());
     num_attached++;
 
@@ -538,7 +637,8 @@ void ShaderProgram::assertIsValid()
 void ShaderProgram::assertUniformsAreSet()
 {
   // slow - enable only for debugging
-#if RENDER_UTIL_ENABLE_DEBUG
+// #if RENDER_UTIL_ENABLE_DEBUG
+#if 1
   int num_unset = 0;
   int num_active = 0;
   gl::GetProgramiv(id, GL_ACTIVE_UNIFORMS, &num_active);
