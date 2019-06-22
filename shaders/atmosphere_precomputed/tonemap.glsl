@@ -32,5 +32,10 @@ vec3 textureColorCorrection(vec3 color)
 
 vec3 toneMap(vec3 color)
 {
-  return  pow(vec3(1.0) - exp(-color / white_point * exposure), vec3(1.0 / gamma));
+  return pow(vec3(1.0) - exp(-color / white_point * exposure), vec3(1.0 / gamma));
+}
+
+vec3 deGamma(vec3 color)
+{
+  return pow(color, vec3(gamma));
 }
