@@ -718,8 +718,9 @@ TerrainCDLOD::~TerrainCDLOD()
   gl::DeleteVertexArrays(1, &vao_id);
   gl::DeleteBuffers(1, &vertex_buffer_id);
   gl::DeleteBuffers(1, &index_buffer_id);
+  gl::DeleteBuffers(1, &node_pos_buffer_id);
 
-  root_node = 0;
+  root_node = nullptr;
   node_allocator.clear();
 
   CHECK_GL_ERROR();
