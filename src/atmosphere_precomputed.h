@@ -40,7 +40,7 @@ class AtmospherePrecomputed : public Atmosphere
 
   static constexpr float gamma = 2.2;
   static constexpr float exposure = 20;
-  static constexpr float texture_brightness = 0.3;
+  static constexpr float texture_brightness = 0.2;
 
 public:
   AtmospherePrecomputed(render_util::TextureManager &tex_mgr, std::string shader_dir);
