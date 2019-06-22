@@ -211,6 +211,7 @@ ShaderParameters AtmospherePrecomputed::getShaderParameters()
 {
   auto p = m_model->getShaderParameters();
   p.set("use_luminance", use_luminance_ != Luminance::NONE);
+  p.set("use_hdr", true);
 
   return p;
 }
