@@ -379,7 +379,7 @@ Model::Model(
   m_shader_search_path.push_back(shader_dir + "/internal");
   m_shader_search_path.push_back(shader_dir);
 
-  auto to_string = [&wavelengths](const std::vector<double>& v,
+  auto to_string = [wavelengths](const std::vector<double>& v,
       const vec3& lambdas, double scale) {
     double r = Interpolate(wavelengths, v, lambdas[0]) * scale;
     double g = Interpolate(wavelengths, v, lambdas[1]) * scale;
