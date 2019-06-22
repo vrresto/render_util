@@ -1884,7 +1884,7 @@ IrradianceSpectrum GetSunAndSkyIrradiance(
 
   // Indirect irradiance (approximated if the surface is not horizontal).
   sky_irradiance = GetIrradiance(atmosphere, irradiance_texture, r, mu_s) *
-      (1.0 + dot(normal, point) / r) * 0.5;
+    mix(0.5 * (1.0 + dot(normal, point) / r), 1.0, 0.5);
 
   // Direct irradiance.
   return atmosphere.solar_irradiance *
