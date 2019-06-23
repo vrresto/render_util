@@ -190,7 +190,8 @@ namespace
         g_scene->hasActiveController())
     {
       auto step_size = mods & GLFW_MOD_ALT ? 1.0 :
-          mods & GLFW_MOD_SHIFT ? 0.01 : 0.1;
+          mods & GLFW_MOD_SHIFT ? 0.01 :
+            mods & GLFW_MOD_CONTROL ? 10.0 : 0.1;
       auto value = g_scene->getActiveController().get();
       g_scene->getActiveController().set(value + step_size);
     }
@@ -199,7 +200,8 @@ namespace
     )
     {
       auto step_size = mods & GLFW_MOD_ALT ? 1.0 :
-          mods & GLFW_MOD_SHIFT ? 0.01 : 0.1;
+          mods & GLFW_MOD_SHIFT ? 0.01 :
+            mods & GLFW_MOD_CONTROL ? 10.0 : 0.1;
       auto value = g_scene->getActiveController().get();
       g_scene->getActiveController().set(value - step_size);
     }
