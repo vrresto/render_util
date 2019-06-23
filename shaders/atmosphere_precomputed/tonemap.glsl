@@ -22,6 +22,7 @@ uniform vec3 white_point;
 uniform float gamma;
 uniform float exposure;
 uniform float saturation;
+uniform float brightness_curve_exponent;
 uniform float texture_brightness;
 uniform float texture_brightness_curve_exponent;
 uniform float texture_saturation;
@@ -48,13 +49,15 @@ vec3 textureColorCorrection(vec3 color)
   color = deGamma(color);
   color = pow(color, vec3(texture_brightness_curve_exponent));
   color *= texture_brightness;
-  return color;
+  return clamp(color, 0, 1);
 }
 
 
 vec3 toneMap(vec3 color)
 {
-  color = pow(vec3(1.0) - exp(-color / white_point * exposure), vec3(1.0 / gamma));
+  color = pow(color, vec3(brightness_curve_exponent));
+  color = pow(vec3(1.0)
+          - exp(-color / white_point * pow(exposure, brightness_curve_exponent)), vec3(1.0 / gamma));
   color = adjustSaturation(color, saturation);
   return color;
 }

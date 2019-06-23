@@ -230,6 +230,7 @@ void AtmospherePrecomputed::setUniforms(ShaderProgramPtr program, const Camera &
 
   program->setUniform("gamma", m_gamma);
   program->setUniform("saturation", m_saturation);
+  program->setUniform("brightness_curve_exponent", m_brightness_curve_exponent);
   program->setUniform("texture_brightness", m_texture_brightness);
   program->setUniform("texture_brightness_curve_exponent", m_texture_brightness_curve_exponent);
   program->setUniform("texture_saturation", m_texture_saturation);
@@ -248,6 +249,7 @@ bool AtmospherePrecomputed::hasParameter(Parameter p)
   {
     case Parameter::EXPOSURE:
     case Parameter::SATURATION:
+    case Parameter::BRIGHTNESS_CURVE_EXPONENT:
     case Parameter::TEXTURE_BRIGHTNESS:
     case Parameter::TEXTURE_BRIGHTNESS_CURVE_EXPONENT:
     case Parameter::TEXTURE_SATURATION:
@@ -267,6 +269,8 @@ double AtmospherePrecomputed::getParameter(Parameter p)
       return m_exposure;
     case Parameter::SATURATION:
       return m_saturation;
+    case Parameter::BRIGHTNESS_CURVE_EXPONENT:
+      return m_brightness_curve_exponent;
     case Parameter::TEXTURE_BRIGHTNESS:
       return m_texture_brightness;
     case Parameter::TEXTURE_BRIGHTNESS_CURVE_EXPONENT:
@@ -290,6 +294,9 @@ void AtmospherePrecomputed::setParameter(Parameter p, double value)
       break;
     case Parameter::SATURATION:
       m_saturation = value;
+      break;
+    case Parameter::BRIGHTNESS_CURVE_EXPONENT:
+      m_brightness_curve_exponent = value;
       break;
     case Parameter::TEXTURE_BRIGHTNESS:
       m_texture_brightness = std::max(0.0, value);

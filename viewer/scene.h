@@ -130,6 +130,7 @@ public:
   {
     addAtmosphereController("exposure", Atmosphere::Parameter::EXPOSURE);
     addAtmosphereController("saturation", Atmosphere::Parameter::SATURATION);
+    addAtmosphereController("brightness_curve_exponent", Atmosphere::Parameter::BRIGHTNESS_CURVE_EXPONENT);
     addAtmosphereController("texture_brightness", Atmosphere::Parameter::TEXTURE_BRIGHTNESS);
     addAtmosphereController("texture_brightness_curve_exponent",
                             Atmosphere::Parameter::TEXTURE_BRIGHTNESS_CURVE_EXPONENT);
