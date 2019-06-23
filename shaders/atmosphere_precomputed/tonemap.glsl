@@ -21,21 +21,40 @@
 uniform vec3 white_point;
 uniform float gamma;
 uniform float exposure;
+uniform float saturation;
 uniform float texture_brightness;
+uniform float texture_brightness_curve_exponent;
+uniform float texture_saturation;
+
+
+vec3 deGamma(vec3 color)
+{
+  return pow(color, vec3(gamma));
+}
+
+
+vec3 adjustSaturation(vec3 rgb, float adjustment)
+{
+  // Algorithm from Chapter 16 of OpenGL Shading Language
+  const vec3 W = vec3(0.2125, 0.7154, 0.0721);
+  vec3 intensity = vec3(dot(rgb, W));
+  return mix(intensity, rgb, adjustment);
+}
 
 
 vec3 textureColorCorrection(vec3 color)
 {
-  return pow(color, vec3(gamma)) * texture_brightness;
+  color = adjustSaturation(color, texture_saturation);
+  color = deGamma(color);
+  color = pow(color, vec3(texture_brightness_curve_exponent));
+  color *= texture_brightness;
+  return color;
 }
 
 
 vec3 toneMap(vec3 color)
 {
-  return pow(vec3(1.0) - exp(-color / white_point * exposure), vec3(1.0 / gamma));
-}
-
-vec3 deGamma(vec3 color)
-{
-  return pow(color, vec3(gamma));
+  color = pow(vec3(1.0) - exp(-color / white_point * exposure), vec3(1.0 / gamma));
+  color = adjustSaturation(color, saturation);
+  return color;
 }

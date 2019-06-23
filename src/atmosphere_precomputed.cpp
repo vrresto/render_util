@@ -229,7 +229,10 @@ void AtmospherePrecomputed::setUniforms(ShaderProgramPtr program, const Camera &
                              use_luminance_ != Luminance::NONE ? m_exposure * 1e-5 : m_exposure);
 
   program->setUniform("gamma", m_gamma);
+  program->setUniform("saturation", m_saturation);
   program->setUniform("texture_brightness", m_texture_brightness);
+  program->setUniform("texture_brightness_curve_exponent", m_texture_brightness_curve_exponent);
+  program->setUniform("texture_saturation", m_texture_saturation);
 
   program->setUniform("white_point", glm::vec3(m_white_point));
   auto earth_center =
@@ -244,7 +247,10 @@ bool AtmospherePrecomputed::hasParameter(Parameter p)
   switch (p)
   {
     case Parameter::EXPOSURE:
+    case Parameter::SATURATION:
     case Parameter::TEXTURE_BRIGHTNESS:
+    case Parameter::TEXTURE_BRIGHTNESS_CURVE_EXPONENT:
+    case Parameter::TEXTURE_SATURATION:
     case Parameter::GAMMA:
       return true;
     default:
@@ -259,8 +265,14 @@ double AtmospherePrecomputed::getParameter(Parameter p)
   {
     case Parameter::EXPOSURE:
       return m_exposure;
+    case Parameter::SATURATION:
+      return m_saturation;
     case Parameter::TEXTURE_BRIGHTNESS:
       return m_texture_brightness;
+    case Parameter::TEXTURE_BRIGHTNESS_CURVE_EXPONENT:
+      return m_texture_brightness_curve_exponent;
+    case Parameter::TEXTURE_SATURATION:
+      return m_texture_saturation;
     case Parameter::GAMMA:
       return m_gamma;
     default:
@@ -276,8 +288,17 @@ void AtmospherePrecomputed::setParameter(Parameter p, double value)
     case Parameter::EXPOSURE:
       m_exposure = std::max(0.0, value);
       break;
+    case Parameter::SATURATION:
+      m_saturation = value;
+      break;
     case Parameter::TEXTURE_BRIGHTNESS:
       m_texture_brightness = std::max(0.0, value);
+      break;
+    case Parameter::TEXTURE_BRIGHTNESS_CURVE_EXPONENT:
+      m_texture_brightness_curve_exponent = value;
+      break;
+    case Parameter::TEXTURE_SATURATION:
+      m_texture_saturation = value;
       break;
     case Parameter::GAMMA:
       m_gamma = std::max(1.0, value);

@@ -41,7 +41,10 @@ public:
   enum class Parameter
   {
     EXPOSURE,
+    SATURATION,
     TEXTURE_BRIGHTNESS,
+    TEXTURE_BRIGHTNESS_CURVE_EXPONENT,
+    TEXTURE_SATURATION,
     GAMMA
   };
 
