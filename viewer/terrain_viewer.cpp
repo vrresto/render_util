@@ -67,6 +67,8 @@ namespace
 {
 
 
+constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
+
 const bool g_terrain_use_lod = true;
 
 const string cache_path = RENDER_UTIL_CACHE_DIR;
@@ -246,7 +248,7 @@ void TerrainViewerScene::setup()
 {
   cout<<"void TerrainViewerScene::setup()"<<endl;
 
-  m_atmosphere = createAtmosphere(Atmosphere::PRECOMPUTED, getTextureManager(), RENDER_UTIL_SHADER_DIR);
+  m_atmosphere = createAtmosphere(ATMOSPHERE_TYPE, getTextureManager(), RENDER_UTIL_SHADER_DIR);
 
   getTextureManager().setActive(true);
 

@@ -147,6 +147,9 @@ public:
 
   void setActiveController(int index)
   {
+    if (m_controllers.empty())
+      return;
+
     if (index < 0)
       index += m_controllers.size();
     index = index % m_controllers.size();
