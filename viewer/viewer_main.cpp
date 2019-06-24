@@ -19,7 +19,7 @@
 #include "viewer_main.h"
 #include "scene.h"
 #include "camera.h"
-#include "text_renderer/text_renderer.h"
+#include <text_renderer/text_renderer.h>
 #include <render_util/render_util.h>
 #include <render_util/map.h>
 #include <render_util/map_textures.h>

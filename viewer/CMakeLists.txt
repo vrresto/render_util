@@ -9,7 +9,6 @@ set(CXX_SRCS
   viewer_main.cpp
   terrain_viewer.cpp
 #   heightmap_viewer.cpp
-  text_renderer/text_renderer.cc
 )
 
 add_library(viewer ${CXX_SRCS})

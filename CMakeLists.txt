@@ -116,7 +116,7 @@ install(FILES precomputed_precomputed_atmospheric_scattering/README.md
   RENAME precomputed_precomputed_atmospheric_scattering_README.md
 )
 
-install(FILES viewer/text_renderer/LICENSE
+install(FILES text_renderer/LICENSE
   DESTINATION ${renderutil_base_dir}
   RENAME text_renderer_LICENSE.txt
 )
