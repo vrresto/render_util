@@ -18,6 +18,7 @@
 
 #version 330
 
+#define USE_UNCHARTED2_TONE_MAPPING @use_uncharted2_tone_mapping:0@
 #define USE_REINHARD_TONE_MAPPING @use_reinhard_tone_mapping:0@
 #define USE_DEFAULT_TONE_MAPPING @use_default_tone_mapping:0@
 
@@ -29,6 +30,14 @@ uniform float brightness_curve_exponent;
 uniform float texture_brightness;
 uniform float texture_brightness_curve_exponent;
 uniform float texture_saturation;
+
+uniform float uncharted2_a = 0.15;
+uniform float uncharted2_b = 0.50;
+uniform float uncharted2_c = 0.10;
+uniform float uncharted2_d = 0.20;
+uniform float uncharted2_e = 0.02;
+uniform float uncharted2_f = 0.30;
+uniform float uncharted2_w = 11.2;
 
 
 vec3 deGamma(vec3 color)
@@ -54,6 +63,31 @@ vec3 textureColorCorrection(vec3 color)
   color *= texture_brightness;
   return clamp(color, 0, 1);
 }
+
+
+#if USE_UNCHARTED2_TONE_MAPPING
+vec3 uncharted2Tonemap(const vec3 x)
+{
+  float A = uncharted2_a;
+  float B = uncharted2_b;
+  float C = uncharted2_c;
+  float D = uncharted2_d;
+  float E = uncharted2_e;
+  float F = uncharted2_f;
+  return ((x * (A * x + C * B) + D * E) / (x * (A * x + B) + D * F)) - E / F;
+}
+
+vec3 toneMap(vec3 color) {
+  color = uncharted2Tonemap(exposure * color);
+  vec3 whiteScale = 1.0 / uncharted2Tonemap(white_point * uncharted2_w);
+
+  color *= whiteScale;
+  color = pow(color, vec3(1. / gamma));
+
+  color = adjustSaturation(color, saturation);
+  return color;
+}
+#endif
 
 
 #if USE_REINHARD_TONE_MAPPING

@@ -74,6 +74,106 @@ public:
 };
 
 
+class Uncharted2ToneMappingOperator : public AtmospherePrecomputed::ToneMappingOperator
+{
+  using Parameter = Atmosphere::Parameter;
+
+  float a = 0.22;
+  float b = 0.30;
+  float c = 0.10;
+  float d = 0.20;
+  float e = 0.01;
+  float f = 0.30;
+  float w = 11.2;
+
+public:
+  bool hasParameter(Atmosphere::Parameter p) override
+  {
+    switch (p)
+    {
+      case Parameter::EXPOSURE:
+      case Parameter::SATURATION:
+      case Parameter::GAMMA:
+      case Parameter::UNCHARTED2_A:
+      case Parameter::UNCHARTED2_B:
+      case Parameter::UNCHARTED2_C:
+      case Parameter::UNCHARTED2_D:
+      case Parameter::UNCHARTED2_E:
+      case Parameter::UNCHARTED2_F:
+      case Parameter::UNCHARTED2_W:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  double getParameter(Atmosphere::Parameter p) override
+  {
+    switch (p)
+    {
+      case Parameter::UNCHARTED2_A:
+        return a;
+      case Parameter::UNCHARTED2_B:
+        return b;
+      case Parameter::UNCHARTED2_C:
+        return c;
+      case Parameter::UNCHARTED2_D:
+        return d;
+      case Parameter::UNCHARTED2_E:
+        return e;
+      case Parameter::UNCHARTED2_F:
+        return f;
+      case Parameter::UNCHARTED2_W:
+        return w;
+      default:
+        return 0;
+    }
+  }
+
+  void setParameter(Atmosphere::Parameter p, double value) override
+  {
+    value = std::max(0.0, value);
+
+    switch (p)
+    {
+      case Parameter::UNCHARTED2_A:
+        a = value;
+        break;
+      case Parameter::UNCHARTED2_B:
+        b = value;
+        break;
+      case Parameter::UNCHARTED2_C:
+        c = value;
+        break;
+      case Parameter::UNCHARTED2_D:
+        d = value;
+        break;
+      case Parameter::UNCHARTED2_E:
+        e = value;
+        break;
+      case Parameter::UNCHARTED2_F:
+        f = value;
+        break;
+      case Parameter::UNCHARTED2_W:
+        w = value;
+        break;
+    }
+  }
+
+  void setUniforms(render_util::ShaderProgramPtr program) override
+  {
+    program->setUniform("uncharted2_a", a);
+    program->setUniform("uncharted2_b", b);
+    program->setUniform("uncharted2_c", c);
+    program->setUniform("uncharted2_d", d);
+    program->setUniform("uncharted2_e", e);
+    program->setUniform("uncharted2_f", f);
+    program->setUniform("uncharted2_w", w);
+  }
+
+};
+
+
 enum class Luminance
 {
   // Render the spectral radiance at kLambdaR, kLambdaG, kLambdaB.
@@ -93,6 +193,7 @@ enum class Luminance
 
 enum class ToneMappingOperatorType
 {
+  UNCHARTED2,
   REINHARD,
   DEFAULT,
 };
@@ -144,6 +245,9 @@ AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mg
 {
   switch (TONE_MAPPING_OPERATOR_TYPE)
   {
+    case ToneMappingOperatorType::UNCHARTED2:
+      m_tone_mapping_operator = std::make_unique<Uncharted2ToneMappingOperator>();
+      break;
     case ToneMappingOperatorType::REINHARD:
     case ToneMappingOperatorType::DEFAULT:
       m_tone_mapping_operator = std::make_unique<DefaultToneMappingOperator>();
@@ -282,6 +386,9 @@ ShaderParameters AtmospherePrecomputed::getShaderParameters()
 
   switch (TONE_MAPPING_OPERATOR_TYPE)
   {
+    case ToneMappingOperatorType::UNCHARTED2:
+      p.set("use_uncharted2_tone_mapping", true);
+      break;
     case ToneMappingOperatorType::REINHARD:
       p.set("use_reinhard_tone_mapping", true);
       break;
