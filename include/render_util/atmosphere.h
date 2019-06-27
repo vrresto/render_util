@@ -48,6 +48,13 @@ public:
     TEXTURE_SATURATION,
     BLUE_SATURATION,
     GAMMA,
+    UNCHARTED2_A,
+    UNCHARTED2_B,
+    UNCHARTED2_C,
+    UNCHARTED2_D,
+    UNCHARTED2_E,
+    UNCHARTED2_F,
+    UNCHARTED2_W
   };
 
   virtual std::string getShaderPath() { return "atmosphere_default"; }

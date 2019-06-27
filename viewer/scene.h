@@ -117,6 +117,14 @@ public:
     addAtmosphereController("texture_saturation", Atmosphere::Parameter::TEXTURE_SATURATION);
     addAtmosphereController("gamma", Atmosphere::Parameter::GAMMA);
     addAtmosphereController("blue saturation", Atmosphere::Parameter::BLUE_SATURATION);
+
+    addAtmosphereController("uncharted2_a", Atmosphere::Parameter::UNCHARTED2_A);
+    addAtmosphereController("uncharted2_b", Atmosphere::Parameter::UNCHARTED2_B);
+    addAtmosphereController("uncharted2_c", Atmosphere::Parameter::UNCHARTED2_C);
+    addAtmosphereController("uncharted2_d", Atmosphere::Parameter::UNCHARTED2_D);
+    addAtmosphereController("uncharted2_e", Atmosphere::Parameter::UNCHARTED2_E);
+    addAtmosphereController("uncharted2_f", Atmosphere::Parameter::UNCHARTED2_F);
+    addAtmosphereController("uncharted2_w", Atmosphere::Parameter::UNCHARTED2_W);
   }
 
 
