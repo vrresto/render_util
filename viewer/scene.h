@@ -27,6 +27,7 @@
 #include <render_util/terrain_util.h>
 #include <render_util/atmosphere.h>
 #include <render_util/globals.h>
+#include <render_util/parameter_wrapper.h>
 #include <render_util/gl_binding/gl_functions.h>
 
 
@@ -65,28 +66,7 @@ class Scene
   render_util::TextureManager texture_manager = render_util::TextureManager(0);
 
 public:
-  struct Controller
-  {
-    using SetFunc = std::function<void(float)>;
-    using GetFunc = std::function<float()>;
-
-    SetFunc set;
-    GetFunc get;
-
-    std::string name;
-    float default_value = 0;
-
-    Controller(std::string name_, SetFunc set_, GetFunc get_) : name(name_), set(set_), get(get_)
-    {
-      default_value = get();
-    }
-
-    void reset()
-    {
-      set(default_value);
-    }
-  };
-
+  using Controller = render_util::ParameterWrapper<float>;
 
   virtual ~Scene() {}
 
@@ -110,9 +90,9 @@ public:
   std::unique_ptr<Atmosphere> m_atmosphere;
 
 
-  void addController(std::string name, Controller::SetFunc set, Controller::GetFunc get)
+  void addController(std::string name, Controller::GetFunc get, Controller::SetFunc set)
   {
-    m_controllers.push_back(Controller(name, set, get));
+    m_controllers.push_back(Controller(name, get, set));
   }
 
 
@@ -121,8 +101,8 @@ public:
     if (m_atmosphere->hasParameter(p))
     {
       addController(name,
-                    [this,p] (auto value) { m_atmosphere->setParameter(p, value); },
-                    [this,p] { return m_atmosphere->getParameter(p); });
+                    [this,p] { return m_atmosphere->getParameter(p); },
+                    [this,p] (auto value) { m_atmosphere->setParameter(p, value); });
     }
   }
 
