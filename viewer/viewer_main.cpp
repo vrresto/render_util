@@ -218,20 +218,6 @@ namespace
       auto value = g_scene->getActiveController().get();
       g_scene->getActiveController().set(value + step_size);
     }
-    else if (key == GLFW_KEY_KP_SUBTRACT && (action == GLFW_PRESS || action == GLFW_REPEAT) &&
-        g_scene->hasActiveController())
-    {
-      auto step_size = 1.0;
-      auto value = g_scene->getActiveController().get();
-      g_scene->getActiveController().set(value - step_size);
-    }
-    else if (key == GLFW_KEY_KP_ADD && (action == GLFW_PRESS || action == GLFW_REPEAT) &&
-        g_scene->hasActiveController())
-    {
-      auto step_size = 1.0;
-      auto value = g_scene->getActiveController().get();
-      g_scene->getActiveController().set(value + step_size);
-    }
 
     else if (key == GLFW_KEY_R && action == GLFW_PRESS &&
         g_scene->hasActiveController())
