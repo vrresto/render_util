@@ -179,10 +179,10 @@ namespace
     else if (key == GLFW_KEY_F8 && action == GLFW_PRESS) {
       g_scene->setActiveController(4);
     }
-    else if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
+    else if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
       g_scene->setActiveController(g_scene->m_active_controller-1);
     }
-    else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
+    else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
       g_scene->setActiveController(g_scene->m_active_controller+1);
     }
 
@@ -196,8 +196,7 @@ namespace
       g_scene->getActiveController().set(value + step_size);
     }
     else if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_PRESS &&
-        g_scene->hasActiveController()
-    )
+        g_scene->hasActiveController())
     {
       auto step_size = mods & GLFW_MOD_ALT ? 1.0 :
           mods & GLFW_MOD_SHIFT ? 0.01 :
@@ -205,7 +204,36 @@ namespace
       auto value = g_scene->getActiveController().get();
       g_scene->getActiveController().set(value - step_size);
     }
-    else if (key == GLFW_KEY_R && action == GLFW_PRESS && mods & GLFW_MOD_ALT &&
+    else if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT) &&
+        g_scene->hasActiveController())
+    {
+      auto step_size = 0.01;
+      auto value = g_scene->getActiveController().get();
+      g_scene->getActiveController().set(value - step_size);
+    }
+    else if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT) &&
+        g_scene->hasActiveController())
+    {
+      auto step_size = 0.01;
+      auto value = g_scene->getActiveController().get();
+      g_scene->getActiveController().set(value + step_size);
+    }
+    else if (key == GLFW_KEY_KP_SUBTRACT && (action == GLFW_PRESS || action == GLFW_REPEAT) &&
+        g_scene->hasActiveController())
+    {
+      auto step_size = 1.0;
+      auto value = g_scene->getActiveController().get();
+      g_scene->getActiveController().set(value - step_size);
+    }
+    else if (key == GLFW_KEY_KP_ADD && (action == GLFW_PRESS || action == GLFW_REPEAT) &&
+        g_scene->hasActiveController())
+    {
+      auto step_size = 1.0;
+      auto value = g_scene->getActiveController().get();
+      g_scene->getActiveController().set(value + step_size);
+    }
+
+    else if (key == GLFW_KEY_R && action == GLFW_PRESS &&
         g_scene->hasActiveController())
     {
       g_scene->getActiveController().reset();
@@ -223,11 +251,9 @@ namespace
       out << endl;
     }
 
-    else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
-      g_scene->camera.x = 0;
-      g_scene->camera.y = 0;
-      g_scene->camera.z = 0;
-
+    else if (key == GLFW_KEY_R && action == GLFW_PRESS &&
+        mods & GLFW_MOD_ALT)
+    {
       camera_move_speed = camera_move_speed_default;
     }
     else if (key == GLFW_KEY_F12 && action == GLFW_PRESS) {
