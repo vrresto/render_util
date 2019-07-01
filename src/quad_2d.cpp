@@ -37,6 +37,7 @@ Quad2D::Quad2D(TextureManager &tex_mgr, const ShaderSearchPath &shader_search_pa
 {
   shader = createShaderProgram("quad_2d", tex_mgr, shader_search_path);
   assert(shader->isValid());
+  setColor(vec4(0,0,0,1));
 }
 
 
