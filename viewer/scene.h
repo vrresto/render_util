@@ -116,6 +116,7 @@ public:
                             Atmosphere::Parameter::TEXTURE_BRIGHTNESS_CURVE_EXPONENT);
     addAtmosphereController("texture_saturation", Atmosphere::Parameter::TEXTURE_SATURATION);
     addAtmosphereController("gamma", Atmosphere::Parameter::GAMMA);
+    addAtmosphereController("blue saturation", Atmosphere::Parameter::BLUE_SATURATION);
   }
 
 

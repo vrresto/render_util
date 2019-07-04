@@ -20,10 +20,13 @@
 
 #define USE_LUMINANCE @use_luminance@
 
+vec3 adjustSaturation(vec3 rgb, float adjustment);
+
 uniform vec3 cameraPosWorld;
 uniform vec3 sunDir;
 uniform vec3 earth_center;
 uniform vec2 sun_size;
+uniform float blue_saturation;
 
 varying vec3 passObjectPos;
 
@@ -46,8 +49,16 @@ void apply_fog()
 
   float shadow_length = 0;
   vec3 transmittance;
+
   vec3 in_scatter = GetSkyRadianceToPoint(cameraPosWorld - earth_center,
       passObjectPos - earth_center, shadow_length, sunDir, transmittance);
 
-  gl_FragColor.rgb = toneMap(radiance * transmittance + in_scatter);
+  radiance = radiance * transmittance + in_scatter;
+
+  float blue_ratio = radiance.b / dot(vec3(1), radiance);
+
+  vec3 color = toneMap(radiance);
+  color = adjustSaturation(color, mix(1, blue_saturation, blue_ratio));
+
+  gl_FragColor.rgb = color;
 }

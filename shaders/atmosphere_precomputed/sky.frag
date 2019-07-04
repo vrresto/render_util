@@ -20,10 +20,13 @@
 
 #define USE_LUMINANCE @use_luminance@
 
+vec3 adjustSaturation(vec3 rgb, float adjustment);
+
 uniform vec3 cameraPosWorld;
 uniform vec3 sunDir;
 uniform vec3 earth_center;
 uniform vec2 sun_size;
+uniform float blue_saturation;
 
 varying vec3 passObjectPosWorld;
 
@@ -53,7 +56,12 @@ vec3 getSkyColor(vec3 view_direction)
     radiance = radiance + transmittance * GetSolarRadiance();
   }
 
-  return radiance;
+  float blue_ratio = radiance.b / dot(vec3(1), radiance);
+
+  vec3 color = toneMap(radiance);
+  color = adjustSaturation(color, mix(1, blue_saturation, blue_ratio));
+
+  return color;
 }
 
 
@@ -61,6 +69,6 @@ void main(void)
 {
   vec3 view_dir = normalize(passObjectPosWorld - cameraPosWorld);
 
-  gl_FragColor.xyz = toneMap(getSkyColor(view_dir));
+  gl_FragColor.xyz = getSkyColor(view_dir);
   gl_FragColor.w = 1.0;
 }

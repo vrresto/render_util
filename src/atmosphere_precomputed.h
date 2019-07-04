@@ -45,6 +45,7 @@ class AtmospherePrecomputed : public Atmosphere
   float m_texture_brightness = 0.2;
   float m_texture_brightness_curve_exponent = 1.0;
   float m_texture_saturation = 1.0;
+  float m_blue_saturation = 1.0;
 
 public:
   AtmospherePrecomputed(render_util::TextureManager &tex_mgr, std::string shader_dir);

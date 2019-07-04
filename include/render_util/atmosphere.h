@@ -46,7 +46,8 @@ public:
     TEXTURE_BRIGHTNESS,
     TEXTURE_BRIGHTNESS_CURVE_EXPONENT,
     TEXTURE_SATURATION,
-    GAMMA
+    BLUE_SATURATION,
+    GAMMA,
   };
 
   virtual std::string getShaderPath() { return "atmosphere_default"; }

@@ -234,6 +234,7 @@ void AtmospherePrecomputed::setUniforms(ShaderProgramPtr program, const Camera &
   program->setUniform("texture_brightness", m_texture_brightness);
   program->setUniform("texture_brightness_curve_exponent", m_texture_brightness_curve_exponent);
   program->setUniform("texture_saturation", m_texture_saturation);
+  program->setUniform("blue_saturation", m_blue_saturation);
 
   program->setUniform("white_point", glm::vec3(m_white_point));
   auto earth_center =
@@ -253,6 +254,7 @@ bool AtmospherePrecomputed::hasParameter(Parameter p)
     case Parameter::TEXTURE_BRIGHTNESS:
     case Parameter::TEXTURE_BRIGHTNESS_CURVE_EXPONENT:
     case Parameter::TEXTURE_SATURATION:
+    case Parameter::BLUE_SATURATION:
     case Parameter::GAMMA:
       return true;
     default:
@@ -277,6 +279,8 @@ double AtmospherePrecomputed::getParameter(Parameter p)
       return m_texture_brightness_curve_exponent;
     case Parameter::TEXTURE_SATURATION:
       return m_texture_saturation;
+    case Parameter::BLUE_SATURATION:
+      return m_blue_saturation;
     case Parameter::GAMMA:
       return m_gamma;
     default:
@@ -306,6 +310,9 @@ void AtmospherePrecomputed::setParameter(Parameter p, double value)
       break;
     case Parameter::TEXTURE_SATURATION:
       m_texture_saturation = value;
+      break;
+    case Parameter::BLUE_SATURATION:
+      m_blue_saturation = value;
       break;
     case Parameter::GAMMA:
       m_gamma = std::max(1.0, value);
