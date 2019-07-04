@@ -183,6 +183,7 @@ class DensityProfileLayer {
 class Model {
  public:
   Model(
+    glm::dvec3 rgb_lambdas,
     // The wavelength values, in nanometers, and sorted in increasing order, for
     // which the solar_irradiance, rayleigh_scattering, mie_scattering,
     // mie_extinction and ground_albedo samples are provided. If your shaders
@@ -308,10 +309,6 @@ class Model {
       const std::vector<double>& spectrum,
       double* r, double* g, double* b);
 
-  static constexpr double kLambdaR = 680.0;
-  static constexpr double kLambdaG = 550.0;
-  static constexpr double kLambdaB = 440.0;
-
  private:
   typedef std::array<double, 3> vec3;
   typedef std::array<float, 9> mat3;
@@ -340,6 +337,8 @@ class Model {
   GLuint irradiance_texture_;
   GLuint full_screen_quad_vao_;
   GLuint full_screen_quad_vbo_;
+
+  glm::dvec3 rgb_lambdas = glm::dvec3(0);
 
   std::function<render_util::ShaderParameters(const vec3&)> m_shader_parameter_factory;
   render_util::ShaderParameters m_shader_params;

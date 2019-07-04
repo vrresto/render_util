@@ -74,6 +74,18 @@ constexpr Luminance use_luminance_ = Luminance::APPROXIMATE;
 constexpr bool use_combined_textures_ = true;
 constexpr bool do_white_balance_ = true;
 
+// calculated using CIECAM02 according to http://www.magnetkern.de/spektrum.html
+constexpr auto RGB_LAMBDAS = glm::dvec3(630.0, 542.0, 454.0);
+
+// calculated using method method "physical" described in http://www.magnetkern.de/spektrum.html
+// constexpr auto RGB_LAMBDAS = glm::dvec3(611.36, 548.96, 464.28)
+
+// CIE RGB color space - https://en.wikipedia.org/wiki/CIE_1931_color_space#CIE_RGB_color_space
+// constexpr auto RGB_LAMBDAS = glm::dvec3(700, 546.1, 435.8);
+
+// originally used in this model
+// constexpr auto RGB_LAMBDAS = glm::dvec3(680.0, 550.0, 440.0);
+
 
 }
 
@@ -173,6 +185,7 @@ AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mg
   }
 
   m_model = std::unique_ptr<atmosphere::Model>(new atmosphere::Model(
+      RGB_LAMBDAS,
       wavelengths, solar_irradiance, kSunAngularRadius,
       kBottomRadius, kTopRadius,
       {rayleigh_layer}, rayleigh_scattering,

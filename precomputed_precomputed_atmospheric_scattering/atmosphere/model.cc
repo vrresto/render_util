@@ -299,15 +299,16 @@ Evaluation of 8 Clear Sky Models</a> for their definitions):
 
 // The returned constants are in lumen.nm / watt.
 void ComputeSpectralRadianceToLuminanceFactors(
+    glm::dvec3 rgb_lambdas,
     const std::vector<double>& wavelengths,
     const std::vector<double>& solar_irradiance,
     double lambda_power, double* k_r, double* k_g, double* k_b) {
   *k_r = 0.0;
   *k_g = 0.0;
   *k_b = 0.0;
-  double solar_r = Interpolate(wavelengths, solar_irradiance, Model::kLambdaR);
-  double solar_g = Interpolate(wavelengths, solar_irradiance, Model::kLambdaG);
-  double solar_b = Interpolate(wavelengths, solar_irradiance, Model::kLambdaB);
+  double solar_r = Interpolate(wavelengths, solar_irradiance, rgb_lambdas.r);
+  double solar_g = Interpolate(wavelengths, solar_irradiance, rgb_lambdas.g);
+  double solar_b = Interpolate(wavelengths, solar_irradiance, rgb_lambdas.b);
   int dlambda = 1;
   for (int lambda = kLambdaMin; lambda < kLambdaMax; lambda += dlambda) {
     double x_bar = CieColorMatchingFunctionTableValue(lambda, 1);
@@ -322,11 +323,11 @@ void ComputeSpectralRadianceToLuminanceFactors(
         xyz2srgb[6] * x_bar + xyz2srgb[7] * y_bar + xyz2srgb[8] * z_bar;
     double irradiance = Interpolate(wavelengths, solar_irradiance, lambda);
     *k_r += r_bar * irradiance / solar_r *
-        pow(lambda / Model::kLambdaR, lambda_power);
+        pow(lambda / rgb_lambdas.r, lambda_power);
     *k_g += g_bar * irradiance / solar_g *
-        pow(lambda / Model::kLambdaG, lambda_power);
+        pow(lambda / rgb_lambdas.g, lambda_power);
     *k_b += b_bar * irradiance / solar_b *
-        pow(lambda / Model::kLambdaB, lambda_power);
+        pow(lambda / rgb_lambdas.b, lambda_power);
   }
   *k_r *= MAX_LUMINOUS_EFFICACY * dlambda;
   *k_g *= MAX_LUMINOUS_EFFICACY * dlambda;
@@ -350,6 +351,7 @@ initialize them), as well as a vertex buffer object to render a full screen quad
 */
 
 Model::Model(
+    glm::dvec3 rgb_lambdas,
     const std::vector<double>& wavelengths,
     const std::vector<double>& solar_irradiance,
     const double sun_angular_radius,
@@ -371,6 +373,7 @@ Model::Model(
     bool half_precision,
     std::string shader_dir,
     const render_util::TextureManager &tex_mgr) :
+        rgb_lambdas(rgb_lambdas),
         num_precomputed_wavelengths_(num_precomputed_wavelengths),
         half_precision_(half_precision),
         rgb_format_supported_(IsFramebufferRgbFormatSupported(half_precision)),
@@ -423,12 +426,12 @@ Model::Model(
   if (precompute_illuminance) {
     sky_k_r = sky_k_g = sky_k_b = MAX_LUMINOUS_EFFICACY;
   } else {
-    ComputeSpectralRadianceToLuminanceFactors(wavelengths, solar_irradiance,
+    ComputeSpectralRadianceToLuminanceFactors(rgb_lambdas, wavelengths, solar_irradiance,
         -3 /* lambda_power */, &sky_k_r, &sky_k_g, &sky_k_b);
   }
   // Compute the values for the SUN_RADIANCE_TO_LUMINANCE constant.
   double sun_k_r, sun_k_g, sun_k_b;
-  ComputeSpectralRadianceToLuminanceFactors(wavelengths, solar_irradiance,
+  ComputeSpectralRadianceToLuminanceFactors(rgb_lambdas, wavelengths, solar_irradiance,
       0 /* lambda_power */, &sun_k_r, &sun_k_g, &sun_k_b);
 
 
@@ -529,7 +532,7 @@ Model::Model(
     return params;
   };
 
-  vec3 lambdas = {kLambdaR, kLambdaG, kLambdaB};
+  vec3 lambdas = {rgb_lambdas.r, rgb_lambdas.g, rgb_lambdas.b};
 
   m_shader_params = m_shader_parameter_factory(lambdas);
 }
@@ -644,7 +647,7 @@ void Model::Init(unsigned int num_scattering_orders) {
   // The actual precomputations depend on whether we want to store precomputed
   // irradiance or illuminance values.
   if (num_precomputed_wavelengths_ <= 3) {
-    vec3 lambdas{kLambdaR, kLambdaG, kLambdaB};
+    vec3 lambdas{rgb_lambdas.r, rgb_lambdas.g, rgb_lambdas.b};
     mat3 luminance_from_radiance{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
     Precompute(fbo, delta_irradiance_texture, delta_rayleigh_scattering_texture,
         delta_mie_scattering_texture, delta_scattering_density_texture,
