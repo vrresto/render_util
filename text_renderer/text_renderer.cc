@@ -94,6 +94,8 @@ void TextRenderer::SetupBuffers() {
   constexpr int kCoordsPerVertex = 2;
   gl::VertexAttribPointer(kAttribIndex, kCoordsPerVertex, GL_FLOAT, false, 0, 0);
   gl::EnableVertexAttribArray(kAttribIndex);
+
+  gl::BindBuffer(GL_ARRAY_BUFFER, 0);
   gl::BindVertexArray(0);
 }
 
