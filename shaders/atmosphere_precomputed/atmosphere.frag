@@ -55,10 +55,11 @@ void apply_fog()
 
   radiance = radiance * transmittance + in_scatter;
 
-  float blue_ratio = radiance.b / dot(vec3(1), radiance);
+  float blue_ratio = in_scatter.b / dot(vec3(1), in_scatter);
+  float in_scatter_ratio = length(in_scatter) / length(radiance);
 
   vec3 color = toneMap(radiance);
-  color = adjustSaturation(color, mix(1, blue_saturation, blue_ratio));
+  color = adjustSaturation(color, mix(1, blue_saturation, blue_ratio * in_scatter_ratio));
 
   gl_FragColor.rgb = color;
 }
