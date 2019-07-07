@@ -30,6 +30,7 @@
 #include <render_util/image.h>
 #include <render_util/water_map.h>
 #include <render_util/render_util.h>
+#include <alloc_tracker.h>
 #include <block_allocator.h>
 
 #include <array>
@@ -537,12 +538,16 @@ TerrainCDLOD::~TerrainCDLOD()
 
 void TerrainCDLOD::build(const ElevationMap *map)
 {
+  alloc_tracker::Tag tag("TerrainCDLOD::build");
+
   assert(p->texture_manager);
   assert(!p->root_node);
 
   CHECK_GL_ERROR();
 
   {
+    alloc_tracker::Tag tag("TerrainCDLOD::build - normal map");
+
     assert(!p->normal_map_texture);
     
 
@@ -592,6 +597,7 @@ void TerrainCDLOD::build(const ElevationMap *map)
   CHECK_GL_ERROR();
 
   {
+    alloc_tracker::Tag tag("TerrainCDLOD::build - generate heightmap mipmap");
     TemporaryTextureBinding tmp(p->height_map_texture);
     gl::GenerateMipmap(p->height_map_texture->getTarget());
   }

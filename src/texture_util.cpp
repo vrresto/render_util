@@ -21,6 +21,7 @@
 #include <render_util/texture_util.h>
 #include <render_util/texunits.h>
 #include <render_util/elevation_map.h>
+#include <alloc_tracker.h>
 
 #include <fstream>
 #include <memory>
@@ -372,6 +373,8 @@ TexturePtr createFloatTexture1D(const float *data, size_t size, int num_componen
 
 TexturePtr createFloatTexture(const float *data, int w, int h, int num_components)
 {
+  alloc_tracker::Tag tag("render_util::createFloatTexture");
+
   CHECK_GL_ERROR();
 
   TexturePtr texture = Texture::create(GL_TEXTURE_2D);

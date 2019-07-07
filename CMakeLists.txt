@@ -27,6 +27,7 @@ include(cflags.cmake)
 include_directories(
   ${PROJECT_SOURCE_DIR}/include
   ${PROJECT_BINARY_DIR}
+  /home/jan/src/alloc_tracker
 )
 
 if(platform_mingw)
