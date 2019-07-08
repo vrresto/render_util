@@ -105,18 +105,15 @@ namespace
 {
 
 
-  struct Binding
+  struct Texunit
   {
-    unsigned int texture = 0;
-    unsigned int target = 0; 
+    // target, texture
+    std::map<unsigned int, TexturePtr> bindings;
   };
 
 
-  void applyBinding(unsigned int unit, const Binding &binding, TextureManager &mgr)
+  void applyBinding(unsigned int unit, unsigned int target, unsigned int texture, TextureManager &mgr)
   {
-    if (binding.target == 0)
-      return;
-
     CHECK_GL_ERROR();
 
     GLenum active_unit_save;
@@ -128,18 +125,23 @@ namespace
 //     cout<<"target: "<<binding.target<<endl;
 //     cout<<"texture: "<<binding.texture<<endl;
     
-    gl::BindTexture(binding.target, binding.texture);
+    gl::BindTexture(target, texture);
     CHECK_GL_ERROR();
 
     gl::ActiveTexture(active_unit_save);
     CHECK_GL_ERROR();
   }
 
-  void applyBindings(const vector<Binding> bindings, TextureManager &mgr)
+  void applyBindings(const vector<Texunit> &units, TextureManager &mgr)
   {
-    for (size_t i = 0; i < bindings.size(); i++)
+    for (size_t i = 0; i < units.size(); i++)
     {
-      applyBinding(i, bindings[i], mgr);
+      for (auto &binding : units[i].bindings)
+      {
+        auto target = binding.first;
+        auto texture = binding.second;
+        applyBinding(i, target, texture ? texture->getID() : 0, mgr);
+      }
     }
   }
 
@@ -154,7 +156,7 @@ struct TextureManager::Private
   unsigned int highest_unit = 0;
   unsigned int max_units = 0;
   bool is_active = false;
-  vector<Binding> bindings;
+  vector<Texunit> texunits;
 };
 
 
@@ -174,7 +176,7 @@ TextureManager::TextureManager(unsigned int lowest_unit, unsigned int highest_un
   p->lowest_unit = lowest_unit;
   p->highest_unit = highest_unit;
 
-  p->bindings.resize(p->max_units);
+  p->texunits.resize(p->max_units);
 }
 
 TextureManager::~TextureManager()
@@ -216,24 +218,36 @@ void TextureManager::setActive(bool active)
 
   if (active)
   {
-    applyBindings(p->bindings, *this);
+    applyBindings(p->texunits, *this);
   }
 
   p->is_active = active;
 }
 
 
-void TextureManager::bind(unsigned int unit, TexturePtr texture)
+void TextureManager::bind(unsigned int unit_, TexturePtr texture)
 {
-  assert(unit <= p->highest_unit);
-  assert(unit < getMaxUnits());
-  Binding &binding = p->bindings[unit];
+  assert(unit_ <= p->highest_unit);
+  assert(unit_ < getMaxUnits());
+  Texunit &unit = p->texunits[unit_];
 
-  binding.texture = texture->getID();
-  binding.target = texture->getTarget();
+  unit.bindings[texture->getTarget()] = texture;
 
   if (p->is_active)
-    applyBinding(unit, binding, *this);
+    applyBinding(unit_, texture->getTarget(), texture->getID(), *this);
+}
+
+
+void TextureManager::unbind(unsigned int unit_, unsigned int target)
+{
+  assert(unit_ <= p->highest_unit);
+  assert(unit_ < getMaxUnits());
+  Texunit &unit = p->texunits[unit_];
+
+  unit.bindings[target] = nullptr;
+
+  if (p->is_active)
+    applyBinding(unit_, target, 0, *this);
 }
 
 

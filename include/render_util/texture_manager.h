@@ -101,6 +101,7 @@ public:
 
   void setActive(bool);
   void bind(unsigned int unit, TexturePtr texture);
+  void unbind(unsigned int unit, unsigned int target);
   int getTexUnitNum(unsigned int unit) const;
   int getLowestUnit() const;
   int getHighestUnit() const;

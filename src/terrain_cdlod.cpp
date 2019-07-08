@@ -238,6 +238,7 @@ public:
                           TerrainBase::TypeMap::ConstPtr type_map);
 
   void bind(TextureManager&);
+  void unbind(TextureManager&);
   void setUniforms(ShaderProgramPtr program);
 };
 
@@ -331,6 +332,51 @@ void TerrainTextures::bind(TextureManager &tm)
       assert(texunit < TEXUNIT_NUM);
 
       tm.bind(texunit, textures);
+
+      CHECK_GL_ERROR();
+    }
+  }
+}
+
+
+void TerrainTextures::unbind(TextureManager &tm)
+{
+  using namespace render_util;
+
+  tm.unbind(TEXUNIT_TYPE_MAP, m_type_map_texture->getTarget());
+
+  for (int i = 0; i < m_textures.size(); i++)
+  {
+    CHECK_GL_ERROR();
+
+    auto texture = m_textures.at(i);
+    if (!texture)
+      continue;
+
+    auto texunit = TEXUNIT_TERRAIN + i;
+    assert(texunit < TEXUNIT_NUM);
+
+    tm.unbind(texunit, texture->getTarget());
+
+    CHECK_GL_ERROR();
+  }
+
+  if (m_enable_normal_maps)
+  {
+    tm.unbind(TEXUNIT_TYPE_MAP_NORMALS, m_type_map_texture_nm->getTarget());
+
+    for (int i = 0; i < m_textures_nm.size(); i++)
+    {
+      CHECK_GL_ERROR();
+
+      auto texture = m_textures_nm.at(i);
+      if (!texture)
+        continue;
+
+      auto texunit = TEXUNIT_TERRAIN_DETAIL_NM0 + i;
+      assert(texunit < TEXUNIT_NUM);
+
+      tm.unbind(texunit, texture->getTarget());
 
       CHECK_GL_ERROR();
     }
@@ -722,6 +768,8 @@ TerrainCDLOD::~TerrainCDLOD()
 
   root_node = nullptr;
   node_allocator.clear();
+
+  m_terrain_textures->unbind(texture_manager);
 
   CHECK_GL_ERROR();
 }
