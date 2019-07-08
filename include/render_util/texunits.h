@@ -28,11 +28,20 @@ namespace render_util
 
   enum { MAX_TERRAIN_TEXUNITS = 4 };
 
-  enum
+  enum TexUnitsEnum : unsigned int
   {
     #include <render_util/texunits.priv>
     TEXUNIT_NUM
   };
+
+
+  enum TexUnitsExtEnum : unsigned int
+  {
+    EXT_TEXUNIT_START = 70,
+    TEXUNIT_CUSTOM_START
+  };
+
+  static_assert((unsigned int)TEXUNIT_NUM < (unsigned int)EXT_TEXUNIT_START);
 
   const std::string &getTexUnitName(int texunit);
   int getTexUnitNumber(const std::string &texunit_name);
