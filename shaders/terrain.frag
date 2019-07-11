@@ -55,7 +55,7 @@ void main(void)
   vec3 view_dir = normalize(cameraPosWorld - passObjectPosFlat.xyz);
   gl_FragColor.xyz = getWaterColorSimple(view_dir, dist);
 #else
-  gl_FragColor = getTerrainColor(passObjectPosFlat.xyz);
+  gl_FragColor.xyz = getTerrainColor(passObjectPosFlat.xyz).xyz;
 #endif
 //   gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
 
