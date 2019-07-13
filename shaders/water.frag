@@ -31,6 +31,7 @@
 // #define ENABLE_WAVE_FOAM 1
 #define ENABLE_WATER_MAP 1
 // #define ENABLE_SHORE_WAVES 1
+#define ENABLE_SKY_REFLECTION @enable_sky_reflection:1@
 
 #define ENABLE_BASE_MAP @enable_base_map@
 #define ENABLE_BASE_WATER_MAP @enable_base_water_map@
@@ -55,6 +56,7 @@ float perlin(vec2 p, float dim);
 float genericNoise(vec2 coord);
 vec3 blend_rnm(vec3 n1, vec3 n2);
 vec3 textureColorCorrection(vec3 color);
+vec3 getSkyColor(vec3 camera_pos, vec3 viewDir);
 
 
 uniform sampler2DArray sampler_beach;
@@ -100,6 +102,19 @@ uniform ivec2 typeMapSize;
 
 varying vec2 pass_texcoord;
 varying vec2 pass_type_map_coord;
+
+
+vec3 calcWaterEnvColor(vec3 pos, vec3 normal, vec3 viewDir)
+{
+  viewDir = reflect(viewDir, normal);
+
+  viewDir.z = max(0, viewDir.z);
+  viewDir = normalize(viewDir);
+
+  vec3 radiance = getSkyColor(pos, viewDir);
+
+  return radiance;
+}
 
 
 float calcSpecular(vec3 view_dir, vec3 normal, float hardness)
@@ -336,7 +351,11 @@ vec3 getWaterColorSimple(vec3 pos, vec3 viewDir, float dist)
   float specular = calcSpecular(-viewDir, normal, specHardness);
   specular = mix(specular * 0.5, specular, specularDetailFactor);
 
+#if ENABLE_SKY_REFLECTION
+  vec3 envColor = calcWaterEnvColor(pos, normal, viewDir);
+#else
   vec3 envColor = calcWaterEnvColor(ambientLight, incomingDirectLight);
+#endif
 
   vec3 refractionColor = 0.9 * textureColorCorrection(water_color);
   refractionColor *= ambientLight + 0.5 * directLight;
@@ -383,7 +402,11 @@ vec3 getWaterColor(vec3 pos, vec3 viewDir, float dist, vec2 coord,
   float specular = calcSpecular(-viewDir, normal, specHardness);
   specular = mix(specular * 0.5, specular, specularDetailFactor);
 
+#if ENABLE_SKY_REFLECTION
+  vec3 envColor = calcWaterEnvColor(pos, normal, viewDir);
+#else
   vec3 envColor = calcWaterEnvColor(ambientLight, incomingDirectLight);
+#endif
 
   vec3 refractionColor = 0.9 * textureColorCorrection(water_color);
 
