@@ -19,6 +19,7 @@
 #include <util.h>
 #include <render_util/render_util.h>
 #include <render_util/terrain_base.h>
+#include <render_util/physics.h>
 
 #include <iostream>
 #include <iomanip>
@@ -68,4 +69,8 @@ void render_util::updateUniforms(render_util::ShaderProgramPtr program, const re
                       glm::vec3(glm::floor(camera.getPosD() / terrain_scale)));
   program->setUniform("camera_pos_offset_terrain",
                       glm::vec3(terrain_scale * glm::fract(camera.getPosD() / terrain_scale)));
+
+  auto earth_center =
+    glm::vec3(camera.getPos().x, camera.getPos().y, -physics::EARTH_RADIUS);
+  program->setUniform("earth_center", earth_center);
 }

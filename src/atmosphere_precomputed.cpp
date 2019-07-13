@@ -230,7 +230,7 @@ ShaderParameters AtmospherePrecomputed::getShaderParameters()
 }
 
 
-void AtmospherePrecomputed::setUniforms(ShaderProgramPtr program, const Camera &camera)
+void AtmospherePrecomputed::setUniforms(ShaderProgramPtr program)
 {
   m_model->SetProgramUniforms(program,
     m_transmittance_texture_unit,
@@ -250,9 +250,6 @@ void AtmospherePrecomputed::setUniforms(ShaderProgramPtr program, const Camera &
   program->setUniform("blue_saturation", m_blue_saturation);
 
   program->setUniform("white_point", glm::vec3(m_white_point));
-  auto earth_center =
-    glm::vec3(camera.getPos().x, camera.getPos().y, -kBottomRadius / kLengthUnitInMeters);
-  program->setUniform("earth_center", earth_center);
   program->setUniform("sun_size", glm::vec2(tan(kSunAngularRadius), cos(kSunAngularRadius)));
 }
 

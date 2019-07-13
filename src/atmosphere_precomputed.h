@@ -52,7 +52,7 @@ public:
 
   std::string getShaderPath() override { return "atmosphere_precomputed"; }
   ShaderParameters getShaderParameters() override;
-  void setUniforms(ShaderProgramPtr, const Camera&) override;
+  void setUniforms(ShaderProgramPtr) override;
 
   bool hasParameter(Parameter) override;
   double getParameter(Parameter) override;

@@ -52,7 +52,7 @@ public:
 
   virtual std::string getShaderPath() { return "atmosphere_default"; }
   virtual ShaderParameters getShaderParameters() { return {}; }
-  virtual void setUniforms(ShaderProgramPtr program, const Camera&) {}
+  virtual void setUniforms(ShaderProgramPtr program) {}
 
   virtual bool hasParameter(Parameter) { return false; }
   virtual double getParameter(Parameter) { return 0; }
