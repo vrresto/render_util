@@ -554,7 +554,7 @@ float bank_amount = 0;
   color.xyz *= light_direct + light_ambient;
 
 #if ENABLE_WATER
-  color = applyWater(color, view_dir, dist, waterDepth, pass_texcoord, pos, shallow_sea_amount, river_amount, bank_amount);
+  color.xyz = applyWater(color.xyz, view_dir, dist, waterDepth, pass_texcoord, pos, shallow_sea_amount, river_amount, bank_amount);
 #endif
 
 // DEBUG

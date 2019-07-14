@@ -575,8 +575,7 @@ float getShoreWaveStrength(vec2 pos, float waterDepth, float amount)
   return shore_wave_strength;
 }
 
-
-vec4 applyWater(vec4 color,
+vec3 applyWater(in vec3 color_in,
   vec3 view_dir,
   float dist,
   float waterDepth,
@@ -682,11 +681,13 @@ vec4 applyWater(vec4 color,
   wetness = max(wetness, wetness_secondary);
 #endif
 
+vec3 color = color_in;
+
 #if !LOW_DETAIL
-  color.xyz = mix(color.xyz, color.xyz * 0.8, wetness);
+  color = mix(color, color * 0.8, wetness);
 #endif
 
-  vec3 waterColor = getWaterColor(pos, view_dir, dist, mapCoords, waterDepth, color.xyz, water_normal, shallow_sea_amount, river_amount);
+  vec3 waterColor = getWaterColor(pos, view_dir, dist, mapCoords, waterDepth, color, water_normal, shallow_sea_amount, river_amount);
 
 
 #if ENABLE_WAVE_FOAM

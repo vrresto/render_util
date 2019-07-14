@@ -1,6 +1,6 @@
 vec3 getWaterColorSimple(vec3 pos, vec3 viewDir, float dist);
 
-vec4 applyWater(vec4 color,
+vec3 applyWater(in vec3 color_in,
   vec3 view_dir,
   float dist,
   float waterDepth,
