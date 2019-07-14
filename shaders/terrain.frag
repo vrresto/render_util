@@ -27,14 +27,13 @@ void apply_fog();
 vec4 getTerrainColor(vec3 pos);
 vec3 getWaterColorSimple(vec3 viewDir, float dist);
 
-uniform float curvature_map_max_distance;
-
 #if IS_EDITOR
 uniform vec2 height_map_base_size_m;
 uniform vec2 height_map_base_origin;
 uniform vec2 cursor_pos_ground;
 #endif
 
+uniform float curvature_map_max_distance;
 uniform float land_map_meters_per_pixel;
 uniform vec3 cameraPosWorld;
 
@@ -50,15 +49,14 @@ void main(void)
   gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
 
 //   resetDebugColor();
+
 #if ONLY_WATER
-  float dist = distance(cameraPosWorld, passObjectPosFlat.xyz);
+  float dist = distance(cameraPosWorld, passObjectPosFlat);
   vec3 view_dir = normalize(passObjectPosFlat - cameraPosWorld);
   gl_FragColor.xyz = getWaterColorSimple(view_dir, dist);
 #else
-  gl_FragColor.xyz = getTerrainColor(passObjectPosFlat.xyz).xyz;
+  gl_FragColor.xyz = getTerrainColor(passObjectPosFlat).xyz;
 #endif
-//   gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
-
 
 #if IS_EDITOR
   if (passObjectPosFlat.x > cursor_pos_ground.x &&
