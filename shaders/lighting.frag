@@ -18,6 +18,8 @@
 
 #version 130
 
+#include lighting_definitions.glsl
+
 vec3 blend_rnm(vec3 n1, vec3 n2);
 
 
@@ -77,6 +79,19 @@ void calcLightParams(vec3 normal, out vec3 ambientLightColor, out vec3 directLig
 }
 
 
+void calcLightParams(out vec3 ambientLightColor, out vec3 directLightColor)
+{
+  directLightColor = calcIncomingDirectLight();
+
+  float ambientLight = 0.6 * smoothstep(0.0, 0.3, sunDir.z);
+  ambientLightColor = vec3(0.95, 0.98, 1.0);
+  ambientLightColor *= 0.6;
+  vec3 ambientLightColorLow = ambientLightColor * 0.6;
+  ambientLightColor = mix(ambientLightColorLow, ambientLightColor, smoothstep(0.0, 0.3, sunDir.z));
+  ambientLightColor *= smoothstep(-0.4, 0.0, sunDir.z);
+}
+
+
 void calcLightParamsWithDetail(vec3 normal, vec3 normal_detail,
     out vec3 ambientLightColor, out vec3 directLightColor)
 {
@@ -84,32 +99,12 @@ void calcLightParamsWithDetail(vec3 normal, vec3 normal_detail,
 }
 
 
-vec3 calcLightWithSpecular(vec3 input_color, vec3 normal, float shinyness, vec3 specular_amount,
-    float direct_scale, float ambient_scale, vec3 viewDir)
-{
-  vec3 ambientLightColor;
-  vec3 directLightColor;
-  calcLightParams(normal, ambientLightColor, directLightColor);
 
-  vec3 light = direct_scale * directLightColor + ambient_scale * ambientLightColor;
 
-  vec3 specular = vec3(0);
 
-  {
-    vec3 reflectDir = reflect(-sunDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), shinyness);
 
-      vec3 R = reflect(viewDir, normal);
-      vec3 lVec = -sunDir;
-      spec = pow(max(dot(R, lVec), 0.0), shinyness);
 
-    specular = calcIncomingDirectLight() * spec;
 
-    specular *= specular_amount;
-  }
-
-  return (light * input_color) + specular;
-}
 
 
 vec3 calcWaterEnvColor()
@@ -121,4 +116,50 @@ vec3 calcWaterEnvColor()
   envColor *= smoothstep(-0.4, 0.2, sunDir.z);
 
   return envColor;
+}
+
+
+vec3 calcWaterEnvColor(vec3 ambientLight, vec3 directLight)
+{
+  return calcWaterEnvColor();
+}
+
+
+vec3 getReflectedDirectLight(vec3 normal, vec3 incoming)
+{
+  return incoming * max(dot(normal, sunDir), 0.0);
+}
+
+
+vec3 getReflectedAmbientLight(vec3 normal, vec3 incoming)
+{
+  return incoming;
+}
+
+
+void getIncomingLight(vec3 pos, out vec3 ambient, out vec3 direct)
+{
+  calcLightParams(ambient, direct);
+}
+
+
+void calcLight(vec3 pos, vec3 normal, out vec3 direct, out vec3 ambient)
+{
+  calcLightParams(normal, ambient, direct);
+}
+
+
+void calcLightWithDetail(vec3 pos, vec3 normal, vec3 normal_detail, out vec3 direct, out vec3 ambient)
+{
+  calcLightParamsWithDetail(normal, normal_detail, ambient, direct);
+}
+
+
+vec3 calcLight(vec3 pos, vec3 normal, float direct_scale, float ambient_scale)
+{
+  vec3 direct;
+  vec3 ambient;
+  calcLightParams(normal, ambient, direct);
+
+  return direct * direct_scale + ambient * ambient_scale;
 }

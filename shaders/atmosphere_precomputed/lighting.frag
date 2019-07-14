@@ -18,80 +18,100 @@
 
 #version 330
 
+#include lighting_definitions.glsl
+
 #define USE_LUMINANCE @use_luminance@
 
 #if USE_LUMINANCE
 #define GetSunAndSkyIrradiance GetSunAndSkyIlluminance
-#define GetSunIrradiance GetSunIlluminance
 #endif
 
-vec3 GetSunAndSkyIrradiance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
-vec3 GetSunIrradiance(vec3 point, vec3 sun_direction);
 vec3 blend_rnm(vec3 n1, vec3 n2);
 vec3 textureColorCorrection(vec3 color);
+
+void GetSunAndSkyIrradiance(vec3 pos, vec3 sun_direction,
+                            out vec3 sun_irradiance, out vec3 sky_irradiance);
 
 
 uniform vec3 sunDir;
 uniform vec3 earth_center;
-uniform float texture_brightness;
-
-varying vec3 passObjectPos;
 
 
-void calcLightParams(vec3 normal, out vec3 ambientLightColor, out vec3 directLightColor)
+vec3 getReflectedDirectLight(vec3 normal, vec3 incoming)
 {
-  directLightColor = GetSunAndSkyIrradiance(
-          passObjectPos - earth_center, normal, sunDir, ambientLightColor);
+  return incoming * max(dot(normal, sunDir), 0.0);
 }
 
 
-vec3 calcIncomingDirectLight()
+vec3 getReflectedAmbientLight(vec3 normal, vec3 incoming)
 {
-  return GetSunIrradiance(passObjectPos - earth_center, sunDir);
+//   return incoming * mix(0.5 * (1.0 + dot(normal, point) / r), 1.0, 0.5);
+  return incoming * mix(0.5 * (1.0 + dot(normal, vec3(0,0,1))), 1.0, 0.5);
 }
 
 
-void calcLightParamsWithDetail(vec3 normal, vec3 normal_detail,
-    out vec3 ambientLightColor, out vec3 directLightColor)
+void getIncomingLight(vec3 pos, out vec3 ambientLight, out vec3 directLight)
 {
+  GetSunAndSkyIrradiance(pos - earth_center, sunDir, directLight, ambientLight);
+}
+
+
+vec3 calcLight(vec3 pos, vec3 normal, float direct_scale, float ambient_scale)
+{
+  vec3 ambient;
+  vec3 direct;
+  getIncomingLight(pos, ambient, direct);
+
+  ambient = getReflectedAmbientLight(normal, ambient);
+  direct = getReflectedDirectLight(normal, direct);
+
+  return direct_scale * direct + ambient_scale * ambient;
+}
+
+
+vec3 calcLightWithDetail(vec3 pos, vec3 normal, vec3 normal_detail,
+                         float direct_scale, float ambient_scale)
+{
+  vec3 ambient;
+  vec3 direct;
+  getIncomingLight(pos, ambient, direct);
+
   normal = blend_rnm(normal, normal_detail);
 
-  calcLightParams(normal, ambientLightColor, directLightColor);
+  ambient = getReflectedAmbientLight(normal, ambient);
+  direct = getReflectedDirectLight(normal, direct);
+
+  return direct_scale * direct + ambient_scale * ambient;
 }
 
 
-vec3 calcLightWithSpecular(vec3 input_color, vec3 normal, float shinyness, vec3 specular_amount,
-    float direct_scale, float ambient_scale, vec3 viewDir)
+void calcLight(vec3 pos, vec3 normal, out vec3 direct, out vec3 ambient)
 {
-  vec3 ambientLightColor;
-  vec3 directLightColor;
-  calcLightParams(normal, ambientLightColor, directLightColor);
+  getIncomingLight(pos, ambient, direct);
 
-  vec3 light = direct_scale * directLightColor + ambient_scale * ambientLightColor;
-
-  vec3 specular = vec3(0);
-
-  {
-    vec3 R = reflect(viewDir, normal);
-    vec3 lVec = -sunDir;
-    specular_amount *= pow(max(dot(R, lVec), 0.0), shinyness);
-
-    specular = specular_amount * calcIncomingDirectLight();
-  }
-
-  return (light * input_color) + specular;
+  ambient = getReflectedAmbientLight(normal, ambient);
+  direct = getReflectedDirectLight(normal, direct);
 }
 
 
-vec3 calcWaterEnvColor()
+void calcLightWithDetail(vec3 pos, vec3 normal, vec3 normal_detail, out vec3 direct, out vec3 ambient)
 {
-  vec3 ambientLightColor;
-  vec3 directLightColor;
-  calcLightParams(vec3(0,0,1), ambientLightColor, directLightColor);
+  getIncomingLight(pos, ambient, direct);
+
+  normal = blend_rnm(normal, normal_detail);
+
+  ambient = getReflectedAmbientLight(normal, ambient);
+  direct = getReflectedDirectLight(normal, direct);
+}
+
+
+vec3 calcWaterEnvColor(vec3 ambientLight, vec3 directLight)
+{
+  directLight *= mix(max(dot(vec3(0,0,1), sunDir), 0.0), 1.0, 0.5);
 
   vec3 envColor = vec3(0.8, 0.9, 1.0) * 0.6;
   envColor = textureColorCorrection(envColor);
-  envColor = envColor * ambientLightColor + envColor * directLightColor;
+  envColor = envColor * ambientLight + envColor * directLight;
 
   return envColor;
 }

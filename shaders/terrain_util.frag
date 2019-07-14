@@ -45,27 +45,17 @@
 #define ENABLE_TERRAIN_DETAIL_NM2 @enable_terrain_detail_nm2:0@
 #define ENABLE_TERRAIN_DETAIL_NM3 @enable_terrain_detail_nm3:0@
 
+#include lighting_definitions.glsl
+#include water_definitions.glsl
 
-vec3 calcLightWithDetail(vec3 normal, vec3 normal_detail, float direct_scale, float ambient_scale);
 vec3 textureColorCorrection(vec3 color);
 float getDetailMapBlend(vec2 pos);
 float genericNoise(vec2 coord);
-vec3 calcLight(vec3 pos, vec3 normal, float direct_scale, float ambient_scale);
 vec4 getForestFarColor(vec2 pos);
 vec4 getForestFarColorSimple(vec2 pos);
 vec4 getForestColor(vec2 pos, int layer);
 float getWaterDepth(vec2 pos);
 void sampleWaterType(vec2 pos, out float shallow_sea_amount, out float river_amount);
-vec4 applyWater(vec4 color,
-  vec3 view_dir,
-  float dist,
-  float waterDepth,
-  vec2 mapCoords,
-  vec2 pos,
-  float shallow_sea_amount,
-  float river_amount,
-  float bank_amount);
-
 uniform float terrain_tile_size_m;
 
 const float near_distance = 80000;
@@ -515,10 +505,12 @@ vec3 normal_detail = vec3(0,0,1);
   color.w = 1;
 #endif
 
+vec3 light_direct;
+vec3 light_ambient;
 #if ENABLE_TERRAIN_DETAIL_NM
-  vec3 light = calcLightWithDetail(normal, normal_detail, 1, 1);
+  calcLightWithDetail(pos, normal, normal_detail, light_direct, light_ambient);
 #else
-  vec3 light = calcLight(vec3(0), normal, 1, 1);
+  calcLight(pos, normal, light_direct, light_ambient);
 #endif
 
 #if ENABLE_WATER
@@ -559,10 +551,10 @@ float bank_amount = 0;
 
   color.xyz = textureColorCorrection(color.xyz);
 
-  color.xyz *= light;
+  color.xyz *= light_direct + light_ambient;
 
 #if ENABLE_WATER
-  color = applyWater(color, view_dir, dist, waterDepth, pass_texcoord, pos.xy, shallow_sea_amount, river_amount, bank_amount);
+  color = applyWater(color, view_dir, dist, waterDepth, pass_texcoord, pos, shallow_sea_amount, river_amount, bank_amount);
 #endif
 
 // DEBUG

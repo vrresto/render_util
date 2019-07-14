@@ -1873,24 +1873,23 @@ the irradiance for horizontal surfaces; we use the approximation defined in our
 The function below returns the direct and indirect irradiances separately:
 */
 
-IrradianceSpectrum GetSunAndSkyIrradiance(
+void GetSunAndSkyIrradiance(
     IN(AtmosphereParameters) atmosphere,
     IN(TransmittanceTexture) transmittance_texture,
     IN(IrradianceTexture) irradiance_texture,
-    IN(Position) point, IN(Direction) normal, IN(Direction) sun_direction,
-    OUT(IrradianceSpectrum) sky_irradiance) {
+    IN(Position) point, IN(Direction) sun_direction,
+    OUT(IrradianceSpectrum) sun_irradiance,
+    OUT(IrradianceSpectrum) sky_irradiance)
+{
   Length r = length(point);
   Number mu_s = dot(point, sun_direction) / r;
 
   // Indirect irradiance (approximated if the surface is not horizontal).
-  sky_irradiance = GetIrradiance(atmosphere, irradiance_texture, r, mu_s) *
-    mix(0.5 * (1.0 + dot(normal, point) / r), 1.0, 0.5);
+  sky_irradiance = GetIrradiance(atmosphere, irradiance_texture, r, mu_s);
 
   // Direct irradiance.
-  return atmosphere.solar_irradiance *
-      GetTransmittanceToSun(
-          atmosphere, transmittance_texture, r, mu_s) *
-      max(dot(normal, sun_direction), 0.0);
+  sun_irradiance = atmosphere.solar_irradiance *
+      GetTransmittanceToSun(atmosphere, transmittance_texture, r, mu_s);
 }
 
 
@@ -1921,11 +1920,13 @@ RadianceSpectrum GetSkyRadianceToPoint(
       scattering_texture, single_mie_scattering_texture,
       camera, point, shadow_length, sun_direction, transmittance);
 }
-IrradianceSpectrum GetSunAndSkyIrradiance(
-    Position p, Direction normal, Direction sun_direction,
-    out IrradianceSpectrum sky_irradiance) {
-  return GetSunAndSkyIrradiance(ATMOSPHERE, transmittance_texture,
-      irradiance_texture, p, normal, sun_direction, sky_irradiance);
+void GetSunAndSkyIrradiance(
+    Position p, Direction sun_direction,
+    out IrradianceSpectrum sun_irradiance,
+    out IrradianceSpectrum sky_irradiance)
+{
+  GetSunAndSkyIrradiance(ATMOSPHERE, transmittance_texture, irradiance_texture,
+      p, sun_direction, sun_irradiance, sky_irradiance);
 }
 #endif
 
@@ -1950,14 +1951,19 @@ Luminance3 GetSkyLuminanceToPoint(
       camera, point, shadow_length, sun_direction, transmittance) *
       SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
 }
-Illuminance3 GetSunAndSkyIlluminance(
-    Position p, Direction normal, Direction sun_direction,
-    out IrradianceSpectrum sky_irradiance) {
-  IrradianceSpectrum sun_irradiance = GetSunAndSkyIrradiance(
-      ATMOSPHERE, transmittance_texture, irradiance_texture, p, normal,
-      sun_direction, sky_irradiance);
-  sky_irradiance *= SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
-  return sun_irradiance * SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+
+
+void GetSunAndSkyIlluminance(
+    Position p, Direction sun_direction,
+    out Illuminance3 sun_illuminance,
+    out Illuminance3 sky_illuminance)
+{
+  GetSunAndSkyIrradiance(
+      ATMOSPHERE, transmittance_texture, irradiance_texture,
+      p, sun_direction, sun_illuminance, sky_illuminance);
+
+  sun_illuminance *= SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+  sky_illuminance *= SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
 }
 
 

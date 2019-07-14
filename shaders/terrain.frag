@@ -21,11 +21,12 @@
 #define IS_EDITOR @is_editor@
 #define ONLY_WATER @enable_water_only:0@
 
+#include water_definitions.glsl
+
 void resetDebugColor();
 vec3 getDebugColor();
 void apply_fog();
 vec4 getTerrainColor(vec3 pos);
-vec3 getWaterColorSimple(vec3 viewDir, float dist);
 
 #if IS_EDITOR
 uniform vec2 height_map_base_size_m;
@@ -49,11 +50,10 @@ void main(void)
   gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
 
 //   resetDebugColor();
-
 #if ONLY_WATER
   float dist = distance(cameraPosWorld, passObjectPosFlat);
   vec3 view_dir = normalize(passObjectPosFlat - cameraPosWorld);
-  gl_FragColor.xyz = getWaterColorSimple(view_dir, dist);
+  gl_FragColor.xyz = getWaterColorSimple(passObjectPosFlat, view_dir, dist);
 #else
   gl_FragColor.xyz = getTerrainColor(passObjectPosFlat).xyz;
 #endif

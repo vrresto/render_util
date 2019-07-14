@@ -25,18 +25,6 @@
 
 #version 130
 
-
-void calcLightParams(vec3 normal, out vec3 ambientLightColor, out vec3 directLightColor);
-void calcLightParamsWithDetail(vec3 normal, vec3 normal_detail,
-    out vec3 ambientLightColor, out vec3 directLightColor);
-
-uniform vec3 sunDir;
-uniform vec3 cameraPosWorld;
-
-
-const float PI = acos(-1.0);
-
-
 // uniform ivec2 typeMapSize;
 
 
@@ -84,28 +72,4 @@ vec3 blend_rnm(vec3 n1, vec3 n2)
   vec3 r = t*dot(t, u) - u*t.z;
 
   return normalize(r);
-}
-
-
-vec3 calcLight(vec3 pos, vec3 normal, float direct_scale, float ambient_scale)
-{
-  vec3 ambientLightColor;
-  vec3 directLightColor;
-  calcLightParams(normal, ambientLightColor, directLightColor);
-
-  vec3 light = direct_scale * directLightColor + ambient_scale * ambientLightColor;
-
-  return light;
-}
-
-
-vec3 calcLightWithDetail(vec3 normal, vec3 normal_detail, float direct_scale, float ambient_scale)
-{
-  vec3 ambientLightColor;
-  vec3 directLightColor;
-  calcLightParamsWithDetail(normal, normal_detail, ambientLightColor, directLightColor);
-
-  vec3 light = direct_scale * directLightColor + ambient_scale * ambientLightColor;
-
-  return light;
 }
