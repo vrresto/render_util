@@ -8,4 +8,6 @@ vec4 applyWater(vec4 color,
   vec3 pos,
   float shallow_sea_amount,
   float river_amount,
-  float bank_amount);
+  float bank_amount,
+  vec3 light_direct_incoming,
+  vec3 light_ambient_incoming);

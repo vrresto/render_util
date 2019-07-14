@@ -351,16 +351,18 @@ vec3 getWaterColor(vec3 pos, vec3 viewDir, float dist, vec2 coord,
                    float waterDepth,
                    vec3 groundColor,
                    vec3 normal,
-                   float shallow_sea_amount, float river_amount)
+                   float shallow_sea_amount,
+                   float river_amount,
+                   vec3 light_direct_incoming,
+                   vec3 light_ambient_incoming)
 {
   float extinction_factor = waterDepth * 0.15;
   waterDepth = 1 - pow(1-waterDepth, 2);
 
   extinction_factor *= 4;
 
-  vec3 ambientLightColor;
-  vec3 directLightColorIncoming;
-  getIncomingLight(pos, ambientLightColor, directLightColorIncoming);
+  vec3 ambientLightColor = light_ambient_incoming;
+  vec3 directLightColorIncoming = light_direct_incoming;
 
   vec3 directLightColor = directLightColorIncoming * max(dot(normal, sunDir), 0.0);
 
@@ -584,7 +586,9 @@ vec4 applyWater(vec4 color,
   vec3 pos,
   float shallow_sea_amount,
   float river_amount,
-  float bank_amount)
+  float bank_amount,
+  vec3 light_direct_incoming,
+  vec3 light_ambient_incoming)
 {
   const float foam_threshold = 0.8;
   const float foam_threshold_smooth = 0.05;
@@ -686,7 +690,7 @@ vec4 applyWater(vec4 color,
   color.xyz = mix(color.xyz, color.xyz * 0.8, wetness);
 #endif
 
-  vec3 waterColor = getWaterColor(pos, view_dir, dist, mapCoords, waterDepth, color.xyz, water_normal, shallow_sea_amount, river_amount);
+  vec3 waterColor = getWaterColor(pos, view_dir, dist, mapCoords, waterDepth, color.xyz, water_normal, shallow_sea_amount, river_amount light_direct_incoming, light_ambient_incoming);
 
 
 #if ENABLE_WAVE_FOAM
