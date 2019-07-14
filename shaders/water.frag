@@ -83,6 +83,7 @@ uniform vec3 sunDir;
 uniform vec3 water_color;
 uniform vec2 map_size;
 
+uniform vec3 earth_center;
 uniform vec3 cameraPosWorld;
 
 struct WaterAnimationParameters
@@ -315,9 +316,9 @@ vec3 sampleWaterNormalMap(float scale, vec2 coord, int layer)
 }
 
 
-vec3 getWaterNormal(float dist, vec2 coord)
+vec3 getWaterNormal(vec3 pos, float dist, vec2 coord)
 {
-  vec3 normal = vec3(0,0,1);
+  vec3 normal = normalize(pos - earth_center);
 #if ENABLE_WAVES
   const float bigWaveStrength = 0.01;
   const float mediumWaveStrength = 0.1;
@@ -336,7 +337,7 @@ vec3 getWaterNormal(float dist, vec2 coord)
 
 vec3 getWaterColorSimple(vec3 pos, vec3 viewDir, float dist)
 {
-  vec3 normal = getWaterNormal(dist, pass_texcoord);
+  vec3 normal = getWaterNormal(pos, dist, pass_texcoord);
 
   vec3 ambientLight;
   vec3 incomingDirectLight;
@@ -726,7 +727,7 @@ vec3 applyWater(in vec3 color_in,
   wave_strength = mix(wave_strength, wave_strength * 0.3, river_amount);
 #endif
 
-  vec3 water_normal = getWaterNormal(dist, mapCoords);
+  vec3 water_normal = getWaterNormal(pos, dist, mapCoords);
 
 #if ENABLE_WAVE_FOAM
   float wave_foam_amount = getFoamAmountWithNoise(mapCoords * 2);

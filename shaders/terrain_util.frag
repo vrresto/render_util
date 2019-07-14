@@ -57,6 +57,8 @@ vec4 getForestFarColorSimple(vec2 pos);
 vec4 getForestColor(vec2 pos, int layer);
 float getWaterDepth(vec2 pos);
 void sampleWaterType(vec2 pos, out float shallow_sea_amount, out float river_amount);
+vec3 blend_rnm(vec3 n1, vec3 n2);
+
 uniform float terrain_tile_size_m;
 
 const float near_distance = 80000;
@@ -78,6 +80,7 @@ uniform sampler2DArray sampler_beach;
 uniform ivec2 typeMapSize;
 uniform vec2 map_size;
 uniform vec3 cameraPosWorld;
+uniform vec3 earth_center;
 
 uniform sampler2DArray sampler_terrain;
 uniform sampler2DArray sampler_terrain1;
@@ -444,13 +447,13 @@ vec4 applyFarTexture(vec4 color, vec2 pos, float dist)
 }
 
 #if ENABLE_UNLIT_OUTPUT
-void getTerrainColor(vec3 pos, out vec3 lit_color, out vec3 unlit_color)
+void getTerrainColor(vec3 pos_curved, vec3 pos_flat, out vec3 lit_color, out vec3 unlit_color)
 #else
-vec3 getTerrainColor(vec3 pos)
+vec3 getTerrainColor(vec3 pos_curved, vec3 pos_flat)
 #endif
 {
-  float dist = distance(cameraPosWorld, pos);
-  vec3 view_dir = normalize(pos - cameraPosWorld);
+  float dist_curved = distance(cameraPosWorld, pos_curved);
+  vec3 view_dir_curved = normalize(pos_curved - cameraPosWorld);
 
   float detail_blend = 1.0;
 
@@ -459,13 +462,13 @@ vec3 getTerrainColor(vec3 pos)
 #endif
 
 #if ENABLE_TERRAIN_NORMAL_MAP
-  vec2 normal_map_coord = fract((pos.xy + vec2(0, 200)) / map_size);
+  vec2 normal_map_coord = fract((pos_flat.xy + vec2(0, 200)) / map_size);
   normal_map_coord.y = 1.0 - normal_map_coord.y;
   vec3 normal = texture2D(sampler_terrain_cdlod_normal_map, normal_map_coord).xyz;
 
 #if ENABLE_BASE_MAP
   {
-    vec2 normal_map_coord_base = fract((pos.xy - height_map_base_origin) / height_map_base_size_m);
+    vec2 normal_map_coord_base = fract((pos_flat.xy - height_map_base_origin) / height_map_base_size_m);
     normal_map_coord_base.y = 1.0 - normal_map_coord_base.y;
     vec3 normal_base = texture2D(sampler_terrain_cdlod_normal_map_base, normal_map_coord_base).xyz;
 
@@ -480,11 +483,13 @@ vec3 getTerrainColor(vec3 pos)
 
   normal.y *= -1;
 
+  normal = blend_rnm(normalize(pos_curved - earth_center), normal);
+
   float shallow_sea_amount = 0;
   float river_amount = 0;
 
 #if ENABLE_WATER && ENABLE_WATER_TYPE_MAP
-  sampleWaterType(pos.xy, shallow_sea_amount, river_amount);
+  sampleWaterType(pos_flat.xy, shallow_sea_amount, river_amount);
 #endif
 
 //   shallow_sea_amount = 1;
@@ -498,12 +503,12 @@ vec3 normal_detail = vec3(0,0,1);
 
 #if ENABLE_TYPE_MAP
   #if !LOW_DETAIL
-    color = sampleTerrainTextures(pos.xy);
+    color = sampleTerrainTextures(pos_flat.xy);
     #if ENABLE_BASE_MAP
-      color = mix(sampleBaseTerrainTextures(pos.xy), color, detail_blend);
+      color = mix(sampleBaseTerrainTextures(pos_flat.xy), color, detail_blend);
     #endif
     #if ENABLE_TERRAIN_DETAIL_NM
-      normal_detail = getTerrainDetailNormal(pos.xy);
+      normal_detail = getTerrainDetailNormal(pos_flat.xy);
     #endif
   #endif
   color.w = 1;
@@ -512,16 +517,16 @@ vec3 normal_detail = vec3(0,0,1);
 vec3 light_direct;
 vec3 light_ambient;
 #if ENABLE_TERRAIN_DETAIL_NM
-  calcLightWithDetail(pos, normal, normal_detail, light_direct, light_ambient);
+  calcLightWithDetail(pos_curved, normal, normal_detail, light_direct, light_ambient);
 #else
-  calcLight(pos, normal, light_direct, light_ambient);
+  calcLight(pos_curved, normal, light_direct, light_ambient);
 #endif
 
 #if ENABLE_WATER
 float waterDepth = 0;
 float bank_amount = 0;
 
-  waterDepth = getWaterDepth(pos.xy);
+  waterDepth = getWaterDepth(pos_flat.xy);
 
   vec3 shallowWaterColor = texture2D(sampler_shallow_water, pass_texcoord * 2).xyz;
 
@@ -541,16 +546,16 @@ float bank_amount = 0;
 
 #if ENABLE_TERRAIN_NOISE
 #if !LOW_DETAIL
-  color = applyTerrainNoise(color, dist);
+  color = applyTerrainNoise(color, dist_curved);
 #endif
 #endif
 
 #if ENABLE_FAR_TEXTURE
-  color = applyFarTexture(color, pos.xy, dist);
+  color = applyFarTexture(color, pos_flat.xy, dist_curved);
 #endif
 
 #if ENABLE_FOREST
-  color = applyForest(color, pos.xy, view_dir, dist);
+  color = applyForest(color, pos_flat.xy, view_dir_curved, dist_curved);
 #endif
 
   color.xyz = textureColorCorrection(color.xyz);
@@ -565,9 +570,9 @@ float bank_amount = 0;
 
 #if ENABLE_WATER
   #if ENABLE_UNLIT_OUTPUT
-    applyWater(lit_color, unlit_color, view_dir, dist, waterDepth, pass_texcoord, pos, shallow_sea_amount, river_amount, bank_amount, lit_color, unlit_color);
+    applyWater(lit_color, unlit_color, view_dir_curved, dist_curved, waterDepth, pass_texcoord, pos_curved, shallow_sea_amount, river_amount, bank_amount, lit_color, unlit_color);
   #else
-    color.xyz = applyWater(color.xyz, view_dir, dist, waterDepth, pass_texcoord, pos, shallow_sea_amount, river_amount, bank_amount);
+    color.xyz = applyWater(color.xyz, view_dir_curved, dist_curved, waterDepth, pass_texcoord, pos_curved, shallow_sea_amount, river_amount, bank_amount);
   #endif
 #endif
 

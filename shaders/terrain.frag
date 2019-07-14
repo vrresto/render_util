@@ -28,8 +28,8 @@
 
 void resetDebugColor();
 vec3 getDebugColor();
-void getTerrainColor(vec3 pos, out vec3 lit_color, out vec3 unlit_color);
-vec3 getTerrainColor(vec3 pos);
+void getTerrainColor(vec3 pos_curved, vec3 pos_flat, out vec3 lit_color, out vec3 unlit_color);
+vec3 getTerrainColor(vec3 pos_curved, vec3 pos_flat);
 vec3 fogAndToneMap(vec3);
 void fogAndToneMap(in vec3 in_color0, in vec3 in_color1,
                    out vec3 out_color0, out vec3 out_color0);
@@ -69,12 +69,13 @@ void main(void)
 #if ONLY_WATER
   float dist = distance(cameraPosWorld, passObjectPosFlat);
   vec3 view_dir = normalize(passObjectPosFlat - cameraPosWorld);
-  out_color0.xyz = getWaterColorSimple(passObjectPos, view_dir, dist); //FIXME
+  vec3 view_dir_curved = normalize(passObjectPos - cameraPosWorld);
+  out_color0.xyz = getWaterColorSimple(passObjectPos, view_dir_curved, dist);
 #else
   #if ENABLE_UNLIT_OUTPUT
-    getTerrainColor(passObjectPosFlat, out_color0.xyz, out_color1.xyz);
+    getTerrainColor(passObjectPos, passObjectPosFlat, out_color0.xyz, out_color1.xyz);
   #else
-    out_color0.xyz = getTerrainColor(passObjectPosFlat);
+    out_color0.xyz = getTerrainColor(passObjectPos, passObjectPosFlat);
   #endif
 #endif
 
