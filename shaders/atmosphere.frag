@@ -96,7 +96,7 @@ float getSphereIntersectionFromInside(vec3 rayStart, vec3 rayDir, vec3 sphere_ce
   }
 
   if (distFromDeepestPointToIntersection > rayStartOntoRayDirScalar) {
-//     gl_FragColor.xyz = vec3(1, 0.5, 0);
+//     out_color.xyz = vec3(1, 0.5, 0);
 //     return -2.0;
   }
 
@@ -223,7 +223,7 @@ float getAtmosphereEdgeIntersectionDistFromInside(vec2 rayStart, vec2 rayDir)
   }
 
   if (distFromDeepestPointToIntersection > rayStartOntoRayDirScalar) {
-//     gl_FragColor.xyz = vec3(1, 0.5, 0);
+//     out_color.xyz = vec3(1, 0.5, 0);
 //     return -2.0;
   }
   
@@ -456,10 +456,10 @@ vec2 getMaxAtmosphereThickness(vec2 cameraPos, vec2 viewDir)
 
   return getMaxAtmosphereThickness(max(0.0, rCameraPos - planet_radius), mu);
 
-//   gl_FragColor.xyz = vec3(0,0,0);
+//   out_color.xyz = vec3(0,0,0);
 //   if (!isnan(mu))
 //   {
-//     gl_FragColor.xyz = vec3(mu);
+//     out_color.xyz = vec3(mu);
 //   }
 
 //   return mu;
@@ -727,12 +727,14 @@ float calcHazeDistance(vec3 obj_pos, vec3 obj_pos_flat)
   return fog_distance;
 }
 
-void apply_fog()
+vec3 apply_fog(vec3 in_color)
 {
 
 #if !ENABLE_FOG
-  return;
+  return in_color;
 #endif
+
+  vec3 out_color = in_color;
 
   debugColor = vec3(0);
 
@@ -785,7 +787,7 @@ void apply_fog()
 
   float extinction = atmosphereColor.w;
 
-  gl_FragColor.xyz *= 1.0 - extinction;
+  out_color.xyz *= 1.0 - extinction;
 
 //   atmosphereColor *=  mix(0.75, 1.0, 1.0 - exp(-3 * (t/atmosphereVisibility) * 5.0));
 //   else if (gl_FragCoord.x > 1200)
@@ -796,21 +798,28 @@ void apply_fog()
 
 //   atmosphereColor *= 0;
 
-  gl_FragColor.xyz = mix(gl_FragColor.xyz, vec3(1), atmosphereColor.xyz);
+  out_color.xyz = mix(out_color.xyz, vec3(1), atmosphereColor.xyz);
 
-  gl_FragColor.xyz = mix(gl_FragColor.xyz, fog_color, fog);
+  out_color.xyz = mix(out_color.xyz, fog_color, fog);
 
 #if 0
   if (t == -1.0) {
-    gl_FragColor.xyz = vec3(0.5, 0.5, 0.0);
+    out_color.xyz = vec3(0.5, 0.5, 0.0);
   }
   else if (t.x < 0.0) {
-    gl_FragColor.xyz = vec3(1,0,1);
-//     gl_FragColor.xyz = vec3(0.0, abs(t + 1.0) * 4.0, 0.0);
+    out_color.xyz = vec3(1,0,1);
+//     out_color.xyz = vec3(0.0, abs(t + 1.0) * 4.0, 0.0);
   }
 
   if (debugColor != vec3(0)) {
-    gl_FragColor.xyz = debugColor;
+    out_color.xyz = debugColor;
   }
 #endif
+
+  return out_color;
+}
+
+vec3 fogAndToneMap(vec3 in_color)
+{
+  return apply_fog(in_color);
 }

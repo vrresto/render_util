@@ -40,12 +40,12 @@ vec3 GetSkyRadianceToPoint(vec3 camera, vec3 point, float shadow_length,
 vec3 toneMap(vec3 color);
 
 
-void apply_fog()
+vec3 fogAndToneMap(vec3 in_color)
 {
   vec3 view_direction = normalize(passObjectPos - cameraPosWorld);
   vec3 normal = normalize(passObjectPos - earth_center);
 
-  vec3 radiance = gl_FragColor.xyz;
+  vec3 radiance = in_color;
 
   float shadow_length = 0;
   vec3 transmittance;
@@ -61,5 +61,11 @@ void apply_fog()
   vec3 color = toneMap(radiance);
   color = adjustSaturation(color, mix(1, blue_saturation, blue_ratio * in_scatter_ratio));
 
-  gl_FragColor.rgb = color;
+  return color;
+}
+
+
+vec3 apply_fog(vec3 in_color)
+{
+  return fogAndToneMap(in_color);
 }
