@@ -67,8 +67,8 @@ namespace
 {
 
 
-constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
-// constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
+// constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
+constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
 
 const bool g_terrain_use_lod = true;
 

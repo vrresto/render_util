@@ -20,17 +20,25 @@
 
 #define IS_EDITOR @is_editor@
 #define ONLY_WATER @enable_water_only:0@
+#define ENABLE_UNLIT_OUTPUT @enable_unlit_output:0@
+
+#include water_definitions.glsl
 
 #include water_definitions.glsl
 
 void resetDebugColor();
 vec3 getDebugColor();
-vec4 getTerrainColor(vec3 pos);
+void getTerrainColor(vec3 pos, out vec3 lit_color, out vec3 unlit_color);
+vec3 getTerrainColor(vec3 pos);
 vec3 fogAndToneMap(vec3);
+void fogAndToneMap(in vec3 in_color0, in vec3 in_color1,
+                   out vec3 out_color0, out vec3 out_color0);
 
 
 layout(location = 0) out vec4 out_color0;
-
+#if ENABLE_UNLIT_OUTPUT
+layout(location = 1) out vec4 out_color1;
+#endif
 
 #if IS_EDITOR
 uniform vec2 height_map_base_size_m;
@@ -53,14 +61,21 @@ void main(void)
     discard;
 
   out_color0 = vec4(0.5, 0.5, 0.5, 1.0);
+#if ENABLE_UNLIT_OUTPUT
+  out_color1 = vec4(0.5, 0.5, 0.5, 1.0);
+#endif
 
 //   resetDebugColor();
 #if ONLY_WATER
   float dist = distance(cameraPosWorld, passObjectPosFlat);
   vec3 view_dir = normalize(passObjectPosFlat - cameraPosWorld);
-  out_color0.xyz = getWaterColorSimple(passObjectPos, view_dir, dist);
+  out_color0.xyz = getWaterColorSimple(passObjectPos, view_dir, dist); //FIXME
 #else
-  out_color0.xyz = getTerrainColor(passObjectPosFlat).xyz;
+  #if ENABLE_UNLIT_OUTPUT
+    getTerrainColor(passObjectPosFlat, out_color0.xyz, out_color1.xyz);
+  #else
+    out_color0.xyz = getTerrainColor(passObjectPosFlat);
+  #endif
 #endif
 
 #if IS_EDITOR
@@ -84,7 +99,11 @@ void main(void)
   }
 #endif
 
+#if ENABLE_UNLIT_OUTPUT
+  fogAndToneMap(out_color0.xyz, out_color1.xyz, out_color0.xyz, out_color1.xyz);
+#else
   out_color0.xyz = fogAndToneMap(out_color0.xyz);
+#endif
 
 //   if (getDebugColor() != vec3(0))
 //     out_color0.xyz = getDebugColor();

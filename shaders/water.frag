@@ -34,6 +34,7 @@
 
 #define ENABLE_BASE_MAP @enable_base_map@
 #define ENABLE_BASE_WATER_MAP @enable_base_water_map@
+#define ENABLE_UNLIT_OUTPUT @enable_unlit_output:0@
 
 // const float water_map_chunk_size_m = 1600;
 const float water_map_chunk_size_m = 1600 * 4;
@@ -348,11 +349,21 @@ vec3 getWaterColorSimple(vec3 pos, vec3 viewDir, float dist)
 }
 
 
+#if ENABLE_UNLIT_OUTPUT
+void getWaterColor(vec3 pos, vec3 viewDir, float dist, vec2 coord,
+                   float waterDepth,
+                   vec3 groundColor,
+                   vec3 groundColorUnlit,
+                   vec3 normal,
+                   float shallow_sea_amount, float river_amount,
+                   out vec3 lit_color, out vec3 unlit_color)
+#else
 vec3 getWaterColor(vec3 pos, vec3 viewDir, float dist, vec2 coord,
                    float waterDepth,
                    vec3 groundColor,
                    vec3 normal,
                    float shallow_sea_amount, float river_amount)
+#endif
 {
   float extinction_factor = waterDepth * 0.15;
   waterDepth = 1 - pow(1-waterDepth, 2);
@@ -375,7 +386,16 @@ vec3 getWaterColor(vec3 pos, vec3 viewDir, float dist, vec2 coord,
   vec3 envColor = calcWaterEnvColor(ambientLight, incomingDirectLight);
 
   vec3 refractionColor = 0.9 * textureColorCorrection(water_color);
+
+#if ENABLE_UNLIT_OUTPUT
+  vec3 refractionColorUnlit = refractionColor;
+#endif
+
   refractionColor *= ambientLight + 0.5 * directLight;
+
+#if ENABLE_UNLIT_OUTPUT
+  refractionColorUnlit *= ambientLight;// + 0.2 * directLightColor;;
+#endif
 
   //extinction
   /////////////////////////////////
@@ -384,6 +404,11 @@ vec3 getWaterColor(vec3 pos, vec3 viewDir, float dist, vec2 coord,
 
   groundColor *= 0.95;
   groundColor *= exp(-extinction_factor * extincion);
+
+#if ENABLE_UNLIT_OUTPUT
+  groundColorUnlit *= 0.95;
+  groundColorUnlit *= exp(-extinction_factor * extincion);
+#endif
 
   float visibility_shallow = 1-waterDepth;
   float visibility_deep = pow(visibility_shallow * smoothstep(0.3, 1.0, visibility_shallow), 1);
@@ -394,7 +419,15 @@ vec3 getWaterColor(vec3 pos, vec3 viewDir, float dist, vec2 coord,
 
   refractionColor = mix(groundColor, refractionColor, 1-visibility);
 
+#if ENABLE_UNLIT_OUTPUT
+  refractionColorUnlit = mix(groundColorUnlit, refractionColorUnlit, 1-visibility);
+  unlit_color = mix(refractionColorUnlit, envColor, fresnel);
+  lit_color = mix(refractionColor, envColor, fresnel);
+  lit_color += specular * incomingDirectLight;
+#else
   return mix(refractionColor, envColor, fresnel) + specular * incomingDirectLight;
+#endif
+
 }
 
 
@@ -572,6 +605,20 @@ float getShoreWaveStrength(vec2 pos, float waterDepth, float amount)
   return shore_wave_strength;
 }
 
+
+#if ENABLE_UNLIT_OUTPUT
+void applyWater(in vec3 lit_color_in, in vec3 unlit_color_in,
+  vec3 view_dir,
+  float dist,
+  float waterDepth,
+  vec2 mapCoords,
+  vec3 pos,
+  float shallow_sea_amount,
+  float river_amount,
+  float bank_amount,
+  out vec3 lit_color,
+  out vec3 unlit_color)
+#else
 vec3 applyWater(in vec3 color_in,
   vec3 view_dir,
   float dist,
@@ -581,6 +628,7 @@ vec3 applyWater(in vec3 color_in,
   float shallow_sea_amount,
   float river_amount,
   float bank_amount)
+#endif
 {
   const float foam_threshold = 0.8;
   const float foam_threshold_smooth = 0.05;
@@ -678,24 +726,67 @@ vec3 applyWater(in vec3 color_in,
   wetness = max(wetness, wetness_secondary);
 #endif
 
-vec3 color = color_in;
 
-#if !LOW_DETAIL
-  color = mix(color, color * 0.8, wetness);
+#if ENABLE_UNLIT_OUTPUT
+lit_color = lit_color_in;
+unlit_color = unlit_color_in;
+#else
+vec3 color = color_in;
 #endif
 
-  vec3 waterColor = getWaterColor(pos, view_dir, dist, mapCoords, waterDepth, color, water_normal, shallow_sea_amount, river_amount);
+#if !LOW_DETAIL
+  #if ENABLE_UNLIT_OUTPUT
+    lit_color = mix(lit_color, lit_color * 0.8, wetness);
+    unlit_color = mix(unlit_color, unlit_color * 0.8, wetness);
+  #else
+    color = mix(color, color * 0.8, wetness);
+  #endif
+#endif
 
+#if ENABLE_UNLIT_OUTPUT
+  vec3 water_color;
+  vec3 water_color_unlit;
+  getWaterColor(pos,
+                view_dir,
+                dist,
+                mapCoords,
+                waterDepth,
+                lit_color,
+                unlit_color,
+                water_normal,
+                shallow_sea_amount,
+                river_amount,
+                water_color,
+                water_color_unlit);
+#else
+  vec3 water_color = getWaterColor(pos,
+                        view_dir,
+                        dist,
+                        mapCoords,
+                        waterDepth,
+                        color,
+                        water_normal,
+                        shallow_sea_amount,
+                        river_amount);
+#endif
 
 #if ENABLE_WAVE_FOAM
-  waterColor = mix(waterColor, vec3(1), wave_foam_amount);
+//   waterColor = mix(waterColor, vec3(1), wave_foam_amount);
 #endif
 
-  color.xyz = mix(color.xyz, waterColor, water_alpha);
+#if ENABLE_UNLIT_OUTPUT
+  lit_color.xyz = mix(lit_color.xyz, water_color, water_alpha);
+  unlit_color.xyz = mix(unlit_color.xyz, water_color_unlit, water_alpha);
+#else
+  color = mix(color, water_color, water_alpha);
+#endif
 
 #if !LOW_DETAIL
-  color.xyz = mix(color.xyz, foamColor.xyz, foam_strength);
+//   color.xyz = mix(color.xyz, foamColor.xyz, foam_strength);
 #endif
 
+#if !ENABLE_UNLIT_OUTPUT
   return color;
+#endif
+
 }

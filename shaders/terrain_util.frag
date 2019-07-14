@@ -34,6 +34,7 @@
 #define ENABLE_FOREST @enable_forest:0@
 #define ENABLE_TYPE_MAP @enable_type_map:0@
 #define ENABLE_TERRAIN_DETAIL_NM !LOW_DETAIL && @enable_terrain_detail_nm:0@
+#define ENABLE_UNLIT_OUTPUT @enable_unlit_output:0@
 
 #define ENABLE_TERRAIN0 @enable_terrain0:0@
 #define ENABLE_TERRAIN1 @enable_terrain1:0@
@@ -442,8 +443,11 @@ vec4 applyFarTexture(vec4 color, vec2 pos, float dist)
   return color;
 }
 
-
-vec4 getTerrainColor(vec3 pos)
+#if ENABLE_UNLIT_OUTPUT
+void getTerrainColor(vec3 pos, out vec3 lit_color, out vec3 unlit_color)
+#else
+vec3 getTerrainColor(vec3 pos)
+#endif
 {
   float dist = distance(cameraPosWorld, pos);
   vec3 view_dir = normalize(pos - cameraPosWorld);
@@ -551,15 +555,30 @@ float bank_amount = 0;
 
   color.xyz = textureColorCorrection(color.xyz);
 
+
+#if ENABLE_UNLIT_OUTPUT
+  lit_color = color.xyz * (light_direct + light_ambient);
+  unlit_color = color.xyz * light_ambient;
+#else
   color.xyz *= light_direct + light_ambient;
+#endif
 
 #if ENABLE_WATER
-  color.xyz = applyWater(color.xyz, view_dir, dist, waterDepth, pass_texcoord, pos, shallow_sea_amount, river_amount, bank_amount);
+  #if ENABLE_UNLIT_OUTPUT
+    applyWater(lit_color, unlit_color, view_dir, dist, waterDepth, pass_texcoord, pos, shallow_sea_amount, river_amount, bank_amount, lit_color, unlit_color);
+  #else
+    color.xyz = applyWater(color.xyz, view_dir, dist, waterDepth, pass_texcoord, pos, shallow_sea_amount, river_amount, bank_amount);
+  #endif
 #endif
+
 
 // DEBUG
 //   if (fract(pos.xy / water_map_chunk_size_m).x < 0.002 || fract(pos.xy / water_map_chunk_size_m).y < 0.002)
 //     color.xyz = vec3(1,0,0);
 
-  return color;
+
+#if !ENABLE_UNLIT_OUTPUT
+  return color.xyz;
+#endif
+
 }

@@ -65,6 +65,37 @@ vec3 fogAndToneMap(vec3 in_color)
 }
 
 
+vec3 fogAndToneMap(vec3 radiance, vec3 in_scatter, vec3 transmittance, float blue_ratio)
+{
+  radiance = radiance * transmittance + in_scatter;
+  float in_scatter_ratio = length(in_scatter) / length(radiance);
+
+  vec3 color = toneMap(radiance);
+  color = adjustSaturation(color, mix(1, blue_saturation, blue_ratio * in_scatter_ratio));
+
+  return color;
+}
+
+
+void fogAndToneMap(in vec3 in_color0, in vec3 in_color1,
+                   out vec3 out_color0, out vec3 out_color1)
+{
+  vec3 view_direction = normalize(passObjectPos - cameraPosWorld);
+  vec3 normal = normalize(passObjectPos - earth_center);
+
+  float shadow_length = 0;
+  vec3 transmittance;
+
+  vec3 in_scatter = GetSkyRadianceToPoint(cameraPosWorld - earth_center,
+      passObjectPos - earth_center, shadow_length, sunDir, transmittance);
+
+  float blue_ratio = in_scatter.b / dot(vec3(1), in_scatter);
+
+  out_color0 = fogAndToneMap(in_color0, in_scatter, transmittance, blue_ratio);
+  out_color1 = fogAndToneMap(in_color1, in_scatter, transmittance, blue_ratio);
+}
+
+
 vec3 apply_fog(vec3 in_color)
 {
   return fogAndToneMap(in_color);
