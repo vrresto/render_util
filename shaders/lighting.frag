@@ -99,14 +99,6 @@ void calcLightParamsWithDetail(vec3 normal, vec3 normal_detail,
 }
 
 
-
-
-
-
-
-
-
-
 vec3 calcWaterEnvColor()
 {
   vec3 envColor = vec3(0.65, 0.85, 1.0);
