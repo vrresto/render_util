@@ -52,7 +52,7 @@ void main(void)
 //   resetDebugColor();
 #if ONLY_WATER
   float dist = distance(cameraPosWorld, passObjectPosFlat.xyz);
-  vec3 view_dir = normalize(cameraPosWorld - passObjectPosFlat.xyz);
+  vec3 view_dir = normalize(passObjectPosFlat - cameraPosWorld);
   gl_FragColor.xyz = getWaterColorSimple(view_dir, dist);
 #else
   gl_FragColor.xyz = getTerrainColor(passObjectPosFlat.xyz).xyz;

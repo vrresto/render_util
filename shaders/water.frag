@@ -330,11 +330,11 @@ vec3 getWaterColorSimple(vec3 viewDir, float dist)
 
   vec3 directLightColorIncoming = calcIncomingDirectLight();
 
-  float fresnel = fresnelSchlick(viewDir, normal, schlick_r0_water);
+  float fresnel = fresnelSchlick(-viewDir, normal, schlick_r0_water);
 
   float specularDetailFactor = exp(-3 * (dist/30000));
   float specHardness = mix(SPEC_HARDNESS * 0.4, SPEC_HARDNESS, specularDetailFactor);
-  float specular = calcSpecular(viewDir, normal, specHardness);
+  float specular = calcSpecular(-viewDir, normal, specHardness);
   specular = mix(specular * 0.5, specular, specularDetailFactor);
 
   vec3 envColor = calcWaterEnvColor();
