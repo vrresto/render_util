@@ -24,6 +24,8 @@
 
 #if USE_LUMINANCE
 #define GetSunAndSkyIrradiance GetSunAndSkyIlluminance
+#define GetSkyRadiance GetSkyLuminance
+#define GetSolarRadiance GetSolarLuminance
 #endif
 
 vec3 blend_rnm(vec3 n1, vec3 n2);
@@ -31,10 +33,38 @@ vec3 textureColorCorrection(vec3 color);
 
 void GetSunAndSkyIrradiance(vec3 pos, vec3 sun_direction,
                             out vec3 sun_irradiance, out vec3 sky_irradiance);
+vec3 GetSolarRadiance();
+vec3 GetSkyRadiance(vec3 camera, vec3 view_ray, float shadow_length,
+    vec3 sun_direction, out vec3 transmittance);
 
 
 uniform vec3 sunDir;
+uniform vec2 sun_size;
 uniform vec3 earth_center;
+
+
+vec3 getSkyRadiance(vec3 camera_pos, vec3 view_direction)
+{
+  float shadow_length = 0;
+  vec3 transmittance;
+  vec3 radiance = GetSkyRadiance(
+      camera_pos - earth_center,
+      view_direction, shadow_length, sunDir,
+      transmittance);
+
+  // If the view ray intersects the Sun, add the Sun radiance.
+  if (dot(view_direction, sunDir) > sun_size.y) {
+    radiance = radiance + transmittance * GetSolarRadiance();
+  }
+
+  return radiance;
+}
+
+
+vec3 getSkyColor(vec3 camera_pos, vec3 view_direction)
+{
+  return getSkyRadiance(camera_pos, view_direction);
+}
 
 
 vec3 getReflectedDirectLight(vec3 normal, vec3 incoming)

@@ -819,7 +819,45 @@ vec3 apply_fog(vec3 in_color)
   return out_color;
 }
 
+
 vec3 fogAndToneMap(vec3 in_color)
 {
   return apply_fog(in_color);
+}
+
+
+vec3 getSkyColor(vec3 camera_pos, vec3 viewDir)
+{
+  vec3 color = vec3(0);
+
+  vec2 viewDirHorizontal = normalize(viewDir.xy);
+  vec2 viewDirVertical = vec2(dot(vec3(viewDirHorizontal, 0), viewDir), viewDir.z);
+
+  vec2 cameraPosVertical = vec2(0, camera_pos.z);
+
+  vec2 t = getMaxAtmosphereThickness(cameraPosVertical, viewDirVertical);
+
+  vec3 fog_color;
+
+  vec3 obj_pos = camera_pos + viewDir * 100000;
+
+  float fog_distance = 0;
+  fog_distance += calcHazeDistance(obj_pos, obj_pos);
+  fog_distance += t.y;
+
+
+  vec3 mie_color = vec3(0);
+  vec4 atmosphere_color = calcAtmosphereColor(t.x, fog_distance, viewDir, fog_color, mie_color, true);
+
+  float fog = hazeForDistance(fog_distance);
+
+  color *= 1.0 - atmosphere_color.w;
+  color = mix(color, vec3(1), atmosphere_color.xyz);
+
+  color  = mix(color, fog_color, fog);
+
+  float sunDisc = smoothstep(0.9999, 0.99995, dot(viewDir, sunDir));
+  color += vec3(sunDisc);
+
+  return color;
 }

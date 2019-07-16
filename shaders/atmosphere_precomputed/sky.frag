@@ -18,43 +18,19 @@
 
 #version 330
 
-#define USE_LUMINANCE @use_luminance@
-
 vec3 adjustSaturation(vec3 rgb, float adjustment);
+vec3 toneMap(vec3 color);
+vec3 getSkyRadiance(vec3 camera_pos, vec3 view_direction);
 
 uniform vec3 cameraPosWorld;
-uniform vec3 sunDir;
-uniform vec3 earth_center;
-uniform vec2 sun_size;
 uniform float blue_saturation;
 
 varying vec3 passObjectPosWorld;
 
-#if USE_LUMINANCE
-#define GetSolarRadiance GetSolarLuminance
-#define GetSkyRadiance GetSkyLuminance
-#endif
-
-vec3 GetSolarRadiance();
-vec3 GetSkyRadiance(vec3 camera, vec3 view_ray, float shadow_length,
-    vec3 sun_direction, out vec3 transmittance);
-
-vec3 toneMap(vec3 color);
-
 
 vec3 getSkyColor(vec3 view_direction)
 {
-  float shadow_length = 0;
-  vec3 transmittance;
-  vec3 radiance = GetSkyRadiance(
-      cameraPosWorld - earth_center,
-      view_direction, shadow_length, sunDir,
-      transmittance);
-
-  // If the view ray intersects the Sun, add the Sun radiance.
-  if (dot(view_direction, sunDir) > sun_size.y) {
-    radiance = radiance + transmittance * GetSolarRadiance();
-  }
+  vec3 radiance = getSkyRadiance(cameraPosWorld, view_direction);
 
   float blue_ratio = radiance.b / dot(vec3(1), radiance);
 
