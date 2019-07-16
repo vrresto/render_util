@@ -73,4 +73,7 @@ void render_util::updateUniforms(render_util::ShaderProgramPtr program, const re
   auto earth_center =
     glm::vec3(camera.getPos().x, camera.getPos().y, -physics::EARTH_RADIUS);
   program->setUniform("earth_center", earth_center);
+
+  program->setUniform("sun_size", glm::vec2(tan(physics::SUN_ANGULAR_RADIUS),
+                                            cos(physics::SUN_ANGULAR_RADIUS )));
 }

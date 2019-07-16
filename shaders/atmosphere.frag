@@ -43,6 +43,7 @@ uniform float planet_radius;
 uniform mat4 view2WorldMatrix;
 uniform mat4 world2ViewMatrix;
 uniform vec3 cameraPosWorld;
+uniform vec2 sun_size;
 
 varying vec3 passObjectPosFlat;
 varying vec3 passObjectPos;
@@ -856,7 +857,7 @@ vec3 getSkyColor(vec3 camera_pos, vec3 viewDir)
 
   color  = mix(color, fog_color, fog);
 
-  float sunDisc = smoothstep(0.9999, 0.99995, dot(viewDir, sunDir));
+  float sunDisc = smoothstep(sun_size.y - 0.00002, sun_size.y, dot(viewDir, sunDir));
   color += vec3(sunDisc);
 
   return color;

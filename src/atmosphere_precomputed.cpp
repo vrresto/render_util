@@ -57,7 +57,7 @@ enum class Luminance
 };
 
 constexpr double kPi = util::PI;
-constexpr double kSunAngularRadius = 0.00935 / 2.0;
+constexpr double kSunAngularRadius = render_util::physics::SUN_ANGULAR_RADIUS;
 constexpr double kSunSolidAngle = kPi * kSunAngularRadius * kSunAngularRadius;
 // constexpr double kLengthUnitInMeters = 1000.0;
 constexpr double kLengthUnitInMeters = 1.0;
@@ -250,7 +250,6 @@ void AtmospherePrecomputed::setUniforms(ShaderProgramPtr program)
   program->setUniform("blue_saturation", m_blue_saturation);
 
   program->setUniform("white_point", glm::vec3(m_white_point));
-  program->setUniform("sun_size", glm::vec2(tan(kSunAngularRadius), cos(kSunAngularRadius)));
 }
 
 

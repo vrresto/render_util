@@ -22,6 +22,7 @@
 namespace render_util::physics
 {
   constexpr double EARTH_RADIUS = 6371000;
+  constexpr double SUN_ANGULAR_RADIUS = 0.00935 / 2.0;
 }
 
 #endif
