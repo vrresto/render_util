@@ -44,6 +44,7 @@ uniform mat4 view2WorldMatrix;
 uniform mat4 world2ViewMatrix;
 uniform vec3 cameraPosWorld;
 uniform vec2 sun_size;
+uniform vec3 earth_center;
 
 varying vec3 passObjectPosFlat;
 varying vec3 passObjectPos;
@@ -728,6 +729,12 @@ float calcHazeDistance(vec3 obj_pos, vec3 obj_pos_flat)
   return fog_distance;
 }
 
+
+float SafeSqrt(float a) {
+  return sqrt(max(a, 0.0));
+}
+
+
 vec3 apply_fog(vec3 in_color)
 {
 
@@ -735,6 +742,24 @@ vec3 apply_fog(vec3 in_color)
   return in_color;
 #endif
 
+
+  vec3 view_ray = normalize(passObjectPos - cameraPosWorld);
+
+  vec3 camera = cameraPosWorld -  earth_center;
+
+  float r = length(camera);
+  float rmu = dot(camera, view_ray);
+  float mu = rmu / r;
+
+  
+ float mu_horizon = -SafeSqrt(
+      1.0 - (planet_radius / r) * (planet_radius / r));
+  
+  
+  
+  
+  
+  
   vec3 out_color = in_color;
 
   debugColor = vec3(0);
@@ -745,20 +770,28 @@ vec3 apply_fog(vec3 in_color)
 
   if
     (
-        viewDir.z < 0.0
+        mu < mu_horizon
+//         viewDir.z < 0.0
 //       gl_FragCoord.x > 800 ||
 //       intersectsGround(vec3(0, 0, cameraPosWorld.z + planet_radius), viewDir)
     )
   {
     if (cameraPosWorld.z > atmosphereHeight)
     {
-      t = getMaxAtmosphereThicknessFromObjectReverse(passObjectPos);
+//       t = getMaxAtmosphereThicknessFromObjectReverse(passObjectPos);
     }
     else
     {
-      vec2 t1 = getMaxAtmosphereThicknessFromObjectReverse(passObjectPos);
-      vec2 t2 = getMaxAtmosphereThicknessFromCameraReverse(passObjectPos);
+//       vec2 t1 = getMaxAtmosphereThicknessFromObjectReverse(passObjectPos);
+//       vec2 t2 = getMaxAtmosphereThicknessFromCameraReverse(passObjectPos);
+//       t = t1 - t2;
+
+      vec2 t1 = getMaxAtmosphereThicknessFromCamera(passObjectPos);
+      vec2 t2 = getMaxAtmosphereThicknessFromObject(passObjectPos);
       t = t1 - t2;
+      
+      t = t1;
+
 
 //       t = t2;
       if (t1.x < t2.x) {

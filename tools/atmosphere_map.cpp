@@ -32,6 +32,9 @@
 #include <atmosphere_map.h>
 #include <render_util/render_util.h>
 #include <render_util/physics.h>
+#include <render_util/image.h>
+#include <render_util/image_loader.h>
+#include <render_util/image_util.h>
 
 #include <iostream>
 #include <fstream>
@@ -371,6 +374,15 @@ namespace
 
   }
 
+
+  constexpr float ATMOSPHERE_VISIBILITY = 600000.0;
+
+  float getTransmittance(float dist)
+  {
+    return exp(-3.0 * (dist / ATMOSPHERE_VISIBILITY));
+  }
+  
+
 } // namespace
 
 
@@ -379,6 +391,24 @@ bool render_util::createAtmosphereMap(const char *output_path)
   Dispatcher dispatcher(calcAtmosphereDensityValues);
 
   dispatcher.dispatch(map_num_rows);
+  
+  auto image = make_shared<render_util::ImageGreyScale>(map_size);
+  
+  
+  for (int y = 0; y < map_size.y; y++)
+  {
+    for (int x = 0; x < map_size.x; x++)
+    {
+      auto index = getMapIndex(x,y);
+      auto transmittance = getTransmittance(g_map[index].air_thickness);
+
+      image->at(x,y) = 255 * (1.f - transmittance);
+    }
+  }
+  
+  image = image::flipY(image);
+  
+  render_util::saveImageToFile("/tmp/atmosphere_map.png", image.get(), render_util::ImageType::PNG);
 
   ofstream out(output_path);
   

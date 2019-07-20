@@ -67,8 +67,8 @@ namespace
 {
 
 
-// constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
-constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
+constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
+// constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
 
 const bool g_terrain_use_lod = true;
 
@@ -388,7 +388,7 @@ void TerrainViewerScene::render(float frame_delta)
 
   gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-  drawTerrain();
+//   drawTerrain();
   CHECK_GL_ERROR();
 
 

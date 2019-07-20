@@ -9,7 +9,7 @@ if(NOT no_tools)
   add_executable(create_atmosphere_map create_atmosphere_map.cpp)
 
   target_link_libraries(create_curvature_map render_util_tools)
-  target_link_libraries(create_atmosphere_map render_util_tools)
+  target_link_libraries(create_atmosphere_map render_util_tools render_util)
 
   foreach(map_name atmosphere_map curvature_map)
     set(output ${CMAKE_CURRENT_BINARY_DIR}/${map_name})
