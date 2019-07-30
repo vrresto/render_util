@@ -1,6 +1,8 @@
-frag main
+frag cirrus
+vert cirrus
+frag noise
 frag atmosphere
+frag lighting
 frag util
-frag sky
-vert sky
+frag main
 texunit atmosphere_thickness_map

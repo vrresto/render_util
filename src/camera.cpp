@@ -161,6 +161,7 @@ namespace render_util
   const Mat4 &Camera::getView2WorldMatrixD() const { return p->view_to_world; }
   const Vec3 &Camera::getPosD() const { return p->pos; }
   const ivec2 &Camera::getViewportSize() const { return p->viewport_size; }
+  const vec2 &Camera::getNDCToView() const { return p->ndc_to_view; }
 
 
   void Camera::setViewportSize(int width, int height) {

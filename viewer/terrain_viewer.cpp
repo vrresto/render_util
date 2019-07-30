@@ -35,6 +35,7 @@
 #include <render_util/camera.h>
 #include <render_util/terrain_util.h>
 #include <render_util/image_util.h>
+#include <render_util/cirrus_clouds.h>
 #include <render_util/gl_binding/gl_binding.h>
 
 #include <glm/glm.hpp>
@@ -134,8 +135,13 @@ class TerrainViewerScene : public Scene
 
   render_util::ShaderProgramPtr sky_program;
 //   render_util::ShaderProgramPtr forest_program;
+  render_util::ShaderProgramPtr cirrus_program;
 
   shared_ptr<render_util::MapLoaderBase> m_map_loader;
+
+  render_util::TexturePtr m_cirrus_texture;
+
+  unique_ptr<CirrusClouds> m_cirrus_clouds;
 
 #if ENABLE_BASE_MAP
   render_util::ImageGreyScale::Ptr m_base_map_land;
@@ -264,6 +270,7 @@ void TerrainViewerScene::setup()
 
   sky_program = render_util::createShaderProgram("sky", getTextureManager(),
                                                  shader_search_path, {}, shader_params);
+
 //   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
 //   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
@@ -309,6 +316,8 @@ void TerrainViewerScene::setup()
 
   buildBaseMap();
 #endif
+
+  m_cirrus_clouds = make_unique<CirrusClouds>(getTextureManager(), shader_search_path, shader_params);
 
   CHECK_GL_ERROR();
   m_map->getTextures().bind(getTextureManager());
@@ -376,9 +385,7 @@ void TerrainViewerScene::render(float frame_delta)
   gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   getCurrentGLContext()->setCurrentProgram(sky_program);
   updateUniforms(sky_program);
-
   render_util::drawSkyBox();
-
   gl::Disable(GL_DEPTH_TEST);
   gl::DepthMask(GL_TRUE);
   gl::FrontFace(GL_CCW);
@@ -387,10 +394,24 @@ void TerrainViewerScene::render(float frame_delta)
   gl::DepthMask(GL_TRUE);
 
   gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
   drawTerrain();
   CHECK_GL_ERROR();
 
+//   gl::Disable(GL_DEPTH_TEST);
+
+  gl::Enable(GL_BLEND);
+  gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//   gl::Disable(GL_CULL_FACE);
+  gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+//   gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  getCurrentGLContext()->setCurrentProgram(m_cirrus_clouds->getProgram());
+  updateUniforms(m_cirrus_clouds->getProgram());
+  m_cirrus_clouds->getProgram()->setUniform("is_far_camera", true);
+  m_cirrus_clouds->draw(camera);
+  m_cirrus_clouds->getProgram()->setUniform("is_far_camera", false);
+  m_cirrus_clouds->draw(camera);
+//   gl::Enable(GL_CULL_FACE);
+  gl::Disable(GL_BLEND);
 
   // forest
 #if 0
