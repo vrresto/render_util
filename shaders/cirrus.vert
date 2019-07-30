@@ -26,6 +26,7 @@ uniform float planet_radius;
 uniform vec2 ndc_to_view;
 uniform float cirrus_height;
 uniform float cirrus_layer_thickness;
+uniform bool inside_cirrus=true;
 
 varying vec3 passViewPos;
 varying vec3 passObjectPos;
@@ -34,6 +35,18 @@ varying vec3 pass_normal;
 
 void main(void)
 {
+
+  if (inside_cirrus)
+  {
+    const float dist = 100;
+    gl_Position = vec4(gl_Vertex.xy, 0.0, 1.0);
+    passViewPos.xy = gl_Vertex.xy * ndc_to_view * dist;
+    passViewPos.z = -dist;
+    passObjectPos = (view2WorldMatrix * vec4(passViewPos, 1)).xyz;
+    passObjectPosFlat = passObjectPos;
+    return;
+  }
+
   vec4 pos = gl_Vertex;
   pass_normal = gl_Normal.xyz;
 

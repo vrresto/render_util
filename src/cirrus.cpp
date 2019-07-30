@@ -214,6 +214,7 @@ void CirrusClouds::draw(const Camera &camera)
   auto program = getCurrentGLContext()->getCurrentProgram();
 
   program->setUniform("cirrus_height", 7000.f);
+  program->setUniform("inside_cirrus", false);
   program->setUniform("cirrus_layer_thickness", 100.f);
 
   if (camera.getPos().z < 7000)
@@ -236,6 +237,19 @@ void CirrusClouds::draw(const Camera &camera)
   impl->vao.unbind();
 
   gl::FrontFace(GL_CCW);
+
+#if 1
+  program->setUniform("inside_cirrus", true);
+
+  gl::Disable(GL_DEPTH_TEST);
+
+  gl::Begin(GL_POLYGON);
+  gl::Vertex3f(  1, -1, 0 );
+  gl::Vertex3f(  1,  1, 0 );
+  gl::Vertex3f( -1,  1, 0 );
+  gl::Vertex3f( -1, -1, 0 );
+  gl::End();
+#endif
 
   gl::Enable(GL_DEPTH_TEST);
   gl::Enable(GL_CULL_FACE);
