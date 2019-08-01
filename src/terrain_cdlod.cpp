@@ -24,6 +24,7 @@
 
 #include "grid_mesh.h"
 #include "terrain_cdlod_base.h"
+#include "vao.h"
 #include <render_util/terrain_cdlod.h>
 #include <render_util/texture_manager.h>
 #include <render_util/texunits.h>
@@ -710,9 +711,7 @@ class TerrainCDLOD : public TerrainCDLODBase
   Node *root_node = 0;
   dvec2 root_node_pos = -dvec2(getNodeSize(MAX_LOD) / 2.0);
 
-  GLuint vao_id = 0;
-  GLuint vertex_buffer_id = 0;
-  GLuint index_buffer_id = 0;
+  std::unique_ptr<VertexArrayObject> vao;
   GLuint node_pos_buffer_id = 0;
 
   int num_indices = 0;
@@ -761,10 +760,9 @@ TerrainCDLOD::~TerrainCDLOD()
 
   CHECK_GL_ERROR();
 
-  gl::DeleteVertexArrays(1, &vao_id);
-  gl::DeleteBuffers(1, &vertex_buffer_id);
-  gl::DeleteBuffers(1, &index_buffer_id);
   gl::DeleteBuffers(1, &node_pos_buffer_id);
+
+  CHECK_GL_ERROR();
 
   root_node = nullptr;
   node_allocator.clear();
@@ -779,45 +777,21 @@ TerrainCDLOD::TerrainCDLOD(TextureManager &tm, const ShaderSearchPath &shader_se
   texture_manager(tm),
   shader_search_path(shader_search_path)
 {
-  GridMesh mesh(MESH_GRID_SIZE+1, MESH_GRID_SIZE+1);
-  mesh.createTriangleDataIndexed();
+  auto mesh = createGridMesh(MESH_GRID_SIZE+1, MESH_GRID_SIZE+1);
 
-  num_indices = mesh.triangle_data_indexed.size();
+  num_indices = mesh.getNumIndices();
 
   gl::GenBuffers(1, &node_pos_buffer_id);
   assert(node_pos_buffer_id > 0);
 
-  gl::GenBuffers(1, &vertex_buffer_id);
-  assert(vertex_buffer_id > 0);
-  gl::GenBuffers(1, &index_buffer_id);
-  assert(index_buffer_id > 0);
-  gl::GenVertexArrays(1, &vao_id);
-  assert(vao_id > 0);
+  vao = std::make_unique<VertexArrayObject>(mesh, false);
 
-  gl::BindVertexArray(vao_id);
-
-  gl::BindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
-  gl::BufferData(GL_ARRAY_BUFFER,
-                mesh.vertices.size() * sizeof(GridMesh::Vertex),
-                mesh.vertices.data(), GL_STATIC_DRAW);
-  gl::VertexPointer(3, GL_FLOAT, 0, 0);
-  gl::EnableClientState(GL_VERTEX_ARRAY);
-  gl::BindBuffer(GL_ARRAY_BUFFER, 0);
+  VertexArrayObjectBinding vao_binding(*vao);
 
   gl::BindBuffer(GL_ARRAY_BUFFER, node_pos_buffer_id);
   gl::VertexAttribPointer(4, 4, GL_FLOAT, false, 0, 0);
   gl::EnableVertexAttribArray(4);
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
-  CHECK_GL_ERROR();
-
-  gl::BindVertexArray(0);
-  CHECK_GL_ERROR();
-
-  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
-  gl::BufferData(GL_ELEMENT_ARRAY_BUFFER,
-              mesh.triangle_data_indexed.size() * sizeof(GLuint),
-              mesh.triangle_data_indexed.data(), GL_STATIC_DRAW);
-  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   CHECK_GL_ERROR();
 }
 
@@ -1072,11 +1046,8 @@ void TerrainCDLOD::draw(Client *client)
 
   assert(client);
 
-  gl::BindVertexArray(vao_id);
-  CHECK_GL_ERROR();
-
-  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
-  CHECK_GL_ERROR();
+  VertexArrayObjectBinding vao_binding(*vao);
+  IndexBufferBinding index_buffer_binding(*vao);
 
   gl::VertexAttribDivisor(4, 1);
   CHECK_GL_ERROR();
@@ -1104,9 +1075,6 @@ void TerrainCDLOD::draw(Client *client)
 
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
   CHECK_GL_ERROR();
-
-  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  gl::BindVertexArray(0);
 
   CHECK_GL_ERROR();
 }

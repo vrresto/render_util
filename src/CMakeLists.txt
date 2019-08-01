@@ -20,6 +20,9 @@ set(CXX_SRCS
   atmosphere_precomputed.cpp
   quad_2d.cpp
   text_display.cpp
+  grid_mesh.cpp
+  indexed_mesh.cpp
+  vao.cpp
   ${PROJECT_SOURCE_DIR}/_modules/FastNoise/FastNoise.cpp
   ${PROJECT_SOURCE_DIR}/precomputed_precomputed_atmospheric_scattering/atmosphere/model.cc
   ${PROJECT_SOURCE_DIR}/text_renderer/text_renderer.cc

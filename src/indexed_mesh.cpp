@@ -1,6 +1,6 @@
 /**
  *    Rendering utilities
- *    Copyright (C) 2018  Jan Lepper
+ *    Copyright (C) 2019  Jan Lepper
  *
  *    This program is free software: you can redistribute it and/or modify
  *    it under the terms of the GNU Lesser General Public License as published by
@@ -16,14 +16,41 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef RENDER_UTIL_GRID_MESH_H
-#define RENDER_UTIL_GRID_MESH_H
-
 #include "indexed_mesh.h"
+
 
 namespace render_util
 {
-  IndexedMesh createGridMesh(int width, int height);
+
+
+const void *IndexedMesh::getVertexData() const
+{
+  return vertices.data();
 }
 
-#endif
+
+size_t IndexedMesh::getVertexDataSize() const
+{
+  return vertices.size() * sizeof(Vertex);
+}
+
+
+const void *IndexedMesh::getIndexData() const
+{
+  return triangles.data();
+}
+
+
+size_t IndexedMesh::getIndexDataSize() const
+{
+  return triangles.size() * sizeof(Triangle);
+}
+
+
+size_t IndexedMesh::getNumIndices() const
+{
+  return triangles.size() * 3;
+}
+
+
+}
