@@ -24,7 +24,7 @@
 
 namespace render_util::viewer
 {
-  void runApplication(util::Factory<Scene> scene_factory);
+  void runApplication(util::Factory<Scene> scene_factory, std::string app_name);
 }
 
 #endif

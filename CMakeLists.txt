@@ -12,6 +12,17 @@ if(NOT renderutil_cache_dir)
   set(renderutil_cache_dir "cache")
 endif()
 
+if(NOT use_plog)
+  set(use_plog 0)
+endif()
+
+if(NOT use_unix_console)
+  set(use_unix_console 0)
+endif()
+
+configure_file(include/render_util/config.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/include/render_util/config.h
+)
 
 if(mesa_path)
   set(MESA_PATH ${mesa_path})
@@ -30,6 +41,7 @@ include(cflags.cmake)
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/include
+  ${PROJECT_BINARY_DIR}/include
   ${PROJECT_BINARY_DIR}
 )
 
@@ -110,7 +122,6 @@ install(FILES precomputed_precomputed_atmospheric_scattering/LICENSE
   DESTINATION ${renderutil_base_dir}
   RENAME precomputed_precomputed_atmospheric_scattering_LICENSE.txt
 )
-
 install(FILES precomputed_precomputed_atmospheric_scattering/README.md
   DESTINATION ${renderutil_base_dir}
   RENAME precomputed_precomputed_atmospheric_scattering_README.md
@@ -125,7 +136,6 @@ install(FILES _modules/FastNoise/LICENSE
   DESTINATION ${renderutil_base_dir}
   RENAME FastNoise_LICENSE.txt
 )
-
 install(FILES _modules/FastNoise/README.md
   DESTINATION ${renderutil_base_dir}
   RENAME FastNoise_README.md
@@ -134,6 +144,15 @@ install(FILES _modules/FastNoise/README.md
 install(FILES _modules/stb/README.md
   DESTINATION ${renderutil_base_dir}
   RENAME stb_README.md
+)
+
+install(FILES _modules/plog/LICENSE
+  DESTINATION ${renderutil_base_dir}
+  RENAME plog_LICENSE.txt
+)
+install(FILES _modules/plog/README.md
+  DESTINATION ${renderutil_base_dir}
+  RENAME plog_README.md
 )
 
 if(glfw_source_dir)

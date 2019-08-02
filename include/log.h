@@ -19,6 +19,38 @@
 #ifndef UTIL_LOG_H
 #define UTIL_LOG_H
 
+#include <render_util/config.h>
+
+#if USE_PLOG
+
+#define PLOG_OMIT_LOG_DEFINES
+#define PLOG_CAPTURE_FILE
+
+#include <plog/Log.h>
+
+namespace util::log
+{
+  enum
+  {
+    LOGGER_DEFAULT = PLOG_DEFAULT_INSTANCE,
+    LOG_SINK_WARNING,
+    LOG_SINK_INFO,
+    LOG_SINK_DEBUG,
+    LOG_SINK_TRACE
+  };
+}
+
+#define LOG_TRACE PLOG_VERBOSE
+#define LOG_DEBUG PLOG_DEBUG
+#define LOG_INFO PLOG_INFO
+#define LOG_WARNING PLOG_WARNING
+#define LOG_ERROR PLOG_ERROR
+
+#define LOG_SEPARATOR
+#define LOG_FLUSH
+
+#else // USE_PLOG
+
 #include <iostream>
 
 #define LOG_TRACE std::cout
@@ -29,5 +61,7 @@
 
 #define LOG_SEPARATOR
 #define LOG_FLUSH std::cout << std::flush
+
+#endif // USE_PLOG
 
 #endif

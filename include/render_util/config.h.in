@@ -1,0 +1,7 @@
+#ifndef RENDER_UTIL_CONFIG_H
+#define RENDER_UTIL_CONFIG_H
+
+#define USE_PLOG ${use_plog}
+#define USE_UNIX_CONSOLE ${use_unix_console}
+
+#endif

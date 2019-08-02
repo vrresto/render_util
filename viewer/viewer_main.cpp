@@ -31,7 +31,12 @@
 #include <render_util/gl_context.h>
 #include <render_util/camera.h>
 #include <render_util/gl_binding/gl_binding.h>
+#include <log/file_appender.h>
+#include <log/color_console_appender_unix.h>
 #include <log.h>
+
+#include <plog/Appenders/ColorConsoleAppender.h>
+#include <plog/Formatters/MessageOnlyFormatter.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -87,6 +92,40 @@ namespace
   float camera_move_speed = camera_move_speed_default;
   dvec2 last_cursor_pos(-1, -1);
   bool g_shift_active = false;
+
+
+  void initLog(string app_name)
+  {
+  #if USE_PLOG
+    using namespace util::log;
+    using FileSink = FileAppender<plog::TxtFormatter>;
+
+    static FileSink file_sink_warn(app_name + "_warnings.log");
+    static FileSink file_sink_info(app_name + "_info.log");
+    static FileSink file_sink_debug(app_name + "_debug.log");
+    static FileSink file_sink_trace(app_name + "_trace.log");
+
+  #if USE_UNIX_CONSOLE
+    static ColorConsoleAppenderUnix<plog::MessageOnlyFormatter> console_sink;
+  #else
+    static plog::ColorConsoleAppender<plog::MessageOnlyFormatter> console_sink;
+  #endif
+
+    auto &logger_default = plog::init(plog::verbose);
+
+    auto &warn_sink = plog::init<LOG_SINK_WARNING>(plog::warning, &file_sink_warn);
+    auto &info_sink = plog::init<LOG_SINK_INFO>(plog::info, &file_sink_info);
+    auto &debug_sink = plog::init<LOG_SINK_DEBUG>(plog::debug, &file_sink_debug);
+    auto &trace_sink = plog::init<LOG_SINK_TRACE>(plog::verbose, &file_sink_trace);
+
+    info_sink.addAppender(&console_sink);
+
+    logger_default.addAppender(&warn_sink);
+    logger_default.addAppender(&info_sink);
+    logger_default.addAppender(&debug_sink);
+    logger_default.addAppender(&trace_sink);
+  #endif
+  }
 
 
   void printDistance (float distance, const char *suffix, ostream &out)
@@ -433,8 +472,10 @@ namespace
 } // namespace
 
 
-void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene)
+void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene, string app_name)
 {
+  initLog(app_name);
+
   glfwSetErrorCallback(errorCallback);
 
   if (!glfwInit())

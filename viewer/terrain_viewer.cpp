@@ -434,7 +434,7 @@ void TerrainViewerScene::render(float frame_delta)
 
 }
 
-void render_util::viewer::runViewer(CreateMapLoaderFunc &create_map_loader)
+void render_util::viewer::runViewer(CreateMapLoaderFunc &create_map_loader, string app_name)
 {
   auto create_func = [&create_map_loader]
   {
@@ -443,7 +443,7 @@ void render_util::viewer::runViewer(CreateMapLoaderFunc &create_map_loader)
     return scene;
   };
 
-  runApplication(create_func);
+  runApplication(create_func, app_name);
 
   LOG_INFO<<"exiting..."<<endl;
 }

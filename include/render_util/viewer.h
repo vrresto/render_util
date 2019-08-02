@@ -33,7 +33,7 @@ namespace render_util::viewer
   using CreateMapLoaderFunc =
     std::function<std::shared_ptr<MapLoaderBase>(const render_util::TextureManager&)>;
 
-  void runViewer(CreateMapLoaderFunc&);
+  void runViewer(CreateMapLoaderFunc&, std::string app_name);
 
   void runHeightMapViewer(Image<float>::ConstPtr height_map);
 }
