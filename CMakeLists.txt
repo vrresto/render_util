@@ -13,7 +13,7 @@ if(NOT renderutil_cache_dir)
 endif()
 
 if(NOT use_plog)
-  set(use_plog 0)
+  set(use_plog 1)
 endif()
 
 if(NOT use_unix_console)
