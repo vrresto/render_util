@@ -101,6 +101,9 @@ if(NOT renderutil_base_dir)
   set(renderutil_base_dir "render_util")
 endif()
 
+set(documentation_base_dir "${renderutil_base_dir}/documentation")
+set(thirdparty_base_dir "${renderutil_base_dir}/documentation/thirdparty")
+
 
 install(DIRECTORY shaders
   DESTINATION ${renderutil_base_dir}
@@ -114,54 +117,54 @@ install(FILES
 )
 
 install(FILES LICENSE
-  DESTINATION ${renderutil_base_dir}
+  DESTINATION ${documentation_base_dir}
   RENAME LICENSE.txt
 )
 
 install(FILES precomputed_precomputed_atmospheric_scattering/LICENSE
-  DESTINATION ${renderutil_base_dir}
-  RENAME precomputed_precomputed_atmospheric_scattering_LICENSE.txt
+  DESTINATION ${thirdparty_base_dir}/precomputed_atmospheric_scattering
+#   RENAME precomputed_precomputed_atmospheric_scattering_LICENSE.txt
 )
 install(FILES precomputed_precomputed_atmospheric_scattering/README.md
-  DESTINATION ${renderutil_base_dir}
-  RENAME precomputed_precomputed_atmospheric_scattering_README.md
+  DESTINATION ${thirdparty_base_dir}/precomputed_atmospheric_scattering
+#   RENAME precomputed_precomputed_atmospheric_scattering_README.md
 )
 
 install(FILES text_renderer/LICENSE
-  DESTINATION ${renderutil_base_dir}
-  RENAME text_renderer_LICENSE.txt
+  DESTINATION ${thirdparty_base_dir}/text_renderer
+#   RENAME text_renderer_LICENSE.txt
 )
 
 install(FILES _modules/FastNoise/LICENSE
-  DESTINATION ${renderutil_base_dir}
-  RENAME FastNoise_LICENSE.txt
+  DESTINATION ${thirdparty_base_dir}/FastNoise
+#   RENAME FastNoise_LICENSE.txt
 )
 install(FILES _modules/FastNoise/README.md
-  DESTINATION ${renderutil_base_dir}
-  RENAME FastNoise_README.md
+  DESTINATION ${thirdparty_base_dir}/FastNoise
+#   RENAME FastNoise_README.md
 )
 
 install(FILES _modules/stb/README.md
-  DESTINATION ${renderutil_base_dir}
-  RENAME stb_README.md
+  DESTINATION ${thirdparty_base_dir}/stb
+#   RENAME stb_README.md
 )
 
 install(FILES _modules/plog/LICENSE
-  DESTINATION ${renderutil_base_dir}
-  RENAME plog_LICENSE.txt
+  DESTINATION ${thirdparty_base_dir}/plog
+#   RENAME plog_LICENSE.txt
 )
 install(FILES _modules/plog/README.md
-  DESTINATION ${renderutil_base_dir}
-  RENAME plog_README.md
+  DESTINATION ${thirdparty_base_dir}/plog
+#   RENAME plog_README.md
 )
 
 if(glfw_source_dir)
   install(FILES ${glfw_source_dir}/COPYING.txt
-    DESTINATION ${renderutil_base_dir}
-    RENAME GLFW_COPYING.txt
+    DESTINATION ${thirdparty_base_dir}/GLFW
+#     RENAME GLFW_COPYING.txt
   )
   install(FILES ${glfw_source_dir}/README.md
-    DESTINATION ${renderutil_base_dir}
-    RENAME GLFW_README.md
+    DESTINATION ${thirdparty_base_dir}/GLFW
+#     RENAME GLFW_README.md
   )
 endif()
