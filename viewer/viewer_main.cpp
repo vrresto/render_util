@@ -31,6 +31,7 @@
 #include <render_util/gl_context.h>
 #include <render_util/camera.h>
 #include <render_util/gl_binding/gl_binding.h>
+#include <log.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

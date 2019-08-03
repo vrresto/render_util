@@ -28,9 +28,10 @@
 
 #include <render_util/gl_binding/gl_functions.h>
 
+#include <log.h>
+
 using namespace render_util::gl_binding;
 using std::vector;
-using std::cout;
 using std::endl;
 
 
@@ -86,7 +87,7 @@ TemporaryTextureBinding::TemporaryTextureBinding(TexturePtr texture) : m_texture
       gl::GetIntegerv(GL_TEXTURE_BINDING_2D_ARRAY, (GLint*) &m_previous_binding);
       break;
     default:
-      cout<<std::hex<<texture->getTarget()<<endl;
+      LOG_INFO<<std::hex<<texture->getTarget()<<endl;
       assert(0);
   }
 
@@ -122,9 +123,9 @@ namespace
     gl::ActiveTexture(GL_TEXTURE0 + mgr.getTexUnitNum(unit));
     CHECK_GL_ERROR();
 
-//     cout<<"target: "<<binding.target<<endl;
-//     cout<<"texture: "<<binding.texture<<endl;
-    
+//     LOG_INFO<<"target: "<<binding.target<<endl;
+//     LOG_INFO<<"texture: "<<binding.texture<<endl;
+
     gl::BindTexture(target, texture);
     CHECK_GL_ERROR();
 
@@ -163,13 +164,13 @@ struct TextureManager::Private
 TextureManager::TextureManager(unsigned int lowest_unit, unsigned int highest_unit) : p(new Private)
 {
   gl::GetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, (int*)&p->max_units);
-  cout << "max texunits: " << p->max_units << endl;
+  LOG_DEBUG << "max texunits: " << p->max_units << endl;
 
   if (!highest_unit)
     highest_unit = getMaxUnits() - 1;
 
-  cout << "TEXUNIT_NUM: " << TEXUNIT_NUM << endl;
-  cout << "highest_unit: " << highest_unit << endl;
+  LOG_DEBUG << "TEXUNIT_NUM: " << TEXUNIT_NUM << endl;
+  LOG_DEBUG << "highest_unit: " << highest_unit << endl;
   assert(TEXUNIT_NUM < highest_unit);
   assert(highest_unit < getMaxUnits());
 

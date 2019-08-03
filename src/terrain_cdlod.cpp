@@ -49,6 +49,7 @@
 
 #include <GL/gl.h>
 #include <render_util/gl_binding/gl_functions.h>
+#include <log.h>
 
 using namespace render_util::gl_binding;
 using namespace glm;
@@ -61,7 +62,6 @@ using render_util::ImageRGB;
 using render_util::ImageRGBA;
 using render_util::ShaderProgramPtr;
 using render_util::ShaderParameters;
-using std::cout;
 using std::endl;
 using std::vector;
 
@@ -84,7 +84,7 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
     std::array<TexturePtr, render_util::MAX_TERRAIN_TEXUNITS> &arrays_out,
     TexturePtr &type_map_texture_out)
 {
-  cout<<"createTextureArrays<<"<<endl;
+  LOG_INFO<<"createTextureArrays()\n"<<endl;
 
   using namespace glm;
   using namespace std;
@@ -133,7 +133,7 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
     while (image->w() < smallest_size)
     {
 //       auto biggest_size = texture_sizes.back();
-//       cout<<"image->w(): "<<image->w()<<", smallest_size: "
+//       LOG_INFO<<"image->w(): "<<image->w()<<", smallest_size: "
 //         <<smallest_size<<", biggest_size: "<<biggest_size<<endl;
       image = render_util::upSample(image, 2);
     }
@@ -203,7 +203,7 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
     if (textures.empty())
       continue;
 
-    cout<<"array: "<<i<<endl;
+    LOG_INFO<<"array: "<<i<<endl;
     arrays_out.at(i) = render_util::createTextureArray<T>(textures);
     textures.clear();
 
@@ -954,12 +954,12 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map,
   m_terrain_textures =
     std::make_unique<TerrainTextures>(texture_manager, textures, textures_nm, texture_scale, type_map);
 
-  cout<<"TerrainCDLOD: creating nodes ..."<<endl;
+  LOG_INFO<<"TerrainCDLOD: creating nodes ..."<<endl;
   root_node = createNode(*map, root_node_pos, MAX_LOD, processMaterialMap(material_map));
-  cout<<"TerrainCDLOD: creating nodes done."<<endl;
+  LOG_INFO<<"TerrainCDLOD: creating nodes done."<<endl;
 
   assert(!height_map_texture);
-  cout<<"TerrainCDLOD: creating height map texture ..."<<endl;
+  LOG_INFO<<"TerrainCDLOD: creating height map texture ..."<<endl;
 
   auto hm_image = map;
   auto new_size = glm::ceilPowerOfTwo(hm_image->size());
@@ -971,7 +971,7 @@ void TerrainCDLOD::build(ElevationMap::ConstPtr map,
 
   height_map_texture = createHeightMapTexture(hm_image);
 
-  cout<<"TerrainCDLOD: done buildding terrain."<<endl;
+  LOG_INFO<<"TerrainCDLOD: done buildding terrain."<<endl;
 }
 
 

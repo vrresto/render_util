@@ -18,6 +18,7 @@
  */
 
 #include <render_util/image_loader.h>
+#include <log.h>
 
 #include <iostream>
 
@@ -55,7 +56,7 @@ bool render_util::loadImageFromMemory(const std::vector<char> &data_in,
   }
   else
   {
-    std::cout << "error loading image: " << stbi_failure_reason() << std::endl;
+    LOG_ERROR << "error loading image: " << stbi_failure_reason() << std::endl;
     return false;
   }
 }
@@ -90,7 +91,7 @@ bool render_util::loadImageFromMemory(const std::vector<char> &data_in,
   }
   else
   {
-    std::cout << "error loading image: " << stbi_failure_reason() << std::endl;
+    LOG_ERROR << "error loading image: " << stbi_failure_reason() << std::endl;
     return false;
   }
 }

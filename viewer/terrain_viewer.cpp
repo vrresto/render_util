@@ -36,6 +36,7 @@
 #include <render_util/terrain_util.h>
 #include <render_util/image_util.h>
 #include <render_util/gl_binding/gl_binding.h>
+#include <log.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -162,7 +163,7 @@ public:
 
 TerrainViewerScene::TerrainViewerScene(CreateMapLoaderFunc &create_map_loader)
 {
-  cout<<"TerrainViewerScene::TerrainViewerScene"<<endl;
+  LOG_INFO<<"TerrainViewerScene::TerrainViewerScene"<<endl;
 
   m_map_loader = create_map_loader(getTextureManager());
   assert(m_map_loader);
@@ -247,7 +248,7 @@ void TerrainViewerScene::updateBaseWaterMapTexture()
 
 void TerrainViewerScene::setup()
 {
-  cout<<"void TerrainViewerScene::setup()"<<endl;
+  LOG_INFO<<"void TerrainViewerScene::setup()"<<endl;
 
   m_atmosphere = createAtmosphere(ATMOSPHERE_TYPE, getTextureManager(), RENDER_UTIL_SHADER_DIR);
 
@@ -296,7 +297,7 @@ void TerrainViewerScene::setup()
 
   assert(map_size != vec2(0));
 
-  cout<<"map size: "<<map_size.x<<","<<map_size.y<<endl;
+  LOG_INFO<<"map size: "<<map_size.x<<","<<map_size.y<<endl;
 
   CHECK_GL_ERROR();
 
@@ -438,11 +439,11 @@ void render_util::viewer::runViewer(CreateMapLoaderFunc &create_map_loader)
   auto create_func = [&create_map_loader]
   {
     auto scene = make_shared<TerrainViewerScene>(create_map_loader);
-    cout<<"create_func: scene: "<<scene.get()<<endl;
+    LOG_INFO<<"create_func: scene: "<<scene.get()<<endl;
     return scene;
   };
 
   runApplication(create_func);
 
-  cout<<"exiting..."<<endl;
+  LOG_INFO<<"exiting..."<<endl;
 }

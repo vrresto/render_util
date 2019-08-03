@@ -25,6 +25,7 @@
 #include <render_util/image_util.h>
 #include <render_util/image.h>
 #include <util.h>
+#include <log.h>
 
 #include <cassert>
 #include <iostream>
@@ -150,7 +151,7 @@ TexturePtr createNoiseTexture()
 //       double value = glm::simplex(params);
 //       value = glm::clamp(value, 0.0, 1.0);
       
-//       cout<<"value:"<<value<<endl
+//       LOG_INFO<<"value:"<<value<<endl
 
 //       assert(value <= 1);
       
@@ -229,7 +230,7 @@ ImageGreyScale::Ptr createShoreWaveTexture()
 TexturePtr createTextureArray(const std::vector<ImageRGBA::ConstPtr> &textures)
 {
   std::vector<ImageRGBA::ConstPtr> textures_resampled;
-  cout << "resampling textures ..." << endl;
+  LOG_INFO << "resampling textures ..." << endl;
   textures_resampled = resampleImages(textures, texture_size);
 
   for (auto &texture : textures_resampled)
@@ -237,7 +238,7 @@ TexturePtr createTextureArray(const std::vector<ImageRGBA::ConstPtr> &textures)
     texture = image::flipY(texture);
   }
 
-  cout << "resampling textures ... done." << endl;
+  LOG_INFO << "resampling textures ... done." << endl;
   return render_util::createTextureArray<ImageRGBA>(textures_resampled);
 }
 

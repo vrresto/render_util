@@ -24,6 +24,7 @@
 #include <sstream>
 
 #include <render_util/gl_binding/gl_functions.h>
+#include <log.h>
 
 using namespace std;
 
@@ -40,7 +41,7 @@ ifstream openDefinition(const std::string &definition, const render_util::Shader
 
     if (!in.good())
     {
-      cout<<"failed to open "<<path<<endl;
+      LOG_INFO<<"failed to open "<<path<<endl;
     }
     else
       return in;
@@ -64,7 +65,7 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
                                      const std::map<unsigned int, std::string> &attribute_locations,
                                      const ShaderParameters &params)
 {
-  cout<<"creating shader program: "<<definition<<endl;
+  LOG_INFO<<"creating shader program: "<<definition<<endl;
 
   vector<string> vertex_shaders;
   vector<string> fragment_shaders;

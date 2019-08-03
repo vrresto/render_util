@@ -19,6 +19,8 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <log.h>
+
 #include <string>
 #include <vector>
 #include <iostream>
@@ -52,7 +54,7 @@ inline std::string trim(const std::string &in)
 
   if (start >= end+1)
   {
-    std::cout<<"start: "<<start<<", end: "<<end<<std::endl;
+    LOG_INFO<<"start: "<<start<<", end: "<<end<<std::endl;
   }
 
   assert(start < end+1);
@@ -203,12 +205,14 @@ inline bool readFile(const std::string &path, std::vector<char> &content, bool q
 
     if (file.good())
       success = true;
-    else if (!quiet)
-      fprintf(stderr, "Failed to read %s\n", path.c_str());
   }
-  else if (!quiet)
+
+  if (!success)
   {
-      fprintf(stderr, "Failed to open %s\n", path.c_str());
+    if (!quiet)
+      LOG_ERROR << "Failed to read " << path << endl;
+    else
+      LOG_TRACE << "Failed to read " << path << endl;
   }
 
   return success;
@@ -221,7 +225,7 @@ inline bool writeFile(const std::string &path, const char *data, size_t data_siz
 
   std::ofstream out(path, ios_base::binary | ios_base::trunc);
   if (!out.good()) {
-    cerr<<"can't open output file "<<path<<endl;
+    LOG_ERROR<<"can't open output file "<<path<<endl;
     return false;
   }
 
@@ -230,12 +234,12 @@ inline bool writeFile(const std::string &path, const char *data, size_t data_siz
   out.write(data, data_size);
 
   size_t size = out.tellp();
-  cout<<"data_size:"<<data_size<<endl;
-  cout<<"size:"<<size<<endl;
+  LOG_INFO<<"data_size:"<<data_size<<endl;
+  LOG_INFO<<"size:"<<size<<endl;
   assert(data_size == size);
 
   if (!out.good()) {
-    cerr<<"error during writing to output file "<<path<<endl;
+    LOG_ERROR<<"error during writing to output file "<<path<<endl;
     return false;
   }
 

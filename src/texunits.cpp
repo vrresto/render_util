@@ -18,6 +18,7 @@
 
 #include <render_util/texunits.h>
 #include <util.h>
+#include <log.h>
 
 #include <iostream>
 #include <cassert>
@@ -54,7 +55,7 @@ namespace render_util
       if (texunit_name == texunit_names[i])
         return i;
     }
-    cout<<"no such texunit: "<<texunit_name<<endl;
+    LOG_ERROR<<"no such texunit: "<<texunit_name<<endl;
     return -1;
   }
 

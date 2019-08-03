@@ -34,6 +34,7 @@
 #include <render_util/gl_binding/gl_functions.h>
 #include <atmosphere_map.h>
 #include <curvature_map.h>
+#include <log.h>
 
 using namespace render_util::gl_binding;
 using namespace render_util;
@@ -55,16 +56,16 @@ void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
 
   size_t max_levels = 0;
   gl::GetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, (int*) &max_levels);
-  cout<<"max_levels: "<<max_levels<<endl;
+  LOG_INFO<<"max_levels: "<<max_levels<<endl;
 
   const unsigned texture_size = texture_width * texture_width * bytes_per_pixel;
   const size_t num_textures = min(textures.size(), max_levels);
   const float array_size_mb = num_textures * texture_size / 1024.f / 1024.f;
 
-  cout<<"num_textures: "<<num_textures<<endl;
-  cout<<"texture_size: "<<texture_size<<endl;
-  cout<<"texture_width: "<<texture_width<<endl;
-  cout<<"bytes_per_pixel: "<<bytes_per_pixel<<endl;
+  LOG_INFO<<"num_textures: "<<num_textures<<endl;
+  LOG_INFO<<"texture_size: "<<texture_size<<endl;
+  LOG_INFO<<"texture_width: "<<texture_width<<endl;
+  LOG_INFO<<"bytes_per_pixel: "<<bytes_per_pixel<<endl;
 
   GLint internal_format = -1;
   GLint format = -1;
@@ -88,24 +89,24 @@ void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
       abort();
   }
 
-  cout<<"reserving gl memory (" << array_size_mb << " MB) ..."<<endl;
+  LOG_INFO<<"reserving gl memory (" << array_size_mb << " MB) ..."<<endl;
   gl::TexImage3D(GL_TEXTURE_2D_ARRAY, 0, internal_format,
             texture_width, texture_width, num_textures,
             0, format, GL_UNSIGNED_BYTE, nullptr);
   FORCE_CHECK_GL_ERROR();
-  cout<<"reserving gl memory ... done"<<endl;
+  LOG_INFO<<"reserving gl memory ... done"<<endl;
 
   for (unsigned i = 0; i < num_textures; i++)
   {
     auto data = textures.at(i);
 
-//     cout<<"calling gl::TexSubImage3D() ..."<<endl;
+//     LOG_INFO<<"calling gl::TexSubImage3D() ..."<<endl;
     gl::TexSubImage3D(GL_TEXTURE_2D_ARRAY, 0,
             0, 0, i,
             texture_width, texture_width, 1,
             format, GL_UNSIGNED_BYTE, data);
     FORCE_CHECK_GL_ERROR();
-//     cout<<"calling gl::TexSubImage3D() ... done"<<endl;
+//     LOG_INFO<<"calling gl::TexSubImage3D() ... done"<<endl;
   }
 
   FORCE_CHECK_GL_ERROR();
@@ -209,7 +210,7 @@ float mapFloatToUnsignedChar(float value)
 //       pixel.g = mapFloatToUnsignedChar(n.y);
 //       pixel.b = mapFloatToUnsignedChar(n.z);
 //       
-// //       cout<<"g: "<<(int)pixel.g<<endl;
+// //       LOG_INFO<<"g: "<<(int)pixel.g<<endl;
 // //       assert(pixel.g <= 55);
 //       
 //       pixel.a = 255;
@@ -263,7 +264,7 @@ void setTextureImage(TexturePtr texture,
       format = GL_RGBA;
       break;
     default:
-      cout<<bytes_per_pixel<<endl;
+      LOG_INFO<<bytes_per_pixel<<endl;
       assert(0);
       abort();
   }
@@ -325,7 +326,7 @@ TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_
       format = GL_RGBA;
       break;
     default:
-      cout<<bytes_per_pixel<<endl;
+      LOG_INFO<<bytes_per_pixel<<endl;
       assert(0);
       abort();
   }
@@ -595,7 +596,7 @@ unsigned int createUnsignedIntTexture(const unsigned int *data, int w, int h)
 // 
 //       vec3 n1 = getNormal(v01, v11, v21);
 //       
-// //         cout<<n1.x<<" "<<n1.y<<" "<<n1.z<<endl;
+// //         LOG_INFO<<n1.x<<" "<<n1.y<<" "<<n1.z<<endl;
 // 
 //       vec3 n = n0 + n1;
 //       n *= 0.5;
@@ -686,7 +687,7 @@ ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
   typedef Sampler<ImageRGBA> SamplerRGBA;
   typedef Surface<ImageRGBA> SurfaceRGBA;
 
-  cout<<"generating far texture..."<<endl;
+  LOG_INFO<<"generating far texture..."<<endl;
 
   int tile_size_pixels = meters_per_tile / type_map_meters_per_pixel;
   assert(tile_size_pixels * type_map_meters_per_pixel == meters_per_tile);
@@ -734,7 +735,7 @@ ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
   }
 
 //   exit(0);
-  cout<<"generating map texture finished."<<endl;
+  LOG_INFO<<"generating map texture finished."<<endl;
 
   return texture;
 }

@@ -30,6 +30,7 @@
 #include <curvature_map.h>
 #include <render_util/shader.h>
 #include <render_util/gl_binding/gl_functions.h>
+#include <log.h>
 
 using namespace render_util::gl_binding;
 using namespace std;
@@ -71,7 +72,7 @@ string getParameterValue(const string &parameter, const ShaderParameters &params
     }
     else
     {
-      cerr << "unset parameter: " << parameter_name << endl;
+      LOG_ERROR << "unset parameter: " << parameter_name << endl;
       abort();
     }
   }
@@ -160,7 +161,7 @@ string readInclude(string include_file, vector<string> search_path, string &path
     }
   }
 
-  cout << "failed to read include file: " << include_file << endl;
+  LOG_INFO << "failed to read include file: " << include_file << endl;
   assert(0);
   abort();
 }
@@ -219,14 +220,14 @@ Shader::Shader(const std::string &name,
   {
     if (util::readFile(p, data, true))
     {
-      cout << "sucessully read shader: " << p << endl;
+      LOG_INFO << "sucessully read shader: " << p << endl;
       m_filename = p;
       preProcess(data, params, paths_);
       return;
     }
   }
 
-  cerr << "Failed to read " << type_str << " shader file: " << name << endl;
+  LOG_ERROR << "Failed to read " << type_str << " shader file: " << name << endl;
 }
 
 
@@ -261,9 +262,9 @@ void Shader::compile()
 
     printf("Error compiling shader: %s\n%s\n", m_filename.c_str(), infoLog);
     for (int i = 0; i < m_includes.size(); i++)
-      cout << "include " << i+1 << ": " << m_includes[i] << endl;
+      LOG_INFO << "include " << i+1 << ": " << m_includes[i] << endl;
 
-    cout << endl;
+    LOG_INFO << endl;
 
     free(infoLog);
 
@@ -387,7 +388,7 @@ ShaderProgram::ShaderProgram(const std::string &name,
 
 ShaderProgram::~ShaderProgram()
 {
-  cout<<"~ShaderProgram()"<<endl;
+  LOG_INFO<<"~ShaderProgram()"<<endl;
   CHECK_GL_ERROR();
 
   if (id)
@@ -414,7 +415,7 @@ void ShaderProgram::link()
     printf("Error linking program: %s\n%s\n", name.c_str(), infoLog);
 
     free(infoLog);
-    cerr<<"error linking"<<endl;
+    LOG_ERROR<<"error linking"<<endl;
   }
   CHECK_GL_ERROR();
 
@@ -435,28 +436,28 @@ void ShaderProgram::create()
   id = gl::CreateProgram();
   assert(id != 0);
 
-  cerr<<name<<": num fragment shaders: "<<fragment_shaders.size()<<endl;
+  LOG_INFO<<name<<": num fragment shaders: "<<fragment_shaders.size()<<endl;
   for (auto name : fragment_shaders)
   {
     shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_FRAGMENT_SHADER,
                                                          m_parameters)));
   }
 
-  cerr<<name<<": num vertex shaders: "<<vertex_shaders.size()<<endl;
+  LOG_INFO<<name<<": num vertex shaders: "<<vertex_shaders.size()<<endl;
   for (auto name : vertex_shaders)
   {
     shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_VERTEX_SHADER,
                                                          m_parameters)));
   }
 
-  cerr<<name<<": num geometry shaders: "<<geometry_shaders.size()<<endl;
+  LOG_INFO<<name<<": num geometry shaders: "<<geometry_shaders.size()<<endl;
   for (auto name : geometry_shaders)
   {
     shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_GEOMETRY_SHADER,
                                                          m_parameters)));
   }
 
-  cerr<<name<<": num compute shaders: "<<compute_shaders.size()<<endl;
+  LOG_INFO<<name<<": num compute shaders: "<<compute_shaders.size()<<endl;
   for (auto name : compute_shaders)
   {
     shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_COMPUTE_SHADER,
@@ -484,8 +485,8 @@ void ShaderProgram::create()
     GLenum error = gl::GetError();
     if (error != GL_NO_ERROR)
     {
-      cerr<<"glAttachShader() failed for program "<<name<<", shader: "<<shader->getFileName()<<endl;
-      cerr<<"gl error: "<<gl_binding::getGLErrorString(error)<<endl;
+      LOG_ERROR<<"glAttachShader() failed for program "<<name<<", shader: "<<shader->getFileName()<<endl;
+      LOG_ERROR<<"gl error: "<<gl_binding::getGLErrorString(error)<<endl;
       abort();
     }
   }
@@ -498,9 +499,9 @@ void ShaderProgram::create()
     GLenum error = gl::GetError();
     if (error != GL_NO_ERROR)
     {
-      cerr<<"gl::BindAttribLocation() failed for program "<<name<<endl;
-      cerr<<"index: "<<it.first<<", name: "<<it.second<<endl;
-      cerr<<"gl error: "<<gl_binding::getGLErrorString(error)<<endl;
+      LOG_ERROR<<"gl::BindAttribLocation() failed for program "<<name<<endl;
+      LOG_ERROR<<"index: "<<it.first<<", name: "<<it.second<<endl;
+      LOG_ERROR<<"gl error: "<<gl_binding::getGLErrorString(error)<<endl;
       abort();
     }
   }
@@ -556,7 +557,7 @@ void ShaderProgram::assertUniformsAreSet()
       if (set_uniforms.find(loc) == set_uniforms.end())
       {
         num_unset++;
-        cout<<"error: " << this->name << ": unset uniform: "<<name_str<<endl;
+        LOG_INFO<<"error: " << this->name << ": unset uniform: "<<name_str<<endl;
       }
     }
   }

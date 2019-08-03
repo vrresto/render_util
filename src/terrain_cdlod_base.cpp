@@ -19,6 +19,7 @@
 #include "terrain_cdlod_base.h"
 #include <render_util/texture_util.h>
 #include <render_util/gl_binding/gl_functions.h>
+#include <log.h>
 
 using namespace std;
 
@@ -32,16 +33,16 @@ TexturePtr TerrainCDLODBase::createNormalMapTexture(render_util::ElevationMap::C
 {
   using namespace render_util;
 
-  cout<<"TerrainCDLOD: creating normal map ..."<<endl;
+  LOG_INFO<<"TerrainCDLOD: creating normal map ..."<<endl;
   auto normal_map = createNormalMap(map, meters_per_grid);
-  cout<<"TerrainCDLOD: creating normal map done."<<endl;
+  LOG_INFO<<"TerrainCDLOD: creating normal map done."<<endl;
 
   auto normal_map_texture =
     createFloatTexture(reinterpret_cast<const float*>(normal_map->getData()),
                       map->getWidth(),
                       map->getHeight(),
                       3);
-  cout<<"TerrainCDLOD: creating normal map  texture done."<<endl;
+  LOG_INFO<<"TerrainCDLOD: creating normal map  texture done."<<endl;
 
   TextureParameters<int> params;
   params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -60,7 +61,7 @@ TexturePtr TerrainCDLODBase::createHeightMapTexture(render_util::ElevationMap::C
 {
   using namespace render_util;
 
-  cout<<"TerrainCDLOD: creating height map texture ..."<<endl;
+  LOG_INFO<<"TerrainCDLOD: creating height map texture ..."<<endl;
 
   auto height_map_texture = createFloatTexture(hm_image, true);
   assert(height_map_texture);
