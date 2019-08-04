@@ -41,7 +41,7 @@ ifstream openDefinition(const std::string &definition, const render_util::Shader
 
     if (!in.good())
     {
-      LOG_INFO<<"failed to open "<<path<<endl;
+      LOG_DEBUG<<"failed to open "<<path<<endl;
     }
     else
       return in;
@@ -65,7 +65,7 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
                                      const std::map<unsigned int, std::string> &attribute_locations,
                                      const ShaderParameters &params)
 {
-  LOG_INFO<<"creating shader program: "<<definition<<endl;
+  LOG_TRACE<<"creating shader program: "<<definition<<endl;
 
   vector<string> vertex_shaders;
   vector<string> fragment_shaders;

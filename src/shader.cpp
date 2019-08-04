@@ -161,7 +161,7 @@ string readInclude(string include_file, vector<string> search_path, string &path
     }
   }
 
-  LOG_INFO << "failed to read include file: " << include_file << endl;
+  LOG_ERROR << "failed to read include file: " << include_file << endl;
   assert(0);
   abort();
 }
@@ -220,7 +220,7 @@ Shader::Shader(const std::string &name,
   {
     if (util::readFile(p, data, true))
     {
-      LOG_INFO << "sucessully read shader: " << p << endl;
+      LOG_TRACE << "sucessully read shader: " << p << endl;
       m_filename = p;
       preProcess(data, params, paths_);
       return;
@@ -260,11 +260,12 @@ void Shader::compile()
     GLchar *infoLog = (GLchar*) malloc(maxLength);
     gl::GetShaderInfoLog(id, maxLength, &maxLength, infoLog);
 
-    printf("Error compiling shader: %s\n%s\n", m_filename.c_str(), infoLog);
-    for (int i = 0; i < m_includes.size(); i++)
-      LOG_INFO << "include " << i+1 << ": " << m_includes[i] << endl;
+    LOG_ERROR << "Error compiling shader: " << m_filename << endl << infoLog <<endl;
 
-    LOG_INFO << endl;
+    for (int i = 0; i < m_includes.size(); i++)
+      LOG_ERROR << "include " << i+1 << ": " << m_includes[i] << endl;
+
+    LOG_ERROR << endl;
 
     free(infoLog);
 
@@ -388,7 +389,7 @@ ShaderProgram::ShaderProgram(const std::string &name,
 
 ShaderProgram::~ShaderProgram()
 {
-  LOG_INFO<<"~ShaderProgram()"<<endl;
+  LOG_TRACE<<"~ShaderProgram()"<<endl;
   CHECK_GL_ERROR();
 
   if (id)
@@ -412,10 +413,9 @@ void ShaderProgram::link()
     GLchar *infoLog = (GLchar*) malloc(maxLength);
     gl::GetProgramInfoLog(id, maxLength, &maxLength, infoLog);
 
-    printf("Error linking program: %s\n%s\n", name.c_str(), infoLog);
+    LOG_ERROR << "Error linking program: " << name << endl << infoLog << endl;
 
     free(infoLog);
-    LOG_ERROR<<"error linking"<<endl;
   }
   CHECK_GL_ERROR();
 
@@ -436,28 +436,28 @@ void ShaderProgram::create()
   id = gl::CreateProgram();
   assert(id != 0);
 
-  LOG_INFO<<name<<": num fragment shaders: "<<fragment_shaders.size()<<endl;
+  LOG_TRACE<<name<<": num fragment shaders: "<<fragment_shaders.size()<<endl;
   for (auto name : fragment_shaders)
   {
     shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_FRAGMENT_SHADER,
                                                          m_parameters)));
   }
 
-  LOG_INFO<<name<<": num vertex shaders: "<<vertex_shaders.size()<<endl;
+  LOG_TRACE<<name<<": num vertex shaders: "<<vertex_shaders.size()<<endl;
   for (auto name : vertex_shaders)
   {
     shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_VERTEX_SHADER,
                                                          m_parameters)));
   }
 
-  LOG_INFO<<name<<": num geometry shaders: "<<geometry_shaders.size()<<endl;
+  LOG_TRACE<<name<<": num geometry shaders: "<<geometry_shaders.size()<<endl;
   for (auto name : geometry_shaders)
   {
     shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_GEOMETRY_SHADER,
                                                          m_parameters)));
   }
 
-  LOG_INFO<<name<<": num compute shaders: "<<compute_shaders.size()<<endl;
+  LOG_TRACE<<name<<": num compute shaders: "<<compute_shaders.size()<<endl;
   for (auto name : compute_shaders)
   {
     shaders.push_back(std::move(std::make_unique<Shader>(name, paths, GL_COMPUTE_SHADER,
@@ -557,7 +557,7 @@ void ShaderProgram::assertUniformsAreSet()
       if (set_uniforms.find(loc) == set_uniforms.end())
       {
         num_unset++;
-        LOG_INFO<<"error: " << this->name << ": unset uniform: "<<name_str<<endl;
+        LOG_ERROR<<"error: " << this->name << ": unset uniform: "<<name_str<<endl;
       }
     }
   }

@@ -56,16 +56,16 @@ void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
 
   size_t max_levels = 0;
   gl::GetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, (int*) &max_levels);
-  LOG_INFO<<"max_levels: "<<max_levels<<endl;
+  LOG_TRACE<<"max_levels: "<<max_levels<<endl;
 
   const unsigned texture_size = texture_width * texture_width * bytes_per_pixel;
   const size_t num_textures = min(textures.size(), max_levels);
   const float array_size_mb = num_textures * texture_size / 1024.f / 1024.f;
 
-  LOG_INFO<<"num_textures: "<<num_textures<<endl;
-  LOG_INFO<<"texture_size: "<<texture_size<<endl;
-  LOG_INFO<<"texture_width: "<<texture_width<<endl;
-  LOG_INFO<<"bytes_per_pixel: "<<bytes_per_pixel<<endl;
+  LOG_TRACE<<"num_textures: "<<num_textures<<endl;
+  LOG_TRACE<<"texture_size: "<<texture_size<<endl;
+  LOG_TRACE<<"texture_width: "<<texture_width<<endl;
+  LOG_TRACE<<"bytes_per_pixel: "<<bytes_per_pixel<<endl;
 
   GLint internal_format = -1;
   GLint format = -1;
@@ -89,24 +89,24 @@ void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
       abort();
   }
 
-  LOG_INFO<<"reserving gl memory (" << array_size_mb << " MB) ..."<<endl;
+  LOG_TRACE<<"reserving gl memory (" << array_size_mb << " MB) ..."<<endl;
   gl::TexImage3D(GL_TEXTURE_2D_ARRAY, 0, internal_format,
             texture_width, texture_width, num_textures,
             0, format, GL_UNSIGNED_BYTE, nullptr);
   FORCE_CHECK_GL_ERROR();
-  LOG_INFO<<"reserving gl memory ... done"<<endl;
+  LOG_TRACE<<"reserving gl memory ... done"<<endl;
 
   for (unsigned i = 0; i < num_textures; i++)
   {
     auto data = textures.at(i);
 
-//     LOG_INFO<<"calling gl::TexSubImage3D() ..."<<endl;
+//     LOG_TRACE<<"calling gl::TexSubImage3D() ..."<<endl;
     gl::TexSubImage3D(GL_TEXTURE_2D_ARRAY, 0,
             0, 0, i,
             texture_width, texture_width, 1,
             format, GL_UNSIGNED_BYTE, data);
     FORCE_CHECK_GL_ERROR();
-//     LOG_INFO<<"calling gl::TexSubImage3D() ... done"<<endl;
+//     LOG_TRACE<<"calling gl::TexSubImage3D() ... done"<<endl;
   }
 
   FORCE_CHECK_GL_ERROR();
@@ -210,7 +210,7 @@ float mapFloatToUnsignedChar(float value)
 //       pixel.g = mapFloatToUnsignedChar(n.y);
 //       pixel.b = mapFloatToUnsignedChar(n.z);
 //       
-// //       LOG_INFO<<"g: "<<(int)pixel.g<<endl;
+// //       LOG_TRACE<<"g: "<<(int)pixel.g<<endl;
 // //       assert(pixel.g <= 55);
 //       
 //       pixel.a = 255;
@@ -264,7 +264,7 @@ void setTextureImage(TexturePtr texture,
       format = GL_RGBA;
       break;
     default:
-      LOG_INFO<<bytes_per_pixel<<endl;
+      LOG_TRACE<<bytes_per_pixel<<endl;
       assert(0);
       abort();
   }
@@ -326,7 +326,7 @@ TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_
       format = GL_RGBA;
       break;
     default:
-      LOG_INFO<<bytes_per_pixel<<endl;
+      LOG_TRACE<<bytes_per_pixel<<endl;
       assert(0);
       abort();
   }
@@ -596,7 +596,7 @@ unsigned int createUnsignedIntTexture(const unsigned int *data, int w, int h)
 // 
 //       vec3 n1 = getNormal(v01, v11, v21);
 //       
-// //         LOG_INFO<<n1.x<<" "<<n1.y<<" "<<n1.z<<endl;
+// //         LOG_TRACE<<n1.x<<" "<<n1.y<<" "<<n1.z<<endl;
 // 
 //       vec3 n = n0 + n1;
 //       n *= 0.5;
@@ -687,7 +687,7 @@ ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
   typedef Sampler<ImageRGBA> SamplerRGBA;
   typedef Surface<ImageRGBA> SurfaceRGBA;
 
-  LOG_INFO<<"generating far texture..."<<endl;
+  LOG_DEBUG<<"generating far texture..."<<endl;
 
   int tile_size_pixels = meters_per_tile / type_map_meters_per_pixel;
   assert(tile_size_pixels * type_map_meters_per_pixel == meters_per_tile);
@@ -735,7 +735,7 @@ ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
   }
 
 //   exit(0);
-  LOG_INFO<<"generating map texture finished."<<endl;
+  LOG_DEBUG<<"generating map texture finished."<<endl;
 
   return texture;
 }
