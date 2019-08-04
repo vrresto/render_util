@@ -20,6 +20,8 @@ set(CXX_SRCS
   atmosphere_precomputed.cpp
   quad_2d.cpp
   text_display.cpp
+  cirrus.cpp
+  uv_dome.cpp
   grid_mesh.cpp
   indexed_mesh.cpp
   vao.cpp

@@ -50,6 +50,7 @@ namespace render_util
     const Mat4 &getProjectionMatrixFarD() const;
     const Vec3 &getPosD() const;
     const glm::ivec2 &getViewportSize() const;
+    const glm::vec2 &getNDCToView() const;
     bool cull(const Box &box) const;
     Unit getFov() const;
     Unit getZNear() const;

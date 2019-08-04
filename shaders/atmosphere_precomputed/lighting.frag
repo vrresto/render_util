@@ -43,6 +43,18 @@ uniform vec2 sun_size;
 uniform vec3 earth_center;
 
 
+vec3 calcCirrusLight(vec3 pos)
+{
+  vec3 ambient;
+  vec3 direct;
+  getIncomingLight(pos, ambient, direct);
+
+  const float albedo = 0.4;
+
+  return albedo * (direct + ambient);
+}
+
+
 vec3 getSkyRadiance(vec3 camera_pos, vec3 view_direction)
 {
   float shadow_length = 0;
