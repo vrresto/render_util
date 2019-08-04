@@ -36,6 +36,7 @@
 #include <render_util/terrain_util.h>
 #include <render_util/image_util.h>
 #include <render_util/cirrus_clouds.h>
+#include <render_util/state.h>
 #include <render_util/gl_binding/gl_binding.h>
 #include <log.h>
 

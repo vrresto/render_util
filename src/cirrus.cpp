@@ -28,6 +28,7 @@
 #include <render_util/image_loader.h>
 #include <render_util/geometry.h>
 #include <render_util/globals.h>
+#include <render_util/state.h>
 
 #include <iostream>
 #include <vector>
@@ -84,8 +85,9 @@ CirrusClouds::CirrusClouds(TextureManager &txmgr,
 
 CirrusClouds::~CirrusClouds() {}
 
-void CirrusClouds::draw(StateModifier &state, const Camera &camera)
+void CirrusClouds::draw(const StateModifier &prev_state, const Camera &camera)
 {
+  StateModifier state(prev_state);
   state.setDefaults();
 
   state.enableBlend(true);

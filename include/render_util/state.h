@@ -118,6 +118,12 @@ struct StateModifier
   {
   }
 
+  StateModifier(const StateModifier &prev) :
+    original_state(prev.current_state),
+    current_state(prev.current_state)
+  {
+  }
+
   ~StateModifier();
 
   void setDefaults();

@@ -22,12 +22,14 @@
 #include <render_util/camera.h>
 #include <render_util/shader.h>
 #include <render_util/texture_manager.h>
-#include <render_util/state.h>
 
 #include <memory>
 
 namespace render_util
 {
+
+
+class StateModifier;
 
 class CirrusClouds
 {
@@ -40,7 +42,7 @@ public:
 
   ShaderProgramPtr getProgram();
 
-  void draw(StateModifier &state, const Camera &camera);
+  void draw(const StateModifier &state, const Camera &camera);
 };
 
 
