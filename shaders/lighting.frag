@@ -64,7 +64,7 @@ vec3 calcIncomingDirectLight()
 }
 
 
-void calcLightParamsWithDetail_(vec3 normal, vec3 normal_detail,
+void calcLightParamsWithDetail(vec3 normal, vec3 normal_detail,
     out vec3 ambientLightColor, out vec3 directLightColor)
 {
   float directLight = 1.0;
@@ -75,10 +75,9 @@ void calcLightParamsWithDetail_(vec3 normal, vec3 normal_detail,
 
   directLightColor = calcIncomingDirectLight() * directLight;
 
-  float ambientLight = 0.6 * smoothstep(0.0, 0.3, sunDir.z);
   ambientLightColor = vec3(0.95, 0.98, 1.0);
   ambientLightColor *= 0.6;
-  vec3 ambientLightColorLow = ambientLightColor * 0.6;
+  vec3 ambientLightColorLow = ambientLightColor * 0.4;
   ambientLightColor = mix(ambientLightColorLow, ambientLightColor, smoothstep(0.0, 0.3, sunDir.z));
   ambientLightColor *= smoothstep(-0.4, 0.0, sunDir.z);
 }
@@ -91,10 +90,9 @@ void calcLightParams(vec3 normal, out vec3 ambientLightColor, out vec3 directLig
 
   directLightColor = calcIncomingDirectLight() * directLight;
 
-  float ambientLight = 0.6 * smoothstep(0.0, 0.3, sunDir.z);
   ambientLightColor = vec3(0.95, 0.98, 1.0);
   ambientLightColor *= 0.6;
-  vec3 ambientLightColorLow = ambientLightColor * 0.6;
+  vec3 ambientLightColorLow = ambientLightColor * 0.4;
   ambientLightColor = mix(ambientLightColorLow, ambientLightColor, smoothstep(0.0, 0.3, sunDir.z));
   ambientLightColor *= smoothstep(-0.4, 0.0, sunDir.z);
 }
@@ -110,13 +108,6 @@ void calcLightParams(out vec3 ambientLightColor, out vec3 directLightColor)
   vec3 ambientLightColorLow = ambientLightColor * 0.6;
   ambientLightColor = mix(ambientLightColorLow, ambientLightColor, smoothstep(0.0, 0.3, sunDir.z));
   ambientLightColor *= smoothstep(-0.4, 0.0, sunDir.z);
-}
-
-
-void calcLightParamsWithDetail(vec3 normal, vec3 normal_detail,
-    out vec3 ambientLightColor, out vec3 directLightColor)
-{
-  calcLightParamsWithDetail_(normal, normal_detail, ambientLightColor, directLightColor);
 }
 
 

@@ -493,11 +493,11 @@ vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir,
   diffuseScatteringColorBright = mix(diffuseScatteringColorBright, vec3(1), 0.5);
 
   fog_color = vec3(0.8, 0.93, 1.0);
-  vec3 fog_color_low = fog_color * 0.6 * vec3(1.0, 0.83, 0.75);
+  vec3 fog_color_low = fog_color * 0.5 * vec3(1.0, 0.83, 0.75);
   fog_color = mix(fog_color_low, fog_color, brightness);
 
   vec3 fog_color_low_alt = vec3(0.76, 0.87, 0.98);
-  vec3 fog_color_low_alt_low = fog_color_low_alt * 0.6 * vec3(0.8, 0.7, 0.64);
+  vec3 fog_color_low_alt_low = fog_color_low_alt * 0.5 * vec3(0.8, 0.7, 0.64);
   fog_color_low_alt = mix(fog_color_low_alt_low, fog_color_low_alt, brightness);
   fog_color = mix(fog_color_low_alt, fog_color, smoothstep(0, 5000, cameraPosWorld.z));
 
@@ -508,7 +508,7 @@ vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir,
   float diffuseScatteringAmount = 1.0;
   
 //   float opacity = 1.0 - exp(-3 * d * 1.0);
-  float opacity = calcOpacity(d * 1.5);
+  float opacity = calcOpacity(d * 3);
   
 //   rayleighColor *= 1.0 - exp(-3.0 * d  * 15.0);
 //   rayleighColor = mix(rayleighColor, diffuseScatteringColorDark, 1.0 - exp(-3 * d *  4.0));
@@ -545,6 +545,14 @@ vec4 calcAtmosphereColor(float air_dist, float haze_dist, vec3 viewDir,
 
     mieColor = mix(mieColor, mieColorSky,
         smoothstep(dist_to_horizon - dist_to_horizon * 0.9, dist_to_horizon, dist_to_object));
+
+    vec3 rayleighColorSky = rayleighColor;
+    rayleighColor *= mix(smoothstep(-0.05, 0.05, sunDir.z),
+      mix(smoothstep(-0.05, 0.05, sunDir.z), 1, smoothstep(-0.2, 0.4, sunDir.z)),
+//       smoothstep(0, 5000, cameraPosWorld.z)
+       1
+      );
+
   }
 
 
