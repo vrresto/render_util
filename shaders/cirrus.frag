@@ -21,6 +21,7 @@
 #include lighting_definitions.glsl
 
 vec3 fogAndToneMap(vec3 color);
+float fbm(vec2 x);
 float getSphereIntersectionFromInside(vec3 rayStart, vec3 rayDir, vec3 sphere_center, float radius);
 bool sphereIntersection(vec3 ray_origin, vec3 ray_dir, float ray_length,
   vec3 sphere_center, float sphere_radius,
@@ -113,9 +114,32 @@ void main()
   if (cameraPosWorld.z > cirrus_height)
     normal = -normal;
 
-  float cloud_density = getCloudDensityNear(view_dir);
-
   vec3 color = calcCirrusLight(passObjectPos);
+
+  float cloud_density_near = getCloudDensityNear(view_dir);
+
+  float cloud_density = 1;
+
+  float continuency = smoothstep(0.3, 0.9, fbm(vec2(1.0, 1.5) * passObjectPos.xy * 0.00001));
+
+  float sharpness = 1.0;
+//   sharpness *= smoothstep(0.0, 0.05, dot(normal, view_dir));
+
+  cloud_density *= smoothstep((1-continuency) * 0.6 * sharpness, 1.0 - (1-continuency) * 0.1 * sharpness,
+      fbm(vec2(1.0, 1.5) * passObjectPos.xy * 0.00005));
+  cloud_density *= 1 - 0.5 * (1-sharpness);
+  cloud_density *= 0.5;
+
+  const float near_blend_dist = 30000;
+  float near_blend_start = 30000;
+
+  float near_blend_noise = smoothstep(0.45, 0.55, fbm(vec2(1.0, 1.5) * passObjectPos.xy * 0.00001));
+
+  near_blend_start += near_blend_noise * 10000;
+
+  cloud_density = mix(cloud_density_near, cloud_density,
+                      smoothstep(near_blend_start,
+                                 near_blend_start+near_blend_dist, dist));
 
   gl_FragColor.w = clamp(cloud_density, 0, 1);
 
