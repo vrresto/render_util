@@ -46,8 +46,8 @@ namespace util::log
 #define LOG_WARNING PLOG_WARNING
 #define LOG_ERROR PLOG_ERROR
 
-#define LOG_SEPARATOR
-#define LOG_FLUSH
+#define LOG_SEPARATOR {}
+#define LOG_FLUSH {}
 
 #else // USE_PLOG
 
@@ -59,7 +59,7 @@ namespace util::log
 #define LOG_WARNING std::cout
 #define LOG_ERROR std::cout
 
-#define LOG_SEPARATOR
+#define LOG_SEPARATOR {}
 #define LOG_FLUSH std::cout << std::flush
 
 #endif // USE_PLOG

@@ -109,7 +109,7 @@ namespace render_util
   void saveImageToFile(const std::string &file_path, const T *image, ImageType type = ImageType::TGA)
   {
     saveImage(file_path,
-              T::BYTES_PER_PIXEL,
+              image->numComponents(),
               image->w(),
               image->h(),
               image->getData(),

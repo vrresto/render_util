@@ -33,6 +33,7 @@ namespace render_util
     virtual MapTextures &getTextures() = 0;
     virtual WaterAnimation &getWaterAnimation() = 0;
     virtual void setMaterialMap(TerrainBase::MaterialMap::ConstPtr) = 0;
+    virtual void setCirrusTexture(std::shared_ptr<GenericImage>) {};
 
   };
 
