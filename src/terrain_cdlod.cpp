@@ -342,6 +342,8 @@ void TerrainTextures::bind(TextureManager &tm)
 
 void TerrainTextures::unbind(TextureManager &tm)
 {
+  LOG_TRACE<<endl;
+
   using namespace render_util;
 
   tm.unbind(TEXUNIT_TYPE_MAP, m_type_map_texture->getTarget());
@@ -756,6 +758,8 @@ public:
 
 TerrainCDLOD::~TerrainCDLOD()
 {
+  LOG_TRACE<<endl;
+
   render_list.clear();
 
   CHECK_GL_ERROR();

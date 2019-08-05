@@ -182,6 +182,7 @@ TextureManager::TextureManager(unsigned int lowest_unit, unsigned int highest_un
 
 TextureManager::~TextureManager()
 {
+  LOG_TRACE<<endl;
   delete p;
 }
 
