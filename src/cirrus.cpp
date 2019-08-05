@@ -58,7 +58,8 @@ struct CirrusClouds::Impl
 
 CirrusClouds::CirrusClouds(TextureManager &txmgr,
                            const ShaderSearchPath &shader_search_path,
-                           const ShaderParameters &shader_params)
+                           const ShaderParameters &shader_params,
+                           std::shared_ptr<const GenericImage> texture_image)
   : impl(std::make_unique<Impl>())
 {
   auto mesh = generateUVDome(100, 100, 0.04 * util::PI);
@@ -71,16 +72,18 @@ CirrusClouds::CirrusClouds(TextureManager &txmgr,
   impl->program->setUniformi("sampler_cirrus",
                              txmgr.getTexUnitNum(TEXUNIT_CIRRUS));
 
-  auto texture_image =
-    render_util::loadImageFromFile<render_util::ImageGreyScale>("cirrus.tga"); //FIXME
+  if (!texture_image)
+    texture_image = render_util::loadImageFromFile<GenericImage>("cirrus.tga"); //FIXME
+
   assert(texture_image);
-  impl->texture = render_util::createTexture<render_util::ImageGreyScale>(texture_image);
+
+  impl->texture = render_util::createTexture(texture_image);
+
   render_util::TextureParameters<int> p;
 //   p.set(GL_TEXTURE_LOD_BIAS, 1.0);
   p.apply(impl->texture);
 
   txmgr.bind(TEXUNIT_CIRRUS, impl->texture);
-
 }
 
 CirrusClouds::~CirrusClouds() {}

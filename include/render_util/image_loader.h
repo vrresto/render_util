@@ -75,7 +75,7 @@ namespace render_util
     }
   }
 
-  inline std::shared_ptr<GenericImage> loadImageFromMemory(const std::vector<char> &data)
+  inline std::shared_ptr<GenericImage> loadGenericImageFromMemory(const std::vector<char> &data)
   {
     std::vector<unsigned char> image_data;
     int width = 0, height = 0, num_channels = 0;
@@ -87,6 +87,12 @@ namespace render_util
     {
       return {};
     }
+  }
+
+  template <>
+  inline std::shared_ptr<GenericImage> loadImageFromMemory<GenericImage>(const std::vector<char> &data)
+  {
+    return loadGenericImageFromMemory(data);
   }
 
   template <typename T>

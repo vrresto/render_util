@@ -22,6 +22,7 @@
 #include <render_util/camera.h>
 #include <render_util/shader.h>
 #include <render_util/texture_manager.h>
+#include <render_util/image.h>
 
 #include <memory>
 
@@ -37,7 +38,8 @@ class CirrusClouds
   std::unique_ptr<Impl> impl;
 
 public:
-  CirrusClouds(TextureManager &txmgr, const ShaderSearchPath&, const ShaderParameters&);
+  CirrusClouds(TextureManager &txmgr, const ShaderSearchPath&, const ShaderParameters&,
+               std::shared_ptr<const GenericImage> texture = {});
   ~CirrusClouds();
 
   ShaderProgramPtr getProgram();
