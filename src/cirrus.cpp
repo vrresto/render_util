@@ -77,7 +77,21 @@ CirrusClouds::CirrusClouds(TextureManager &txmgr,
 
   assert(texture_image);
 
-  impl->texture = render_util::createTexture(texture_image);
+  assert(texture_image->numComponents() == 1 || texture_image->numComponents() == 4);
+
+  if (texture_image->numComponents() == 1)
+  {
+    impl->texture = render_util::createTexture(texture_image);
+  }
+  else if (texture_image->numComponents() == 4)
+  {
+    auto alpha_channel = image::getChannel(texture_image, 3);
+    impl->texture = render_util::createTexture(alpha_channel);
+  }
+  else
+  {
+    abort();
+  }
 
   render_util::TextureParameters<int> p;
 //   p.set(GL_TEXTURE_LOD_BIAS, 1.0);
