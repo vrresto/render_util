@@ -72,7 +72,7 @@ void UVDome(uint32_t meridians, uint32_t parallels, double angle, render_util::I
 	{
 		uint32_t const a = i + 1;
 		uint32_t const b = (i + 1) % meridians + 1;
-		mesh.addTriangle(0, b, a);
+		mesh.addTriangle(0, a, b);
 	}
 
 	for (uint32_t j = 0; j < parallels - 2; ++j)
