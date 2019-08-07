@@ -402,6 +402,9 @@ void TerrainViewerScene::render(float frame_delta)
     const auto original_state = State::fromCurrent();
     StateModifier state(original_state);
 
+    state.setDefaults();
+    state.enableBlend(true);
+
     getCurrentGLContext()->setCurrentProgram(m_cirrus_clouds->getProgram());
     updateUniforms(m_cirrus_clouds->getProgram());
     m_cirrus_clouds->getProgram()->setUniform("is_far_camera", true);

@@ -86,14 +86,13 @@ CirrusClouds::CirrusClouds(TextureManager &txmgr,
   txmgr.bind(TEXUNIT_CIRRUS, impl->texture);
 }
 
+
 CirrusClouds::~CirrusClouds() {}
+
 
 void CirrusClouds::draw(const StateModifier &prev_state, const Camera &camera)
 {
   StateModifier state(prev_state);
-  state.setDefaults();
-
-  state.enableBlend(true);
 
   if (camera.getPos().z < 7000)
     state.setFrontFace(GL_CW);
