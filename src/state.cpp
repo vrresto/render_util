@@ -97,14 +97,8 @@ StateModifier::~StateModifier()
   restoreEnable(EnableIndex::BLEND);
   restoreEnable(EnableIndex::DEPTH_TEST);
 
-  if (original_state.attributes.at(AttributeIndex::BLEND_SRC) !=
-      current_state.attributes.at(AttributeIndex::BLEND_SRC) ||
-      original_state.attributes.at(AttributeIndex::BLEND_DST) !=
-      current_state.attributes.at(AttributeIndex::BLEND_DST))
-  {
-    gl::BlendFunc(original_state.attributes.at(AttributeIndex::BLEND_SRC),
-                  original_state.attributes.at(AttributeIndex::BLEND_DST));
-  }
+  setBlendFunc(original_state.attributes.at(AttributeIndex::BLEND_SRC),
+               original_state.attributes.at(AttributeIndex::BLEND_DST));
 }
 
 
@@ -117,8 +111,8 @@ void StateModifier::setDefaults()
   setDepthFunc(defaults.attributes.at(AttributeIndex::DEPTH_FUNC));
   setDepthMask(defaults.attributes.at(AttributeIndex::DEPTH_MASK));
 
-//     setBlendFunc(defaults.attributes.at(AttributeIndex::BLEND_SRC),
-//                  defaults.attributes.at(AttributeIndex::BLEND_DST));
+  setBlendFunc(defaults.attributes.at(AttributeIndex::BLEND_SRC),
+               defaults.attributes.at(AttributeIndex::BLEND_DST));
 
   enableBlend(defaults.enables.at(EnableIndex::BLEND));
   enableCullFace(defaults.enables.at(EnableIndex::CULL_FACE));

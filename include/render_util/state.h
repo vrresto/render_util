@@ -128,6 +128,19 @@ struct StateModifier
 
   void setDefaults();
 
+  void setBlendFunc(GLenum sfactor, GLenum dfactor)
+  {
+    using namespace render_util::gl_binding;
+
+    if (current_state.attributes.at(AttributeIndex::BLEND_SRC) != sfactor ||
+        current_state.attributes.at(AttributeIndex::BLEND_DST) != dfactor)
+    {
+      current_state.attributes.at(AttributeIndex::BLEND_SRC) = sfactor;
+      current_state.attributes.at(AttributeIndex::BLEND_DST) = dfactor;
+      gl::BlendFunc(sfactor, dfactor);
+    }
+  }
+
   void setFrontFace(GLenum value)
   {
     setAttribute<AttributeIndex::FRONT_FACE>(value);
