@@ -182,6 +182,16 @@ struct StateModifier
   }
 
 private:
+  template <auto T>
+  struct AttributeSetter
+  {
+    template <typename... Args>
+    static auto set(Args&&... args) -> decltype(T(std::forward<Args>(args)...))
+    {
+      return T(std::forward<Args>(args)...);
+    }
+  };
+
   template <AttributeIndex::Enum T>
   struct Attribute
   {
@@ -229,29 +239,31 @@ private:
 };
 
 
-
 template <>
-struct StateModifier::Attribute<StateModifier::AttributeIndex::FRONT_FACE>
+struct StateModifier::Attribute<StateModifier::AttributeIndex::FRONT_FACE> :
+  public StateModifier::AttributeSetter<render_util::gl_binding::gl::FrontFace>
 {
-  static constexpr auto &set = render_util::gl_binding::gl::FrontFace;
 };
+
 
 template <>
 struct StateModifier::Attribute<StateModifier::AttributeIndex::CULL_FACE>
+ : public StateModifier::AttributeSetter <render_util::gl_binding::gl::CullFace>
 {
-  static constexpr auto &set = render_util::gl_binding::gl::CullFace;
 };
+
 
 template <>
 struct StateModifier::Attribute<StateModifier::AttributeIndex::DEPTH_FUNC>
+ : public StateModifier::AttributeSetter <render_util::gl_binding::gl::DepthFunc>
 {
-  static constexpr auto &set = render_util::gl_binding::gl::DepthFunc;
 };
+
 
 template <>
 struct StateModifier::Attribute<StateModifier::AttributeIndex::DEPTH_MASK>
+ : public StateModifier::AttributeSetter <render_util::gl_binding::gl::DepthMask>
 {
-  static constexpr auto &set = render_util::gl_binding::gl::DepthMask;
 };
 
 
