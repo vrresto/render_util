@@ -200,13 +200,7 @@ private:
   template<AttributeIndex::Enum T>
   void restoreAttribute()
   {
-    auto orig = original_state.attributes.at(T);
-    auto curr = current_state.attributes.at(T);
-
-    if (curr != orig)
-    {
-      Attribute<T>::set(orig);
-    }
+    setAttribute<T>(original_state.attributes.at(T));
   }
 
   void enable(EnableIndex::Enum index, bool value)
@@ -227,18 +221,7 @@ private:
 
   void restoreEnable(EnableIndex::Enum index)
   {
-    using namespace render_util::gl_binding;
-
-    if (original_state.enables.at(index) != current_state.enables.at(index))
-    {
-      auto value = original_state.enables.at(index);
-      auto name = State::getEnableNameFromIndex(index);
-
-      if (value)
-        gl::Enable(name);
-      else
-        gl::Disable(name);
-    }
+    enable(index, original_state.enables.at(index));
   }
 
   const State &original_state;
