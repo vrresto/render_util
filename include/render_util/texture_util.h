@@ -85,19 +85,12 @@ namespace render_util
     return createTextureArray(texture_data, mipmap_levels, texture_width, T::BYTES_PER_PIXEL);
   }
 
-//   template <typename T>
-//   unsigned int createTexture(typename Image<T>::ConstPtr image, bool mipmaps = true)
-//   {
-//     return createTexture(image->data(),
-//                          image->w(),
-//                          image->h(),
-//                          render_util::Image<T>::BYTES_PER_PIXEL,
-//                          mipmaps);
-//   }
-
-
-  inline TexturePtr createTexture(std::shared_ptr<const GenericImage> image, bool mipmaps = true)
+  template <typename T>
+  TexturePtr createTexture(T image, bool mipmaps = true)
   {
+    using ImageType = typename image::TypeFromPtr<T>::Type;
+    static_assert(std::is_same<typename ImageType::ComponentType, unsigned char>::value);
+
     return createTexture(image->data(),
                          image->w(),
                          image->h(),
@@ -105,17 +98,6 @@ namespace render_util
                          mipmaps);
   }
 
-
-  template <typename T>
-  TexturePtr createTexture(typename T::ConstPtr image, bool mipmaps = true)
-  {
-    static_assert(std::is_same<typename T::ComponentType, unsigned char>::value);
-    return createTexture(image->data(),
-                         image->w(),
-                         image->h(),
-                         T::BYTES_PER_PIXEL,
-                         mipmaps);
-  }
 
   template <typename T>
   TexturePtr createFloatTexture(T image, bool mipmaps)

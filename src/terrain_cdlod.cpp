@@ -185,7 +185,7 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
   }
 
   {
-    TexturePtr t = render_util::createTexture<ImageRGBA>(type_map, false);
+    TexturePtr t = render_util::createTexture(type_map, false);
     TextureParameters<int> params;
     params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);

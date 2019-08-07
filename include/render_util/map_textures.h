@@ -67,15 +67,9 @@ namespace render_util
     void setUniforms(ShaderProgramPtr program);
 
     template <class T>
-    void setTexture(unsigned texunit, std::shared_ptr<const T> image)
+    void setTexture(unsigned texunit, T image)
     {
-      setTexture(texunit, createTexture<T>(image));
-    }
-
-    template <class T>
-    void setTexture(unsigned texunit, std::shared_ptr<T> image)
-    {
-      setTexture(texunit, createTexture<T>(image));
+      setTexture(texunit, createTexture(image));
     }
 
     template <class T>

@@ -183,7 +183,7 @@ TexturePtr createNoiseTexture()
 
 //   saveImageToFile("noise.tga", image.get());
   
-  TexturePtr texture = createTexture<ImageGreyScale>(image);
+  TexturePtr texture = createTexture(image);
 
   TextureParameters<int> params;
   params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -351,7 +351,7 @@ void render_util::MapTextures::setWaterMap(const std::vector<ImageGreyScale::Con
 
 void render_util::MapTextures::setWaterTypeMap(ImageGreyScale::ConstPtr map)
 {
-  TexturePtr t = createTexture<ImageGreyScale>(map, false);
+  TexturePtr t = createTexture(map, false);
   TextureParameters<int> params;
   params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
   params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -374,7 +374,7 @@ void render_util::MapTextures::setWaterColor(const glm::vec3 &color)
 
 void render_util::MapTextures::setForestMap(ImageGreyScale::ConstPtr image)
 {
-  auto texture = render_util::createTexture<ImageGreyScale>(image, true);
+  auto texture = render_util::createTexture(image, true);
 
   TextureParameters<int> params;
 
