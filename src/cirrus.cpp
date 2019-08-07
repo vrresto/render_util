@@ -108,10 +108,7 @@ void CirrusClouds::draw(const StateModifier &prev_state, const Camera &camera)
 {
   StateModifier state(prev_state);
 
-  if (camera.getPos().z < 7000)
-    state.setFrontFace(GL_CW);
-  else
-    state.setFrontFace(GL_CCW);
+  state.setFrontFace(GL_CW);
 
   VertexArrayObjectBinding vao_binding(*impl->vao);
   IndexBufferBinding index_buffer_binding(*impl->vao);
@@ -121,17 +118,14 @@ void CirrusClouds::draw(const StateModifier &prev_state, const Camera &camera)
   program->setUniform("cirrus_height", 7000.f);
   program->setUniform("cirrus_layer_thickness", 100.f);
 
-  if (camera.getPos().z < 7000)
-  {
-    state.setFrontFace(GL_CCW);
-    gl::DrawElements(GL_TRIANGLES, impl->vao->getNumIndices(), GL_UNSIGNED_INT, nullptr);
-  }
-  else
-  {
-    state.setFrontFace(GL_CCW);
-    gl::DrawElements(GL_TRIANGLES, impl->vao->getNumIndices(), GL_UNSIGNED_INT, nullptr);
+  program->setUniform("is_upper_side", false);
+  state.setCullFace(GL_FRONT);
+  gl::DrawElements(GL_TRIANGLES, impl->vao->getNumIndices(), GL_UNSIGNED_INT, nullptr);
 
-    state.setFrontFace(GL_CW);
+  if (camera.getPos().z > 7000)
+  {
+    program->setUniform("is_upper_side", true);
+    state.setCullFace(GL_BACK);
     gl::DrawElements(GL_TRIANGLES, impl->vao->getNumIndices(), GL_UNSIGNED_INT, nullptr);
   }
 }

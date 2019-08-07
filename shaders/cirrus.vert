@@ -26,6 +26,7 @@ uniform float planet_radius;
 uniform vec2 ndc_to_view;
 uniform float cirrus_height;
 uniform float cirrus_layer_thickness;
+uniform bool is_upper_side = false;
 
 varying vec3 passViewPos;
 varying vec3 passObjectPos;
@@ -37,8 +38,10 @@ void main(void)
   vec4 pos = gl_Vertex;
   pass_normal = gl_Normal.xyz;
 
-  pos.xyz *= planet_radius + cirrus_height +
-    (cameraPosWorld.z < cirrus_height ? -(cirrus_layer_thickness/2) : (cirrus_layer_thickness/2));
+  float height = is_upper_side ? cirrus_height + (cirrus_layer_thickness/2) :
+                                 cirrus_height - (cirrus_layer_thickness/2);
+
+  pos.xyz *= planet_radius + cirrus_height;
   pos.z -= planet_radius;
   pos.xy += cameraPosWorld.xy;
 
