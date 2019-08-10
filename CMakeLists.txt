@@ -26,7 +26,7 @@ configure_file(include/render_util/config.h.in
 
 if(mesa_path)
   set(MESA_PATH ${mesa_path})
-else(mesa_path)
+else()
   ExternalProject_Add(mesa
     URL "https://mesa.freedesktop.org/archive/mesa-18.1.6.tar.xz"
     CONFIGURE_COMMAND ""
@@ -35,7 +35,7 @@ else(mesa_path)
   )
   ExternalProject_Get_Property(mesa SOURCE_DIR)
   set(MESA_PATH ${SOURCE_DIR})
-endif(mesa_path)
+endif()
 
 include(cflags.cmake)
 
@@ -66,14 +66,14 @@ if(platform_mingw)
     set(glfw_source_dir ${SOURCE_DIR})
   endif()
 
-endif(platform_mingw)
+endif()
 
 if(no_std_thread)
   add_definitions(-DNO_STD_THREAD)
-else(no_std_thread)
+else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
   link_libraries(pthread)
-endif(no_std_thread)
+endif()
 
 add_definitions(
   -DRENDER_UTIL_SHADER_DIR="${renderutil_shader_dir}"
@@ -89,12 +89,12 @@ if(render_util_build_viewer)
 
   if(NOT platform_mingw)
     add_subdirectory(testbed)
-  endif(NOT platform_mingw)
+  endif()
 endif()
 
 if(platform_mingw)
   add_dependencies(render_util_tools glm)
-endif(platform_mingw)
+endif()
 
 
 if(NOT renderutil_base_dir)
