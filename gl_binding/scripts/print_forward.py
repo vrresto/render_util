@@ -17,30 +17,27 @@ def get_called_parameter_string(func, ep):
 
     return p_string
 
-def main():
-  api = parser.parseAPI()
 
-  for func in api.functionIterateByOffset():
-    if func.desktop != True:
-      continue
+api = parser.parseAPI()
 
-    for ep in func.entry_points:
-      ep_params = func.entry_point_parameters[ep]
-      ep_name = "gl" + ep
-      out_str = "gl: " + ep;
+for func in api.functionIterateByOffset():
+  if func.desktop != True:
+    continue
 
-      print "static " + func.return_type + " GLAPIENTRY forward_" + ep + "(" + gl_XML.create_parameter_string(ep_params, 1)  + ") {"
+  for ep in func.entry_points:
+    ep_params = func.entry_point_parameters[ep]
+    ep_name = "gl" + ep
+    out_str = "gl: " + ep;
 
-      #print "cout << \"" + out_str + "\" << endl;"
-      #print "assert(current_GL_Interface()->" + ep_name + ");"
+    print "static " + func.return_type + " GLAPIENTRY forward_" + ep + "(" + gl_XML.create_parameter_string(ep_params, 1)  + ") {"
 
-      if func.return_type != "void":
-        print "  return current_GL_Interface()->" + ep_name + "(" + get_called_parameter_string(func, ep) + ");"
-      else:
-        print "  if (!discard_gl_calls)"
-        print "    current_GL_Interface()->" + ep_name + "(" + get_called_parameter_string(func, ep) + ");"
+    #print "cout << \"" + out_str + "\" << endl;"
+    #print "assert(current_GL_Interface()->" + ep_name + ");"
 
-      print "}"
+    if func.return_type != "void":
+      print "  return current_GL_Interface()->" + ep_name + "(" + get_called_parameter_string(func, ep) + ");"
+    else:
+      print "  if (!discard_gl_calls)"
+      print "    current_GL_Interface()->" + ep_name + "(" + get_called_parameter_string(func, ep) + ");"
 
-if __name__ == '__main__':
-    main()
+    print "}"
