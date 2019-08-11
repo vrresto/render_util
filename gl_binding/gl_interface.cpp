@@ -16,12 +16,13 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <stdexcept>
+
 #include <GL/gl.h>
 #include <GL/glext.h>
 
 #include <render_util/gl_binding/gl_interface.h>
 
-#define PROC_INIT(type, proc) proc = (type) getProcAddress(#proc);
 
 namespace render_util::gl_binding
 {
@@ -29,6 +30,16 @@ namespace render_util::gl_binding
 
   GL_Interface::GL_Interface(GetProcAddressFunc *getProcAddress)
   {
+    auto get_proc_address = [getProcAddress] (const char *name)
+    {
+      auto addr = getProcAddress(name);
+
+      if (!addr)
+        throw std::runtime_error(std::string("GL procedure is missing: ") + name);
+
+      return addr;
+    };
+
     #include "gl_binding/_generated/gl_p_proc_init.inc"
   }
 
@@ -36,5 +47,4 @@ namespace render_util::gl_binding
   {
     s_current = iface;
   }
-
 }

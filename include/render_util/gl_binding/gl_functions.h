@@ -25,6 +25,17 @@
 #include <render_util/gl_binding/gl_interface.h>
 #include <render_util/gl_binding/gl_binding.h>
 
+
+namespace render_util::gl_binding
+{
+  inline auto getCurrentInterface()
+  {
+    auto gl_interface = GL_Interface::getCurrent();
+    assert(gl_interface);
+    return gl_interface;
+  }
+}
+
 namespace render_util::gl_binding::gl
 {
   #include <gl_binding/_generated/gl_inline_forwards.inc>

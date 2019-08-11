@@ -3,6 +3,7 @@
 import sys
 import os
 import parser
+import enabled_procs
 
 def main():
   api = parser.parseAPI()
@@ -12,8 +13,8 @@ def main():
       continue
 
     for ep in func.entry_points:
-      print func.return_type + " GLAPIENTRY (*gl" + ep + ") (" + func.get_parameter_string(ep) + ") = 0;"
-
+      if enabled_procs.isProcEnabled(ep):
+        print func.return_type + " GLAPIENTRY (*" + ep + ") (" + func.get_parameter_string(ep) + ") = nullptr;"
 
 if __name__ == '__main__':
     main()

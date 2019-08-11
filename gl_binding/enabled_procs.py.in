@@ -1,0 +1,15 @@
+import sys
+import os
+
+procs = [
+
+#define ENABLE_PROC(name) #name,
+
+#include <gl_binding/_generated/enabled_procs.inc>
+
+#undef ENABLE_PROC
+
+]
+
+def isProcEnabled(proc):
+  return proc in procs
