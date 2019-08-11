@@ -33,10 +33,10 @@ namespace util::log
   enum
   {
     LOGGER_DEFAULT = PLOG_DEFAULT_INSTANCE,
-    LOG_SINK_WARNING,
-    LOG_SINK_INFO,
-    LOG_SINK_DEBUG,
-    LOG_SINK_TRACE
+    LOGGER_WARNING,
+    LOGGER_INFO,
+    LOGGER_DEBUG,
+    LOGGER_TRACE
   };
 }
 

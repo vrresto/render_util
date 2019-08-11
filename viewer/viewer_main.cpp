@@ -118,10 +118,10 @@ namespace
 
     auto &logger_default = plog::init(plog::verbose);
 
-    auto &warn_sink = plog::init<LOG_SINK_WARNING>(plog::warning, &file_sink_warn);
-    auto &info_sink = plog::init<LOG_SINK_INFO>(plog::info, &file_sink_info);
-    auto &debug_sink = plog::init<LOG_SINK_DEBUG>(plog::debug, &file_sink_debug);
-    auto &trace_sink = plog::init<LOG_SINK_TRACE>(plog::verbose, &file_sink_trace);
+    auto &warn_sink = plog::init<LOGGER_WARNING>(plog::warning, &file_sink_warn);
+    auto &info_sink = plog::init<LOGGER_INFO>(plog::info, &file_sink_info);
+    auto &debug_sink = plog::init<LOGGER_DEBUG>(plog::debug, &file_sink_debug);
+    auto &trace_sink = plog::init<LOGGER_TRACE>(plog::verbose, &file_sink_trace);
 
     info_sink.addAppender(&console_sink);
 
