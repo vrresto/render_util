@@ -28,6 +28,7 @@
 
 #include <plog/Log.h>
 
+
 namespace util::log
 {
   enum

@@ -32,13 +32,10 @@
 #include <render_util/camera.h>
 #include <render_util/gl_binding/gl_binding.h>
 #include <log/file_appender.h>
-#include <log/color_console_appender_unix.h>
+#include <log/console_appender.h>
 #include <log/txt_formatter.h>
 #include <log/message_only_formatter.h>
 #include <log.h>
-
-#include <plog/Appenders/ColorConsoleAppender.h>
-#include <plog/Formatters/MessageOnlyFormatter.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -99,22 +96,18 @@ namespace
   void initLog(string app_name)
   {
   #if USE_PLOG
-
     constexpr bool ADD_NEW_LINE = false;
 
     using namespace util::log;
     using FileSink = FileAppender<TxtFormatter<ADD_NEW_LINE>>;
+    using ConsoleSink = ConsoleAppender<MessageOnlyFormatter<ADD_NEW_LINE>>;
 
     static FileSink file_sink_warn(app_name + "_warnings.log");
     static FileSink file_sink_info(app_name + "_info.log");
     static FileSink file_sink_debug(app_name + "_debug.log");
     static FileSink file_sink_trace(app_name + "_trace.log");
 
-  #if USE_UNIX_CONSOLE
-    static ColorConsoleAppenderUnix<MessageOnlyFormatter<ADD_NEW_LINE>> console_sink;
-  #else
-    static plog::ColorConsoleAppender<MessageOnlyFormatter<ADD_NEW_LINE>> console_sink;
-  #endif
+    static ConsoleSink console_sink;
 
     auto &logger_default = plog::init(plog::verbose);
 
