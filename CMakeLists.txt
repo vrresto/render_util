@@ -16,6 +16,10 @@ if(NOT use_plog)
   set(use_plog 1)
 endif()
 
+if(NOT plog_dir)
+  set(plog_dir ${PROJECT_SOURCE_DIR}/_modules/plog)
+endif()
+
 if(NOT use_unix_console)
   set(use_unix_console 0)
 endif()
@@ -83,6 +87,7 @@ add_definitions(
 add_subdirectory(gl_binding)
 add_subdirectory(src)
 add_subdirectory(tools)
+add_subdirectory(util)
 
 if(render_util_build_viewer)
   add_subdirectory(viewer)
