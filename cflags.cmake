@@ -27,6 +27,10 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_REENTRANT")
 # disable win32 defines
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNODRAWTEXT")
 
+# plog configuration
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPLOG_ENABLE_WCHAR_INPUT=0")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPLOG_OMIT_LOG_DEFINES=1")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPLOG_CAPTURE_FILES=1")
 
 # -fdata-sections -ffunction-sections
 # -Wall

@@ -23,9 +23,6 @@
 
 #if USE_PLOG
 
-#define PLOG_OMIT_LOG_DEFINES
-#define PLOG_CAPTURE_FILE
-
 #include <plog/Log.h>
 
 namespace util::log
