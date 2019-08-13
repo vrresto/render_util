@@ -37,7 +37,6 @@
 #include <log/message_only_formatter.h>
 #include <log.h>
 
-#include <plog/Appenders/ColorConsoleAppender.h>
 #include <plog/Formatters/MessageOnlyFormatter.h>
 
 #include <glm/glm.hpp>
@@ -113,7 +112,7 @@ namespace
   #if USE_UNIX_CONSOLE
     static ColorConsoleAppenderUnix<MessageOnlyFormatter<ADD_NEW_LINE>> console_sink;
   #else
-    static plog::ColorConsoleAppender<MessageOnlyFormatter<ADD_NEW_LINE>> console_sink;
+    static plog::ConsoleAppender<MessageOnlyFormatter<ADD_NEW_LINE>> console_sink;
   #endif
 
     auto &logger_default = plog::init(plog::verbose);
