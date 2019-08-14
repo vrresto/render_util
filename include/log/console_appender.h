@@ -4,7 +4,7 @@
 #include <render_util/config.h>
 #include <log/color_console_appender_unix.h>
 
-#include <plog/Appenders/ColorConsoleAppender.h>
+#include <plog/Appenders/ConsoleAppender.h>
 
 namespace util::log
 {
@@ -12,7 +12,7 @@ namespace util::log
 #if USE_UNIX_CONSOLE
   using ConsoleAppender = ColorConsoleAppenderUnix<T>;
 #else
-  using ConsoleAppender = plog::ColorConsoleAppender<T>;
+  using ConsoleAppender = plog::ConsoleAppender<T>;
 #endif
 }
 

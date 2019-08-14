@@ -3,6 +3,10 @@ add_library(render_util_tools
   curvature_map.cpp
 )
 
+target_link_libraries(render_util_tools
+  render_util_util
+)
+
 if(NOT no_tools)
 
   add_executable(create_curvature_map create_curvature_map.cpp)
