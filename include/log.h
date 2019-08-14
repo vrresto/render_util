@@ -35,6 +35,13 @@ namespace util::log
     LOG_SINK_DEBUG,
     LOG_SINK_TRACE
   };
+
+  inline void separator()
+  {
+    plog::Record record(plog::error);
+    record << "-----------------------------------------------------------" << std::endl;
+    *plog::get<PLOG_DEFAULT_INSTANCE>() += record;
+  }
 }
 
 #define LOG_TRACE PLOG_VERBOSE
@@ -43,7 +50,7 @@ namespace util::log
 #define LOG_WARNING PLOG_WARNING
 #define LOG_ERROR PLOG_ERROR
 
-#define LOG_SEPARATOR {}
+#define LOG_SEPARATOR util::log::separator()
 #define LOG_FLUSH {}
 
 #else // USE_PLOG
