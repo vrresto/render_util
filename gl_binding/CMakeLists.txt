@@ -18,7 +18,12 @@ set(CXX_SRCS
 )
 
 
-set(enabled_procs_inc_input ${CMAKE_CURRENT_SOURCE_DIR}/enabled_procs)
+if(NOT render_util_enabled_gl_procs_file)
+  message(FATAL_ERROR "render_util_enabled_gl_procs_file unset")
+endif()
+
+
+set(enabled_procs_inc_input ${render_util_enabled_gl_procs_file})
 set(enabled_procs_inc_output ${generated_output_dir}/enabled_procs.inc)
 set(enabled_procs_inc_generator ${script_dir}/generate_enabled_procs)
 set(enabled_procs_inc_deps
