@@ -655,15 +655,9 @@ float calcHazeDistance(vec3 obj_pos, vec3 obj_pos_flat)
   return fog_distance;
 }
 
-vec3 apply_fog(vec3 in_color)
+
+void getFogParameters(out vec4 atmosphere_color, out vec4 fog_color)
 {
-
-#if !ENABLE_FOG
-  return in_color;
-#endif
-
-  vec3 out_color = in_color;
-
   debugColor = vec3(0);
 
   vec3 viewDir = normalize(passObjectPos - cameraPosWorld);
@@ -702,55 +696,46 @@ vec3 apply_fog(vec3 in_color)
 
   t = max(vec2(0), t);
 
-  vec3 fog_color;
-
   float fog_dist = 0;
   fog_dist += calcHazeDistance(passObjectPos, passObjectPosFlat);
   fog_dist += t.y;
 
   vec3 mie_color = vec3(0);
-  vec4 atmosphereColor = calcAtmosphereColor(t.x, fog_dist, viewDir, fog_color, mie_color, false);
 
-  float fog = hazeForDistance(fog_dist);
+  atmosphere_color = calcAtmosphereColor(t.x, fog_dist, viewDir, fog_color.xyz, mie_color, false);
+  fog_color.w = hazeForDistance(fog_dist);
+}
 
-  float extinction = atmosphereColor.w;
 
-  out_color.xyz *= 1.0 - extinction;
-
-//   atmosphereColor *=  mix(0.75, 1.0, 1.0 - exp(-3 * (t/atmosphereVisibility) * 5.0));
-//   else if (gl_FragCoord.x > 1200)
-//     atmosphereColor *= 1.0 - exp(-3 * (t/atmosphereVisibility) * 10.0);
-  
-//   atmosphereColor.xyz *= atmosphereColor.w;
-//   pow(atmosphereColor.w, 1.5);
-
-//   atmosphereColor *= 0;
-
-  out_color.xyz = mix(out_color.xyz, vec3(1), atmosphereColor.xyz);
-
-  out_color.xyz = mix(out_color.xyz, fog_color, fog);
-
-#if 0
-  if (t == -1.0) {
-    out_color.xyz = vec3(0.5, 0.5, 0.0);
-  }
-  else if (t.x < 0.0) {
-    out_color.xyz = vec3(1,0,1);
-//     out_color.xyz = vec3(0.0, abs(t + 1.0) * 4.0, 0.0);
-  }
-
-  if (debugColor != vec3(0)) {
-    out_color.xyz = debugColor;
-  }
-#endif
-
+vec3 fogAndToneMap(vec4 atmosphere_color, vec4 fog_color, vec3 in_color)
+{
+  vec3 out_color = in_color;
+  out_color *= 1.0 - atmosphere_color.w;
+  out_color = mix(out_color, vec3(1), atmosphere_color.xyz);
+  out_color = mix(out_color, fog_color.xyz, fog_color.w);
   return out_color;
 }
 
 
 vec3 fogAndToneMap(vec3 in_color)
 {
-  return apply_fog(in_color);
+  vec4 atmosphere_color;
+  vec4 fog_color;
+  getFogParameters(atmosphere_color, fog_color);
+
+  return fogAndToneMap(atmosphere_color, fog_color, in_color);
+}
+
+
+void fogAndToneMap(in vec3 in_color0, in vec3 in_color1,
+                   out vec3 out_color0, out vec3 out_color1)
+{
+  vec4 atmosphere_color;
+  vec4 fog_color;
+  getFogParameters(atmosphere_color, fog_color);
+
+  out_color0 = fogAndToneMap(atmosphere_color, fog_color, in_color0);
+  out_color1 = fogAndToneMap(atmosphere_color, fog_color, in_color1);
 }
 
 
@@ -788,4 +773,10 @@ vec3 getSkyColor(vec3 camera_pos, vec3 viewDir)
   color += vec3(sunDisc);
 
   return color;
+}
+
+
+vec3 apply_fog(vec3 in_color)
+{
+  return fogAndToneMap(in_color);
 }
