@@ -16,8 +16,10 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
 
+#include <log.h>
+
+#include <stdexcept>
 #include <GL/gl.h>
 #include <GL/glext.h>
 
@@ -27,6 +29,7 @@
 namespace render_util::gl_binding
 {
   GL_Interface *GL_Interface::s_current = 0;
+
 
   GL_Interface::GL_Interface(GetProcAddressFunc *getProcAddress)
   {
@@ -41,10 +44,43 @@ namespace render_util::gl_binding
     };
 
     #include "gl_binding/_generated/gl_p_proc_init.inc"
+
+    #if ENABLE_GL_DEBUG_CALLBACK
+    this->DebugMessageCallback(messageCallback, this);
+    this->DebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, false);
+    this->DebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_ERROR, GL_DONT_CARE, 0, nullptr, true);
+    this->DebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR, GL_DONT_CARE, 0, nullptr, true);
+    this->Enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    this->Enable(GL_DEBUG_OUTPUT);
+    #endif
   }
+
 
   void GL_Interface::setCurrent(GL_Interface *iface)
   {
     s_current = iface;
   }
+
+  #if ENABLE_GL_DEBUG_CALLBACK
+  void GLAPIENTRY GL_Interface::messageCallback(GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar* message,
+    const void* userParam)
+  {
+    if (type == GL_DEBUG_TYPE_ERROR || type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR)
+    {
+      LOG_ERROR << message << std::endl;
+
+      auto iface = (GL_Interface*)userParam;
+      iface->has_error = true;
+    }
+    else
+    {
+      LOG_WARNING << message << std::endl;
+    }
+  }
+  #endif
 }

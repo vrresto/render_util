@@ -23,18 +23,20 @@ if(NOT render_util_enabled_gl_procs_file)
 endif()
 
 
-set(enabled_procs_inc_input ${render_util_enabled_gl_procs_file})
+set(enabled_procs_inc_inputs
+  ${render_util_enabled_gl_procs_file}
+  ${CMAKE_CURRENT_SOURCE_DIR}/enabled_procs
+)
 set(enabled_procs_inc_output ${generated_output_dir}/enabled_procs.inc)
 set(enabled_procs_inc_generator ${script_dir}/generate_enabled_procs)
 set(enabled_procs_inc_deps
-  ${enabled_procs_inc_input}
+  ${enabled_procs_inc_inputs}
   ${enabled_procs_inc_generator}
 )
 add_custom_command(
     OUTPUT ${enabled_procs_inc_output}
     COMMAND mkdir -p ${generated_output_dir}
-    COMMAND bash ${enabled_procs_inc_generator}
-      < ${enabled_procs_inc_input}
+    COMMAND cat ${enabled_procs_inc_inputs} | sort | uniq | bash ${enabled_procs_inc_generator}
       > ${enabled_procs_inc_output}
     DEPENDS ${enabled_procs_inc_deps}
 )
@@ -81,3 +83,5 @@ endforeach(name)
 add_library(gl_binding ${CXX_SRCS})
 
 add_dependencies(gl_binding gl_binding_input_generated)
+
+target_link_libraries(gl_binding render_util_util)

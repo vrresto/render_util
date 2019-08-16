@@ -19,6 +19,10 @@
 #ifndef GL_INTERFACE_H
 #define GL_INTERFACE_H
 
+#include <render_util/config.h>
+
+#include <atomic>
+#include <cassert>
 #include <GL/gl.h>
 #include <GL/glext.h>
 
@@ -35,12 +39,28 @@ namespace render_util::gl_binding
 
     GL_Interface(GetProcAddressFunc *getProcAddress);
 
+    bool hasError() { return has_error; }
+
     #include <gl_binding/_generated/gl_p_proc.inc>
 
     static GL_Interface *getCurrent() { return s_current; }
     static void setCurrent(GL_Interface *iface);
 
   private:
+  #if ENABLE_GL_DEBUG_CALLBACK
+    static void GLAPIENTRY messageCallback(GLenum source,
+        GLenum type,
+        GLuint id,
+        GLenum severity,
+        GLsizei length,
+        const GLchar* message,
+        const void* userParam);
+
+    std::atomic_bool has_error = false;
+  #else
+    static constexpr bool has_error = false;
+  #endif
+
     static GL_Interface *s_current;
   };
 

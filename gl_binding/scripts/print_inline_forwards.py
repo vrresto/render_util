@@ -6,7 +6,7 @@ import parser
 import gl_XML
 import enabled_procs
 
-def get_called_parameter_string(func, ep):
+def getArgs(func, ep):
     p_string = ""
     comma = ""
 
@@ -34,12 +34,19 @@ for func in api.functionIterateByOffset():
     print "inline " + func.return_type + " " + ep + "(" + gl_XML.create_parameter_string(ep_params, 1)  + ")"
     print "{"
 
-    if func.return_type != "void":
-      return_statement = "  return "
-    else:
-      return_statement = "  "
+    print "  auto iface = getCurrentInterface();"
 
-    print return_statement + "getCurrentInterface()->" + ep_name + "(" + get_called_parameter_string(func, ep) + ");"
+    if func.return_type != "void":
+      ret_assignment = "  auto ret = "
+    else:
+      ret_assignment = "  "
+
+    print ret_assignment + "iface->" + ep_name + "(" + getArgs(func, ep) + ");"
+
+    print "  assert(!iface->hasError());"
+
+    if func.return_type != "void":
+      print "  return ret;"
 
     print "}"
     print

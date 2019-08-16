@@ -24,6 +24,10 @@ if(NOT use_unix_console)
   set(use_unix_console 0)
 endif()
 
+if (NOT enable_gl_debug_callback)
+  set(enable_gl_debug_callback 0)
+endif()
+
 configure_file(include/render_util/config.h.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/render_util/config.h
 )

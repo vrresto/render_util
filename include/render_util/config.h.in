@@ -4,4 +4,6 @@
 #define USE_PLOG ${use_plog}
 #define USE_UNIX_CONSOLE ${use_unix_console}
 
+#define ENABLE_GL_DEBUG_CALLBACK (${enable_gl_debug_callback} || RENDER_UTIL_ENABLE_DEBUG)
+
 #endif
