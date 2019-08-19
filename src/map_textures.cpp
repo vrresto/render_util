@@ -200,7 +200,7 @@ float sampleShoreWave(float pos)
 
   if (pos < peak_pos)
   {
-    pos = pos /= peak_pos;
+    pos /= peak_pos;
     return pow(pos, 2);
   }
   else

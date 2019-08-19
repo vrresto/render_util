@@ -15,8 +15,20 @@ if(NOT enable_debug)
   # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DGLM_FORCE_AVX2")
 else()
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-strict-aliasing")
 endif()
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-strict-aliasing")
+
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address")
+
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-variable")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-sign-compare")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-local-typedefs")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-reorder")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-but-set-variable")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-vla")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wfatal-errors")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
@@ -37,3 +49,5 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPLOG_CAPTURE_FILES=1")
 # -rdynamic
 
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++17 -Wmissing-declarations")
+
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wpedantic")

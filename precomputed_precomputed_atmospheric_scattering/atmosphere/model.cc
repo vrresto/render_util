@@ -149,7 +149,7 @@ void useProgram(render_util::ShaderProgramPtr program, bool assert_uniforms_are_
 }
 
 
-/*<h3 id="utilities">Utility classes and functions</h3>
+/*<h3 id="utilities">Utility classes and functions</h3>*/
 
 
 /*
