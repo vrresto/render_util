@@ -12,7 +12,7 @@ if(NOT renderutil_cache_dir)
   set(renderutil_cache_dir "cache")
 endif()
 
-if(NOT use_plog)
+if(NOT DEFINED use_plog)
   set(use_plog 1)
 endif()
 
@@ -20,7 +20,7 @@ if(NOT plog_dir)
   set(plog_dir ${PROJECT_SOURCE_DIR}/_modules/plog)
 endif()
 
-if(NOT use_unix_console)
+if(NOT DEFINED use_unix_console)
   set(use_unix_console 0)
 endif()
 
