@@ -158,11 +158,11 @@ install(FILES _modules/stb/README.md
 #   RENAME stb_README.md
 )
 
-install(FILES _modules/plog/LICENSE
+install(FILES ${plog_dir}/LICENSE
   DESTINATION ${thirdparty_base_dir}/plog
 #   RENAME plog_LICENSE.txt
 )
-install(FILES _modules/plog/README.md
+install(FILES ${plog_dir}/README.md
   DESTINATION ${thirdparty_base_dir}/plog
 #   RENAME plog_README.md
 )
