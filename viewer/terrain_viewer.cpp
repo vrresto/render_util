@@ -315,7 +315,8 @@ void TerrainViewerScene::setup()
   buildBaseMap();
 #endif
 
-  m_cirrus_clouds = make_unique<CirrusClouds>(getTextureManager(), shader_search_path, shader_params);
+  m_cirrus_clouds = make_unique<CirrusClouds>(getTextureManager(), shader_search_path,
+                                              shader_params, 7000);
 
   CHECK_GL_ERROR();
   m_map->getTextures().bind(getTextureManager());

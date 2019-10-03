@@ -53,14 +53,19 @@ struct CirrusClouds::Impl
 
   render_util::TexturePtr texture;
   render_util::ShaderProgramPtr program;
+
+  Impl(float height) : height(height) {}
+
+  const float height = 0;
 };
 
 
 CirrusClouds::CirrusClouds(TextureManager &txmgr,
                            const ShaderSearchPath &shader_search_path,
                            const ShaderParameters &shader_params,
+                           float height,
                            std::shared_ptr<const GenericImage> texture_image)
-  : impl(std::make_unique<Impl>())
+  : impl(std::make_unique<Impl>(height))
 {
   auto mesh = generateUVDome(100, 100, 0.04 * util::PI);
 
@@ -115,14 +120,14 @@ void CirrusClouds::draw(const StateModifier &prev_state, const Camera &camera)
 
   auto program = getCurrentGLContext()->getCurrentProgram();
 
-  program->setUniform("cirrus_height", 7000.f);
+  program->setUniform("cirrus_height", getHeight());
   program->setUniform("cirrus_layer_thickness", 100.f);
 
   program->setUniform("is_upper_side", false);
   state.setCullFace(GL_FRONT);
   gl::DrawElements(GL_TRIANGLES, impl->vao->getNumIndices(), GL_UNSIGNED_INT, nullptr);
 
-  if (camera.getPos().z > 7000)
+  if (camera.getPos().z > getHeight())
   {
     program->setUniform("is_upper_side", true);
     state.setCullFace(GL_BACK);
@@ -134,6 +139,12 @@ void CirrusClouds::draw(const StateModifier &prev_state, const Camera &camera)
 ShaderProgramPtr CirrusClouds::getProgram()
 {
   return impl->program;
+}
+
+
+float CirrusClouds::getHeight() const
+{
+  return impl->height;
 }
 
 

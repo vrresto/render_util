@@ -38,11 +38,12 @@ class CirrusClouds
   std::unique_ptr<Impl> impl;
 
 public:
-  CirrusClouds(TextureManager &txmgr, const ShaderSearchPath&, const ShaderParameters&,
+  CirrusClouds(TextureManager &txmgr, const ShaderSearchPath&, const ShaderParameters&, float height,
                std::shared_ptr<const GenericImage> texture = {});
   ~CirrusClouds();
 
   ShaderProgramPtr getProgram();
+  float getHeight() const;
 
   void draw(const StateModifier &state, const Camera &camera);
 };
