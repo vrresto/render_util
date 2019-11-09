@@ -73,8 +73,13 @@ std::shared_ptr<Texture> Texture::create(unsigned int target)
 }
 
 
-TemporaryTextureBinding::TemporaryTextureBinding(TexturePtr texture) : m_texture(texture)
+TemporaryTextureBinding::TemporaryTextureBinding(TexturePtr texture, int texunit) :
+  m_texture(texture),
+  m_texunit(texunit)
 {
+  if (m_texunit >= 0)
+    gl::ActiveTexture(GL_TEXTURE0 + texunit);
+
   switch (texture->getTarget())
   {
     case GL_TEXTURE_1D:
@@ -92,12 +97,21 @@ TemporaryTextureBinding::TemporaryTextureBinding(TexturePtr texture) : m_texture
   }
 
   m_texture->bind();
+
+  if (m_texunit >= 0)
+    gl::ActiveTexture(GL_TEXTURE0);
 }
 
 
 TemporaryTextureBinding::~TemporaryTextureBinding()
 {
+  if (m_texunit >= 0)
+    gl::ActiveTexture(GL_TEXTURE0 + m_texunit);
+
   gl::BindTexture(m_texture->getTarget(), m_previous_binding);
+
+  if (m_texunit >= 0)
+    gl::ActiveTexture(GL_TEXTURE0);
 }
 
 

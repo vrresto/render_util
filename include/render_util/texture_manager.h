@@ -36,9 +36,10 @@ class TemporaryTextureBinding
 {
   TexturePtr m_texture;
   unsigned int m_previous_binding = 0;
+  int m_texunit = -1;
 
 public:
-  TemporaryTextureBinding(TexturePtr texture);
+  TemporaryTextureBinding(TexturePtr texture, int texunit = -1);
   ~TemporaryTextureBinding();
 };
 
