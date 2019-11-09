@@ -87,6 +87,24 @@ fill(T image, typename TypeFromPtr<T>::Type::PixelType color)
   }
 }
 
+
+template <typename T>
+void
+clear(T image)
+{
+  for (int y = 0; y < image->h(); y++)
+  {
+    for (int x = 0; x < image->w(); x++)
+    {
+      for (int c = 0; c < image->numComponents(); c++)
+      {
+        image->at(x, y, c) = 0;
+      }
+    }
+  }
+}
+
+
 template <typename T, int N>
 std::shared_ptr<Image<T,N>>
 create(Pixel<T,N> color, glm::ivec2 size)

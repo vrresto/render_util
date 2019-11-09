@@ -77,12 +77,19 @@ CirrusClouds::CirrusClouds(TextureManager &txmgr,
   impl->program->setUniformi("sampler_cirrus",
                              txmgr.getTexUnitNum(TEXUNIT_CIRRUS));
 
+  if (texture_image && !(texture_image->numComponents() == 1 || texture_image->numComponents() == 4))
+  {
+    LOG_ERROR << "Cirrus cloud textures with "
+              << texture_image->numComponents() << " channels are not supported." << endl;
+    texture_image.reset();
+  }
+
   if (!texture_image)
-    texture_image = render_util::loadImageFromFile<GenericImage>("cirrus.tga"); //FIXME
-
-  assert(texture_image);
-
-  assert(texture_image->numComponents() == 1 || texture_image->numComponents() == 4);
+  {
+    auto image = std::make_shared<GenericImage>(glm::ivec2(4), 1);
+    image::clear(image);
+    texture_image = image;
+  }
 
   if (texture_image->numComponents() == 1)
   {
