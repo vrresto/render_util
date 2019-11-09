@@ -97,7 +97,7 @@ float getCloudDensityNear(vec3 view_dir)
       cloud_density_near += density * layer_alpha;
   }
 
-  cloud_density_near = min(cloud_density_near, 1);
+  cloud_density_near = min(2 * cloud_density_near, 1);
 
   return cloud_density_near;
 }
