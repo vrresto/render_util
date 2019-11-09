@@ -33,7 +33,8 @@ class Quad2D
   ShaderProgramPtr shader;
 
 public:
-  Quad2D(TextureManager&, const ShaderSearchPath&);
+  Quad2D(TextureManager&, const ShaderSearchPath&, std::string shader_program = {});
+  Quad2D(ShaderProgramPtr shader_program);
   void setColor(glm::vec4);
   void draw(int x, int y, int width, int height);
 };

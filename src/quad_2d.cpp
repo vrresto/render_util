@@ -33,9 +33,20 @@ namespace render_util
 {
 
 
-Quad2D::Quad2D(TextureManager &tex_mgr, const ShaderSearchPath &shader_search_path)
+Quad2D::Quad2D(TextureManager &tex_mgr, const ShaderSearchPath &shader_search_path,
+               std::string shader_program)
 {
-  shader = createShaderProgram("quad_2d", tex_mgr, shader_search_path);
+  if (shader_program.empty())
+    shader_program = "quad_2d";
+
+  shader = createShaderProgram(shader_program, tex_mgr, shader_search_path);
+  assert(shader->isValid());
+  setColor(vec4(0,0,0,1));
+}
+
+
+Quad2D::Quad2D(ShaderProgramPtr shader_program) : shader(shader_program)
+{
   assert(shader->isValid());
   setColor(vec4(0,0,0,1));
 }
