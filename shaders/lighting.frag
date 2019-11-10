@@ -176,3 +176,13 @@ vec3 calcLight(vec3 pos, vec3 normal, float direct_scale, float ambient_scale)
 
   return direct * direct_scale + ambient * ambient_scale;
 }
+
+
+vec3 calcLight(vec3 pos, float direct_scale, float ambient_scale)
+{
+  vec3 direct;
+  vec3 ambient;
+  calcLightParams(ambient, direct);
+
+  return direct * direct_scale + ambient * ambient_scale;
+}

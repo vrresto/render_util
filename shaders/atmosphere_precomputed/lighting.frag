@@ -156,3 +156,13 @@ vec3 calcWaterEnvColor(vec3 ambientLight, vec3 directLight)
 
   return envColor;
 }
+
+
+vec3 calcLight(vec3 pos, float direct_scale, float ambient_scale)
+{
+  vec3 ambient;
+  vec3 direct;
+  getIncomingLight(pos, ambient, direct);
+
+  return direct_scale * direct + ambient_scale * ambient;
+}
