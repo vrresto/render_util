@@ -61,6 +61,7 @@ public:
 
 
 std::unique_ptr<Atmosphere> createAtmosphere(Atmosphere::Type,
+                                             float max_cirrus_albedo,
                                              render_util::TextureManager&, std::string shader_dir);
 
 

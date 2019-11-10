@@ -47,8 +47,11 @@ class AtmospherePrecomputed : public Atmosphere
   float m_texture_saturation = 1.0;
   float m_blue_saturation = 1.0;
 
+  float m_max_cirrus_albedo = 1.0;
+
 public:
-  AtmospherePrecomputed(render_util::TextureManager &tex_mgr, std::string shader_dir);
+  AtmospherePrecomputed(render_util::TextureManager &tex_mgr, std::string shader_dir,
+                        float max_cirrus_albedo);
 
   std::string getShaderPath() override { return "atmosphere_precomputed"; }
   ShaderParameters getShaderParameters() override;

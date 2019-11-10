@@ -20,6 +20,8 @@
 
 #include lighting_definitions.glsl
 
+#define MAX_CIRRUS_OPACITY @max_cirrus_opacity@
+
 vec3 fogAndToneMap(vec3 color);
 float getSphereIntersectionFromInside(vec3 rayStart, vec3 rayDir, vec3 sphere_center, float radius);
 bool sphereIntersection(vec3 ray_origin, vec3 ray_dir, float ray_length,
@@ -113,7 +115,7 @@ void main()
   if (cameraPosWorld.z > cirrus_height)
     normal = -normal;
 
-  float cloud_density = getCloudDensityNear(view_dir);
+  float cloud_density = MAX_CIRRUS_OPACITY * getCloudDensityNear(view_dir);
 
   vec3 color = calcCirrusLight(passObjectPos);
 

@@ -38,7 +38,11 @@ class CirrusClouds
   std::unique_ptr<Impl> impl;
 
 public:
-  CirrusClouds(TextureManager &txmgr, const ShaderSearchPath&, const ShaderParameters&, float height,
+  CirrusClouds(float max_opacity,
+               TextureManager &txmgr,
+               const ShaderSearchPath&,
+               const ShaderParameters&,
+               float height,
                std::shared_ptr<const GenericImage> texture = {});
   ~CirrusClouds();
 

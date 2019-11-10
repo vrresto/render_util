@@ -95,7 +95,8 @@ namespace render_util
 
 
 AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mgr,
-                                       std::string shader_dir)
+                                             std::string shader_dir, float max_cirrus_albedo) :
+  m_max_cirrus_albedo(max_cirrus_albedo)
 {
   // Values from "Reference Solar Spectral Irradiance: ASTM G-173", ETR column
   // (see http://rredc.nrel.gov/solar/spectra/am1.5/ASTMG173/ASTMG173.html),
@@ -225,6 +226,7 @@ ShaderParameters AtmospherePrecomputed::getShaderParameters()
   auto p = m_model->getShaderParameters();
   p.set("use_luminance", use_luminance_ != Luminance::NONE);
   p.set("use_hdr", true);
+  p.set("max_cirrus_albedo", m_max_cirrus_albedo);
 
   return p;
 }

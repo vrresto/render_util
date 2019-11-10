@@ -20,6 +20,7 @@
 
 #include lighting_definitions.glsl
 
+#define MAX_CIRRUS_ALBEDO @max_cirrus_albedo@
 #define USE_LUMINANCE @use_luminance@
 
 #if USE_LUMINANCE
@@ -49,9 +50,7 @@ vec3 calcCirrusLight(vec3 pos)
   vec3 direct;
   getIncomingLight(pos, ambient, direct);
 
-  const float albedo = 0.4;
-
-  return albedo * (direct + ambient);
+  return MAX_CIRRUS_ALBEDO * (direct + ambient);
 }
 
 

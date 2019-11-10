@@ -60,9 +60,10 @@ struct CirrusClouds::Impl
 };
 
 
-CirrusClouds::CirrusClouds(TextureManager &txmgr,
+CirrusClouds::CirrusClouds(float max_opacity,
+                           TextureManager &txmgr,
                            const ShaderSearchPath &shader_search_path,
-                           const ShaderParameters &shader_params,
+                           const ShaderParameters &shader_params_,
                            float height,
                            std::shared_ptr<const GenericImage> texture_image)
   : impl(std::make_unique<Impl>(height))
@@ -70,6 +71,9 @@ CirrusClouds::CirrusClouds(TextureManager &txmgr,
   auto mesh = generateUVDome(100, 100, 0.04 * util::PI);
 
   impl->vao = std::make_unique<VertexArrayObject>(mesh, true);
+
+  auto shader_params = shader_params_;
+  shader_params.set("max_cirrus_opacity", max_opacity);
 
   impl->program = render_util::createShaderProgram("cirrus", txmgr, shader_search_path, {}, shader_params);
 //   impl->program->setUniformi("sampler_generic_noise",

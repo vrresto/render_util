@@ -254,7 +254,7 @@ void TerrainViewerScene::setup()
 {
   LOG_INFO<<"void TerrainViewerScene::setup()"<<endl;
 
-  m_atmosphere = createAtmosphere(ATMOSPHERE_TYPE, getTextureManager(), RENDER_UTIL_SHADER_DIR);
+  m_atmosphere = createAtmosphere(ATMOSPHERE_TYPE, 0.4, getTextureManager(), RENDER_UTIL_SHADER_DIR);
 
   getTextureManager().setActive(true);
 
@@ -315,7 +315,7 @@ void TerrainViewerScene::setup()
   buildBaseMap();
 #endif
 
-  m_cirrus_clouds = make_unique<CirrusClouds>(getTextureManager(), shader_search_path,
+  m_cirrus_clouds = make_unique<CirrusClouds>(0.7, getTextureManager(), shader_search_path,
                                               shader_params, 7000);
 
   CHECK_GL_ERROR();
