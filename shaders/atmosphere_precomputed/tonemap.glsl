@@ -18,6 +18,7 @@
 
 #version 330
 
+#define USE_REINHARD_TONE_MAPPING @use_reinhard_tone_mapping:0@
 #define USE_DEFAULT_TONE_MAPPING @use_default_tone_mapping:0@
 
 uniform vec3 white_point;
@@ -53,6 +54,19 @@ vec3 textureColorCorrection(vec3 color)
   color *= texture_brightness;
   return clamp(color, 0, 1);
 }
+
+
+#if USE_REINHARD_TONE_MAPPING
+vec3 toneMap(vec3 color)
+{
+  color *= exposure;
+  color = pow(color, vec3(brightness_curve_exponent));
+  color = (color/white_point) / (1.0 + (color/white_point));
+  color = pow(color, vec3(1.0 / gamma));
+  color = adjustSaturation(color, saturation);
+  return color;
+}
+#endif
 
 
 #if USE_DEFAULT_TONE_MAPPING

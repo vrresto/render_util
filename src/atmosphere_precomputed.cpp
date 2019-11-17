@@ -93,6 +93,7 @@ enum class Luminance
 
 enum class ToneMappingOperatorType
 {
+  REINHARD,
   DEFAULT,
 };
 
@@ -143,6 +144,7 @@ AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mg
 {
   switch (TONE_MAPPING_OPERATOR_TYPE)
   {
+    case ToneMappingOperatorType::REINHARD:
     case ToneMappingOperatorType::DEFAULT:
       m_tone_mapping_operator = std::make_unique<DefaultToneMappingOperator>();
       break;
@@ -280,6 +282,9 @@ ShaderParameters AtmospherePrecomputed::getShaderParameters()
 
   switch (TONE_MAPPING_OPERATOR_TYPE)
   {
+    case ToneMappingOperatorType::REINHARD:
+      p.set("use_reinhard_tone_mapping", true);
+      break;
     case ToneMappingOperatorType::DEFAULT:
       p.set("use_default_tone_mapping", true);
       break;
