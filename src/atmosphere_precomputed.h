@@ -30,7 +30,12 @@ namespace render_util
 
 class AtmospherePrecomputed : public Atmosphere
 {
+public:
+  class ToneMappingOperator;
+
+private:
   std::unique_ptr<atmosphere::Model> m_model;
+  std::unique_ptr<ToneMappingOperator> m_tone_mapping_operator;
 
   unsigned int m_transmittance_texture_unit = 0;
   unsigned int m_scattering_texture_unit = 0;
@@ -52,6 +57,7 @@ class AtmospherePrecomputed : public Atmosphere
 public:
   AtmospherePrecomputed(render_util::TextureManager &tex_mgr, std::string shader_dir,
                         float max_cirrus_albedo);
+  ~AtmospherePrecomputed();
 
   std::string getShaderPath() override { return "atmosphere_precomputed"; }
   ShaderParameters getShaderParameters() override;

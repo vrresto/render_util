@@ -35,9 +35,43 @@
 #include <util.h>
 
 using namespace atmosphere;
+using render_util::Atmosphere;
+using render_util::AtmospherePrecomputed;
+
+
+class render_util::AtmospherePrecomputed::ToneMappingOperator
+{
+public:
+  virtual bool hasParameter(Atmosphere::Parameter) { return false; }
+  virtual double getParameter(Atmosphere::Parameter p) { return 0; }
+  virtual void setParameter(Atmosphere::Parameter p, double value) {}
+  virtual void setUniforms(render_util::ShaderProgramPtr) {}
+};
+
 
 namespace
 {
+
+
+class DefaultToneMappingOperator : public AtmospherePrecomputed::ToneMappingOperator
+{
+  using Parameter = Atmosphere::Parameter;
+
+public:
+  bool hasParameter(Atmosphere::Parameter p) override
+  {
+    switch (p)
+    {
+      case Parameter::EXPOSURE:
+      case Parameter::SATURATION:
+      case Parameter::BRIGHTNESS_CURVE_EXPONENT:
+      case Parameter::GAMMA:
+        return true;
+      default:
+        return false;
+    }
+  }
+};
 
 
 enum class Luminance
@@ -54,6 +88,12 @@ enum class Luminance
   // "http://www.oskee.wz.cz/stranka/uploads/SCCG10ElekKmoch.pdf">Real-time
   //  Spectral Scattering in Large-scale Natural Participating Media</a>).
   PRECOMPUTED
+};
+
+
+enum class ToneMappingOperatorType
+{
+  DEFAULT,
 };
 
 constexpr double kPi = util::PI;
@@ -73,6 +113,7 @@ constexpr Luminance use_luminance_ = Luminance::APPROXIMATE;
 // constexpr Luminance use_luminance_ = Luminance::NONE;
 constexpr bool use_combined_textures_ = true;
 constexpr bool do_white_balance_ = true;
+constexpr auto TONE_MAPPING_OPERATOR_TYPE = ToneMappingOperatorType::DEFAULT;
 
 // calculated using CIECAM02 according to http://www.magnetkern.de/spektrum.html
 constexpr auto RGB_LAMBDAS = glm::dvec3(630.0, 542.0, 454.0);
@@ -98,6 +139,13 @@ AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mg
                                              std::string shader_dir, float max_cirrus_albedo) :
   m_max_cirrus_albedo(max_cirrus_albedo)
 {
+  switch (TONE_MAPPING_OPERATOR_TYPE)
+  {
+    case ToneMappingOperatorType::DEFAULT:
+      m_tone_mapping_operator = std::make_unique<DefaultToneMappingOperator>();
+      break;
+  }
+
   // Values from "Reference Solar Spectral Irradiance: ASTM G-173", ETR column
   // (see http://rredc.nrel.gov/solar/spectra/am1.5/ASTMG173/ASTMG173.html),
   // summed and averaged in each bin (e.g. the value for 360nm is the average
@@ -221,12 +269,22 @@ AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mg
 }
 
 
+AtmospherePrecomputed::~AtmospherePrecomputed() {}
+
+
 ShaderParameters AtmospherePrecomputed::getShaderParameters()
 {
   auto p = m_model->getShaderParameters();
   p.set("use_luminance", use_luminance_ != Luminance::NONE);
   p.set("use_hdr", true);
   p.set("max_cirrus_albedo", m_max_cirrus_albedo);
+
+  switch (TONE_MAPPING_OPERATOR_TYPE)
+  {
+    case ToneMappingOperatorType::DEFAULT:
+      p.set("use_default_tone_mapping", true);
+      break;
+  }
 
   return p;
 }
@@ -252,6 +310,7 @@ void AtmospherePrecomputed::setUniforms(ShaderProgramPtr program)
   program->setUniform("blue_saturation", m_blue_saturation);
 
   program->setUniform("white_point", glm::vec3(m_white_point));
+  m_tone_mapping_operator->setUniforms(program);
 }
 
 
@@ -259,17 +318,13 @@ bool AtmospherePrecomputed::hasParameter(Parameter p)
 {
   switch (p)
   {
-    case Parameter::EXPOSURE:
-    case Parameter::SATURATION:
-    case Parameter::BRIGHTNESS_CURVE_EXPONENT:
     case Parameter::TEXTURE_BRIGHTNESS:
-    case Parameter::TEXTURE_BRIGHTNESS_CURVE_EXPONENT:
     case Parameter::TEXTURE_SATURATION:
+    case Parameter::TEXTURE_BRIGHTNESS_CURVE_EXPONENT:
     case Parameter::BLUE_SATURATION:
-    case Parameter::GAMMA:
       return true;
     default:
-      return false;
+      return m_tone_mapping_operator->hasParameter(p);
   }
 }
 
@@ -295,7 +350,7 @@ double AtmospherePrecomputed::getParameter(Parameter p)
     case Parameter::GAMMA:
       return m_gamma;
     default:
-      return 0;
+      return m_tone_mapping_operator->getParameter(p);
   }
 }
 
@@ -328,6 +383,8 @@ void AtmospherePrecomputed::setParameter(Parameter p, double value)
     case Parameter::GAMMA:
       m_gamma = std::max(1.0, value);
       break;
+    default:
+      m_tone_mapping_operator->setParameter(p, value);
   }
 }
 

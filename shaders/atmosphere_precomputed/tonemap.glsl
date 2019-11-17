@@ -18,6 +18,8 @@
 
 #version 330
 
+#define USE_DEFAULT_TONE_MAPPING @use_default_tone_mapping:1@
+
 uniform vec3 white_point;
 uniform float gamma;
 uniform float exposure;
@@ -53,6 +55,7 @@ vec3 textureColorCorrection(vec3 color)
 }
 
 
+#if USE_DEFAULT_TONE_MAPPING
 vec3 toneMap(vec3 color)
 {
   color = pow(color, vec3(brightness_curve_exponent));
@@ -61,3 +64,4 @@ vec3 toneMap(vec3 color)
   color = adjustSaturation(color, saturation);
   return color;
 }
+#endif
