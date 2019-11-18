@@ -18,7 +18,7 @@
 
 #version 330
 
-#define USE_DEFAULT_TONE_MAPPING @use_default_tone_mapping:1@
+#define USE_DEFAULT_TONE_MAPPING @use_default_tone_mapping:0@
 
 uniform vec3 white_point;
 uniform float gamma;
