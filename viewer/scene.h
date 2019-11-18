@@ -82,6 +82,7 @@ public:
   float sun_elevation = 90.0;
   float sun_azimuth = 0.0;
   float sea_roughness = 0.1;
+  float wave_foam = 0.1;
   bool toggle_lod_morph = false;
   bool pause_animations = false;
   int m_active_controller = 0;
@@ -135,6 +136,7 @@ public:
     addAtmosphereController("uncharted2_w", Atmosphere::Parameter::UNCHARTED2_W);
 
     addController("sea_roughness", sea_roughness);
+    addController("wave_foam", wave_foam);
   }
 
 
@@ -215,6 +217,7 @@ public:
     program->setUniform("sunDir", getSunDir());
     program->setUniform("toggle_lod_morph", toggle_lod_morph);
     program->setUniform("sea_roughness", sea_roughness);
+    program->setUniform("wave_foam", wave_foam);
 #if ENABLE_BASE_MAP
     program->setUniform("height_map_base_origin", base_map_origin);
 #endif

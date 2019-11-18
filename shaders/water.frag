@@ -29,7 +29,6 @@
 #define ENABLE_WAVES !LOW_DETAIL
 #define ENABLE_WAVE_INTERPOLATION 1
 #define ENABLE_WAVE_FOAM !LOW_DETAIL
-// #define ENABLE_WAVE_FOAM 1
 #define ENABLE_WATER_MAP 1
 // #define ENABLE_SHORE_WAVES 1
 #define ENABLE_SKY_REFLECTION @enable_sky_reflection:1@
@@ -84,6 +83,7 @@ uniform vec3 sunDir;
 uniform vec3 water_color;
 uniform vec2 map_size;
 uniform float sea_roughness = 0.1;
+uniform float wave_foam = 0.1;
 
 uniform vec3 earth_center;
 uniform vec3 cameraPosWorld;
@@ -216,8 +216,7 @@ float getFoamAmountWithNoise(vec2 coord)
 
 //   noise *= 4;
 
-  noise *= sea_roughness;
-
+  noise *= wave_foam;
   noise = smoothstep(0.4, 0.6, noise);
 
 //   float amount1 = getFoamAmount(coord, 0);
@@ -810,7 +809,7 @@ vec3 color = color_in;
 #endif
 
 #if ENABLE_WAVE_FOAM
-//   waterColor = mix(waterColor, vec3(1), wave_foam_amount);
+  water_color = mix(water_color, vec3(1), wave_foam_amount);
 #endif
 
 #if ENABLE_UNLIT_OUTPUT
