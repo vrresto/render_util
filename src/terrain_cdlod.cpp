@@ -146,7 +146,7 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
     textures_in.at(i).reset();
   }
 
-  auto type_map = make_shared<ImageRGBA>(type_map_in->getSize());
+  auto type_map = make_shared<ImageRGB>(type_map_in->getSize());
 
   for (int y = 0; y < type_map->h(); y++)
   {
@@ -180,7 +180,6 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
       type_map->at(x,y,0) = new_index.x;
       type_map->at(x,y,1) = new_index.y;
       type_map->at(x,y,2) = new_index.z;
-      type_map->at(x,y,3) = 255;
     }
   }
 

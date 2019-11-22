@@ -34,14 +34,11 @@ TexturePtr TerrainCDLODBase::createNormalMapTexture(render_util::ElevationMap::C
   using namespace render_util;
 
   LOG_INFO<<"TerrainCDLOD: creating normal map ..."<<endl;
-  auto normal_map = createNormalMap(map, meters_per_grid);
+  auto normal_map = createNormalMapRGB(map, meters_per_grid);
   LOG_INFO<<"TerrainCDLOD: creating normal map done."<<endl;
 
-  auto normal_map_texture =
-    createFloatTexture(reinterpret_cast<const float*>(normal_map->getData()),
-                      map->getWidth(),
-                      map->getHeight(),
-                      3);
+  LOG_INFO<<"TerrainCDLOD: creating normal map texture ..."<<endl;
+  auto normal_map_texture = createTexture(normal_map);
   LOG_INFO<<"TerrainCDLOD: creating normal map  texture done."<<endl;
 
   TextureParameters<int> params;

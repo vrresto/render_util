@@ -185,7 +185,7 @@ namespace render_util
   TexturePtr createAmosphereThicknessTexture(TextureManager &texture_manager, std::string resource_path);
   TexturePtr createCurvatureTexture(TextureManager &texture_manager, std::string resource_path);
 
-  ImageRGBA::Ptr createMapFarTexture(
+  ImageRGB::Ptr createMapFarTexture(
       ImageGreyScale::ConstPtr type_map,
       const std::vector<ImageRGBA::ConstPtr> &textures,
 //       ImageGreyScale::ConstPtr forest_map,
@@ -195,7 +195,8 @@ namespace render_util
 
   ImageGreyScale::Ptr createTerrainLightMap(const ElevationMap&);
 
-  Image<Normal>::Ptr createNormalMap(ElevationMap::ConstPtr elevation_map, float grid_scale);
+  ImageRGB::Ptr createNormalMapRGB(ElevationMap::ConstPtr elevation_map, float grid_scale);
+  Image<float, 3>::Ptr createNormalMap(ElevationMap::ConstPtr elevation_map, float grid_scale);
   ImageRGB::Ptr createNormalMap(ImageGreyScale::ConstPtr height_map,
                                 float max_height_m,
                                 float height_map_width_m);

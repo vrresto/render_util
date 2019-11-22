@@ -47,7 +47,7 @@ namespace render_util
       std::vector<ImageRGBA::Ptr> textures;
       std::vector<ImageRGB::Ptr> textures_nm;
       std::vector<float> texture_scale;
-      ImageRGBA::ConstPtr far_texture;
+      ImageRGB::ConstPtr far_texture;
     };
 
     virtual ~MapLoaderBase() {}

@@ -113,20 +113,75 @@ void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
 }
 
 
+inline glm::vec3 pixelToNormal(ImageRGB::PixelType pixel)
+{
+  glm::vec3 normal = glm::make_vec3(pixel.components);
+
+//   cout<<normal.x<<endl;
+  
+  normal /= 255;
+  
+  
+  
+//   normal.x -= 128;
+//   normal.y -= 128;
+
+//   cout<<normal.x<<endl;
+  
+  normal *= 2;
+  
+//   cout<<normal.x<<endl;
+
+//   normal /= glm::vec3(255);
+  normal -= vec3(1);
+
+//   cout<<normal.x<<endl;
+  assert(normal.x >= -1 && normal.x <= 1);
+//   cout<<normal.y<<endl;
+  assert(normal.y >= -1 && normal.y <= 1);
+//   cout<<normal.z<<endl;
+  assert(normal.z >= -1 && normal.z <= 1);
+
+  return normal;
+}
+
+
+inline void normalToPixel(glm::vec3 normal, ImageRGB::PixelType &pixel)
+{
+  normal += vec3(1);
+  normal /= 2;
+  normal *= 255;
+
+  pixel[0] = normal.x;
+  pixel[1] = normal.y;
+  pixel[2] = normal.z;
+}
+
+
+template <typename T>
 struct NormalMapCreator
 {
+  using ImageType = T;
+
   render_util::ElevationMap::ConstPtr elevation_map;
-  render_util::Image<Normal>::Ptr normals;
+  std::shared_ptr<ImageType> normals;
   float grid_scale = 1.0;
 
   vec3 getNormal(ivec2 coords) const
   {
-    return normals->get(coords).to_vec3();
+//     return normals->get(coords).to_vec3();
+    return pixelToNormal(normals->getPixel(coords));
   }
 
   void setNormal(ivec2 coords, glm::vec3 normal)
   {
-    normals->at(coords) = { normal.x, normal.y, normal.z };
+//     normals->at(coords) = { normal.x, normal.y, normal.z };
+//     ::setNormal(normal, normals->at(coords));
+    
+    typename ImageType::PixelType pixel;
+    normalToPixel(normal, pixel);
+    
+    normals->setPixel(coords, pixel);
   }
 
   glm::vec3 calcTriangleNormal(const vec2 vertex_coords[3])
@@ -147,9 +202,22 @@ struct NormalMapCreator
     return v;
   }
 
+  void reset()
+  {
+    normals = std::make_shared<ImageType>(elevation_map->getSize());
+
+    for (int y = 0; y < normals->getHeight(); y++)
+    {
+      for (int x = 0; x < normals->getWidth(); x++)
+      {
+        setNormal(ivec2(x,y), vec3(0,0,1));
+      }
+    }
+  }
+
   void calcNormals()
   {
-    normals.reset(new Image<Normal>(elevation_map->getSize()));
+    reset();
 
     for (int y = 0; y < elevation_map->getHeight()-1; y++)
     {
@@ -293,6 +361,8 @@ void setTextureImage(TexturePtr texture,
 
 TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_pixel, bool mipmaps)
 {
+  FORCE_CHECK_GL_ERROR();
+  
   assert(data);
   assert(w);
   assert(h);
@@ -332,6 +402,12 @@ TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_
       abort();
   }
 
+//   data = nullptr;
+  
+  LOG_TRACE << "reserving texture memory: " << w << "x" << h
+    << " (" << bytes_per_pixel << " bpp, " << w*h*bytes_per_pixel/1024/1024 << " mb)"
+    << endl;
+  
   gl::TexImage2D(GL_TEXTURE_2D, 0,
                 internal_format,
                 w,
@@ -342,6 +418,7 @@ TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_
                 data);
 
   CHECK_GL_ERROR();
+  FORCE_CHECK_GL_ERROR();
 
   if (mipmaps)
   {
@@ -352,6 +429,7 @@ TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_
     gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   
   CHECK_GL_ERROR();
+  FORCE_CHECK_GL_ERROR();
 
   gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -530,6 +608,10 @@ TexturePtr createFloatTexture(const float *data, int w, int h, int num_component
       assert(0);
       abort();
   }
+
+  LOG_TRACE << "reserving texture memory: " << w << "x" << h
+    << " (" << num_components << " components, " << w*h*num_components*4/1024/1024 << " mb)"
+    << endl;
 
   gl::TexImage2D(GL_TEXTURE_2D, 0,
                 internal_format,
@@ -736,7 +818,7 @@ TexturePtr createCurvatureTexture(TextureManager &texture_manager,
 }
 
 
-ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
+ImageRGB::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
                             const vector<ImageRGBA::ConstPtr> &textures,
                             int type_map_meters_per_pixel,
                             int meters_per_tile)
@@ -752,7 +834,7 @@ ImageRGBA::Ptr createMapFarTexture(ImageGreyScale::ConstPtr type_map,
   int tile_size_pixels = meters_per_tile / type_map_meters_per_pixel;
   assert(tile_size_pixels * type_map_meters_per_pixel == meters_per_tile);
 
-  ImageRGBA::Ptr texture = make_shared<ImageRGBA>(type_map->size());
+  auto texture = make_shared<ImageRGB>(type_map->size());
 
   vector<ImageRGBA::Ptr> mipmaps(textures.size());
   for (size_t i = 0; i < mipmaps.size(); i++)
@@ -823,32 +905,13 @@ ImageRGB::Ptr createNormalMap(ImageGreyScale::ConstPtr height_map,
 
   const float grid_scale = height_map_width_m / height_map->w();
 
-  auto normal_map = createNormalMap(elevation_map, grid_scale);
-
-  auto normal_map_rgb = make_shared<ImageRGB>(normal_map->size());
-
-  for (int y = 0; y < normal_map_rgb->h(); y++)
-  {
-    for (int x = 0; x < normal_map_rgb->w(); x++)
-    {
-      auto normal = normal_map->getPixel(x,y)[0].to_vec3();
-
-      for (int comp = 0; comp < normal_map_rgb->numComponents(); comp++)
-      {
-        normal_map_rgb->at(x,y,comp) = ((normal[comp] + 1.f) / 2.f) * 255.f;
-      }
-    }
-  }
-
-//   normal_map_rgb = downSample(normal_map_rgb, 4);
-
-  return normal_map_rgb;
+  return createNormalMapRGB(elevation_map, grid_scale);
 }
 
 
-Image<Normal>::Ptr createNormalMap(ElevationMap::ConstPtr elevation_map, float grid_scale)
+ImageRGB::Ptr createNormalMapRGB(ElevationMap::ConstPtr elevation_map, float grid_scale)
 {
-  NormalMapCreator c;
+  NormalMapCreator<ImageRGB> c;
   c.grid_scale = grid_scale;
   c.elevation_map = elevation_map;
   c.calcNormals();

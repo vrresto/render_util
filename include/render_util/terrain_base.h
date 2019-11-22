@@ -47,7 +47,7 @@ namespace render_util
       static constexpr unsigned int ALL = LAND | WATER | FOREST;
     };
 
-    using MaterialMap = Image<unsigned int>;
+    using MaterialMap = Image<unsigned char>;
     using TypeMap = ImageGreyScale;
 
     struct Client
