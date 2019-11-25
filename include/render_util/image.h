@@ -283,6 +283,7 @@ public:
   }
   const unsigned char *getData() const { return _data.data(); }
   const unsigned char *data() const { return getData(); }
+  unsigned getDataSize() const { return _data.size(); }
   unsigned dataSize() const { return _data.size(); }
   const std::vector<unsigned char> &getDataContainer() const { return _data; }
 

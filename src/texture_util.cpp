@@ -290,6 +290,7 @@ void setTextureImage(TexturePtr texture,
   CHECK_GL_ERROR();
 }
 
+
 TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_pixel, bool mipmaps)
 {
   assert(data);
@@ -351,6 +352,65 @@ TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_
     gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   
   CHECK_GL_ERROR();
+
+  gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+  return texture;
+}
+
+
+TexturePtr createTextureExt(const unsigned char *data,
+                          size_t data_size,
+                          int w, int h,
+                          int num_components,
+                          size_t bytes_per_component,
+                          int type,
+                          int format,
+                          int internal_format,
+                          bool mipmaps)
+{
+  assert(data);
+  assert(w);
+  assert(h);
+  assert(data_size == (w * h * num_components * bytes_per_component));
+
+  FORCE_CHECK_GL_ERROR();
+
+  TexturePtr texture = Texture::create(GL_TEXTURE_2D);
+  CHECK_GL_ERROR();
+
+  TemporaryTextureBinding binding(texture);
+  CHECK_GL_ERROR();
+
+  LOG_TRACE << "reserving texture memory: " << w << "x" << h
+    << " (" << num_components << " components, " << bytes_per_component << " bytes per component, "
+    << data_size/1024.0/1024.0 << " mb)"
+    << endl;
+
+  gl::TexImage2D(GL_TEXTURE_2D, 0,
+                internal_format,
+                w,
+                h,
+                0,
+                format,
+                type,
+                data);
+
+  FORCE_CHECK_GL_ERROR();
+
+  if (mipmaps)
+  {
+    gl::GenerateMipmap(GL_TEXTURE_2D);
+    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  }
+  else
+  {
+    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  }
+
+  FORCE_CHECK_GL_ERROR();
 
   gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -798,3 +858,104 @@ Image<Normal>::Ptr createNormalMap(ElevationMap::ConstPtr elevation_map, float g
 
 
 } // namespace render_util
+
+
+namespace render_util::texture_format
+{
+
+
+int TextureFormatParametersBase::getFormat(unsigned int num)
+{
+  switch (num)
+  {
+    case 1:
+      return GL_RED;
+    case 2:
+      return GL_RG;
+    case 3:
+      return GL_RGB;
+    case 4:
+      return GL_RGBA;
+    default:
+      assert(0);
+      abort();
+  }
+}
+
+
+int TextureFormatParameters<unsigned char>::getType()
+{
+   return GL_UNSIGNED_BYTE;
+}
+
+
+int TextureFormatParameters<unsigned char>::getInternalFormat(unsigned int num)
+{
+  switch (num)
+  {
+    case 1:
+      return GL_R8;
+    case 2:
+      return GL_RG8;
+    case 3:
+      return GL_RGB8;
+    case 4:
+      return GL_RGBA8;
+    default:
+      assert(0);
+      abort();
+  }
+}
+
+
+int TextureFormatParameters<float>::getType()
+{
+  return GL_FLOAT;
+}
+
+
+int TextureFormatParameters<float>::getInternalFormat(unsigned int num)
+{
+  switch (num)
+  {
+    case 1:
+      return GL_R32F;
+    case 2:
+      return GL_RG32F;
+    case 3:
+      return GL_RGB32F;
+    case 4:
+      return GL_RGBA32F;
+    default:
+      assert(0);
+      abort();
+  }
+};
+
+
+int TextureFormatParameters<half_float::half>::getType()
+{
+  return GL_HALF_FLOAT;
+}
+
+
+int TextureFormatParameters<half_float::half>::getInternalFormat(unsigned int num)
+{
+  switch (num)
+  {
+    case 1:
+      return GL_R16F;
+    case 2:
+      return GL_RG16F;
+    case 3:
+      return GL_RGB16F;
+    case 4:
+      return GL_RGBA16F;
+    default:
+      assert(0);
+      abort();
+  }
+};
+
+
+} // namespace render_util::texture_format

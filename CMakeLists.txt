@@ -57,17 +57,26 @@ include_directories(
   ${PROJECT_BINARY_DIR}
 )
 
+ExternalProject_Add(glm
+  URL "https://github.com/g-truc/glm/archive/0.9.9.0.tar.gz"
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
+)
+ExternalProject_Get_Property(glm SOURCE_DIR)
+include_directories(${SOURCE_DIR})
+
+ExternalProject_Add(half
+  URL "https://downloads.sourceforge.net/project/half/half/2.1.0/half-2.1.0.zip"
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
+)
+ExternalProject_Get_Property(half SOURCE_DIR)
+include_directories(${SOURCE_DIR}/include)
+
+
 if(platform_mingw)
-
-  ExternalProject_Add(glm
-    URL "https://github.com/g-truc/glm/archive/0.9.9.0.tar.gz"
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-  )
-  ExternalProject_Get_Property(glm SOURCE_DIR)
-  include_directories(${SOURCE_DIR})
-
   if (render_util_build_viewer)
     ExternalProject_Add(glfw_source
       URL "https://github.com/glfw/glfw/releases/download/3.2.1/glfw-3.2.1.zip"
@@ -77,7 +86,6 @@ if(platform_mingw)
     ExternalProject_Get_Property(glfw_source SOURCE_DIR)
     set(glfw_source_dir ${SOURCE_DIR})
   endif()
-
 endif()
 
 if(no_std_thread)

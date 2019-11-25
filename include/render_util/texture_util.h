@@ -16,7 +16,6 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#if 1
 #ifndef RENDER_UTIL_TEXTURE_UTIL_H
 #define RENDER_UTIL_TEXTURE_UTIL_H
 
@@ -26,12 +25,57 @@
 #include <render_util/render_util.h>
 #include <render_util/elevation_map.h>
 
+#include <half.hpp>
 #include <vector>
 #include <type_traits>
 
+
+namespace render_util::texture_format
+{
+  struct TextureFormatParametersBase
+  {
+    static int getFormat(unsigned int num_components);
+  };
+
+  template <typename T>
+  struct TextureFormatParameters {};
+
+  template <>
+  struct TextureFormatParameters<unsigned char> : public TextureFormatParametersBase
+  {
+    static int getType();
+    static int getInternalFormat(unsigned int num_components);
+  };
+
+  template <>
+  struct TextureFormatParameters<float> : public TextureFormatParametersBase
+  {
+    static int getType();
+    static int getInternalFormat(unsigned int num_components);
+  };
+
+  template <>
+  struct TextureFormatParameters<half_float::half> : public TextureFormatParametersBase
+  {
+    static int getType();
+    static int getInternalFormat(unsigned int num_components);
+  };
+}
+
+
 namespace render_util
 {
+
   TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_pixel, bool mipmaps);
+  TexturePtr createTextureExt(const unsigned char *data,
+                              size_t data_size,
+                              int w, int h,
+                              int num_components,
+                              size_t bytes_per_component,
+                              int type,
+                              int format,
+                              int internal_format,
+                              bool mipmaps);
   TexturePtr createFloatTexture1D(const float *data, size_t size, int num_components);
   TexturePtr createFloatTexture(const float *data, int w, int h, int num_components, bool mipmaps = false);
   TexturePtr createUnsignedIntTexture(const unsigned int *data, int w, int h);
@@ -111,6 +155,33 @@ namespace render_util
   }
 
 
+  template <typename T>
+  TexturePtr createTextureExt(T image, bool mipmaps)
+  {
+    using namespace texture_format;
+
+    using ImageType = typename image::TypeFromPtr<T>::Type;
+    using ComponentType = typename ImageType::ComponentType;
+    using Parameters = TextureFormatParameters<ComponentType>;
+
+    auto type = Parameters::getType();
+    auto format = Parameters::getFormat(ImageType::NUM_COMPONENTS);
+    auto internal_format = Parameters::getInternalFormat(ImageType::NUM_COMPONENTS);
+    auto num_components = ImageType::NUM_COMPONENTS;
+
+    return createTextureExt(reinterpret_cast<const unsigned char*>(image->getData()),
+                         image->getDataSize(),
+                         image->w(),
+                         image->h(),
+                         num_components,
+                         sizeof(ComponentType),
+                         type,
+                         format,
+                         internal_format,
+                         mipmaps);
+  }
+
+
   TexturePtr createAmosphereThicknessTexture(TextureManager &texture_manager, std::string resource_path);
   TexturePtr createCurvatureTexture(TextureManager &texture_manager, std::string resource_path);
 
@@ -130,5 +201,4 @@ namespace render_util
                                 float height_map_width_m);
 }
 
-#endif
 #endif
