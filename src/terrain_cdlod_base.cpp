@@ -63,8 +63,8 @@ TexturePtr TerrainCDLODBase::createHeightMapTexture(render_util::ElevationMap::C
 
   LOG_INFO<<"TerrainCDLOD: creating height map texture ..."<<endl;
 
-  auto height_map_texture = createFloatTexture(hm_image, true);
-  assert(height_map_texture);
+  auto height_map_texture = createTextureExt(image::convert<half_float::half>(hm_image), true);
+
   CHECK_GL_ERROR();
 
   TextureParameters<int> params;
