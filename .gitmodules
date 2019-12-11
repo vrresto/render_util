@@ -6,4 +6,4 @@
 	url = https://github.com/nothings/stb.git
 [submodule "_modules/plog"]
 	path = _modules/plog
-	url = https://gitlab.com/vrresto/plog.git
+	url = https://github.com/vrresto/plog.git
