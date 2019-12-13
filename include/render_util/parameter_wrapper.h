@@ -16,6 +16,10 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+
+#ifndef RENDER_UTIL_PARAMETERWRAPPER_H
+#define RENDER_UTIL_PARAMETERWRAPPER_H
+
 #include <string>
 #include <functional>
 
@@ -47,3 +51,5 @@ struct ParameterWrapper
 
 
 }
+
+#endif
