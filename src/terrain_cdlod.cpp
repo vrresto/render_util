@@ -439,7 +439,8 @@ size_t getDetailLevelAtDistance(double dist)
 }
 
 
-render_util::ShaderProgramPtr createProgram(unsigned int material,
+render_util::ShaderProgramPtr createProgram(std::string name,
+                                            unsigned int material,
                                             size_t detail_level,
                                             render_util::TextureManager &tex_mgr,
                                             const render_util::ShaderSearchPath &shader_search_path,
@@ -452,7 +453,6 @@ render_util::ShaderProgramPtr createProgram(unsigned int material,
   bool enable_base_water_map = false;
   bool is_editor = false;
 
-  string name;
   if (name.empty())
     name = "terrain";
 
@@ -554,7 +554,8 @@ class Material
   std::array<std::unique_ptr<RenderBatch>, NUM_DETAIL_LEVELS> m_batches;
 
 public:
-  Material(unsigned int id, render_util::TextureManager &tm,
+  Material(std::string program_name,
+           unsigned int id, render_util::TextureManager &tm,
            const render_util::ShaderSearchPath &shader_search_path,
            const render_util::ShaderParameters &params)
   {
@@ -562,7 +563,7 @@ public:
     for (size_t i = 0; i < m_batches.size(); i++)
     {
       assert(i < m_batches.size());
-      auto program = createProgram(id, i, tm, shader_search_path, params);
+      auto program = createProgram(program_name, id, i, tm, shader_search_path, params);
       m_batches[i] = std::make_unique<RenderBatch>(program);
     }
   }
@@ -729,10 +730,9 @@ class TerrainCDLOD : public TerrainCDLODBase
   vec2 height_map_base_size_px = vec2(0);
 
   std::unordered_map<unsigned int, std::unique_ptr<Material>> materials;
-
   std::unique_ptr<TerrainTextures> m_terrain_textures;
-
   render_util::ShaderParameters m_shader_params;
+  std::string m_program_name;
 
   void processNode(Node *node, int lod_level, const Camera &camera, bool low_detail);
   void drawInstanced(TerrainBase::Client *client);
@@ -754,6 +754,7 @@ public:
   void setDrawDistance(float dist) override;
   void setBaseElevationMap(ElevationMap::ConstPtr map) override;
   render_util::TexturePtr getNormalMapTexture() override;
+  void setProgramName(std::string name) override;
 };
 
 
@@ -801,6 +802,12 @@ TerrainCDLOD::TerrainCDLOD(TextureManager &tm, const ShaderSearchPath &shader_se
 }
 
 
+void TerrainCDLOD::setProgramName(std::string name)
+{
+  m_program_name = name;
+}
+
+
 Material *TerrainCDLOD::getMaterial(unsigned int id)
 {
   auto it = materials.find(id);
@@ -814,7 +821,8 @@ Material *TerrainCDLOD::getMaterial(unsigned int id)
   auto shader_params = m_shader_params;
   shader_params.add(m_terrain_textures->getShaderParameters());
 
-  materials[id] = std::make_unique<Material>(id, texture_manager, shader_search_path,
+  materials[id] = std::make_unique<Material>(m_program_name,
+                                             id, texture_manager, shader_search_path,
                                              shader_params);
 
   return materials[id].get();

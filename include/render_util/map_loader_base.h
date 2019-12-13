@@ -38,6 +38,13 @@ namespace render_util
   };
 
 
+  struct ElevationMapLoaderBase
+  {
+    virtual ElevationMap::Ptr createElevationMap() const = 0;
+    virtual int getMetersPerPixel() const = 0;
+  };
+
+
   class MapLoaderBase
   {
   public:

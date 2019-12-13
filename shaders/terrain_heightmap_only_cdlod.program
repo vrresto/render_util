@@ -1,0 +1,8 @@
+vert terrain_cdlod
+vert util
+frag terrain_heightmap_only
+frag util
+frag main
+frag lighting
+texunit terrain_cdlod_height_map
+texunit terrain_cdlod_normal_map

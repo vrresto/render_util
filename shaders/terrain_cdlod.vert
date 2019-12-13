@@ -28,6 +28,7 @@
 
 
 #define ENABLE_BASE_MAP @enable_base_map@
+#define ENABLE_CURVATURE @enable_curvature:1@
 
 
 attribute vec4 attrib_pos;
@@ -174,6 +175,7 @@ void main(void)
   float height_diff = 0;
 
   // curvature
+  #if ENABLE_CURVATURE
   {
     vec2 pos_xy_camera_relative = pos.xy - camera_pos_terrain_floor.xy;
     pos_xy_camera_relative *= terrain_resolution_m;
@@ -197,6 +199,7 @@ void main(void)
     pos.xy = pos_xy_new;
     height_diff = diff.y;
   }
+  #endif
 
   passObjectPos = (pos * vec3(vec2(terrain_resolution_m), 1)) + vec3(0, 0, height_diff);
 

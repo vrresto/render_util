@@ -71,6 +71,7 @@ namespace render_util
     virtual void setDrawDistance(float dist) {}
     virtual std::vector<glm::vec3> getNormals() { return {}; }
     virtual TexturePtr getNormalMapTexture() { return nullptr; }
+    virtual void setProgramName(std::string) {}
   };
 
   using TerrainFactory = util::Factory<TerrainBase, TextureManager&, const ShaderSearchPath&>;

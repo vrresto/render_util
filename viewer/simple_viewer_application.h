@@ -1,6 +1,6 @@
 /**
  *    Rendering utilities
- *    Copyright (C) 2018  Jan Lepper
+ *    Copyright (C) 2019 Jan Lepper
  *
  *    This program is free software: you can redistribute it and/or modify
  *    it under the terms of the GNU Lesser General Public License as published by
@@ -16,30 +16,15 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef RENDER_UTIL_VIEWER_H
-#define RENDER_UTIL_VIEWER_H
+#ifndef SIMPLE_VIEWER_APPLICATION_H
+#define SIMPLE_VIEWER_APPLICATION_H
 
-#include <render_util/map_loader_base.h>
-#include <render_util/image.h>
-#include <render_util/terrain_base.h>
-#include <render_util/shader.h>
-#include <render_util/texture_manager.h>
+#include "scene_base.h"
 #include <factory.h>
-
-#include <functional>
 
 namespace render_util::viewer
 {
-  using CreateMapLoaderFunc =
-    std::function<std::shared_ptr<MapLoaderBase>(const render_util::TextureManager&)>;
-
-  using CreateElevationMapLoaderFunc =
-    std::function<std::shared_ptr<ElevationMapLoaderBase>()>;
-
-  void runViewer(CreateMapLoaderFunc&, std::string app_name);
-  void runSimpleViewer(CreateElevationMapLoaderFunc&, std::string app_name);
-
-  void runHeightMapViewer(Image<float>::ConstPtr height_map);
+  void runSimpleApplication(util::Factory<SceneBase> scene_factory, std::string app_name);
 }
 
 #endif
