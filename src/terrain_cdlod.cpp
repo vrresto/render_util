@@ -156,20 +156,21 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
 
       uvec3 new_index(0);
 
-      try
+      auto it = mapping.find(orig_index);
+      if (it != mapping.end())
       {
-        new_index = mapping.at(orig_index);
+        new_index = it->second;
       }
-      catch(...)
+      else
       {
         for (int i = 0; i < 4; i++)
         {
-          try
+          auto it = mapping.find(orig_index - (orig_index % 4) + i);
+          if (it != mapping.end())
           {
-            new_index = mapping.at(orig_index - (orig_index % 4) + i);
-            break;
+            new_index = it->second;
           }
-          catch(...)
+          else
           {
             new_index.x = 255;
           }
