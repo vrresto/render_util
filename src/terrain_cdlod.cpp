@@ -169,6 +169,7 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
           if (it != mapping.end())
           {
             new_index = it->second;
+            break;
           }
           else
           {
