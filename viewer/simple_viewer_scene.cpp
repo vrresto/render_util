@@ -94,13 +94,18 @@ void SimpleViewerScene::createTerrain(render_util::ElevationMap::ConstPtr elevat
   std::vector<render_util::ImageRGB::Ptr> textures_nm;
   const std::vector<float> texture_scale;
 
-  m_terrain->build(elevation_map,
-                    material_map,
-                    type_map,
-                    textures,
-                    textures_nm,
-                    texture_scale,
-                    shader_params);
+  render_util::TerrainBase::BuildParameters params =
+  {
+    .map = elevation_map,
+    .material_map = material_map,
+    .type_map = type_map,
+    .textures = textures,
+    .textures_nm = textures_nm,
+    .texture_scale = texture_scale,
+    .shader_parameters = shader_params,
+  };
+
+  m_terrain->build(params);
 }
 
 

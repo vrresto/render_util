@@ -745,11 +745,7 @@ public:
   TerrainCDLOD(TextureManager&, const ShaderSearchPath&);
   ~TerrainCDLOD() override;
 
-  void build(ElevationMap::ConstPtr, MaterialMap::ConstPtr, TypeMap::ConstPtr type_map,
-             std::vector<ImageRGBA::Ptr>&,
-             std::vector<ImageRGB::Ptr>&,
-             const std::vector<float>&,
-             const ShaderParameters&) override;
+  void build(BuildParameters&) override;
   void draw(TerrainBase::Client *client) override;
   void update(const Camera &camera, bool low_detail) override;
   void setDrawDistance(float dist) override;
@@ -945,37 +941,32 @@ void TerrainCDLOD::processNode(Node *node, int lod_level, const Camera &camera, 
 }
 
 
-void TerrainCDLOD::build(ElevationMap::ConstPtr map,
-                         MaterialMap::ConstPtr material_map,
-                         TypeMap::ConstPtr type_map,
-                         std::vector<ImageRGBA::Ptr> &textures,
-                         std::vector<ImageRGB::Ptr> &textures_nm,
-                         const std::vector<float> &texture_scale,
-                         const ShaderParameters &shader_params)
+void TerrainCDLOD::build(BuildParameters &params)
 {
   CHECK_GL_ERROR();
 
-  assert(material_map);
+  assert(params.material_map);
   assert(!root_node);
   assert(!normal_map_texture);
 
-  m_shader_params = shader_params;
+  m_shader_params = params.shader_parameters;
 
-  normal_map_texture = createNormalMapTexture(map, HEIGHT_MAP_METERS_PER_GRID);
+  normal_map_texture = createNormalMapTexture(params.map, HEIGHT_MAP_METERS_PER_GRID);
 
   CHECK_GL_ERROR();
 
   m_terrain_textures =
-    std::make_unique<TerrainTextures>(texture_manager, textures, textures_nm, texture_scale, type_map);
+    std::make_unique<TerrainTextures>(texture_manager, params.textures,
+                                      params.textures_nm, params.texture_scale, params.type_map);
 
   LOG_DEBUG<<"TerrainCDLOD: creating nodes ..."<<endl;
-  root_node = createNode(*map, root_node_pos, MAX_LOD, processMaterialMap(material_map));
+  root_node = createNode(*params.map, root_node_pos, MAX_LOD, processMaterialMap(params.material_map));
   LOG_DEBUG<<"TerrainCDLOD: creating nodes done."<<endl;
 
   assert(!height_map_texture);
   LOG_DEBUG<<"TerrainCDLOD: creating height map texture ..."<<endl;
 
-  auto hm_image = map;
+  auto hm_image = params.map;
   auto new_size = glm::ceilPowerOfTwo(hm_image->size());
 
   if (new_size != hm_image->size())

@@ -175,13 +175,18 @@ public:
     assert(!textures.textures.empty());
     assert(textures.texture_scale.size() == textures.textures.size());
 
-    m_terrain.getTerrain()->build(elevation_map,
-                          material_map,
-                          textures.type_map,
-                          textures.textures,
-                          textures.textures_nm,
-                          textures.texture_scale,
-                          shader_params);
+    render_util::TerrainBase::BuildParameters params =
+    {
+      .map = elevation_map,
+      .material_map = material_map,
+      .type_map = textures.type_map,
+      .textures = textures.textures,
+      .textures_nm = textures.textures_nm,
+      .texture_scale = textures.texture_scale,
+      .shader_parameters = shader_params,
+    };
+
+    m_terrain.getTerrain()->build(params);
 
   }
 

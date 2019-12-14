@@ -55,15 +55,20 @@ namespace render_util
       virtual void setActiveProgram(ShaderProgramPtr) = 0;
     };
 
+    struct BuildParameters
+    {
+      ElevationMap::ConstPtr map;
+      MaterialMap::ConstPtr material_map;
+      TypeMap::ConstPtr type_map;
+      std::vector<ImageRGBA::Ptr> &textures;
+      std::vector<ImageRGB::Ptr> &textures_nm;
+      const std::vector<float> &texture_scale;
+      const ShaderParameters &shader_parameters;
+    };
+
     virtual ~TerrainBase() {}
 
-    virtual void build(ElevationMap::ConstPtr map,
-                       MaterialMap::ConstPtr,
-                       TypeMap::ConstPtr,
-                       std::vector<ImageRGBA::Ptr> &textures,
-                       std::vector<ImageRGB::Ptr> &textures_nm,
-                       const std::vector<float> &texture_scale,
-                       const ShaderParameters&) = 0;
+    virtual void build(BuildParameters&) = 0;
 
     virtual void draw(Client *client = nullptr) = 0;
     virtual void setBaseElevationMap(ElevationMap::ConstPtr map) {}
