@@ -17,7 +17,6 @@
  */
 
 #include "simple_viewer_application.h"
-#include "scene.h"
 #include "camera.h"
 #include <text_renderer/text_renderer.h>
 #include <render_util/render_util.h>
@@ -51,8 +50,9 @@
 
 using namespace glm;
 using namespace std;
-using namespace render_util::viewer;
 using namespace render_util;
+using namespace render_util::viewer;
+using namespace render_util::gl_binding;
 using render_util::ShaderProgram;
 using Clock = std::chrono::steady_clock;
 
