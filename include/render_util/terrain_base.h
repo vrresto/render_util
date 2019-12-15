@@ -31,8 +31,6 @@
 
 namespace render_util
 {
-  enum { HEIGHT_MAP_BASE_METERS_PER_PIXEL = 400 };
-
   class TerrainBase
   {
   public:
@@ -58,6 +56,8 @@ namespace render_util
     struct BuildParameters
     {
       ElevationMap::ConstPtr map;
+      ElevationMap::ConstPtr base_map {};
+      unsigned int base_map_resolution_m = 0;
       MaterialMap::ConstPtr material_map;
       TypeMap::ConstPtr type_map;
       std::vector<ImageRGBA::Ptr> &textures;
@@ -71,12 +71,12 @@ namespace render_util
     virtual void build(BuildParameters&) = 0;
 
     virtual void draw(Client *client = nullptr) = 0;
-    virtual void setBaseElevationMap(ElevationMap::ConstPtr map) {}
     virtual void update(const Camera &camera, bool low_detail) {}
     virtual void setDrawDistance(float dist) {}
     virtual std::vector<glm::vec3> getNormals() { return {}; }
     virtual TexturePtr getNormalMapTexture() { return nullptr; }
     virtual void setProgramName(std::string) {}
+    virtual void setBaseMapOrigin(glm::vec2 origin) {}
   };
 
   using TerrainFactory = util::Factory<TerrainBase, TextureManager&, const ShaderSearchPath&>;

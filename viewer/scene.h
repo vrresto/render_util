@@ -190,11 +190,6 @@ public:
 
   }
 
-  void updateTerrain(const render_util::ElevationMap::ConstPtr elevation_map_base)
-  {
-    m_terrain.getTerrain()->setBaseElevationMap(elevation_map_base);
-  }
-
 //   void updateTerrain()
 //   {
 //     m_terrain.update(camera);

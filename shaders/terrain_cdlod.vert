@@ -90,7 +90,7 @@ vec2 getDiff(float dist, float height)
 
 float sampleMap(sampler2D sampler, vec2 world_coord, vec2 map_size_world, vec2 map_origin)
 {
-  vec2 coord = fract((world_coord.xy - map_origin) / map_size_world);
+  vec2 coord = (world_coord.xy - map_origin) / map_size_world;
   coord.y = 1.0 - coord.y;
   return texture2D(sampler, coord).x;
 }

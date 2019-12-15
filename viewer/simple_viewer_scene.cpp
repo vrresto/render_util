@@ -56,6 +56,9 @@ class SimpleViewerScene : public render_util::viewer::SceneBase
   std::shared_ptr<render_util::TerrainBase> m_terrain;
 
   void createTerrain(render_util::ElevationMap::ConstPtr elevation_map,
+                     render_util::ElevationMap::ConstPtr base_elevation_map,
+                     unsigned int base_elevation_map_resolution_m,
+                     glm::dvec2 base_map_origin,
                      const render_util::ShaderSearchPath &shader_search_path,
                      const render_util::ShaderParameters &shader_params);
   void drawTerrain();
@@ -77,12 +80,16 @@ SimpleViewerScene::SimpleViewerScene(render_util::viewer::CreateElevationMapLoad
 
 
 void SimpleViewerScene::createTerrain(render_util::ElevationMap::ConstPtr elevation_map,
+                                      render_util::ElevationMap::ConstPtr base_elevation_map,
+                                      unsigned int base_elevation_map_resolution_m,
+                                      glm::dvec2 base_map_origin,
                                       const render_util::ShaderSearchPath &shader_search_path,
                                       const render_util::ShaderParameters &shader_params)
 {
   m_terrain = render_util::createTerrain(getTextureManager(), true, shader_search_path);
 
   m_terrain->setProgramName("terrain_heightmap_only");
+  m_terrain->setBaseMapOrigin(base_map_origin);
 
   auto material_map = std::make_shared<render_util::TerrainBase::MaterialMap>(elevation_map->getSize());
   render_util::image::fill(material_map, render_util::TerrainBase::MaterialID::LAND);
@@ -97,6 +104,8 @@ void SimpleViewerScene::createTerrain(render_util::ElevationMap::ConstPtr elevat
   render_util::TerrainBase::BuildParameters params =
   {
     .map = elevation_map,
+    .base_map = base_elevation_map,
+    .base_map_resolution_m = base_elevation_map_resolution_m,
     .material_map = material_map,
     .type_map = type_map,
     .textures = textures,
@@ -120,7 +129,9 @@ void SimpleViewerScene::drawTerrain()
   m_terrain->setDrawDistance(0);
   m_terrain->update(camera, false);
 
+//   gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   m_terrain->draw(&client);
+//   gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 
@@ -132,15 +143,35 @@ void SimpleViewerScene::setup()
   shader_search_path.push_back(RENDER_UTIL_SHADER_DIR);
 
   auto elevation_map = m_loader->createElevationMap();
+  auto base_elevation_map = m_loader->createBaseElevationMap();
+
+  m_map_size = glm::vec2(elevation_map->getSize() * m_loader->getMetersPerPixel());
+
+  auto map_center = m_map_size / 2.f;
+
+  glm::vec2 base_map_origin(0);
+
+  if (base_elevation_map)
+  {
+    auto base_map_size =
+      m_loader->getBaseElevationMapMetersPerPixel() * base_elevation_map->getSize();
+
+    base_map_origin = -1.f * (glm::vec2(base_map_size) / glm::vec2(2));
+    base_map_origin += map_center;
+  }
 
   render_util::ShaderParameters shader_params;
   shader_params.set("enable_curvature", false);
 
-  createTerrain(elevation_map, shader_search_path, shader_params);
+  createTerrain(elevation_map,
+                base_elevation_map,
+                m_loader->getBaseElevationMapMetersPerPixel(),
+                base_map_origin,
+                shader_search_path,
+                shader_params);
 
-  m_map_size = glm::vec2(elevation_map->getSize() * m_loader->getMetersPerPixel());
-  camera.x = m_map_size.x / 2;
-  camera.y = m_map_size.y / 2;
+  camera.x = map_center.x;
+  camera.y = map_center.y;
   camera.z = 10000;
 }
 

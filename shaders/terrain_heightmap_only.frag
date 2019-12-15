@@ -23,13 +23,35 @@
 layout(location = 0) out vec4 out_color0;
 
 uniform sampler2D sampler_terrain_cdlod_normal_map;
+uniform sampler2D sampler_terrain_cdlod_normal_map_base;
 
 uniform vec3 cameraPosWorld;
 uniform vec2 map_size;
 uniform int map_resolution_m;
 
+uniform vec2 height_map_base_size_m;
+uniform vec2 height_map_base_origin;
+
 varying float vertexHorizontalDist;
 varying vec3 passObjectPosFlat;
+
+
+float getDetailMapBlend(vec2 pos);
+
+vec3 sampleNormalMap(sampler2D sampler, vec2 world_coord, vec2 map_size_world, vec2 map_origin)
+{
+  vec2 coord = (world_coord.xy - map_origin) / map_size_world;
+  coord.y = 1.0 - coord.y;
+  vec3 normal = texture2D(sampler, coord).xyz;
+  normal.y *= -1;
+  return normal;
+}
+
+vec3 sampleBaseNormalMap(vec2 world_coord)
+{
+  return sampleNormalMap(sampler_terrain_cdlod_normal_map_base, world_coord,
+                         height_map_base_size_m, height_map_base_origin).xyz;
+}
 
 
 void main(void)
@@ -39,6 +61,12 @@ void main(void)
 
   vec3 normal = texture2D(sampler_terrain_cdlod_normal_map, normal_map_coord).xyz;
   normal.y *= -1;
+
+  float detail_blend = getDetailMapBlend(passObjectPosFlat.xy);
+
+  vec3 base_normal = sampleBaseNormalMap(passObjectPosFlat.xy);
+
+  normal = mix(base_normal, normal, detail_blend);
 
   vec3 light_direct;
   vec3 light_ambient;

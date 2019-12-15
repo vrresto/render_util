@@ -42,6 +42,8 @@ namespace render_util
   {
     virtual ElevationMap::Ptr createElevationMap() const = 0;
     virtual int getMetersPerPixel() const = 0;
+    virtual ElevationMap::Ptr createBaseElevationMap() const = 0;
+    virtual int getBaseElevationMapMetersPerPixel() const = 0;
   };
 
 

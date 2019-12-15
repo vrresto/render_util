@@ -26,15 +26,15 @@ float getDetailMapBlend(vec2 pos)
 {
   float blend_dist = 18000.0;
 
-  float threshold_noise = clamp(genericNoise(pos * 0.0008), -1, 1);
-  float threshold_noise_coarse = clamp(genericNoise(pos * 0.00005), -1, 1);
+//   float threshold_noise = clamp(genericNoise(pos * 0.0008), -1, 1);
+//   float threshold_noise_coarse = clamp(genericNoise(pos * 0.00005), -1, 1);
 
-  float threshold = 0.5;
+//   float threshold = 0.5;
 
-  threshold -= 0.5 * threshold_noise_coarse;
-  threshold += 0.1 * threshold_noise;
+//   threshold -= 0.5 * threshold_noise_coarse;
+//   threshold += 0.1 * threshold_noise;
 
-  threshold = clamp(threshold, 0.1, 0.9);
+//   threshold = clamp(threshold, 0.1, 0.9);
 
   float detail_blend_x =
     smoothstep(0.0, blend_dist, pos.x) -
@@ -47,7 +47,7 @@ float getDetailMapBlend(vec2 pos)
   float detail_blend = detail_blend_x * detail_blend_y;
 
 
-  detail_blend = smoothstep(threshold, threshold + 0.4, detail_blend);
+//   detail_blend = smoothstep(threshold, threshold + 0.4, detail_blend);
 
 
 //   detail_blend *= smoothstep(0.5, 0.6, detail_blend);
