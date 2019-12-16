@@ -49,6 +49,7 @@ const float schlick_r0_water = pow(ior_water - 1, 2) / pow(ior_water + 1, 2);
 
 #include lighting_definitions.glsl
 #include water_definitions.glsl
+#include terrain_params.glsl
 
 float getDetailMapBlend(vec2 pos);
 vec2 rotate(vec2 v, float a);
@@ -81,10 +82,11 @@ uniform sampler2DArray sampler_water_map;
 
 uniform vec3 sunDir;
 uniform vec3 water_color;
-uniform vec2 map_size;
 
 uniform vec3 earth_center;
 uniform vec3 cameraPosWorld;
+
+uniform Terrain terrain;
 
 struct WaterAnimationParameters
 {
@@ -555,10 +557,10 @@ float getWaterDepth(vec2 pos)
 {
 #if ENABLE_WATER_MAP
   // tiled
-  // vec2 waterMapTablePos = fract((pos.xy + water_map_table_shift) / map_size) * map_size;
+  // vec2 waterMapTablePos = fract((pos.xy + water_map_table_shift) / terrain.detail_layer.size_m) * terrain.detail_layer.size_m;
 
   // cropped
-  vec2 waterMapTablePos = ((pos.xy + water_map_table_shift) / map_size) * map_size;
+  vec2 waterMapTablePos = ((pos.xy + water_map_table_shift) / terrain.detail_layer.size_m) * terrain.detail_layer.size_m;
   
   vec2 waterMapTableCoords = waterMapTablePos / (water_map_table_size * water_map_chunk_size_m);
   
@@ -594,7 +596,7 @@ float getWaterDepth(vec2 pos)
 
   return depth;
 #else
-  return texture2D(sampler_water_map_simple, pos.xy / map_size).x;
+  return texture2D(sampler_water_map_simple, pos.xy / terrain.detail_layer.size_m).x;
 #endif
 }
 

@@ -48,6 +48,8 @@
 
 #include lighting_definitions.glsl
 #include water_definitions.glsl
+#include terrain_params.glsl
+#include terrain_geometry_util.h.glsl
 
 vec3 textureColorCorrection(vec3 color);
 float getDetailMapBlend(vec2 pos);
@@ -63,12 +65,6 @@ uniform float terrain_tile_size_m;
 
 const float near_distance = 80000;
 
-uniform sampler2D sampler_terrain_cdlod_normal_map;
-uniform sampler2D sampler_terrain_cdlod_normal_map_base;
-uniform vec2 height_map_base_size_m;
-uniform vec2 height_map_base_origin;
-
-uniform sampler1D sampler_terrain_scale_map;
 uniform sampler2D sampler_type_map;
 uniform sampler2D sampler_type_map_normals;
 uniform sampler2D sampler_type_map_base;
@@ -78,9 +74,10 @@ uniform sampler2D sampler_shallow_water;
 uniform sampler2DArray sampler_beach;
 
 uniform ivec2 typeMapSize;
-uniform vec2 map_size;
 uniform vec3 cameraPosWorld;
 uniform vec3 earth_center;
+
+uniform Terrain terrain;
 
 uniform sampler2DArray sampler_terrain;
 uniform sampler2DArray sampler_terrain1;
@@ -94,9 +91,6 @@ uniform sampler2DArray sampler_terrain_detail_nm3;
 
 varying vec2 pass_texcoord;
 varying vec2 pass_type_map_coord;
-
-const ivec2 type_map_base_size_px = ivec2(4096);
-const ivec2 type_map_base_meters_per_pixel = ivec2(400);
 
 float sampleNoise(vec2 coord)
 {
@@ -337,7 +331,7 @@ vec4 applyForest(vec4 color, vec2 pos, vec3 view_dir, float dist)
 #else
 
 #if ENABLE_FAR_TEXTURE
-  float lod = textureQueryLOD(sampler_terrain_far, pos.xy / map_size).x;
+  float lod = textureQueryLOD(sampler_terrain_far, pos.xy / terrain.detail_layer.size_m).x;
 #else
   float lod = 0;
 #endif
@@ -407,7 +401,7 @@ vec4 applyTerrainNoise(vec4 color, float dist)
 
 vec4 applyFarTexture(vec4 color, vec2 pos, float dist)
 {
-  vec2 mapCoordsFar = pos.xy / map_size;
+  vec2 mapCoordsFar = pos.xy / terrain.detail_layer.size_m;
   vec4 farColor = texture(sampler_terrain_far, mapCoordsFar);
   
 //   float lod = mip_map_level(pos.xy / 200);
@@ -462,9 +456,7 @@ vec3 getTerrainColor(vec3 pos_curved, vec3 pos_flat)
 #endif
 
 #if ENABLE_TERRAIN_NORMAL_MAP
-  vec2 normal_map_coord = fract((pos_flat.xy + vec2(0, 200)) / map_size);
-  normal_map_coord.y = 1.0 - normal_map_coord.y;
-  vec3 normal = texture2D(sampler_terrain_cdlod_normal_map, normal_map_coord).xyz;
+  vec3 normal = sampleTerrainNormalMap(terrain.detail_layer, pos_flat.xy);
 
 #if ENABLE_BASE_MAP
   {

@@ -7,6 +7,7 @@ frag functions
 frag noise
 frag forest_util
 frag terrain_util
+frag terrain_geometry_util
 frag water
 frag util
 frag main

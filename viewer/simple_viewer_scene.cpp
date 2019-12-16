@@ -184,8 +184,6 @@ void SimpleViewerScene::render(float frame_delta)
 void SimpleViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
 {
   SceneBase::updateUniforms(program);
-  program->setUniform("map_size", m_map_size);
-  program->setUniformi("map_resolution_m", m_loader->getMetersPerPixel());
 }
 
 

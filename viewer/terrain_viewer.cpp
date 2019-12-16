@@ -345,7 +345,6 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
   m_map->getTextures().setUniforms(program);
   program->setUniform("shore_wave_scroll", shore_wave_pos);
   program->setUniform("terrain_height_offset", 0.f);
-  program->setUniform("map_size", map_size);
 
 #if ENABLE_BASE_MAP
   auto base_map_size =

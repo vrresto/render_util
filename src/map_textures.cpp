@@ -301,7 +301,6 @@ void render_util::MapTextures::setUniforms(ShaderProgramPtr program)
   program->setUniform("water_map_shift", glm::vec2(water_map_shift, water_map_shift));
   program->setUniform("water_map_scale", glm::vec2(1.0 / water_map_scale));
   program->setUniform("water_map_table_size", p->water_map_table_size);
-  program->setUniform("max_terrain_texture_scale", MAX_TERRAIN_TEXTURE_SCALE);
 
   p->m_material->setUniforms(program);
 }
