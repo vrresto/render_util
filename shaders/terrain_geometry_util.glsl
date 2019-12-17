@@ -24,6 +24,15 @@
 uniform Terrain terrain;
 
 
+vec2 getHeightMapTextureCoords(in TerrainLayer layer, vec2 pos_m)
+{
+  vec2 coords =
+    (pos_m - layer.origin_m + vec2(0, layer.height_map.resolution_m)) / layer.height_map.size_m;
+  coords.y = 1.0 - coords.y;
+  return coords;
+}
+
+
 vec2 getNormalMapCoords(in TerrainLayer layer, vec2 pos_m)
 {
   vec2 coords =
@@ -40,6 +49,24 @@ vec3 sampleTerrainNormalMap(in TerrainLayer layer, vec2 pos_m)
   vec3 normal = texture2D(layer.normal_map.sampler, coords).xyz;
   normal.y *= -1;
   return normal;
+}
+
+
+float getTerrainHeight(vec2 pos_m)
+{
+  vec2 height_map_texture_coords = getHeightMapTextureCoords(terrain.detail_layer, pos_m);
+  float detail = texture2D(terrain.detail_layer.height_map.sampler, height_map_texture_coords).x;
+
+#if @enable_base_map@
+  vec2 base_height_map_texture_coords = getHeightMapTextureCoords(terrain.base_layer, pos_m);
+  float base = texture2D(terrain.base_layer.height_map.sampler, base_height_map_texture_coords).x;
+
+  float detail_blend = getDetailMapBlend(pos_m);
+
+  return mix(base, detail, detail_blend);
+#else
+  return detail;
+#endif
 }
 
 

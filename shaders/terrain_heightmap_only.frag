@@ -53,10 +53,12 @@ void main(void)
   vec3 color2 = vec3(0.5, 0.5, 0.0);
   vec3 color3 = vec3(1,1,1);
 
-  out_color0.rgb = mix(color_base, color0, min(passObjectPosFlat.z / 2, 1));
-  out_color0.rgb = mix(out_color0.rgb, color1, min(passObjectPosFlat.z / 10, 1));
-  out_color0.rgb = mix(out_color0.rgb, color2, min(passObjectPosFlat.z / 300, 1));
-  out_color0.rgb = mix(out_color0.rgb, color3, min(passObjectPosFlat.z / 2000, 1));
+  float height = getTerrainHeight(passObjectPosFlat.xy);
+
+  out_color0.rgb = mix(color_base, color0, min(height / 2, 1));
+  out_color0.rgb = mix(out_color0.rgb, color1, min(height / 10, 1));
+  out_color0.rgb = mix(out_color0.rgb, color2, min(height / 300, 1));
+  out_color0.rgb = mix(out_color0.rgb, color3, min(height / 2000, 1));
 
   out_color0.rgb *= (light_direct * 1.5 + light_ambient * 0.5);
 }

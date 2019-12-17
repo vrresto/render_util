@@ -71,27 +71,9 @@ vec2 getDiff(float dist, float height)
 }
 
 
-float sampleMap(sampler2D sampler, vec2 world_coord, vec2 map_size_world, vec2 map_origin)
-{
-  vec2 coord = (world_coord.xy - map_origin) / map_size_world;
-  coord.y = 1.0 - coord.y;
-  return texture2D(sampler, coord).x;
-}
-
-
-
-vec2 getHeightMapTextureCoord(vec2 world_coord, in TerrainLayer layer)
-{
-  vec2 height_map_coord =
-    (world_coord - layer.origin_m + vec2(0, layer.height_map.resolution_m)) / layer.height_map.size_m;
-  height_map_coord.y = 1.0 - height_map_coord.y;
-  return height_map_coord;
-}
-
-
 float getHeight(vec2 world_coord, float approx_dist)
 {
-  vec2 height_map_texture_coord = getHeightMapTextureCoord(world_coord, terrain.detail_layer);
+  vec2 height_map_texture_coord = getHeightMapTextureCoords(terrain.detail_layer, world_coord);
 
   ivec2 height_map_texture_coord_px =
     ivec2(terrain.detail_layer.height_map.size_px * height_map_texture_coord);
@@ -103,7 +85,7 @@ float getHeight(vec2 world_coord, float approx_dist)
     smoothstep(cdlod_min_dist / 4.0, cdlod_min_dist / 2.0, approx_dist));
 
 #if ENABLE_BASE_MAP
-  vec2 base_height_map_texture_coord = getHeightMapTextureCoord(world_coord, terrain.base_layer);
+  vec2 base_height_map_texture_coord = getHeightMapTextureCoords(terrain.base_layer, world_coord);
 
   float base = texture2D(terrain.base_layer.height_map.sampler, base_height_map_texture_coord).x;
 
