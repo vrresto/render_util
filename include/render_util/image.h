@@ -307,7 +307,7 @@ public:
   static constexpr int NUM_COMPONENTS = N;
 
   Image(glm::ivec2 size) : Base(size) {}
-  Image(glm::ivec2 size, std::vector<unsigned char> &&data) : Base(size, data) {}
+  Image(glm::ivec2 size, std::vector<unsigned char> &&data) : Base(size, std::move(data)) {}
   Image(glm::ivec2 size, const std::vector<T> &data) : Base(size, data) {}
 
   const PixelType &getPixel(const glm::ivec2 pos) const
