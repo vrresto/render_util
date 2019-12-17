@@ -410,7 +410,7 @@ class TerrainCDLOD : public TerrainCDLODBase
 
   std::vector<TerrainLayer> m_layers;
   std::unordered_map<unsigned int, std::unique_ptr<Material>> materials;
-  std::unique_ptr<LandTextures> m_terrain_textures;
+  std::unique_ptr<LandTextures> m_land_textures;
   render_util::ShaderParameters m_shader_params;
   std::string m_program_name;
 
@@ -450,7 +450,7 @@ TerrainCDLOD::~TerrainCDLOD()
   root_node = nullptr;
   node_allocator.clear();
 
-  m_terrain_textures->unbind(texture_manager);
+  m_land_textures->unbind(texture_manager);
 
   CHECK_GL_ERROR();
 }
@@ -493,10 +493,10 @@ Material *TerrainCDLOD::getMaterial(unsigned int id)
     return it->second.get();
   }
 
-  assert(m_terrain_textures);
+  assert(m_land_textures);
 
   auto shader_params = m_shader_params;
-  shader_params.add(m_terrain_textures->getShaderParameters());
+  shader_params.add(m_land_textures->getShaderParameters());
 
   materials[id] = std::make_unique<Material>(m_program_name,
                                              id, texture_manager, shader_search_path,
@@ -519,8 +519,8 @@ void TerrainCDLOD::setUniforms(ShaderProgramPtr program)
   program->setUniformi("terrain.tile_size_m", TILE_SIZE_M);
   program->setUniform("terrain.max_texture_scale", LandTextures::MAX_TEXTURE_SCALE);
 
-  assert(m_terrain_textures);
-  m_terrain_textures->setUniforms(program);
+  assert(m_land_textures);
+  m_land_textures->setUniforms(program);
 }
 
 
@@ -632,7 +632,7 @@ void TerrainCDLOD::build(BuildParameters &params)
 
   CHECK_GL_ERROR();
 
-  m_terrain_textures =
+  m_land_textures =
     std::make_unique<LandTextures>(texture_manager, params.textures,
                                       params.textures_nm, params.texture_scale, params.type_map);
 
@@ -797,7 +797,7 @@ void TerrainCDLOD::draw(Client *client)
   if (render_list.isEmpty())
     return;
 
-  m_terrain_textures->bind(texture_manager);
+  m_land_textures->bind(texture_manager);
 
   for (auto& layer : m_layers)
     layer.bindTextures(texture_manager);
