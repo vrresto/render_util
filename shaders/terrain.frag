@@ -18,11 +18,8 @@
 
 #version 330
 
-#define IS_EDITOR @is_editor@
 #define ONLY_WATER @enable_water_only:0@
 #define ENABLE_UNLIT_OUTPUT @enable_unlit_output:0@
-
-#include water_definitions.glsl
 
 #include water_definitions.glsl
 
@@ -40,14 +37,7 @@ layout(location = 0) out vec4 out_color0;
 layout(location = 1) out vec4 out_color1;
 #endif
 
-#if IS_EDITOR
-uniform vec2 height_map_base_size_m;
-uniform vec2 height_map_base_origin;
-uniform vec2 cursor_pos_ground;
-#endif
-
 uniform float curvature_map_max_distance;
-uniform float land_map_meters_per_pixel;
 uniform vec3 cameraPosWorld;
 
 varying float vertexHorizontalDist;
@@ -77,27 +67,6 @@ void main(void)
   #else
     out_color0.xyz = getTerrainColor(passObjectPos, passObjectPosFlat);
   #endif
-#endif
-
-#if IS_EDITOR
-  if (passObjectPosFlat.x > cursor_pos_ground.x &&
-      passObjectPosFlat.x < cursor_pos_ground.x + land_map_meters_per_pixel &&
-      passObjectPosFlat.y > cursor_pos_ground.y &&
-      passObjectPosFlat.y < cursor_pos_ground.y + land_map_meters_per_pixel)
-  {
-    out_color0.x = 1;
-  }
-
-
-  if (passObjectPosFlat.x < height_map_base_origin.x ||
-      passObjectPosFlat.y < height_map_base_origin.y ||
-      passObjectPosFlat.x > height_map_base_origin.x + height_map_base_size_m.x ||
-      passObjectPosFlat.y > height_map_base_origin.y + height_map_base_size_m.y)
-  {
-    out_color0.x = 0.3;
-    out_color0.y = 0.3;
-    out_color0.z = 0.3;
-  }
 #endif
 
 #if ENABLE_UNLIT_OUTPUT

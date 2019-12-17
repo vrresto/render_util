@@ -346,19 +346,6 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
   program->setUniform("shore_wave_scroll", shore_wave_pos);
   program->setUniform("terrain_height_offset", 0.f);
 
-#if ENABLE_BASE_MAP
-  auto base_map_size =
-    m_elevation_map_base->w() * HEIGHT_MAP_BASE_METERS_PER_PIXEL;
-
-  auto land_map_meters_per_pixel = base_map_size / (float)m_base_map_land->w();
-
-  vec2 mark_coords_m = vec2(mark_pixel_coords) * land_map_meters_per_pixel;
-  mark_coords_m += base_map_origin;
-
-  program->setUniform("cursor_pos_ground", mark_coords_m);
-  program->setUniform("land_map_meters_per_pixel", land_map_meters_per_pixel);
-#endif
-
   CHECK_GL_ERROR();
 }
 
