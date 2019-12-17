@@ -473,8 +473,6 @@ vec3 getTerrainColor(vec3 pos_curved, vec3 pos_flat)
   vec3 normal = vec3(0,0,1);
 #endif
 
-  normal.y *= -1;
-
   normal = blend_rnm(normalize(pos_curved - earth_center), normal);
 
   float shallow_sea_amount = 0;
