@@ -135,6 +135,12 @@ inline std::string getDirFromPath(const std::string &path)
 }
 
 
+inline std::string getFileExtensionFromPath(const std::string &path)
+{
+  return path.substr(path.find_last_of('.') + 1, std::string::npos);
+}
+
+
 inline std::string basename(std::string path, bool remove_extension = false)
 {
   size_t pos = path.find_last_of("/\\");
