@@ -1,8 +1,8 @@
 set(CXX_SRCS
-#   terrain.cpp
+  terrain/terrain_cdlod_base.cpp
+  terrain/terrain_cdlod.cpp
+  terrain/terrain_util.cpp
   atmosphere.cpp
-  terrain_cdlod_base.cpp
-  terrain_cdlod.cpp
   camera.cpp
   texunits.cpp
   texture_util.cpp
@@ -14,7 +14,6 @@ set(CXX_SRCS
   image_loader.cpp
   image_writer.cpp
   util.cpp
-  terrain_util.cpp
   gl_context.cpp
   globals.cpp
   atmosphere_precomputed.cpp
@@ -48,4 +47,5 @@ target_link_libraries(render_util
 target_include_directories(render_util PUBLIC
   ${PROJECT_SOURCE_DIR}/_modules/FastNoise
   ${PROJECT_SOURCE_DIR}/_modules/stb
+  ${CMAKE_CURRENT_SOURCE_DIR}
 )
