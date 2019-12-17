@@ -22,9 +22,10 @@
  * by Filip Strugar <http://www.vertexasylum.com/downloads/cdlod/cdlod_latest.pdf>.
  */
 
-#include "grid_mesh.h"
 #include "terrain_cdlod_base.h"
+#include "terrain_layer.h"
 #include "land_textures.h"
+#include "grid_mesh.h"
 #include "vao.h"
 #include <render_util/terrain_cdlod.h>
 #include <render_util/texture_manager.h>
@@ -379,50 +380,6 @@ unsigned int getMaterialID(render_util::TerrainBase::MaterialMap::ConstPtr mater
     return MaterialID::ALL;
   }
 }
-
-
-struct TerrainTextureMap
-{
-  unsigned int texunit;
-  int resolution_m;
-  glm::vec2 size_m;
-  glm::ivec2 size_px;
-  TexturePtr texture;
-  std::string name;
-};
-
-
-struct TerrainLayer
-{
-  glm::vec2 origin_m;
-  glm::vec2 size_m;
-  std::string uniform_prefix;
-  std::vector<TerrainTextureMap> texture_maps;
-
-  void bindTextures(render_util::TextureManager& tex_mgr)
-  {
-    for (auto& map : texture_maps)
-      tex_mgr.bind(map.texunit, map.texture);
-  }
-
-  void setUniforms(ShaderProgramPtr program, render_util::TextureManager &tex_mgr)
-  {
-    program->setUniform(uniform_prefix + "size_m", size_m);
-    program->setUniform(uniform_prefix + "origin_m", origin_m);
-    for (auto& map : texture_maps)
-      setTextureMapUniforms(map, program, tex_mgr);
-  }
-
-private:
-  void setTextureMapUniforms(TerrainTextureMap &map, ShaderProgramPtr program,
-                             render_util::TextureManager &tex_mgr)
-  {
-    program->setUniformi(uniform_prefix + map.name + ".sampler", tex_mgr.getTexUnitNum(map.texunit));
-    program->setUniformi(uniform_prefix + map.name + ".resolution_m", map.resolution_m);
-    program->setUniform(uniform_prefix + map.name + ".size_px", map.size_px);
-    program->setUniform(uniform_prefix + map.name + ".size_m", map.size_m);
-  }
-};
 
 
 } // namespace
