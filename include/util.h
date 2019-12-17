@@ -137,7 +137,11 @@ inline std::string getDirFromPath(const std::string &path)
 
 inline std::string getFileExtensionFromPath(const std::string &path)
 {
-  return path.substr(path.find_last_of('.') + 1, std::string::npos);
+  auto pos = path.find_last_of('.');
+  if (pos != std::string::npos)
+    return path.substr(pos + 1, std::string::npos);
+  else
+    return {};
 }
 
 
