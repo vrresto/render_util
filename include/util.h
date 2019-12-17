@@ -199,6 +199,38 @@ inline std::string resolveRelativePathComponents(const std::string &path)
 
 
 template <typename T>
+inline std::vector<T> readFile(const std::string &path)
+{
+  static_assert(sizeof(T) == 1);
+  using namespace std;
+
+  bool success = false;
+
+  std::vector<T> content;
+
+  std::ifstream file(path, ios_base::binary);
+  if (file.good())
+  {
+    file.seekg (0, file.end);
+    size_t size = file.tellg();
+    file.seekg (0, file.beg);
+    content.resize(size);
+    file.read(reinterpret_cast<char*>(content.data()), size);
+
+    if (file.good())
+      success = true;
+  }
+
+  if (!success)
+  {
+    throw std::runtime_error("Failed to read " + path);
+  }
+
+  return std::move(content);
+}
+
+
+template <typename T>
 inline bool readFile(const std::string &path, T& content, bool quiet = false)
 {
   using ElementType = typename std::remove_const<typename T::value_type>::type;
