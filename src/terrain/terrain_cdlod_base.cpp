@@ -41,10 +41,13 @@ TexturePtr TerrainCDLODBase::createNormalMapTexture(render_util::ElevationMap::C
     createFloatTexture(reinterpret_cast<const float*>(normal_map->getData()),
                       map->getWidth(),
                       map->getHeight(),
-                      3);
+                      3,
+                      true);
   LOG_INFO<<"TerrainCDLOD: creating normal map  texture done."<<endl;
 
   TextureParameters<int> params;
+  params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  params.set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
   params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
   params.apply(normal_map_texture);
