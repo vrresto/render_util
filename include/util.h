@@ -188,8 +188,12 @@ inline std::string resolveRelativePathComponents(const std::string &path)
 }
 
 
-inline bool readFile(const std::string &path, std::vector<char> &content, bool quiet = false)
+template <typename T>
+inline bool readFile(const std::string &path, T& content, bool quiet = false)
 {
+  using ElementType = typename std::remove_const<typename T::value_type>::type;
+  static_assert(sizeof(ElementType) == 1);
+
   using namespace std;
 
   bool success = false;
@@ -201,7 +205,7 @@ inline bool readFile(const std::string &path, std::vector<char> &content, bool q
     size_t size = file.tellg();
     file.seekg (0, file.beg);
     content.resize(size);
-    file.read(content.data(), size);
+    file.read(reinterpret_cast<char*>(content.data()), size);
 
     if (file.good())
       success = true;
