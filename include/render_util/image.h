@@ -225,6 +225,10 @@ public:
 
   ComponentType &at(int x, int y, size_t component = 0)
   {
+    assert(x >= 0);
+    assert(y >= 0);
+    assert(x < _w);
+    assert(y < _h);
     assert(component < Base::numComponents());
     return getPixel(x, y) [component];
   }
@@ -236,6 +240,10 @@ public:
 
   const ComponentType &get(int x, int y, size_t component = 0) const
   {
+    assert(x >= 0);
+    assert(y >= 0);
+    assert(x < _w);
+    assert(y < _h);
     assert(component < Base::numComponents());
     return getPixel(x, y) [component];
   }
