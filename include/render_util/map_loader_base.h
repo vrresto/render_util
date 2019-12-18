@@ -22,8 +22,6 @@
 #include <render_util/map.h>
 #include <render_util/terrain_base.h>
 
-#include <string>
-
 namespace render_util
 {
   struct MapBase
@@ -42,8 +40,11 @@ namespace render_util
   {
     virtual ElevationMap::Ptr createElevationMap() const = 0;
     virtual int getMetersPerPixel() const = 0;
+
     virtual ElevationMap::Ptr createBaseElevationMap() const = 0;
     virtual int getBaseElevationMapMetersPerPixel() const = 0;
+    virtual glm::vec3 getBaseElevationMapOrigin(const glm::vec3 &default_value) const = 0;
+    virtual void saveBaseElevationMapOrigin(const glm::vec3&) = 0;
   };
 
 
@@ -68,7 +69,7 @@ namespace render_util
 
     virtual ElevationMap::Ptr createBaseElevationMap(ImageGreyScale::ConstPtr land_map) const = 0;
     virtual ImageGreyScale::Ptr createBaseLandMap() const = 0;
-    virtual glm::vec2 getBaseMapOrigin() const { return {}; };
+    virtual glm::vec2 getBaseMapOrigin() const = 0;
   };
 }
 

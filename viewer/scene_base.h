@@ -161,6 +161,7 @@ public:
 
   virtual void setup() = 0;
   virtual void render(float frame_delta) = 0;
+  virtual void save() = 0;
 
 protected:
 

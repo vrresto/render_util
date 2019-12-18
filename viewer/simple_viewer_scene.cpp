@@ -16,6 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include "simple_viewer_application.h"
 #include "scene_base.h"
 #include "camera.h"
@@ -39,6 +41,7 @@
 #include <render_util/gl_binding/gl_binding.h>
 #include <log.h>
 
+#include <glm/gtx/vec_swizzle.hpp>
 #include <memory>
 
 
@@ -72,6 +75,7 @@ public:
   void render(float frame_delta) override;
   void setup() override;
   void updateUniforms(render_util::ShaderProgramPtr) override;
+  void save() override;
 };
 
 
@@ -160,6 +164,12 @@ void SimpleViewerScene::setup()
     m_base_map_origin += map_center;
   }
 
+  {
+    auto origin = m_loader->getBaseElevationMapOrigin(glm::vec3(m_base_map_origin, m_base_map_height));
+    m_base_map_origin = glm::xy(origin);
+    m_base_map_height = origin.z;
+  }
+
   render_util::ShaderParameters shader_params;
   shader_params.set("enable_curvature", false);
 
@@ -189,6 +199,12 @@ void SimpleViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
 {
   SceneBase::updateUniforms(program);
   program->setUniform("terrain_base_map_height", m_base_map_height);
+}
+
+
+void SimpleViewerScene::save()
+{
+  m_loader->saveBaseElevationMapOrigin(glm::vec3(m_base_map_origin, m_base_map_height));
 }
 
 

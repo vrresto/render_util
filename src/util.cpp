@@ -36,6 +36,31 @@ bool util::mkdir(const char *name)
   return res == 0 || (res == -1 && errno == EEXIST);
 }
 
+bool util::fileExists(std::string path)
+{
+  struct _stat buffer {};
+
+  auto res = _stat(path.c_str(), &buffer);
+  auto error_code = errno;
+
+  if (res == -1 && error_code == ENOENT)
+  {
+    return false;
+  }
+  else if (res == -1)
+  {
+    throw std::runtime_error("_stat() returned error: " + std::to_string(error_code));
+  }
+  else if (res == 0)
+  {
+    return true;
+  }
+  else
+  {
+    throw std::runtime_error("unexpected return value from _stat(): " + res);
+  }
+}
+
 #endif
 
 

@@ -190,6 +190,8 @@ namespace
     for (auto &p : g_scene->getParameters())
       cout << p->name << ": " << p->getValueString() << endl;
     cout << "-------------------" << endl;
+
+    g_scene->save();
   }
 
   void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
