@@ -20,7 +20,6 @@
 #include "camera.h"
 #include <text_renderer/text_renderer.h>
 #include <render_util/render_util.h>
-#include <render_util/map.h>
 #include <render_util/map_textures.h>
 #include <render_util/terrain.h>
 #include <render_util/terrain_cdlod.h>

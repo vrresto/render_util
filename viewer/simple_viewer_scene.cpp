@@ -27,7 +27,6 @@
 #include <render_util/shader.h>
 #include <render_util/shader_util.h>
 #include <render_util/texture_manager.h>
-#include <render_util/map.h>
 #include <render_util/map_textures.h>
 #include <render_util/texture_util.h>
 #include <render_util/texunits.h>
