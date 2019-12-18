@@ -91,6 +91,8 @@ namespace
   float camera_move_speed = camera_move_speed_default;
   dvec2 last_cursor_pos(-1, -1);
   bool g_shift_active = false;
+  Clock::time_point g_last_frame_time {};
+  std::unique_ptr<TextRenderer> g_text_renderer;
 
 
   void initLog(string app_name)
@@ -253,6 +255,7 @@ namespace
     }
   }
 
+
   void processInput(GLFWwindow *window, float frame_delta)
   {
     if (glfwGetMouseButton(window, 1) == GLFW_PRESS)
@@ -297,16 +300,80 @@ namespace
     g_scene->camera.updateTransform();
   }
 
+
   void *getGLProcAddress(const char *name)
   {
     return (void*) glfwGetProcAddress(name);
   }
+
 
   void errorCallback(int error, const char* description)
   {
     fprintf(stderr, "Error: %s\n", description);
     exit(1);
   }
+
+
+  std::chrono::milliseconds frame()
+  {
+    Clock::time_point current_frame_time = Clock::now();
+    std::chrono::milliseconds frame_delta =
+      std::chrono::duration_cast<std::chrono::milliseconds>(current_frame_time - g_last_frame_time);
+    g_last_frame_time = current_frame_time;
+    return frame_delta;
+  }
+
+
+  void refresh(GLFWwindow* window, std::chrono::milliseconds frame_delta)
+  {
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    gl::Viewport(0, 0, width, height);
+    gl::DepthMask(GL_TRUE);
+    gl::Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    g_scene->camera.setViewportSize(width, height);
+
+    g_scene->render((float)frame_delta.count() / 1000.0);
+
+    ostringstream stats;
+    printStats(frame_delta.count(), stats);
+
+    g_text_renderer->SetColor(0,0,0);
+    g_text_renderer->DrawText(stats.str(), 1, 1);
+    g_text_renderer->SetColor(1.0, 1.0, 1.0);
+    g_text_renderer->DrawText(stats.str(), 0, 0);
+
+    for (int i = 0; i < g_scene->getParameters().size(); i++)
+    {
+      auto &parameter = *g_scene->getParameters().at(i);
+      auto parameter_text = parameter.name + ": " + parameter.getValueString();
+
+      float offset_y = i * 30;;
+
+      g_text_renderer->SetColor(0,0,0);
+      g_text_renderer->DrawText(parameter_text, 1, 31 + offset_y);
+
+      if (i == g_scene->getActiveParameterIndex())
+        g_text_renderer->SetColor(1,1,1);
+      else
+        g_text_renderer->SetColor(0.6, 0.6, 0.6);
+      g_text_renderer->DrawText(parameter_text, 0, 30 + offset_y);
+    }
+
+    CHECK_GL_ERROR();
+
+    glfwSwapBuffers(window);
+
+    CHECK_GL_ERROR();
+  }
+
+
+  void refresh(GLFWwindow* window)
+  {
+    refresh(window, frame());
+  }
+
 
 } // namespace
 
@@ -337,6 +404,7 @@ void render_util::viewer::runSimpleApplication(util::Factory<SceneBase> f_create
 
   glfwSetKeyCallback(window, keyCallback);
   glfwSetMouseButtonCallback(window, mouseButtonCallback);
+  glfwSetWindowRefreshCallback(window, refresh);
 
   gl_binding::GL_Interface *gl_interface = new gl_binding::GL_Interface(&getGLProcAddress);
   gl_binding::GL_Interface::setCurrent(gl_interface);
@@ -363,19 +431,15 @@ void render_util::viewer::runSimpleApplication(util::Factory<SceneBase> f_create
   glfwMaximizeWindow(window);
 #endif
 
-  auto text_renderer = make_unique<TextRenderer>();
+  g_text_renderer = make_unique<TextRenderer>();
 
-  Clock::time_point last_frame_time = Clock::now();
-  Clock::time_point last_stats_time = Clock::now();
+  g_last_frame_time = Clock::now();
 
   while (!glfwWindowShouldClose(window))
   {
     CHECK_GL_ERROR();
 
-    Clock::time_point current_frame_time = Clock::now();
-    std::chrono::milliseconds frame_delta =
-      std::chrono::duration_cast<std::chrono::milliseconds>(current_frame_time - last_frame_time);
-    last_frame_time = current_frame_time;
+    auto frame_delta = frame();
 
     glfwPollEvents();
     processInput(window, (float)frame_delta.count() / 1000.0);
@@ -386,53 +450,14 @@ void render_util::viewer::runSimpleApplication(util::Factory<SceneBase> f_create
       break;
     }
 
-    int width, height;
-    glfwGetFramebufferSize(window, &width, &height);
-    gl::Viewport(0, 0, width, height);
-    gl::DepthMask(GL_TRUE);
-    gl::Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    g_scene->camera.setViewportSize(width, height);
-
-    g_scene->render((float)frame_delta.count() / 1000.0);
-
-    ostringstream stats;
-    printStats(frame_delta.count(), stats);
-
-    text_renderer->SetColor(0,0,0);
-    text_renderer->DrawText(stats.str(), 1, 1);
-    text_renderer->SetColor(1.0, 1.0, 1.0);
-    text_renderer->DrawText(stats.str(), 0, 0);
-
-    for (int i = 0; i < g_scene->getParameters().size(); i++)
-    {
-      auto &parameter = *g_scene->getParameters().at(i);
-      auto parameter_text = parameter.name + ": " + parameter.getValueString();
-
-      float offset_y = i * 30;;
-
-      text_renderer->SetColor(0,0,0);
-      text_renderer->DrawText(parameter_text, 1, 31 + offset_y);
-
-      if (i == g_scene->getActiveParameterIndex())
-        text_renderer->SetColor(1,1,1);
-      else
-        text_renderer->SetColor(0.6, 0.6, 0.6);
-      text_renderer->DrawText(parameter_text, 0, 30 + offset_y);
-    }
-
-    CHECK_GL_ERROR();
-
-    glfwSwapBuffers(window);
-
-    CHECK_GL_ERROR();
+    refresh(window, frame_delta);
   }
 
   cout<<endl;
 
   CHECK_GL_ERROR();
 
-  text_renderer.reset();
+  g_text_renderer.reset();
 
   g_scene.reset();
   globals.reset();
