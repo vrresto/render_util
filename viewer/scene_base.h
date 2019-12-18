@@ -89,7 +89,6 @@ public:
     ParameterVec2(std::string name, glm::vec2 &value, float step) : ParameterBase(name),
       default_value(value), step(step), value(value)
     {
-      assert(default_value.x != 0);
     }
 
     void reset() override
