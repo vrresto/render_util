@@ -138,7 +138,7 @@ class TerrainViewerScene : public Scene
   render_util::ShaderProgramPtr sky_program;
 //   render_util::ShaderProgramPtr forest_program;
 
-  shared_ptr<render_util::MapLoaderBase> m_map_loader;
+  shared_ptr<MapLoaderBase> m_map_loader;
 
   unique_ptr<CirrusClouds> m_cirrus_clouds;
 
@@ -287,14 +287,14 @@ void TerrainViewerScene::setup()
   assert(elevation_map);
   assert(!m_map->getWaterAnimation().isEmpty());
 
-  MapLoaderBase::TerrainTextures terrain_textures;
-  m_map_loader->createTerrainTextures(terrain_textures);
+  LandTextures land_textures;
+  m_map_loader->createLandTextures(land_textures);
 
   assert(m_map->getMaterialMap());
 
-  m_map->getTextures().setTexture(TEXUNIT_TERRAIN_FAR, terrain_textures.far_texture);
+  m_map->getTextures().setTexture(TEXUNIT_TERRAIN_FAR, land_textures.far_texture);
 
-  createTerrain(elevation_map, m_map->getMaterialMap(), terrain_textures,
+  createTerrain(elevation_map, m_map->getMaterialMap(), land_textures,
                 shader_search_path, shader_params);
 
   map_size = glm::vec2(elevation_map->getSize() * m_map_loader->getHeightMapMetersPerPixel());

@@ -21,8 +21,8 @@
 
 #include "camera.h"
 
+#include <render_util/land_textures.h>
 #include <render_util/render_util.h>
-#include <render_util/map_loader_base.h>
 #include <render_util/shader.h>
 #include <render_util/terrain_util.h>
 #include <render_util/atmosphere.h>
@@ -165,7 +165,7 @@ public:
 
   void createTerrain(render_util::ElevationMap::ConstPtr elevation_map,
                      render_util::TerrainBase::MaterialMap::ConstPtr material_map,
-                     render_util::MapLoaderBase::TerrainTextures &textures,
+                     LandTextures &textures,
                      const ShaderSearchPath &shader_search_path,
                      const ShaderParameters &shader_params)
   {

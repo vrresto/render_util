@@ -55,7 +55,7 @@ namespace
 class SimpleViewerScene : public render_util::viewer::SceneBase
 {
   glm::vec2 m_map_size = glm::vec2(0);
-  std::shared_ptr<render_util::ElevationMapLoaderBase> m_loader;
+  std::shared_ptr<render_util::viewer::ElevationMapLoaderBase> m_loader;
   std::shared_ptr<render_util::TerrainBase> m_terrain;
   float m_base_map_height = 0;
   glm::vec2 m_base_map_origin = glm::vec2(0);
