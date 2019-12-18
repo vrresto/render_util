@@ -184,30 +184,70 @@ namespace
   }
 
 
+  void saveParameters()
+  {
+    cout << "-------------------" << endl;
+    for (auto &p : g_scene->getParameters())
+      cout << p->name << ": " << p->getValueString() << endl;
+    cout << "-------------------" << endl;
+  }
+
   void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
   {
-#if ENABLE_BASE_MAP
-    auto base_map_origin_new = g_scene->base_map_origin;
-#endif
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-      glfwSetWindowShouldClose(window, true);
-    }
-    else if (key == GLFW_KEY_F2 && action == GLFW_PRESS) {
-      g_scene->camera.setFov(g_scene->camera.getFov() + 10);
-    }
-    else if (key == GLFW_KEY_F3 && action == GLFW_PRESS) {
-      g_scene->camera.setFov(g_scene->camera.getFov() - 10);
-    }
-    else if (key == GLFW_KEY_R && action == GLFW_PRESS &&
-        mods & GLFW_MOD_ALT)
+    if (action == GLFW_PRESS)
     {
-      camera_move_speed = camera_move_speed_default;
+      switch (key)
+      {
+        case GLFW_KEY_ESCAPE:
+          glfwSetWindowShouldClose(window, true);
+          break;
+        case GLFW_KEY_F2:
+          g_scene->camera.setFov(g_scene->camera.getFov() + 10);
+          break;
+        case GLFW_KEY_F3:
+          g_scene->camera.setFov(g_scene->camera.getFov() - 10);
+          break;
+        case GLFW_KEY_KP_ADD:
+          camera_move_speed *= 2;
+          break;
+        case GLFW_KEY_KP_SUBTRACT:
+          camera_move_speed /= 2;
+          break;
+        case GLFW_KEY_P:
+          saveParameters();
+          break;
+      }
     }
-    else if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS) {
-      camera_move_speed *= 2;
-    }
-    else if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS) {
-      camera_move_speed /= 2;
+
+    if (action == GLFW_PRESS || action == GLFW_REPEAT)
+    {
+      float step_factor = mods & GLFW_MOD_SHIFT ? 0.1 : 1;
+      auto &p = g_scene->getActiveParameter();
+
+      switch (key)
+      {
+        case GLFW_KEY_PAGE_UP :
+          g_scene->setActiveParameter(g_scene->getActiveParameterIndex() + 1);
+          break;
+        case GLFW_KEY_PAGE_DOWN:
+          g_scene->setActiveParameter(g_scene->getActiveParameterIndex() - 1);
+          break;
+        case GLFW_KEY_R:
+          p.reset();
+          break;
+        case GLFW_KEY_LEFT:
+          p.changeX(-step_factor);
+          break;
+        case GLFW_KEY_RIGHT:
+            p.changeX(step_factor);
+          break;
+        case GLFW_KEY_UP:
+          p.changeY(step_factor);
+          break;
+        case GLFW_KEY_DOWN:
+          p.changeY(-step_factor);
+          break;
+      }
     }
   }
 
@@ -361,6 +401,23 @@ void render_util::viewer::runSimpleApplication(util::Factory<SceneBase> f_create
     text_renderer->DrawText(stats.str(), 1, 1);
     text_renderer->SetColor(1.0, 1.0, 1.0);
     text_renderer->DrawText(stats.str(), 0, 0);
+
+    for (int i = 0; i < g_scene->getParameters().size(); i++)
+    {
+      auto &parameter = *g_scene->getParameters().at(i);
+      auto parameter_text = parameter.name + ": " + parameter.getValueString();
+
+      float offset_y = i * 30;;
+
+      text_renderer->SetColor(0,0,0);
+      text_renderer->DrawText(parameter_text, 1, 31 + offset_y);
+
+      if (i == g_scene->getActiveParameterIndex())
+        text_renderer->SetColor(1,1,1);
+      else
+        text_renderer->SetColor(0.6, 0.6, 0.6);
+      text_renderer->DrawText(parameter_text, 0, 30 + offset_y);
+    }
 
     CHECK_GL_ERROR();
 

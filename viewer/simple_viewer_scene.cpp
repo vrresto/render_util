@@ -54,6 +54,8 @@ class SimpleViewerScene : public render_util::viewer::SceneBase
   glm::vec2 m_map_size = glm::vec2(0);
   std::shared_ptr<render_util::ElevationMapLoaderBase> m_loader;
   std::shared_ptr<render_util::TerrainBase> m_terrain;
+  float m_base_map_height = 0;
+  glm::vec2 m_base_map_origin = glm::vec2(0);
 
   void createTerrain(render_util::ElevationMap::ConstPtr elevation_map,
                      render_util::ElevationMap::ConstPtr base_elevation_map,
@@ -149,15 +151,13 @@ void SimpleViewerScene::setup()
 
   auto map_center = m_map_size / 2.f;
 
-  glm::vec2 base_map_origin(0);
-
   if (base_elevation_map)
   {
     auto base_map_size =
       m_loader->getBaseElevationMapMetersPerPixel() * base_elevation_map->getSize();
 
-    base_map_origin = -1.f * (glm::vec2(base_map_size) / glm::vec2(2));
-    base_map_origin += map_center;
+    m_base_map_origin = -1.f * (glm::vec2(base_map_size) / glm::vec2(2));
+    m_base_map_origin += map_center;
   }
 
   render_util::ShaderParameters shader_params;
@@ -166,24 +166,29 @@ void SimpleViewerScene::setup()
   createTerrain(elevation_map,
                 base_elevation_map,
                 m_loader->getBaseElevationMapMetersPerPixel(),
-                base_map_origin,
+                m_base_map_origin,
                 shader_search_path,
                 shader_params);
 
   camera.x = map_center.x;
   camera.y = map_center.y;
   camera.z = 10000;
+
+  addParameter("base_map_height", m_base_map_height, 100.f);
+  addParameter("base_map_origin", m_base_map_origin, 1000.f);
 }
 
 
 void SimpleViewerScene::render(float frame_delta)
 {
+  m_terrain->setBaseMapOrigin(m_base_map_origin);
   drawTerrain();
 }
 
 void SimpleViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
 {
   SceneBase::updateUniforms(program);
+  program->setUniform("terrain_base_map_height", m_base_map_height);
 }
 
 

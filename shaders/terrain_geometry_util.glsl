@@ -22,6 +22,7 @@
 #include terrain_geometry_util.h.glsl
 
 uniform Terrain terrain;
+uniform float terrain_base_map_height = 0.0;
 
 
 vec2 getHeightMapTextureCoords(in TerrainLayer layer, vec2 pos_m)
@@ -60,6 +61,7 @@ float getTerrainHeight(vec2 pos_m)
 #if @enable_base_map@
   vec2 base_height_map_texture_coords = getHeightMapTextureCoords(terrain.base_layer, pos_m);
   float base = texture2D(terrain.base_layer.height_map.sampler, base_height_map_texture_coords).x;
+  base += terrain_base_map_height;
 
   float detail_blend = getDetailMapBlend(pos_m);
 

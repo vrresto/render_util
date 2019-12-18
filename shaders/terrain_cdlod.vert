@@ -48,6 +48,7 @@ uniform mat4 projectionMatrixFar;
 
 uniform float cdlod_min_dist;
 uniform float terrain_height_offset = 0.0;
+uniform float terrain_base_map_height = 0.0;
 
 uniform Terrain terrain;
 
@@ -88,6 +89,7 @@ float getHeight(vec2 world_coord, float approx_dist)
   vec2 base_height_map_texture_coord = getHeightMapTextureCoords(terrain.base_layer, world_coord);
 
   float base = texture2D(terrain.base_layer.height_map.sampler, base_height_map_texture_coord).x;
+  base += terrain_base_map_height;
 
   float detail_blend = getDetailMapBlend(world_coord);
 
