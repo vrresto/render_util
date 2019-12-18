@@ -319,7 +319,7 @@ void Shader::preProcess(const vector<char> &data_in, const ShaderParameters &par
 
       out += include_file_content;
       out += '\n';
-      out += "#line " + to_string(line_num+1) + " 0 \n";
+      out += "#line " + to_string(line_num) + " 0 \n";
 
       line_num++;
       continue;
@@ -329,7 +329,6 @@ void Shader::preProcess(const vector<char> &data_in, const ShaderParameters &par
     out += '\n';
     line_num++;
   }
-
 
   m_preprocessed_source = move(out);
 }
