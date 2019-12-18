@@ -55,10 +55,10 @@ void main(void)
 
   float height = getTerrainHeight(passObjectPosFlat.xy);
 
-  out_color0.rgb = mix(color_base, color0, min(height / 2, 1));
-  out_color0.rgb = mix(out_color0.rgb, color1, min(height / 10, 1));
-  out_color0.rgb = mix(out_color0.rgb, color2, min(height / 300, 1));
-  out_color0.rgb = mix(out_color0.rgb, color3, min(height / 2000, 1));
+  out_color0.rgb = mix(color_base, color0, clamp(height / 2, 0, 1));
+  out_color0.rgb = mix(out_color0.rgb, color1, clamp(height / 10, 0, 1));
+  out_color0.rgb = mix(out_color0.rgb, color2, clamp(height / 300, 0, 1));
+  out_color0.rgb = mix(out_color0.rgb, color3, clamp(height / 2000, 0, 1));
 
   out_color0.rgb *= (light_direct * 1.5 + light_ambient * 0.5);
 }
