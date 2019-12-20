@@ -19,8 +19,6 @@
 #ifndef RENDER_UTIL_VIEWER_H
 #define RENDER_UTIL_VIEWER_H
 
-#include <render_util/land_textures.h>
-#include <render_util/map_base.h>
 #include <render_util/image.h>
 #include <render_util/terrain_base.h>
 #include <render_util/shader.h>
@@ -48,14 +46,8 @@ namespace render_util::viewer
   public:
     virtual ~MapLoaderBase() {}
 
-    virtual void createMapTextures(MapBase*) const = 0;
-    virtual ElevationMap::Ptr createElevationMap() const = 0;
-    virtual void createLandTextures(LandTextures&) const = 0;
-    virtual int getHeightMapMetersPerPixel() const = 0;
-
-    virtual ElevationMap::Ptr createBaseElevationMap(ImageGreyScale::ConstPtr land_map) const = 0;
-    virtual ImageGreyScale::Ptr createBaseLandMap() const = 0;
-    virtual glm::vec2 getBaseMapOrigin() const = 0;
+    virtual const TerrainBase::Loader &getTerrainLoader() const = 0;
+    virtual const std::shared_ptr<GenericImage> getCirrusTexture() const = 0;
   };
 
 

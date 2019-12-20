@@ -2,7 +2,10 @@ set(CXX_SRCS
   terrain/terrain_cdlod_base.cpp
   terrain/terrain_cdlod.cpp
   terrain/terrain_util.cpp
-  terrain/land_textures.cpp
+  terrain/land.cpp
+  terrain/forest.cpp
+  terrain/water.cpp
+  terrain/noise.cpp
   atmosphere.cpp
   camera.cpp
   texunits.cpp
@@ -10,8 +13,6 @@ set(CXX_SRCS
   texture_manager.cpp
   shader.cpp
   shader_util.cpp
-  map_textures.cpp
-  water.cpp
   image_loader.cpp
   image_writer.cpp
   util.cpp

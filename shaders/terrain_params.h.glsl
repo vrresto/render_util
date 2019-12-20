@@ -16,7 +16,7 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-struct TerrainTextureMap
+struct TerrainParameterMap
 {
   sampler2D sampler;
   int resolution_m;
@@ -24,12 +24,35 @@ struct TerrainTextureMap
   vec2 size_m;
 };
 
+
+struct WaterMap
+{
+  sampler2D sampler_table;
+  sampler2DArray sampler;
+
+  vec2 table_size_m;
+  vec2 table_shift_m;
+  float chunk_size_m;
+  vec2 chunk_scale;
+  vec2 chunk_shift_m;
+};
+
 struct TerrainLayer
 {
   vec2 size_m;
-  vec2 origin_m;
-  TerrainTextureMap height_map;
-  TerrainTextureMap normal_map;
+  vec3 origin_m;
+  TerrainParameterMap height_map;
+  TerrainParameterMap normal_map;
+
+#if @enable_type_map@
+  TerrainParameterMap type_map;
+#endif
+
+#if @enable_forest@
+  TerrainParameterMap forest_map;
+#endif
+
+  WaterMap water_map;
 };
 
 struct Terrain
@@ -42,3 +65,5 @@ struct Terrain
   TerrainLayer base_layer;
 #endif
 };
+
+float sampleWaterMap(vec2 pos, in TerrainLayer layer);

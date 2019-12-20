@@ -8,8 +8,8 @@ endif()
 set(CXX_SRCS
   viewer_main.cpp
   terrain_viewer.cpp
-  simple_viewer_scene.cpp
-  simple_viewer_application.cpp
+#   simple_viewer_scene.cpp
+#   simple_viewer_application.cpp
 )
 
 add_library(viewer ${CXX_SRCS})

@@ -30,6 +30,8 @@
 #include terrain_geometry_util.h.glsl
 
 #define ENABLE_BASE_MAP @enable_base_map@
+
+
 #define ENABLE_CURVATURE @enable_curvature:1@
 
 attribute vec4 attrib_pos;
@@ -48,9 +50,12 @@ uniform mat4 projectionMatrixFar;
 
 uniform float cdlod_min_dist;
 uniform float terrain_height_offset = 0.0;
+// <<<<<<< HEAD
 #if @enable_base_map@
-uniform float terrain_base_map_height = 0.0;
+// uniform float terrain_base_map_height = 0.0;
 #endif
+// =======
+// >>>>>>> wip - add base type map support
 
 uniform Terrain terrain;
 
@@ -61,7 +66,12 @@ varying float vertexHorizontalDist;
 varying vec3 passLight;
 varying vec3 passNormal;
 varying vec2 pass_texcoord;
-varying vec2 pass_type_map_coord;
+varying vec2 pass_type_map_coords;
+
+#if ENABLE_BASE_MAP
+// uniform float terrain_base_map_height = 0.0;
+varying vec2 pass_base_type_map_coords;
+#endif
 
 
 vec2 getDiff(float dist, float height)
@@ -91,11 +101,14 @@ float getHeight(vec2 world_coord, float approx_dist)
   vec2 base_height_map_texture_coord = getHeightMapTextureCoords(terrain.base_layer, world_coord);
 
   float base = texture2D(terrain.base_layer.height_map.sampler, base_height_map_texture_coord).x;
-  base += terrain_base_map_height;
+//   base += terrain_base_map_height;
+  base += terrain.base_layer.origin_m.z;
 
   float detail_blend = getDetailMapBlend(world_coord);
 
   return mix(base, detail, detail_blend);
+
+//   return base;
 #else
   return detail;
 #endif
@@ -144,7 +157,14 @@ void main(void)
   pass_texcoord = (pos.xy + vec2(0,1)) / grids_per_tile;
   pass_texcoord -= origin_tile;
 
-  pass_type_map_coord = pos.xy;
+  pass_type_map_coords = pos.xy; //FIXME this assumes mesh resolution equals type map resolution
+
+#if ENABLE_BASE_MAP
+  vec2 base_map_origin_px =
+    terrain.base_layer.origin_m.xy / 200; //FIXME
+  pass_base_type_map_coords = pass_type_map_coords - base_map_origin_px;
+//   pass_base_type_map_coords = pass_type_map_coords;
+#endif
 
   pos2d_m = pos.xy * terrain.mesh_resolution_m;
 

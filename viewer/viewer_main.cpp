@@ -21,7 +21,6 @@
 #include "camera.h"
 #include <text_renderer/text_renderer.h>
 #include <render_util/render_util.h>
-#include <render_util/map_textures.h>
 #include <render_util/terrain.h>
 #include <render_util/terrain_cdlod.h>
 #include <render_util/texture_util.h>
@@ -100,6 +99,7 @@ namespace
     using namespace util::log;
     using FileSink = FileAppender<TxtFormatter<ADD_NEW_LINE>>;
     using ConsoleSink = ConsoleAppender<MessageOnlyFormatter<ADD_NEW_LINE>>;
+//     using ConsoleSink = ConsoleAppender<TxtFormatter<ADD_NEW_LINE>>;
 
     static FileSink file_sink_warn(app_name + "_warnings.log");
     static FileSink file_sink_info(app_name + "_info.log");
@@ -508,7 +508,9 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene, st
   g_scene = f_create_scene();
   assert(g_scene);
 
+  LOG_INFO << "Setting up scene ..." << endl;
   g_scene->setup();
+  LOG_INFO << "Setting up scene ... done." << endl;
 
   CHECK_GL_ERROR();
 

@@ -45,6 +45,83 @@ namespace
 {
 
 
+void createTextureArrayLevel0(const std::vector<ScaledImageResource> &textures,
+                              int texture_width,
+                              int bytes_per_pixel)
+{
+  using namespace std;
+  using std::min;
+
+  assert(!textures.empty());
+
+  CHECK_GL_ERROR();
+
+  size_t max_levels = 0;
+  gl::GetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, (int*) &max_levels);
+  LOG_TRACE<<"max_levels: "<<max_levels<<endl;
+
+  assert(textures.size() <= max_levels);
+
+  const unsigned texture_size = texture_width * texture_width * bytes_per_pixel;
+  const size_t num_textures = min(textures.size(), max_levels);
+  const float array_size_mb = num_textures * texture_size / 1024.f / 1024.f;
+
+  LOG_TRACE<<"num_textures: "<<num_textures<<endl;
+  LOG_TRACE<<"texture_size: "<<texture_size<<endl;
+  LOG_TRACE<<"texture_width: "<<texture_width<<endl;
+  LOG_TRACE<<"bytes_per_pixel: "<<bytes_per_pixel<<endl;
+
+  GLint internal_format = -1;
+  GLint format = -1;
+
+  switch (bytes_per_pixel)
+  {
+    case 1:
+      internal_format = GL_R8;
+      format = GL_RED;
+      break;
+    case 3:
+      internal_format = GL_RGB8;
+      format = GL_RGB;
+      break;
+    case 4:
+      internal_format = GL_RGBA8;
+      format = GL_RGBA;
+      break;
+    default:
+      assert(0);
+      abort();
+  }
+
+  LOG_TRACE<<"reserving gl memory (" << array_size_mb << " MB) ..."<<endl;
+  gl::TexImage3D(GL_TEXTURE_2D_ARRAY, 0, internal_format,
+            texture_width, texture_width, num_textures,
+            0, format, GL_UNSIGNED_BYTE, nullptr);
+  FORCE_CHECK_GL_ERROR();
+  LOG_TRACE<<"reserving gl memory ... done"<<endl;
+
+  for (unsigned i = 0; i < num_textures; i++)
+  {
+    LOG_INFO << "Loading texture: " << textures.at(i).resource->getName()
+             << " (" << i+1 << " of " << num_textures << ")" << endl;
+
+    auto image = textures.at(i).load(bytes_per_pixel);
+    assert(image->getSize() == glm::ivec2(texture_width));
+    assert(image->getNumComponents() == bytes_per_pixel);
+
+//     LOG_TRACE<<"calling gl::TexSubImage3D() ..."<<endl;
+    gl::TexSubImage3D(GL_TEXTURE_2D_ARRAY, 0,
+            0, 0, i,
+            texture_width, texture_width, 1,
+            format, GL_UNSIGNED_BYTE, image->getData());
+    FORCE_CHECK_GL_ERROR();
+//     LOG_TRACE<<"calling gl::TexSubImage3D() ... done"<<endl;
+  }
+
+  FORCE_CHECK_GL_ERROR();
+}
+
+
 void createTextureArrayLevel0(const std::vector<const unsigned char*> &textures,
                               int texture_width,
                               int bytes_per_pixel)
@@ -436,7 +513,7 @@ TexturePtr createTextureArray(const std::vector<const unsigned char*> &textures,
   gl::TexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   createTextureArrayLevel0(textures, texture_width, bytes_per_pixel);
-  
+
   CHECK_GL_ERROR();
 
   gl::GenerateMipmap(GL_TEXTURE_2D_ARRAY);
@@ -855,6 +932,31 @@ Image<Normal>::Ptr createNormalMap(ElevationMap::ConstPtr elevation_map, float g
 
   return c.normals;
 }
+
+
+TexturePtr createTextureArray(const std::vector<ScaledImageResource> &images, int num_components)
+{
+  auto texture_width = images.at(0).getScaledSize().x;
+  auto bytes_per_pixel = num_components ? num_components : images.at(0).resource->getNumComponents();
+
+  for (auto &image : images)
+  {
+    assert(image.getScaledSize() == glm::ivec2(texture_width));
+  }
+
+  TexturePtr texture = Texture::create(GL_TEXTURE_2D_ARRAY);
+  TemporaryTextureBinding binding(texture);
+
+  gl::TexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  gl::TexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  createTextureArrayLevel0(images, texture_width, bytes_per_pixel);
+
+  gl::GenerateMipmap(GL_TEXTURE_2D_ARRAY);
+
+  return texture;
+}
+
 
 
 } // namespace render_util

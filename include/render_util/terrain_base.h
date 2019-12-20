@@ -23,6 +23,7 @@
 #include <render_util/camera.h>
 #include <render_util/elevation_map.h>
 #include <render_util/texture_manager.h>
+#include <render_util/texture_util.h>
 #include <factory.h>
 
 #include <string>
@@ -47,23 +48,49 @@ namespace render_util
 
     using MaterialMap = Image<unsigned int>;
     using TypeMap = ImageGreyScale;
+    using ImageResourceList = std::vector<std::shared_ptr<ImageResource>>;
 
     struct Client
     {
       virtual void setActiveProgram(ShaderProgramPtr) = 0;
     };
 
+    struct Loader
+    {
+      struct Layer
+      {
+        virtual glm::vec3 getOriginM() const = 0;
+        virtual unsigned int getResolutionM() const = 0;
+        virtual ElevationMap::Ptr loadHeightMap() const = 0;
+        virtual TerrainBase::TypeMap::Ptr loadTypeMap() const = 0;
+        virtual ImageGreyScale::Ptr loadForestMap() const = 0;
+        virtual MaterialMap::Ptr loadMaterialMap() const = 0;
+        virtual void loadWaterMap(std::vector<ImageGreyScale::Ptr> &chunks,
+                                  Image<unsigned int>::Ptr &table) const = 0;
+      };
+
+      virtual bool hasBaseLayer() const = 0;
+
+      virtual const Layer &getDetailLayer() const = 0;
+      virtual const Layer &getBaseLayer() const = 0;
+
+      virtual const ImageResourceList &getLandTextures() const = 0;
+      virtual const ImageResourceList &getLandTexturesNM() const = 0;
+      virtual const std::vector<float> &getLandTexturesScale() const = 0;
+
+      virtual std::vector<ImageRGBA::Ptr> loadForestLayers() const = 0;
+      virtual ImageRGBA::Ptr loadForestFarTexture() const = 0;
+
+      virtual const ImageResourceList &getWaterAnimationNormalMaps() const = 0;
+      virtual const ImageResourceList &getWaterAnimationFoamMasks() const = 0;
+
+      virtual glm::vec3 getWaterColor() const = 0;
+    };
+
     struct BuildParameters
     {
-      ElevationMap::ConstPtr map;
-      ElevationMap::ConstPtr base_map {};
-      unsigned int base_map_resolution_m = 0;
-      MaterialMap::ConstPtr material_map;
-      TypeMap::ConstPtr type_map;
-      std::vector<ImageRGBA::Ptr> &textures;
-      std::vector<ImageRGB::Ptr> &textures_nm;
-      const std::vector<float> &texture_scale;
       const ShaderParameters &shader_parameters;
+      const Loader &loader;
     };
 
     virtual ~TerrainBase() {}
@@ -77,6 +104,7 @@ namespace render_util
     virtual TexturePtr getNormalMapTexture() { return nullptr; }
     virtual void setProgramName(std::string) {}
     virtual void setBaseMapOrigin(glm::vec2 origin) {}
+    virtual void updateAnimation(float frame_delta) {}
   };
 
   using TerrainFactory = util::Factory<TerrainBase, TextureManager&, const ShaderSearchPath&>;

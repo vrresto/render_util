@@ -18,33 +18,47 @@
 
 #version 130
 
+#if @enable_forest@
+
 #define ENABLE_BASE_MAP @enable_base_map@
+
+#include terrain_params.h.glsl
 
 float genericNoise(vec2 coord);
 float getDetailMapBlend(vec2 pos);
 
-uniform ivec2 typeMapSize;
+// uniform ivec2 typeMapSize;
+// 
+// uniform sampler2D sampler_forest_map;
+// #if ENABLE_BASE_MAP
+//   uniform sampler2D sampler_forest_map_base;
+// #endif
 
-uniform sampler2D sampler_forest_map;
-#if ENABLE_BASE_MAP
-  uniform sampler2D sampler_forest_map_base;
-  uniform vec2 height_map_base_size_m;
-  uniform vec2 height_map_base_origin;
-#endif
 uniform sampler2D sampler_forest_far;
 uniform sampler2DArray sampler_forest_layers;
 
+uniform Terrain terrain;
+
+// sampler2D getForestMapSampler()
+// {
+//   return terrain.detail_layer.forest_map.sampler;
+// }
+// 
+// sampler2D getBaseForestMapSampler()
+// {
+//   return terrain.base_layer.forest_map.sampler;
+// }
 
 
 float sampleForestAlpha(vec2 typeMapCoords, vec2 pos)
 {
-  float forest_alpha = texture2D(sampler_forest_map, (typeMapCoords + vec2(0.5)) / typeMapSize).x;
+  float forest_alpha = texture2D(terrain.detail_layer.forest_map.sampler, (typeMapCoords + vec2(0.5)) / terrain.detail_layer.forest_map.size_px).x;
 
   #if ENABLE_BASE_MAP
   {
-    vec2 coords = (pos - height_map_base_origin) / height_map_base_size_m;
+    vec2 coords = (pos - terrain.base_layer.origin_m.xy) / terrain.base_layer.size_m;
     float forest_alpha_base =
-      texture2D(sampler_forest_map_base, coords).x;
+      texture2D(terrain.base_layer.forest_map.sampler, coords).x;
     forest_alpha = mix(forest_alpha_base, forest_alpha, getDetailMapBlend(pos));
   }
   #endif
@@ -130,3 +144,9 @@ vec4 getForestColor(vec2 pos, int layer)
 
   return color;
 }
+
+#else
+
+void forest_util_dummy() {}
+
+#endif

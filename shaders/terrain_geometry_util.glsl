@@ -31,7 +31,7 @@ uniform float terrain_base_map_height = 0.0;
 vec2 getHeightMapTextureCoords(in TerrainLayer layer, vec2 pos_m)
 {
   vec2 coords =
-    (pos_m - layer.origin_m + vec2(0, layer.height_map.resolution_m)) / layer.height_map.size_m;
+    (pos_m - layer.origin_m.xy + vec2(0, layer.height_map.resolution_m)) / layer.height_map.size_m;
   coords.y = 1.0 - coords.y;
   return coords;
 }
@@ -40,7 +40,7 @@ vec2 getHeightMapTextureCoords(in TerrainLayer layer, vec2 pos_m)
 vec2 getNormalMapCoords(in TerrainLayer layer, vec2 pos_m)
 {
   vec2 coords =
-    (pos_m - layer.origin_m + vec2(0, layer.normal_map.resolution_m))
+    (pos_m - layer.origin_m.xy + vec2(0, layer.normal_map.resolution_m))
       / layer.normal_map.size_m;
   coords.y = 1.0 - coords.y;
   return coords;
@@ -79,7 +79,7 @@ float getDetailMapBlend(vec2 pos)
 {
   vec2 map_size = terrain.detail_layer.size_m;
 
-  float blend_dist = 18000.0;
+  float blend_dist = 10000.0;
 
 //   float threshold_noise = clamp(genericNoise(pos * 0.0008), -1, 1);
 //   float threshold_noise_coarse = clamp(genericNoise(pos * 0.00005), -1, 1);
