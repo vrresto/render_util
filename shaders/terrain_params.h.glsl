@@ -30,6 +30,9 @@ struct TerrainLayer
   vec2 origin_m;
   TerrainTextureMap height_map;
   TerrainTextureMap normal_map;
+// #if @enable_forest@
+//   TerrainTextureMap forest_map;
+// #endif
 };
 
 struct Terrain

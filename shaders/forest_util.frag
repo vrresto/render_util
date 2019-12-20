@@ -20,6 +20,8 @@
 
 #define ENABLE_BASE_MAP @enable_base_map@
 
+#include terrain_params.h.glsl
+
 float genericNoise(vec2 coord);
 float getDetailMapBlend(vec2 pos);
 
@@ -28,12 +30,11 @@ uniform ivec2 typeMapSize;
 uniform sampler2D sampler_forest_map;
 #if ENABLE_BASE_MAP
   uniform sampler2D sampler_forest_map_base;
-  uniform vec2 height_map_base_size_m;
-  uniform vec2 height_map_base_origin;
 #endif
 uniform sampler2D sampler_forest_far;
 uniform sampler2DArray sampler_forest_layers;
 
+uniform Terrain terrain;
 
 
 float sampleForestAlpha(vec2 typeMapCoords, vec2 pos)
@@ -42,9 +43,9 @@ float sampleForestAlpha(vec2 typeMapCoords, vec2 pos)
 
   #if ENABLE_BASE_MAP
   {
-    vec2 coords = (pos - height_map_base_origin) / height_map_base_size_m;
+    vec2 coords = (pos - terrain.base_layer.origin_m) / terrain.base_layer.size_m;
     float forest_alpha_base =
-      texture2D(sampler_forest_map_base, coords).x;
+      texture2D(terrain.base_layer.forest_map.sampler, coords).x;
     forest_alpha = mix(forest_alpha_base, forest_alpha, getDetailMapBlend(pos));
   }
   #endif

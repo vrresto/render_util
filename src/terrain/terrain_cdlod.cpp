@@ -100,7 +100,7 @@ struct DetailLevel
 constexpr DetailLevel g_detail_levels[] =
 {
   { 0, 0 },
-  { 40000, DetailOption::LAND },
+  { 1800000, DetailOption::LAND },
   { 15000, DetailOption::LAND | DetailOption::FOREST },
   { 5000, DetailOption::LAND | DetailOption::WATER | DetailOption::FOREST },
   { 2000, DetailOption::ALL },
@@ -156,19 +156,21 @@ render_util::ShaderProgramPtr createProgram(std::string name,
 
   if (material == MaterialID::WATER)
   {
-    params.set("enable_water", true);
-    params.set("enable_water_only", true);
+//     params.set("enable_water", true);
+//     params.set("enable_water_only", true);
   }
   else
   {
-    params.set("enable_type_map", (material & MaterialID::LAND) &&
-                                  (detail_options & DetailOption::LAND));
-    params.set("enable_water", material & MaterialID::WATER);
-    params.set("enable_forest", material & MaterialID::FOREST);
+    params.set("enable_type_map", (material & MaterialID::LAND)
+//         && (detail_options & DetailOption::LAND)
+      
+    );
+//     params.set("enable_water", material & MaterialID::WATER);
+//     params.set("enable_forest", material & MaterialID::FOREST);
   }
 
-  params.set("detailed_water", detail_options & DetailOption::WATER);
-  params.set("detailed_forest", detail_options & DetailOption::FOREST);
+//   params.set("detailed_water", detail_options & DetailOption::WATER);
+//   params.set("detailed_forest", detail_options & DetailOption::FOREST);
 
   auto program = createShaderProgram(name, tex_mgr, shader_search_path, attribute_locations, params);
 

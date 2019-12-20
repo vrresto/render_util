@@ -221,6 +221,7 @@ LandTextures::LandTextures(const TextureManager &texture_manager,
                       base_type_map_,
                       m_base_type_map_texture);
 
+#if 0
   if (!textures_nm.empty())
   {
     m_enable_normal_maps = true;
@@ -236,6 +237,7 @@ LandTextures::LandTextures(const TextureManager &texture_manager,
                                   base_type_map_,
                                   m_base_type_map_texture_nm);
   }
+#endif
 
   for (int i = 0; i < m_textures.size(); i++)
   {

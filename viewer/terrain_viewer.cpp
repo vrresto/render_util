@@ -16,6 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include "viewer_main.h"
 #include "scene.h"
 #include "camera.h"
@@ -41,6 +43,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/vec_swizzle.hpp>
 #include <GLFW/glfw3.h>
 #include <cstdlib>
 #include <cstdio>
@@ -65,12 +68,15 @@ using namespace render_util;
 #include <render_util/skybox.h>
 
 
+#define ENABLE_BASE_MAP 1
+
+
 namespace
 {
 
 
-// constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
-constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
+constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
+// constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
 
 const bool g_terrain_use_lod = true;
 
@@ -105,6 +111,7 @@ namespace terrain_viewer
   class Map : public MapBase
   {
     TerrainBase::MaterialMap::ConstPtr m_material_map;
+    TerrainBase::MaterialMap::ConstPtr m_base_material_map;
     MapTextures m_map_textures;
     WaterAnimation m_water_animation;
 
@@ -117,8 +124,18 @@ namespace terrain_viewer
     {
       m_material_map = map;
     }
+    void setBaseMaterialMap(TerrainBase::MaterialMap::ConstPtr map) override
+    {
+      cout<<"setBaseMaterialMap()"<<endl;
+      m_base_material_map = map;
+    }
 
     TerrainBase::MaterialMap::ConstPtr getMaterialMap() { return m_material_map; }
+    TerrainBase::MaterialMap::ConstPtr getBaseMaterialMap()
+    {
+      assert(m_base_material_map);
+      return m_base_material_map;
+    }
   };
 }
 
@@ -142,9 +159,10 @@ class TerrainViewerScene : public Scene
   unique_ptr<CirrusClouds> m_cirrus_clouds;
 
 #if ENABLE_BASE_MAP
-  render_util::ImageGreyScale::Ptr m_base_map_land;
-  render_util::TexturePtr m_base_map_land_texture;
-  ElevationMap::Ptr m_elevation_map_base;
+  glm::vec3 m_base_map_origin = glm::vec3(0);
+
+//   render_util::ImageGreyScale::Ptr m_base_map_land;
+//   render_util::TexturePtr m_base_map_land_texture;
 #endif
 
   void updateUniforms(render_util::ShaderProgramPtr program) override;
@@ -175,11 +193,11 @@ TerrainViewerScene::TerrainViewerScene(CreateMapLoaderFunc &create_map_loader)
 TerrainViewerScene::~TerrainViewerScene()
 {
 #if ENABLE_BASE_MAP
-  auto land_map_flipped = image::flipY(m_base_map_land);
-  saveImageToFile(RENDER_UTIL_CACHE_DIR "/base_map_land_editor.tga", land_map_flipped.get());
-  std::ofstream s(RENDER_UTIL_CACHE_DIR "/base_map_origin_editor", ios_base::binary);
-  s<<"BaseMapOriginX="<<base_map_origin.x<<endl;
-  s<<"BaseMapOriginY="<<base_map_origin.y<<endl;
+//   auto land_map_flipped = image::flipY(m_base_map_land);
+//   saveImageToFile(RENDER_UTIL_CACHE_DIR "/base_map_land_editor.tga", land_map_flipped.get());
+//   std::ofstream s(RENDER_UTIL_CACHE_DIR "/base_map_origin_editor", ios_base::binary);
+//   s<<"BaseMapOriginX="<<base_map_origin.x<<endl;
+//   s<<"BaseMapOriginY="<<base_map_origin.y<<endl;
 #endif
 }
 
@@ -187,15 +205,15 @@ TerrainViewerScene::~TerrainViewerScene()
 void TerrainViewerScene::buildBaseMap()
 {
 #if ENABLE_BASE_MAP
-  m_elevation_map_base = m_map_loader->createBaseElevationMap(m_base_map_land);
-  base_map_size_m =
-    glm::vec2(m_elevation_map_base->getSize() * (int)render_util::HEIGHT_MAP_BASE_METERS_PER_PIXEL);
-
-  updateTerrain(m_elevation_map_base);
-
-  m_map->getTextures().bind(getTextureManager());
-
-  updateBaseWaterMapTexture();
+//   m_elevation_map_base = m_map_loader->createBaseElevationMap(m_base_map_land);
+//   base_map_size_m =
+//     glm::vec2(m_elevation_map_base->getSize() * (int)render_util::HEIGHT_MAP_BASE_METERS_PER_PIXEL);
+// 
+//   updateTerrain(m_elevation_map_base);
+// 
+//   m_map->getTextures().bind(getTextureManager());
+// 
+//   updateBaseWaterMapTexture();
 #endif
 }
 
@@ -203,8 +221,8 @@ void TerrainViewerScene::buildBaseMap()
 void TerrainViewerScene::mark()
 {
 #if ENABLE_BASE_MAP
-  m_base_map_land->at(mark_pixel_coords) = 255;
-  updateBaseWaterMapTexture();
+//   m_base_map_land->at(mark_pixel_coords) = 255;
+//   updateBaseWaterMapTexture();
 #endif
 }
 
@@ -212,8 +230,8 @@ void TerrainViewerScene::mark()
 void TerrainViewerScene::unmark()
 {
 #if ENABLE_BASE_MAP
-  m_base_map_land->at(mark_pixel_coords) = 0;
-  updateBaseWaterMapTexture();
+//   m_base_map_land->at(mark_pixel_coords) = 0;
+//   updateBaseWaterMapTexture();
 #endif
 }
 
@@ -221,22 +239,22 @@ void TerrainViewerScene::unmark()
 void TerrainViewerScene::cursorPos(const glm::dvec2 &pos)
 {
 #if ENABLE_BASE_MAP
-  auto beam = camera.createBeamThroughViewportCoord(glm::vec2(pos));
-
-  vec3 ground_plane_pos = vec3(0);
-
-  try
-  {
-    ground_plane_pos = hitGround(beam);
-  }
-  catch(...)
-  {
-    return;
-  }
-
-  auto base_map_pos_relative = (glm::vec2(ground_plane_pos.x, ground_plane_pos.y) - base_map_origin) / base_map_size_m;
-  mark_pixel_coords = base_map_pos_relative * glm::vec2(m_base_map_land->getSize());
-  mark_pixel_coords = clamp(mark_pixel_coords, ivec2(0), m_base_map_land->getSize() - ivec2(1));
+//   auto beam = camera.createBeamThroughViewportCoord(glm::vec2(pos));
+// 
+//   vec3 ground_plane_pos = vec3(0);
+// 
+//   try
+//   {
+//     ground_plane_pos = hitGround(beam);
+//   }
+//   catch(...)
+//   {
+//     return;
+//   }
+// 
+//   auto base_map_pos_relative = (glm::vec2(ground_plane_pos.x, ground_plane_pos.y) - base_map_origin) / base_map_size_m;
+//   mark_pixel_coords = base_map_pos_relative * glm::vec2(m_base_map_land->getSize());
+//   mark_pixel_coords = clamp(mark_pixel_coords, ivec2(0), m_base_map_land->getSize() - ivec2(1));
 #endif
 }
 
@@ -244,7 +262,7 @@ void TerrainViewerScene::cursorPos(const glm::dvec2 &pos)
 void TerrainViewerScene::updateBaseWaterMapTexture()
 {
 #if ENABLE_BASE_MAP
-  setTextureImage(m_base_map_land_texture, m_base_map_land);
+//   setTextureImage(m_base_map_land_texture, m_base_map_land);
 #endif
 }
 
@@ -273,28 +291,50 @@ void TerrainViewerScene::setup()
 
   m_map = make_unique<terrain_viewer::Map>(getTextureManager());
 
-  auto elevation_map = m_map_loader->createElevationMap();
+  LandTextures land_textures;
+
+#if ENABLE_BASE_MAP
+  auto base_elevation_map = m_map_loader->createBaseElevationMap();
+
+  if (base_elevation_map)
+  {
+    m_base_map_origin = m_map_loader->getBaseMapOrigin();
+
+    m_map_loader->generateBaseTypeMap(base_elevation_map);
+
+    land_textures.base_type_map = m_map_loader->getBaseTypeMap();
+  }
+#endif
 
   m_map_loader->createMapTextures(m_map.get());
 
-#if ENABLE_BASE_MAP
-  base_map_origin = m_map_loader->getBaseMapOrigin();
-  m_base_map_land = m_map_loader->createBaseLandMap();
-  m_elevation_map_base = m_map_loader->createBaseElevationMap(m_base_map_land);
-#endif
-
+  auto elevation_map = m_map_loader->createElevationMap();
   assert(elevation_map);
   assert(!m_map->getWaterAnimation().isEmpty());
 
-  LandTextures land_textures;
   m_map_loader->createLandTextures(land_textures);
 
   assert(m_map->getMaterialMap());
 
   m_map->getTextures().setTexture(TEXUNIT_TERRAIN_FAR, land_textures.far_texture);
 
-  createTerrain(elevation_map, m_map->getMaterialMap(), land_textures,
-                shader_search_path, shader_params);
+  render_util::TerrainBase::BuildParameters params =
+  {
+    .shader_parameters = shader_params,
+    .textures = land_textures.textures,
+    .textures_nm = land_textures.textures_nm,
+    .texture_scale = land_textures.texture_scale,
+    .material_map = m_map->getMaterialMap(),
+    .map = elevation_map,
+    .type_map = land_textures.type_map,
+    .base_map_origin_m = glm::xy(m_base_map_origin),
+    .base_map_resolution_m = m_map_loader->getBaseElevationMapMetersPerPixel(),
+    .base_material_map = m_map->getBaseMaterialMap(),
+    .base_map = base_elevation_map,
+    .base_type_map = land_textures.base_type_map,
+  };
+
+  createTerrain(params, shader_search_path, glm::xy(m_base_map_origin));
 
   map_size = glm::vec2(elevation_map->getSize() * m_map_loader->getHeightMapMetersPerPixel());
 
@@ -305,13 +345,13 @@ void TerrainViewerScene::setup()
   CHECK_GL_ERROR();
 
 #if ENABLE_BASE_MAP
-  if (!m_base_map_land)
-    m_base_map_land = image::create<unsigned char>(0, ivec2(128));
-  m_base_map_land_texture =
-      render_util::createTexture<render_util::ImageGreyScale>(m_base_map_land);
-  getTextureManager().bind(TEXUNIT_WATER_MAP_BASE, m_base_map_land_texture);
-
-  buildBaseMap();
+//   if (!m_base_map_land)
+//     m_base_map_land = image::create<unsigned char>(0, ivec2(128));
+//   m_base_map_land_texture =
+//       render_util::createTexture<render_util::ImageGreyScale>(m_base_map_land);
+//   getTextureManager().bind(TEXUNIT_WATER_MAP_BASE, m_base_map_land_texture);
+// 
+//   buildBaseMap();
 #endif
 
   m_cirrus_clouds = make_unique<CirrusClouds>(0.7, getTextureManager(), shader_search_path,
@@ -345,6 +385,8 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
   program->setUniform("shore_wave_scroll", shore_wave_pos);
   program->setUniform("terrain_height_offset", 0.f);
 
+  program->setUniform("terrain_base_map_height", m_base_map_origin.z);
+
   CHECK_GL_ERROR();
 }
 
@@ -370,7 +412,7 @@ void TerrainViewerScene::render(float frame_delta)
   getCurrentGLContext()->setCurrentProgram(sky_program);
   updateUniforms(sky_program);
 
-  render_util::drawSkyBox();
+//   render_util::drawSkyBox();
 
   gl::Disable(GL_DEPTH_TEST);
   gl::DepthMask(GL_TRUE);
