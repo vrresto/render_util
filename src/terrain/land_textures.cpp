@@ -199,8 +199,8 @@ LandTextures::LandTextures(const TextureManager &texture_manager,
                                       const std::vector<float> &texture_scale,
                                       TerrainBase::TypeMap::ConstPtr type_map_,
                                       TerrainBase::TypeMap::ConstPtr base_type_map_) :
-    m_texture_manager(texture_manager),
-    m_type_map_size(type_map_->getSize())
+    m_texture_manager(texture_manager)
+//     , m_type_map_size(type_map_->getSize())
 {
   using namespace glm;
   using namespace std;
@@ -209,8 +209,8 @@ LandTextures::LandTextures(const TextureManager &texture_manager,
 
   assert(textures.size() == texture_scale.size());
 
-  if (base_type_map_)
-    m_base_type_map_size = base_type_map_->getSize();
+//   if (base_type_map_)
+//     m_base_type_map_size = base_type_map_->getSize();
 
   createTextureArrays<ImageRGBA>(textures,
                       texture_scale,
@@ -239,6 +239,32 @@ LandTextures::LandTextures(const TextureManager &texture_manager,
   }
 #endif
 
+
+  TerrainTextureMap type_map =
+  {
+    .texunit = TEXUNIT_TYPE_MAP,
+    .resolution_m = TYPE_MAP_RESOLUTION_M,
+    .size_m = type_map_->getSize() * TYPE_MAP_RESOLUTION_M,
+    .size_px = type_map_->getSize(),
+    .texture = m_type_map_texture,
+    .name = "type_map",
+  };
+  m_texture_maps.push_back(type_map);
+
+  if (base_type_map_)
+  {
+    TerrainTextureMap type_map_base =
+    {
+      .texunit = TEXUNIT_TYPE_MAP_BASE,
+      .resolution_m = TYPE_MAP_RESOLUTION_M,
+      .size_m = type_map_->getSize() * TYPE_MAP_RESOLUTION_M,
+      .size_px = type_map_->getSize(),
+      .texture = m_base_type_map_texture,
+      .name = "type_map",
+    };
+    m_base_texture_maps.push_back(type_map_base);
+  }
+
   for (int i = 0; i < m_textures.size(); i++)
   {
     CHECK_GL_ERROR();
@@ -265,11 +291,6 @@ void LandTextures::bind(TextureManager &tm)
 {
   using namespace render_util;
 
-  tm.bind(TEXUNIT_TYPE_MAP, m_type_map_texture);
-
-  if (m_base_type_map_texture)
-    tm.bind(TEXUNIT_TYPE_MAP_BASE, m_base_type_map_texture);
-
   for (int i = 0; i < m_textures.size(); i++)
   {
     CHECK_GL_ERROR();
@@ -288,24 +309,24 @@ void LandTextures::bind(TextureManager &tm)
 
   if (m_enable_normal_maps)
   {
-    assert(m_type_map_texture_nm);
-    tm.bind(TEXUNIT_TYPE_MAP_NORMALS, m_type_map_texture_nm);
-
-    for (int i = 0; i < m_textures_nm.size(); i++)
-    {
-      CHECK_GL_ERROR();
-
-      auto textures = m_textures_nm.at(i);
-      if (!textures)
-        continue;
-
-      auto texunit = TEXUNIT_TERRAIN_DETAIL_NM0 + i;
-      assert(texunit < TEXUNIT_NUM);
-
-      tm.bind(texunit, textures);
-
-      CHECK_GL_ERROR();
-    }
+//     assert(m_type_map_texture_nm);
+//     tm.bind(TEXUNIT_TYPE_MAP_NORMALS, m_type_map_texture_nm);
+// 
+//     for (int i = 0; i < m_textures_nm.size(); i++)
+//     {
+//       CHECK_GL_ERROR();
+// 
+//       auto textures = m_textures_nm.at(i);
+//       if (!textures)
+//         continue;
+// 
+//       auto texunit = TEXUNIT_TERRAIN_DETAIL_NM0 + i;
+//       assert(texunit < TEXUNIT_NUM);
+// 
+//       tm.bind(texunit, textures);
+// 
+//       CHECK_GL_ERROR();
+//     }
   }
 }
 
@@ -316,7 +337,7 @@ void LandTextures::unbind(TextureManager &tm)
 
   using namespace render_util;
 
-  tm.unbind(TEXUNIT_TYPE_MAP, m_type_map_texture->getTarget());
+//   tm.unbind(TEXUNIT_TYPE_MAP, m_type_map_texture->getTarget());
 
   for (int i = 0; i < m_textures.size(); i++)
   {
@@ -336,32 +357,29 @@ void LandTextures::unbind(TextureManager &tm)
 
   if (m_enable_normal_maps)
   {
-    tm.unbind(TEXUNIT_TYPE_MAP_NORMALS, m_type_map_texture_nm->getTarget());
-
-    for (int i = 0; i < m_textures_nm.size(); i++)
-    {
-      CHECK_GL_ERROR();
-
-      auto texture = m_textures_nm.at(i);
-      if (!texture)
-        continue;
-
-      auto texunit = TEXUNIT_TERRAIN_DETAIL_NM0 + i;
-      assert(texunit < TEXUNIT_NUM);
-
-      tm.unbind(texunit, texture->getTarget());
-
-      CHECK_GL_ERROR();
-    }
+//     tm.unbind(TEXUNIT_TYPE_MAP_NORMALS, m_type_map_texture_nm->getTarget());
+// 
+//     for (int i = 0; i < m_textures_nm.size(); i++)
+//     {
+//       CHECK_GL_ERROR();
+// 
+//       auto texture = m_textures_nm.at(i);
+//       if (!texture)
+//         continue;
+// 
+//       auto texunit = TEXUNIT_TERRAIN_DETAIL_NM0 + i;
+//       assert(texunit < TEXUNIT_NUM);
+// 
+//       tm.unbind(texunit, texture->getTarget());
+// 
+//       CHECK_GL_ERROR();
+//     }
   }
 }
 
 
 void LandTextures::setUniforms(ShaderProgramPtr program)
 {
-  assert(m_type_map_size != glm::ivec2(0));
-  program->setUniform("typeMapSize", m_type_map_size);
-  program->setUniform("base_type_map_size_px", m_base_type_map_size);
 }
 
 

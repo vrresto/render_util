@@ -26,7 +26,7 @@
 
 #extension GL_ARB_draw_instanced : require
 
-#include terrain_params.glsl
+#include terrain_params.h.glsl
 #include terrain_geometry_util.h.glsl
 
 #define ENABLE_BASE_MAP @enable_base_map@

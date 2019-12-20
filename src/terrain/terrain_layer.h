@@ -19,6 +19,12 @@
 #ifndef RENDER_UTIL_TERRAIN_TERRAIN_LAYER_H
 #define RENDER_UTIL_TERRAIN_TERRAIN_LAYER_H
 
+#include <render_util/texture_manager.h>
+#include <render_util/shader.h>
+
+#include <glm/glm.hpp>
+#include <vector>
+
 namespace render_util::terrain
 {
 

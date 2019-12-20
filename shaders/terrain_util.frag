@@ -53,7 +53,7 @@
 
 #include lighting_definitions.glsl
 #include water_definitions.glsl
-#include terrain_params.glsl
+#include terrain_params.h.glsl
 #include terrain_geometry_util.h.glsl
 
 vec3 textureColorCorrection(vec3 color);
@@ -70,14 +70,14 @@ uniform float terrain_tile_size_m;
 
 const float near_distance = 80000;
 
-uniform sampler2D sampler_type_map;
-uniform sampler2D sampler_type_map_normals;
+// uniform sampler2D sampler_type_map;
+// uniform sampler2D sampler_type_map_normals;
 uniform sampler2D sampler_terrain_noise;
 uniform sampler2D sampler_terrain_far;
 uniform sampler2D sampler_shallow_water;
 uniform sampler2DArray sampler_beach;
 
-uniform ivec2 typeMapSize;
+// uniform ivec2 typeMapSize;
 uniform vec3 cameraPosWorld;
 uniform vec3 earth_center;
 
@@ -97,8 +97,6 @@ varying vec2 pass_texcoord;
 varying vec2 pass_type_map_coords;
 
 #if ENABLE_BASE_MAP
-uniform sampler2D sampler_type_map_base;
-uniform vec2 base_type_map_size_px;
 varying vec2 pass_base_type_map_coords;
 #endif
 
@@ -249,9 +247,10 @@ vec3 sampleTerrainDetailNormal(vec3 type)
 #endif
 
 
+#if @enable_type_map@
 vec4 sampleTerrainTextures(vec2 pos)
 {
-  return vec4(pass_type_map_coords / typeMapSize, 0, 1);
+  return vec4(pass_type_map_coords / getTypeMapSizePx(), 0, 1);
 
 
   vec3 types[4];
@@ -260,7 +259,7 @@ vec4 sampleTerrainTextures(vec2 pos)
 //   float lod = textureQueryLod(sampler_type_map, typeMapCoords).y;
 //   float lod = mip_map_level(pos.xy / map_size);
 
-  sampleTypeMap(sampler_type_map, typeMapSize, pass_type_map_coords, types, weights);
+  sampleTypeMap(getTypeMapSampler(), getTypeMapSizePx(), pass_type_map_coords, types, weights);
 
   vec4 c00 = sampleTerrain(types[0]);
   vec4 c01 = sampleTerrain(types[1]);
@@ -273,15 +272,17 @@ vec4 sampleTerrainTextures(vec2 pos)
     c10 * weights[2] +
     c11 * weights[3];
 }
+#endif
 
 
+#if @enable_type_map@
 #if ENABLE_TERRAIN_DETAIL_NM
 vec3 getTerrainDetailNormal(vec2 pos)
 {
   vec3 types[4];
   float weights[4];
 
-  sampleTypeMap(sampler_type_map_normals, typeMapSize, pass_type_map_coords, types, weights);
+  sampleTypeMap(sampler_type_map_normals, getTypeMapSizePx(), pass_type_map_coords, types, weights);
 
   vec3 c00 = sampleTerrainDetailNormal(types[0]);
   vec3 c01 = sampleTerrainDetailNormal(types[1]);
@@ -294,6 +295,7 @@ vec3 getTerrainDetailNormal(vec2 pos)
     c10 * weights[2] +
     c11 * weights[3];
 }
+#endif
 #endif
 
 
@@ -331,23 +333,24 @@ vec4 sampleBaseTerrain(vec3 type)
 }
 
 
+#if (@enable_type_map@ && @enable_base_map@)
 vec4 sampleBaseTerrainTextures(vec2 pos)
 {
 //   return vec4(pass_base_type_map_coords / vec2(4096), 0, 1);
 
-//   return vec4(pass_base_type_map_coords / base_type_map_size_px, 0, 1);
+//   return vec4(pass_base_type_map_coords / getBaseTypeMapSizePx(), 0, 1);
 
-//   return vec4(pass_base_type_map_coords / typeMapSize, 0, 1);
+//   return vec4(pass_base_type_map_coords / getTypeMapSizePx(), 0, 1);
 
 
-//   return texelFetch(sampler_type_map_base, ivec2(pass_base_type_map_coords), 0);
+//   return texelFetch(getBaseTypeMapSampler(), ivec2(pass_base_type_map_coords), 0);
 
   vec3 types[4];
   float weights[4];
 
 //   vec2 typeMapCoords = (pos.xy - height_map_base_origin) / type_map_base_meters_per_pixel;
 
-  sampleTypeMap(sampler_type_map_base,
+  sampleTypeMap(getBaseTypeMapSampler(),
                 ivec2(0),
                 pass_base_type_map_coords,
                 types,
@@ -368,6 +371,8 @@ vec4 sampleBaseTerrainTextures(vec2 pos)
     c10 * weights[2] +
     c11 * weights[3];
 }
+#endif
+
 #endif
 #endif
 

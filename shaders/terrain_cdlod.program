@@ -2,17 +2,20 @@ vert terrain_cdlod
 vert noise
 vert util
 vert terrain_geometry_util
+
 frag terrain
 frag atmosphere
 frag noise
 frag terrain_util
 frag terrain_geometry_util
+frag terrain_type_map_util
 #frag forest_util
 #frag water
 frag util
 frag main
 frag lighting
 frag tonemap
+
 texunit terrain
 texunit terrain1
 texunit terrain2

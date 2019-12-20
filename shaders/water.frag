@@ -49,7 +49,7 @@ const float schlick_r0_water = pow(ior_water - 1, 2) / pow(ior_water + 1, 2);
 
 #include lighting_definitions.glsl
 #include water_definitions.glsl
-#include terrain_params.glsl
+#include terrain_params.h.glsl
 
 float getDetailMapBlend(vec2 pos);
 vec2 rotate(vec2 v, float a);

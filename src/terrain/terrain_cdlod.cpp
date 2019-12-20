@@ -153,6 +153,9 @@ render_util::ShaderProgramPtr createProgram(std::string name,
   params.set("enable_base_map", enable_base_map);
   params.set("enable_base_water_map", enable_base_water_map);
   params.set("is_editor", is_editor);
+  
+  bool enable_type_map = false;
+  bool enable_forest = false;
 
   if (material == MaterialID::WATER)
   {
@@ -161,16 +164,19 @@ render_util::ShaderProgramPtr createProgram(std::string name,
   }
   else
   {
-    params.set("enable_type_map", (material & MaterialID::LAND)
+    enable_type_map = ((material & MaterialID::LAND)
 //         && (detail_options & DetailOption::LAND)
       
     );
 //     params.set("enable_water", material & MaterialID::WATER);
-//     params.set("enable_forest", material & MaterialID::FOREST);
+//     enable_forest = (material & MaterialID::FOREST);
   }
 
 //   params.set("detailed_water", detail_options & DetailOption::WATER);
 //   params.set("detailed_forest", detail_options & DetailOption::FOREST);
+
+  params.set("enable_type_map", enable_type_map);
+  params.set("enable_forest", enable_forest);
 
   auto program = createShaderProgram(name, tex_mgr, shader_search_path, attribute_locations, params);
 
@@ -567,6 +573,9 @@ void TerrainCDLOD::build(BuildParameters &params)
                                    params.type_map,
                                    params.base_type_map);
 
+//   m_forest_textures = std::make_unique<ForestTextures>();
+//   m_water_textures = std::make_unique<WaterTextures>();
+
   auto hm_image = params.map;
   auto new_size = glm::ceilPowerOfTwo(hm_image->size());
 
@@ -602,6 +611,16 @@ void TerrainCDLOD::build(BuildParameters &params)
     layer.uniform_prefix = "terrain.detail_layer.";
     layer.texture_maps.push_back(hm);
     layer.texture_maps.push_back(nm);
+
+    for (auto &map : m_land_textures->getTextureMaps())
+      layer.texture_maps.push_back(map);
+
+//     for (auto &map : m_forest_textures->getTextureMaps())
+//       layer.texture_maps.push_back(map);
+
+//     for (auto &map : m_water_textures->getTextureMaps())
+//       layer.texture_maps.push_back(map);
+
 
     m_layers.push_back(layer);
   }
@@ -639,6 +658,16 @@ void TerrainCDLOD::build(BuildParameters &params)
     layer.uniform_prefix = "terrain.base_layer.";
     layer.texture_maps.push_back(hm);
     layer.texture_maps.push_back(nm);
+
+    for (auto &map : m_land_textures->getBaseTextureMaps())
+      layer.texture_maps.push_back(map);
+
+//     for (auto &map : m_forest_textures->getBaseTextureMaps())
+//       layer.texture_maps.push_back(map);
+
+//     for (auto &map : m_water_textures->getBaseTextureMaps())
+//       layer.texture_maps.push_back(map);
+
 
     m_layers.push_back(layer);
   }

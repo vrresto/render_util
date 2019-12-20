@@ -30,9 +30,15 @@ struct TerrainLayer
   vec2 origin_m;
   TerrainTextureMap height_map;
   TerrainTextureMap normal_map;
-// #if @enable_forest@
-//   TerrainTextureMap forest_map;
-// #endif
+
+#if @enable_type_map@
+  TerrainTextureMap type_map;
+#endif
+
+#if @enable_forest@
+  TerrainTextureMap forest_map;
+#endif
+
 };
 
 struct Terrain
@@ -45,3 +51,13 @@ struct Terrain
   TerrainLayer base_layer;
 #endif
 };
+
+
+#if @enable_type_map@
+  ivec2 getTypeMapSizePx();
+  sampler2D getTypeMapSampler();
+  #if @enable_base_map@
+    sampler2D getBaseTypeMapSampler();
+    ivec2 getBaseTypeMapSizePx();
+  #endif
+#endif
