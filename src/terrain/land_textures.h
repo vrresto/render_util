@@ -34,13 +34,17 @@ namespace render_util::terrain
 class LandTextures
 {
   const TextureManager &m_texture_manager;
+  ShaderParameters m_shader_params;
+  bool m_enable_normal_maps = false;
   glm::ivec2 m_type_map_size = glm::ivec2(0);
   TexturePtr m_type_map_texture;
   TexturePtr m_type_map_texture_nm;
-  ShaderParameters m_shader_params;
+  glm::ivec2 m_base_type_map_size = glm::ivec2(0);
+  TexturePtr m_base_type_map_texture;
+  TexturePtr m_base_type_map_texture_nm;
   std::array<TexturePtr, MAX_TERRAIN_TEXUNITS> m_textures;
   std::array<TexturePtr, MAX_TERRAIN_TEXUNITS> m_textures_nm;
-  bool m_enable_normal_maps = false;
+
 
 public:
   static constexpr float MAX_TEXTURE_SCALE = 8;
@@ -49,7 +53,8 @@ public:
                   std::vector<ImageRGBA::Ptr> &textures,
                   std::vector<ImageRGB::Ptr> &textures_nm,
                   const std::vector<float> &texture_scale,
-                  TerrainBase::TypeMap::ConstPtr type_map);
+                  TerrainBase::TypeMap::ConstPtr type_map,
+                  TerrainBase::TypeMap::ConstPtr base_type_map = {});
 
   const ShaderParameters &getShaderParameters() { return m_shader_params; }
 

@@ -53,9 +53,12 @@ namespace render_util::viewer
     virtual void createLandTextures(LandTextures&) const = 0;
     virtual int getHeightMapMetersPerPixel() const = 0;
 
-    virtual ElevationMap::Ptr createBaseElevationMap(ImageGreyScale::ConstPtr land_map) const = 0;
-    virtual ImageGreyScale::Ptr createBaseLandMap() const = 0;
-    virtual glm::vec2 getBaseMapOrigin() const = 0;
+    virtual ElevationMap::Ptr createBaseElevationMap() const = 0;
+    virtual glm::vec3 getBaseMapOrigin() const = 0;
+    virtual unsigned int getBaseElevationMapMetersPerPixel() const = 0;
+
+    virtual std::shared_ptr<const render_util::TerrainBase::TypeMap> getBaseTypeMap() const = 0;
+    virtual void generateBaseTypeMap(render_util::ElevationMap::ConstPtr map) = 0;
   };
 
 

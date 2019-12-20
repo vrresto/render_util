@@ -32,13 +32,73 @@ namespace
 {
 
 
+TexturePtr createTypeMapTexture(TerrainBase::TypeMap::ConstPtr type_map_in,
+                                const std::map<unsigned, glm::uvec3> &mapping,
+                                std::string name)
+{
+  auto type_map = std::make_shared<ImageRGBA>(type_map_in->getSize());
+
+  for (int y = 0; y < type_map->h(); y++)
+  {
+    for (int x = 0; x < type_map->w(); x++)
+    {
+      unsigned int orig_index = type_map_in->get(x,y) & 0x1F;
+
+      glm::uvec3 new_index(0);
+
+      auto it = mapping.find(orig_index);
+      if (it != mapping.end())
+      {
+        new_index = it->second;
+      }
+      else
+      {
+        for (int i = 0; i < 4; i++)
+        {
+          auto it = mapping.find(orig_index - (orig_index % 4) + i);
+          if (it != mapping.end())
+          {
+            new_index = it->second;
+            break;
+          }
+          else
+          {
+            new_index.x = 255;
+          }
+        }
+      }
+
+      assert(new_index.y <= 0x1F+1);
+      type_map->at(x,y,0) = new_index.x;
+      type_map->at(x,y,1) = new_index.y;
+      type_map->at(x,y,2) = new_index.z;
+      type_map->at(x,y,3) = 255;
+    }
+  }
+
+  {
+    TexturePtr t = render_util::createTexture(type_map, false);
+    TextureParameters<int> params;
+    params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    params.set(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    params.set(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    params.apply(t);
+
+    return t;
+  }
+}
+
+
 template <class T>
 void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
     const std::vector<float> &texture_scale_in,
     TerrainBase::TypeMap::ConstPtr type_map_in,
     double max_texture_scale,
     std::array<TexturePtr, render_util::MAX_TERRAIN_TEXUNITS> &arrays_out,
-    TexturePtr &type_map_texture_out)
+    TexturePtr &type_map_texture_out,
+    TerrainBase::TypeMap::ConstPtr base_type_map_in,
+    TexturePtr &base_type_map_texture_out)
 {
   LOG_TRACE<<"createTextureArrays()"<<endl;
 
@@ -102,55 +162,11 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
     textures_in.at(i).reset();
   }
 
-  auto type_map = make_shared<ImageRGBA>(type_map_in->getSize());
+  type_map_texture_out = createTypeMapTexture(type_map_in, mapping, "type_map");
 
-  for (int y = 0; y < type_map->h(); y++)
+  if (base_type_map_in)
   {
-    for (int x = 0; x < type_map->w(); x++)
-    {
-      unsigned int orig_index = type_map_in->get(x,y) & 0x1F;
-
-      uvec3 new_index(0);
-
-      auto it = mapping.find(orig_index);
-      if (it != mapping.end())
-      {
-        new_index = it->second;
-      }
-      else
-      {
-        for (int i = 0; i < 4; i++)
-        {
-          auto it = mapping.find(orig_index - (orig_index % 4) + i);
-          if (it != mapping.end())
-          {
-            new_index = it->second;
-            break;
-          }
-          else
-          {
-            new_index.x = 255;
-          }
-        }
-      }
-
-      assert(new_index.y <= 0x1F+1);
-      type_map->at(x,y,0) = new_index.x;
-      type_map->at(x,y,1) = new_index.y;
-      type_map->at(x,y,2) = new_index.z;
-      type_map->at(x,y,3) = 255;
-    }
-  }
-
-  {
-    TexturePtr t = render_util::createTexture(type_map, false);
-    TextureParameters<int> params;
-    params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    params.set(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    params.set(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    params.apply(t);
-    type_map_texture_out = t;
+    base_type_map_texture_out = createTypeMapTexture(base_type_map_in, mapping, "type_map_base");
   }
 
   for (int i = 0; i < texture_arrays.size(); i++)
@@ -181,9 +197,10 @@ LandTextures::LandTextures(const TextureManager &texture_manager,
                                       std::vector<ImageRGBA::Ptr> &textures,
                                       std::vector<ImageRGB::Ptr> &textures_nm,
                                       const std::vector<float> &texture_scale,
-                                      TerrainBase::TypeMap::ConstPtr type_map_) :
-  m_texture_manager(texture_manager),
-  m_type_map_size(type_map_->getSize())
+                                      TerrainBase::TypeMap::ConstPtr type_map_,
+                                      TerrainBase::TypeMap::ConstPtr base_type_map_) :
+    m_texture_manager(texture_manager),
+    m_type_map_size(type_map_->getSize())
 {
   using namespace glm;
   using namespace std;
@@ -192,18 +209,32 @@ LandTextures::LandTextures(const TextureManager &texture_manager,
 
   assert(textures.size() == texture_scale.size());
 
-  m_enable_normal_maps = !textures_nm.empty();
+  if (base_type_map_)
+    m_base_type_map_size = base_type_map_->getSize();
 
-  createTextureArrays<ImageRGBA>(textures, texture_scale, type_map_, MAX_TEXTURE_SCALE,
-                      m_textures, m_type_map_texture);
+  createTextureArrays<ImageRGBA>(textures,
+                      texture_scale,
+                      type_map_,
+                      MAX_TEXTURE_SCALE,
+                      m_textures,
+                      m_type_map_texture,
+                      base_type_map_,
+                      m_base_type_map_texture);
 
-  if (m_enable_normal_maps)
+  if (!textures_nm.empty())
   {
+    m_enable_normal_maps = true;
     m_shader_params.set("enable_terrain_detail_nm", true);
     assert(textures.size() == textures_nm.size());
 
-    createTextureArrays<ImageRGB>(textures_nm, texture_scale, type_map_, MAX_TEXTURE_SCALE,
-                                  m_textures_nm, m_type_map_texture_nm);
+    createTextureArrays<ImageRGB>(textures_nm,
+                                  texture_scale,
+                                  type_map_,
+                                  MAX_TEXTURE_SCALE,
+                                  m_textures_nm,
+                                  m_type_map_texture_nm,
+                                  base_type_map_,
+                                  m_base_type_map_texture_nm);
   }
 
   for (int i = 0; i < m_textures.size(); i++)
@@ -234,6 +265,9 @@ void LandTextures::bind(TextureManager &tm)
 
   tm.bind(TEXUNIT_TYPE_MAP, m_type_map_texture);
 
+  if (m_base_type_map_texture)
+    tm.bind(TEXUNIT_TYPE_MAP_BASE, m_base_type_map_texture);
+
   for (int i = 0; i < m_textures.size(); i++)
   {
     CHECK_GL_ERROR();
@@ -252,6 +286,7 @@ void LandTextures::bind(TextureManager &tm)
 
   if (m_enable_normal_maps)
   {
+    assert(m_type_map_texture_nm);
     tm.bind(TEXUNIT_TYPE_MAP_NORMALS, m_type_map_texture_nm);
 
     for (int i = 0; i < m_textures_nm.size(); i++)
@@ -324,6 +359,7 @@ void LandTextures::setUniforms(ShaderProgramPtr program)
 {
   assert(m_type_map_size != glm::ivec2(0));
   program->setUniform("typeMapSize", m_type_map_size);
+  program->setUniform("base_type_map_size_px", m_base_type_map_size);
 }
 
 

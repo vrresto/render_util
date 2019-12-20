@@ -24,8 +24,100 @@
 using namespace std;
 
 
+namespace
+{
+
+
+unsigned int gatherMaterials(render_util::TerrainBase::MaterialMap::ConstPtr map,
+                             glm::ivec2 begin,
+                             glm::ivec2 size)
+{
+  using namespace glm;
+
+  auto end = begin + size;
+
+  begin = clamp(begin, ivec2(0), map->getSize());
+  end = clamp(end, ivec2(0), map->getSize());
+
+  unsigned int material = 0;
+
+  for (int y = begin.y; y < end.y; y++)
+  {
+    for (int x = begin.x; x < end.x; x++)
+    {
+      material |= map->get(x,y);
+    }
+  }
+
+  return material;
+}
+
+
+} // namespace
+
+
 namespace render_util
 {
+
+
+struct TerrainCDLODBase::MaterialMap::Map
+{
+  render_util::TerrainBase::MaterialMap::ConstPtr map;
+  glm::vec2 origin_m = glm::vec2(0);
+  float resolution_m = 0;
+
+  unsigned int getMaterialID(const Rect &area)
+  {
+    assert(resolution_m);
+
+    auto area_origin = (area.origin - origin_m);
+    assert(fract(area_origin / resolution_m) == glm::vec2(0));
+
+    auto area_origin_px = glm::ivec2(area_origin / resolution_m);
+
+    assert(fract(area.extent / resolution_m) == glm::vec2(0));
+    auto area_extent_px = area.extent / resolution_m;
+
+    return gatherMaterials(map, area_origin_px, area_extent_px);
+  }
+};
+
+
+TerrainCDLODBase::MaterialMap::MaterialMap(const TerrainBase::BuildParameters &params)
+{
+  m_map = std::make_unique<Map>();
+  m_map->map = params.material_map;
+  m_map->resolution_m = render_util::TerrainBase::GRID_RESOLUTION_M;
+
+  assert(params.base_material_map);
+  assert(params.base_map_origin_m != glm::vec2(0));
+
+  if (params.base_material_map)
+  {
+    m_base_map = std::make_unique<Map>();
+    m_base_map->map = params.base_material_map;
+    m_base_map->resolution_m = params.base_map_resolution_m;
+    m_base_map->origin_m = params.base_map_origin_m;
+  }
+}
+
+
+TerrainCDLODBase::MaterialMap::~MaterialMap()
+{
+}
+
+
+unsigned int TerrainCDLODBase::MaterialMap::getMaterialID(const Rect &area) const
+{
+  auto material = m_map->getMaterialID(area);
+  if (m_base_map)
+    material |= m_base_map->getMaterialID(area);
+
+  if (!material)
+    material = MaterialID::WATER;
+
+  return material;
+}
 
 
 TexturePtr TerrainCDLODBase::createNormalMapTexture(render_util::ElevationMap::ConstPtr map,

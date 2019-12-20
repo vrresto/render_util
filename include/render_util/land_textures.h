@@ -28,6 +28,7 @@ namespace render_util
 struct LandTextures
 {
   TerrainBase::TypeMap::ConstPtr type_map;
+  TerrainBase::TypeMap::ConstPtr base_type_map;
   std::vector<ImageRGBA::Ptr> textures;
   std::vector<ImageRGB::Ptr> textures_nm;
   std::vector<float> texture_scale;

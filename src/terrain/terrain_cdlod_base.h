@@ -47,6 +47,21 @@ public:
     MAX_LOD = LOD_LEVELS,
   };
 
+
+  class MaterialMap
+  {
+    struct Map;
+
+    std::unique_ptr<Map> m_map;
+    std::unique_ptr<Map> m_base_map;
+
+  public:
+    MaterialMap(const TerrainBase::BuildParameters &params);
+    ~MaterialMap();
+    unsigned int getMaterialID(const Rect &area) const;
+  };
+
+
   static constexpr size_t getNumLeafNodes()
   {
     return pow(4, (size_t)LOD_LEVELS);
@@ -83,7 +98,6 @@ public:
 
 static_assert(TerrainCDLODBase::getNodeSize(0) == TerrainCDLODBase::LEAF_NODE_SIZE);
 static_assert(TerrainCDLODBase::getNodeScale(0) == 1);
-
 
 
 } // namespace render_util

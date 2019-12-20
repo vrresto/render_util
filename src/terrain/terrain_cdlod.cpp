@@ -65,6 +65,7 @@ using render_util::ImageRGB;
 using render_util::ImageRGBA;
 using render_util::ShaderProgramPtr;
 using render_util::ShaderParameters;
+using render_util::Rect;
 using std::endl;
 using std::vector;
 
@@ -300,88 +301,6 @@ public:
 };
 
 
-unsigned int gatherMaterials(render_util::TerrainBase::MaterialMap::ConstPtr map,
-                             uvec2 begin,
-                             uvec2 size)
-{
-  assert(begin.x < map->w());
-  assert(begin.y < map->h());
-
-  uvec2 end = begin + size;
-  end.x = min(end.x, (unsigned int)map->w()-1);
-  end.y = min(end.y, (unsigned int)map->h()-1);
-
-  unsigned int material = 0;
-
-  for (int y = begin.y; y < end.y; y++)
-  {
-    for (int x = begin.x; x < end.x; x++)
-    {
-      material |= map->get(x,y);
-    }
-  }
-
-  assert(material);
-
-  return material;
-}
-
-
-render_util::TerrainBase::MaterialMap::Ptr
-processMaterialMap(render_util::TerrainBase::MaterialMap::ConstPtr in)
-{
-  if (!in)
-    return {};
-
-  uvec2 new_size = uvec2(in->getSize()) / TerrainCDLODBase::MESH_GRID_SIZE;
-  auto resized = std::make_shared<render_util::TerrainBase::MaterialMap>(new_size);
-
-  for (int y = 0; y < resized->h(); y++)
-  {
-    for (int x = 0; x < resized->w(); x++)
-    {
-      uvec2 src_coords = uvec2(x,y) * TerrainCDLODBase::MESH_GRID_SIZE;
-      uvec2 size = uvec2(TerrainCDLODBase::MESH_GRID_SIZE + 1);
-      if (src_coords.x > 0)
-      {
-        src_coords.x -= 1;
-        size.x += 1;
-      }
-      if (src_coords.y > 0)
-      {
-        src_coords.y -= 1;
-        size.y += 1;
-      }
-      resized->at(x,y) = gatherMaterials(in, src_coords, size);
-    }
-  }
-
-  return resized;
-}
-
-
-unsigned int getMaterialID(render_util::TerrainBase::MaterialMap::ConstPtr material_map,
-                         const glm::dvec2 &node_origin)
-{
-  if (material_map)
-  {
-    const uvec2 grid_pos = uvec2(node_origin) / (unsigned int)TerrainCDLODBase::LEAF_NODE_SIZE;
-
-    if (node_origin.x < 0 || node_origin.y < 0)
-      return MaterialID::WATER;
-
-    if (grid_pos.x >= material_map->w() || grid_pos.y >= material_map->h())
-      return MaterialID::WATER;
-
-    return material_map->get(grid_pos.x, grid_pos.y);
-  }
-  else
-  {
-    return MaterialID::ALL;
-  }
-}
-
-
 } // namespace
 
 
@@ -416,7 +335,7 @@ class TerrainCDLOD : public TerrainCDLODBase
 
   void processNode(Node *node, int lod_level, const Camera &camera, bool low_detail);
   void drawInstanced(TerrainBase::Client *client);
-  Node *createNode(const render_util::ElevationMap &map, dvec2 pos, int lod_level, MaterialMap::ConstPtr material_map);
+  Node *createNode(const render_util::ElevationMap &map, dvec2 pos, int lod_level, const MaterialMap&);
   void setUniforms(ShaderProgramPtr program);
   Material *getMaterial(unsigned int id);
   bool hasBaseMap();
@@ -525,9 +444,9 @@ void TerrainCDLOD::setUniforms(ShaderProgramPtr program)
 
 
 Node *TerrainCDLOD::createNode(const render_util::ElevationMap &map,
-                                        dvec2 pos,
-                                        int lod_level,
-                                        MaterialMap::ConstPtr material_map)
+                               dvec2 pos,
+                               int lod_level,
+                               const MaterialMap &material_map)
 {
   assert(fract(pos) == dvec2(0));
 
@@ -542,10 +461,16 @@ Node *TerrainCDLOD::createNode(const render_util::ElevationMap &map,
 
   node->size = node_size;
 
+  Rect area
+  {
+    .origin = vec2(pos),
+    .extent = vec2(node_size),
+  };
+
   if (lod_level == 0)
   {
     node->max_height = getMaxHeight(map, node->pos, node_size);
-    node->material_id = ::getMaterialID(material_map, pos);
+    node->material_id = material_map.getMaterialID(area);
   }
   else
   {
@@ -633,8 +558,12 @@ void TerrainCDLOD::build(BuildParameters &params)
   CHECK_GL_ERROR();
 
   m_land_textures =
-    std::make_unique<LandTextures>(texture_manager, params.textures,
-                                      params.textures_nm, params.texture_scale, params.type_map);
+    std::make_unique<LandTextures>(texture_manager,
+                                   params.textures,
+                                   params.textures_nm,
+                                   params.texture_scale,
+                                   params.type_map,
+                                   params.base_type_map);
 
   auto hm_image = params.map;
   auto new_size = glm::ceilPowerOfTwo(hm_image->size());
@@ -678,6 +607,7 @@ void TerrainCDLOD::build(BuildParameters &params)
   if (params.base_map)
   {
     assert(params.base_map_resolution_m != 0);
+    assert(params.base_material_map);
 
     auto hm_image = params.base_map;
 
@@ -711,8 +641,10 @@ void TerrainCDLOD::build(BuildParameters &params)
     m_layers.push_back(layer);
   }
 
+  auto material_map = std::make_unique<MaterialMap>(params);
+
   LOG_DEBUG<<"TerrainCDLOD: creating nodes ..."<<endl;
-  root_node = createNode(*params.map, root_node_pos, MAX_LOD, processMaterialMap(params.material_map));
+  root_node = createNode(*params.map, root_node_pos, MAX_LOD, *material_map);
   LOG_DEBUG<<"TerrainCDLOD: creating nodes done."<<endl;
 
   LOG_DEBUG<<"TerrainCDLOD: done building terrain."<<endl;

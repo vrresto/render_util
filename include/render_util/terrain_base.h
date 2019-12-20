@@ -55,15 +55,18 @@ namespace render_util
 
     struct BuildParameters
     {
-      ElevationMap::ConstPtr map;
-      ElevationMap::ConstPtr base_map {};
-      unsigned int base_map_resolution_m = 0;
-      MaterialMap::ConstPtr material_map;
-      TypeMap::ConstPtr type_map;
+      const ShaderParameters &shader_parameters;
       std::vector<ImageRGBA::Ptr> &textures;
       std::vector<ImageRGB::Ptr> &textures_nm;
       const std::vector<float> &texture_scale;
-      const ShaderParameters &shader_parameters;
+      MaterialMap::ConstPtr material_map;
+      ElevationMap::ConstPtr map;
+      TypeMap::ConstPtr type_map;
+      glm::vec2 base_map_origin_m = glm::vec2(0);
+      unsigned int base_map_resolution_m = 0;
+      MaterialMap::ConstPtr base_material_map {};
+      ElevationMap::ConstPtr base_map {};
+      TypeMap::ConstPtr base_type_map {};
     };
 
     virtual ~TerrainBase() {}
