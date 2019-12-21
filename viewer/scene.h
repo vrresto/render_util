@@ -21,7 +21,6 @@
 
 #include "camera.h"
 
-#include <render_util/land_textures.h>
 #include <render_util/render_util.h>
 #include <render_util/shader.h>
 #include <render_util/terrain_util.h>

@@ -292,11 +292,6 @@ void render_util::MapTextures::setUniforms(ShaderProgramPtr program)
 {
   using namespace glm;
 
-//   vec4 fc = mix(p->forest_color, forest_color, forest_color.a);
-//   fc.a = glm::max(p->forest_color.a, forest_color.a);
-// //   program->setUniform("forest_color", p->forest_color);
-//   program->setUniform("forest_color", fc);
-  
   program->setUniform("water_color", p->water_color);
   program->setUniform("water_map_shift", glm::vec2(water_map_shift, water_map_shift));
   program->setUniform("water_map_scale", glm::vec2(1.0 / water_map_scale));
@@ -371,39 +366,6 @@ void render_util::MapTextures::setWaterColor(const glm::vec3 &color)
 }
 
 
-void render_util::MapTextures::setForestMap(ImageGreyScale::ConstPtr image)
-{
-  auto texture = render_util::createTexture(image, true);
-
-  TextureParameters<int> params;
-
-  params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  params.set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-//   params.set(GL_TEXTURE_LOD_BIAS, 10.0);
-
-  params.apply(texture);
-
-  p->m_material->setTexture(TEXUNIT_FOREST_MAP, texture);
-}
-
-
-void render_util::MapTextures::setForestLayers(const std::vector<ImageRGBA::ConstPtr> &images)
-{
-  auto resampled = resampleImages(images, getMaxWidth(images));
-  TexturePtr texture = createTextureArray<ImageRGBA>(resampled);
-
-  TextureParameters<int> params;
-  params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  params.set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//   params.set(GL_TEXTURE_LOD_BIAS, 2.0);
-  params.apply(texture);
-
-  p->m_material->setTexture(TEXUNIT_FOREST_LAYERS, texture);
-}
-
-
 void render_util::MapTextures::setTexture(unsigned texunit, TexturePtr texture)
 {
   TextureParameters<int> params;
@@ -414,14 +376,6 @@ void render_util::MapTextures::setTexture(unsigned texunit, TexturePtr texture)
       params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
       params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
       params.set(GL_TEXTURE_LOD_BIAS, -3.0);
-      break;
-    case TEXUNIT_FOREST_MAP:
-//FIXME     case TEXUNIT_FOREST_MAP_BASE:
-      params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-      params.set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-      params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-      // params.set(GL_TEXTURE_LOD_BIAS, 10.0);
       break;
   }
 

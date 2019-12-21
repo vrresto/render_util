@@ -35,7 +35,7 @@ namespace render_util
 class TerrainCDLODBase : public TerrainBase
 {
 public:
-  static constexpr int METERS_PER_GRID = render_util::TerrainBase::GRID_RESOLUTION_M;
+  static constexpr int METERS_PER_GRID = render_util::TerrainBase::GRID_RESOLUTION_M; //FIXME remove
   static constexpr float MIN_LOD_DIST = 40000;
   static constexpr unsigned int MESH_GRID_SIZE = 64;
 
@@ -51,6 +51,8 @@ public:
   class MaterialMap
   {
     struct Map;
+
+    std::unique_ptr<Map> createMap(const TerrainBase::Textures::Layer&);
 
     std::unique_ptr<Map> m_map;
     std::unique_ptr<Map> m_base_map;
@@ -74,7 +76,7 @@ public:
   }
 
 
-  static float getMaxHeight(const render_util::ElevationMap &map, const glm::vec2 &pos, float size)
+  static float getMaxHeight(const TerrainBase::BuildParameters&, const glm::vec2 &pos, float size)
   {
     return 4000.0;
   }

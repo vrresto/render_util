@@ -96,9 +96,9 @@ enum class ToneMappingOperatorType
   DEFAULT,
 };
 
-constexpr double kPi = util::PI;
+const double kPi = util::PI;
 constexpr double kSunAngularRadius = render_util::physics::SUN_ANGULAR_RADIUS;
-constexpr double kSunSolidAngle = kPi * kSunAngularRadius * kSunAngularRadius;
+const double kSunSolidAngle = kPi * kSunAngularRadius * kSunAngularRadius;
 // constexpr double kLengthUnitInMeters = 1000.0;
 constexpr double kLengthUnitInMeters = 1.0;
 

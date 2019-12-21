@@ -53,6 +53,8 @@ unsigned int gatherMaterials(render_util::TerrainBase::MaterialMap::ConstPtr map
 }
 
 
+
+
 } // namespace
 
 
@@ -85,25 +87,27 @@ struct TerrainCDLODBase::MaterialMap::Map
 
 TerrainCDLODBase::MaterialMap::MaterialMap(const TerrainBase::BuildParameters &params)
 {
-  m_map = std::make_unique<Map>();
-  m_map->map = params.material_map;
-  m_map->resolution_m = render_util::TerrainBase::GRID_RESOLUTION_M;
+  assert(params.textures.detail_layer);
+  m_map = createMap(*params.textures.detail_layer);
 
-  assert(params.base_material_map);
-  assert(params.base_map_origin_m != glm::vec2(0));
-
-  if (params.base_material_map)
-  {
-    m_base_map = std::make_unique<Map>();
-    m_base_map->map = params.base_material_map;
-    m_base_map->resolution_m = params.base_map_resolution_m;
-    m_base_map->origin_m = params.base_map_origin_m;
-  }
+  if (params.textures.base_layer)
+    m_base_map = createMap(*params.textures.base_layer);
 }
 
 
 TerrainCDLODBase::MaterialMap::~MaterialMap()
 {
+}
+
+
+std::unique_ptr<TerrainCDLODBase::MaterialMap::Map>
+TerrainCDLODBase::MaterialMap::createMap(const TerrainBase::Textures::Layer &layer)
+{
+  auto map = std::make_unique<Map>();
+  map->map = layer.material_map;
+  map->resolution_m = layer.resolution_m;
+  map->origin_m = layer.origin_m;
+  return map;
 }
 
 

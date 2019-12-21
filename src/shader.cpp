@@ -539,7 +539,7 @@ void ShaderProgram::assertUniformsAreSet()
 {
   // slow - enable only for debugging
 // #if RENDER_UTIL_ENABLE_DEBUG
-#if 0
+#if 1
   int num_unset = 0;
   int num_active = 0;
   gl::GetProgramiv(id, GL_ACTIVE_UNIFORMS, &num_active);

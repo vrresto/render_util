@@ -16,23 +16,37 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef render_util_land_textures_h
-#define render_util_land_textures_h
+#ifndef _RENDER_UTIL_TERRAIN_FOREST_TEXTURES_H
+#define _RENDER_UTIL_TERRAIN_FOREST_TEXTURES_H
 
+#include "textures.h"
+#include "terrain_layer.h"
+
+#include <render_util/texture_manager.h>
+#include <render_util/texunits.h>
+#include <render_util/shader.h>
+#include <render_util/image.h>
 #include <render_util/terrain_base.h>
 
-namespace render_util
+#include <glm/glm.hpp>
+
+namespace render_util::terrain
 {
 
 
-struct LandTextures
+class ForestTextures : public Textures
 {
-  TerrainBase::TypeMap::ConstPtr type_map;
-  TerrainBase::TypeMap::ConstPtr base_type_map;
-  std::vector<ImageRGBA::Ptr> textures;
-  std::vector<ImageRGB::Ptr> textures_nm;
-  std::vector<float> texture_scale;
-  ImageRGBA::ConstPtr far_texture;
+  const TextureManager &m_texture_manager;
+  ShaderParameters m_shader_params;
+
+public:
+
+  ForestTextures(const TextureManager &texture_manager, TerrainBase::BuildParameters&);
+
+  const ShaderParameters &getShaderParameters() const override { return m_shader_params; }
+
+  void bind(TextureManager&) override;
+  void unbind(TextureManager&) override;
 };
 
 

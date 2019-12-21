@@ -24,7 +24,9 @@
 
 #include "terrain_cdlod_base.h"
 #include "terrain_layer.h"
+#include "textures.h"
 #include "land_textures.h"
+#include "forest_textures.h"
 #include "grid_mesh.h"
 #include "vao.h"
 #include <render_util/terrain_cdlod.h>
@@ -124,6 +126,36 @@ size_t getDetailLevelAtDistance(double dist)
 }
 
 
+
+TerrainTextureMap createHeightMap(unsigned int texunit, render_util::ElevationMap::ConstPtr image)
+{
+  TerrainTextureMap hm =
+  {
+    .texunit = texunit,
+    .resolution_m = TerrainCDLODBase::HEIGHT_MAP_METERS_PER_GRID,
+    .size_m = image->getSize() * (int)TerrainCDLODBase::HEIGHT_MAP_METERS_PER_GRID,
+    .size_px = image->getSize(),
+    .texture = TerrainCDLODBase::createHeightMapTexture(image),
+    .name = "height_map",
+  };
+  return hm;
+}
+
+TerrainTextureMap createNormalMap(unsigned int texunit, render_util::ElevationMap::ConstPtr image)
+{
+  TerrainTextureMap nm =
+  {
+    .texunit = texunit,
+    .resolution_m = TerrainCDLODBase::HEIGHT_MAP_METERS_PER_GRID,
+    .size_m = image->getSize() * (int)TerrainCDLODBase::HEIGHT_MAP_METERS_PER_GRID,
+    .size_px = image->getSize(),
+    .texture = TerrainCDLODBase::createNormalMapTexture(image, TerrainCDLODBase::HEIGHT_MAP_METERS_PER_GRID),
+    .name = "normal_map",
+  };
+  return nm;
+}
+
+
 render_util::ShaderProgramPtr createProgram(std::string name,
                                             unsigned int material,
                                             size_t detail_level,
@@ -169,7 +201,7 @@ render_util::ShaderProgramPtr createProgram(std::string name,
       
     );
 //     params.set("enable_water", material & MaterialID::WATER);
-//     enable_forest = (material & MaterialID::FOREST);
+    enable_forest = (material & MaterialID::FOREST);
   }
 
 //   params.set("detailed_water", detail_options & DetailOption::WATER);
@@ -337,13 +369,15 @@ class TerrainCDLOD : public TerrainCDLODBase
 
   std::vector<TerrainLayer> m_layers;
   std::unordered_map<unsigned int, std::unique_ptr<Material>> materials;
-  std::unique_ptr<LandTextures> m_land_textures;
+
+  std::vector<std::unique_ptr<terrain::Textures>> m_textures;
+
   render_util::ShaderParameters m_shader_params;
   std::string m_program_name;
 
   void processNode(Node *node, int lod_level, const Camera &camera, bool low_detail);
   void drawInstanced(TerrainBase::Client *client);
-  Node *createNode(const render_util::ElevationMap &map, dvec2 pos, int lod_level, const MaterialMap&);
+  Node *createNode(const BuildParameters&, dvec2 pos, int lod_level, const MaterialMap&);
   void setUniforms(ShaderProgramPtr program);
   Material *getMaterial(unsigned int id);
   bool hasBaseMap();
@@ -377,7 +411,8 @@ TerrainCDLOD::~TerrainCDLOD()
   root_node = nullptr;
   node_allocator.clear();
 
-  m_land_textures->unbind(texture_manager);
+  for (auto &t : m_textures)
+    t->unbind(texture_manager);
 
   CHECK_GL_ERROR();
 }
@@ -420,10 +455,11 @@ Material *TerrainCDLOD::getMaterial(unsigned int id)
     return it->second.get();
   }
 
-  assert(m_land_textures);
 
   auto shader_params = m_shader_params;
-  shader_params.add(m_land_textures->getShaderParameters());
+
+  for (auto &t : m_textures)
+    shader_params.add(t->getShaderParameters());
 
   materials[id] = std::make_unique<Material>(m_program_name,
                                              id, texture_manager, shader_search_path,
@@ -446,12 +482,12 @@ void TerrainCDLOD::setUniforms(ShaderProgramPtr program)
   program->setUniformi("terrain.tile_size_m", TILE_SIZE_M);
   program->setUniform("terrain.max_texture_scale", LandTextures::MAX_TEXTURE_SCALE);
 
-  assert(m_land_textures);
-  m_land_textures->setUniforms(program);
+//   assert(m_land_textures);
+//   m_land_textures->setUniforms(program);
 }
 
 
-Node *TerrainCDLOD::createNode(const render_util::ElevationMap &map,
+Node *TerrainCDLOD::createNode(const BuildParameters &params,
                                dvec2 pos,
                                int lod_level,
                                const MaterialMap &material_map)
@@ -477,7 +513,7 @@ Node *TerrainCDLOD::createNode(const render_util::ElevationMap &map,
 
   if (lod_level == 0)
   {
-    node->max_height = getMaxHeight(map, node->pos, node_size);
+    node->max_height = getMaxHeight(params, node->pos, node_size);
     node->material_id = material_map.getMaterialID(area);
   }
   else
@@ -485,10 +521,10 @@ Node *TerrainCDLOD::createNode(const render_util::ElevationMap &map,
     double child_node_size = node_size / 2;
     assert(child_node_size == getNodeSize(lod_level-1));
 
-    node->children[0] = createNode(map, pos + dvec2(0, child_node_size), lod_level-1, material_map);
-    node->children[1] = createNode(map, pos + dvec2(child_node_size), lod_level-1, material_map);
-    node->children[2] = createNode(map, pos + dvec2(0, 0), lod_level-1, material_map);
-    node->children[3] = createNode(map, pos + dvec2(child_node_size, 0), lod_level-1, material_map);
+    node->children[0] = createNode(params, pos + dvec2(0, child_node_size), lod_level-1, material_map);
+    node->children[1] = createNode(params, pos + dvec2(child_node_size), lod_level-1, material_map);
+    node->children[2] = createNode(params, pos + dvec2(0, 0), lod_level-1, material_map);
+    node->children[3] = createNode(params, pos + dvec2(child_node_size, 0), lod_level-1, material_map);
 
     for (Node *child : node->children)
     {
@@ -557,26 +593,30 @@ void TerrainCDLOD::build(BuildParameters &params)
 {
   CHECK_GL_ERROR();
 
-  assert(params.material_map);
   assert(!root_node);
   assert(m_layers.empty());
+  assert(params.textures.detail_layer);
 
   m_shader_params = params.shader_parameters;
 
   CHECK_GL_ERROR();
 
-  m_land_textures =
-    std::make_unique<LandTextures>(texture_manager,
-                                   params.textures,
-                                   params.textures_nm,
-                                   params.texture_scale,
-                                   params.type_map,
-                                   params.base_type_map);
+  {
+    auto land_textures = std::make_unique<LandTextures>(texture_manager, params);
+    m_textures.push_back(std::move(land_textures));
+  }
 
-//   m_forest_textures = std::make_unique<ForestTextures>();
-//   m_water_textures = std::make_unique<WaterTextures>();
+  {
+//    auto forest_textures = std::make_unique<ForestTextures>(texture_manager, params);
+//    m_textures.push_back(std::move(forest_textures));
+  }
 
-  auto hm_image = params.map;
+//   {
+//     auto water_textures = std::make_unique<WaterTextures>(texture_manager);
+//     m_textures.push_back(std::move(water_textures));
+//   }
+
+  auto hm_image = params.textures.detail_layer->height_map;
   auto new_size = glm::ceilPowerOfTwo(hm_image->size());
 
   if (new_size != hm_image->size())
@@ -585,89 +625,47 @@ void TerrainCDLOD::build(BuildParameters &params)
   }
 
   {
-    TerrainTextureMap hm =
-    {
-      .texunit = TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP,
-      .resolution_m = HEIGHT_MAP_METERS_PER_GRID,
-      .size_m = hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID,
-      .size_px = hm_image->getSize(),
-      .texture = createHeightMapTexture(hm_image),
-      .name = "height_map",
-    };
-
-    TerrainTextureMap nm =
-    {
-      .texunit = TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP,
-      .resolution_m = HEIGHT_MAP_METERS_PER_GRID,
-      .size_m = params.map->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID,
-      .size_px = params.map->getSize(),
-      .texture = createNormalMapTexture(params.map, HEIGHT_MAP_METERS_PER_GRID),
-      .name = "normal_map",
-    };
+    auto hm = ::createHeightMap(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP, hm_image);
+    auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP,
+                                params.textures.detail_layer->height_map);
 
     TerrainLayer layer;
     layer.origin_m = vec2(0);
-    layer.size_m = vec2(params.map->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
+    layer.size_m = vec2(params.textures.detail_layer->height_map->getSize() *
+                        (int)HEIGHT_MAP_METERS_PER_GRID);
     layer.uniform_prefix = "terrain.detail_layer.";
     layer.texture_maps.push_back(hm);
     layer.texture_maps.push_back(nm);
 
-    for (auto &map : m_land_textures->getTextureMaps())
-      layer.texture_maps.push_back(map);
-
-//     for (auto &map : m_forest_textures->getTextureMaps())
-//       layer.texture_maps.push_back(map);
-
-//     for (auto &map : m_water_textures->getTextureMaps())
-//       layer.texture_maps.push_back(map);
-
+    for (auto &t : m_textures)
+    {
+      for (auto &map : t->getTextureMaps())
+        layer.texture_maps.push_back(map);
+    }
 
     m_layers.push_back(layer);
   }
 
-  if (params.base_map)
+  if (params.textures.base_layer)
   {
-    assert(params.base_map_resolution_m != 0);
-    assert(params.base_material_map);
-
-    auto hm_image = params.base_map;
-
-    TerrainTextureMap hm =
-    {
-      .texunit = TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE,
-      .resolution_m = HEIGHT_MAP_METERS_PER_GRID,
-      .size_m = hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID,
-      .size_px = hm_image->getSize(),
-      .texture = createHeightMapTexture(hm_image),
-      .name = "height_map",
-    };
-
-    TerrainTextureMap nm =
-    {
-      .texunit = TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE,
-      .resolution_m = HEIGHT_MAP_METERS_PER_GRID,
-      .size_m = params.base_map->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID,
-      .size_px = params.base_map->getSize(),
-      .texture = createNormalMapTexture(params.base_map, HEIGHT_MAP_METERS_PER_GRID),
-      .name = "normal_map",
-    };
+    auto hm = ::createHeightMap(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE,
+                                params.textures.base_layer->height_map);
+    auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE,
+                                params.textures.base_layer->height_map);
 
     TerrainLayer layer;
     layer.origin_m = m_base_map_origin;
-    layer.size_m = vec2(params.base_map->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
+    layer.size_m = vec2(params.textures.base_layer->height_map->getSize() *
+                        (int)HEIGHT_MAP_METERS_PER_GRID);
     layer.uniform_prefix = "terrain.base_layer.";
     layer.texture_maps.push_back(hm);
     layer.texture_maps.push_back(nm);
 
-    for (auto &map : m_land_textures->getBaseTextureMaps())
-      layer.texture_maps.push_back(map);
-
-//     for (auto &map : m_forest_textures->getBaseTextureMaps())
-//       layer.texture_maps.push_back(map);
-
-//     for (auto &map : m_water_textures->getBaseTextureMaps())
-//       layer.texture_maps.push_back(map);
-
+    for (auto &t : m_textures)
+    {
+      for (auto &map : t->getBaseTextureMaps())
+        layer.texture_maps.push_back(map);
+    }
 
     m_layers.push_back(layer);
   }
@@ -675,7 +673,7 @@ void TerrainCDLOD::build(BuildParameters &params)
   auto material_map = std::make_unique<MaterialMap>(params);
 
   LOG_DEBUG<<"TerrainCDLOD: creating nodes ..."<<endl;
-  root_node = createNode(*params.map, root_node_pos, MAX_LOD, *material_map);
+  root_node = createNode(params, root_node_pos, MAX_LOD, *material_map);
   LOG_DEBUG<<"TerrainCDLOD: creating nodes done."<<endl;
 
   LOG_DEBUG<<"TerrainCDLOD: done building terrain."<<endl;
@@ -760,7 +758,8 @@ void TerrainCDLOD::draw(Client *client)
   if (render_list.isEmpty())
     return;
 
-  m_land_textures->bind(texture_manager);
+  for (auto &t : m_textures)
+    t->bind(texture_manager);
 
   for (auto& layer : m_layers)
     layer.bindTextures(texture_manager);

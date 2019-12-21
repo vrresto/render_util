@@ -291,7 +291,7 @@ void TerrainViewerScene::setup()
 
   m_map = make_unique<terrain_viewer::Map>(getTextureManager());
 
-  LandTextures land_textures;
+  TerrainBase::Textures land_textures;
 
 #if ENABLE_BASE_MAP
   auto base_elevation_map = m_map_loader->createBaseElevationMap();
@@ -302,11 +302,11 @@ void TerrainViewerScene::setup()
 
     m_map_loader->generateBaseTypeMap(base_elevation_map);
 
-    land_textures.base_type_map = m_map_loader->getBaseTypeMap();
+    land_textures.base_layer->type_map = m_map_loader->getBaseTypeMap();
   }
 #endif
 
-  m_map_loader->createMapTextures(m_map.get());
+  m_map_loader->createMapTextures(m_map.get(), land_textures);
 
   auto elevation_map = m_map_loader->createElevationMap();
   assert(elevation_map);
@@ -318,20 +318,16 @@ void TerrainViewerScene::setup()
 
   m_map->getTextures().setTexture(TEXUNIT_TERRAIN_FAR, land_textures.far_texture);
 
+  land_textures.detail_layer->height_map = elevation_map;
+
+  land_textures.base_layer->height_map = base_elevation_map;
+  land_textures.base_layer->origin_m = glm::xy(m_base_map_origin);
+  land_textures.base_layer->resolution_m = m_map_loader->getBaseElevationMapMetersPerPixel();
+
   render_util::TerrainBase::BuildParameters params =
   {
     .shader_parameters = shader_params,
-    .textures = land_textures.textures,
-    .textures_nm = land_textures.textures_nm,
-    .texture_scale = land_textures.texture_scale,
-    .material_map = m_map->getMaterialMap(),
-    .map = elevation_map,
-    .type_map = land_textures.type_map,
-    .base_map_origin_m = glm::xy(m_base_map_origin),
-    .base_map_resolution_m = m_map_loader->getBaseElevationMapMetersPerPixel(),
-    .base_material_map = m_map->getBaseMaterialMap(),
-    .base_map = base_elevation_map,
-    .base_type_map = land_textures.base_type_map,
+    .textures = land_textures,
   };
 
   createTerrain(params, shader_search_path, glm::xy(m_base_map_origin));

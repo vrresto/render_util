@@ -53,20 +53,33 @@ namespace render_util
       virtual void setActiveProgram(ShaderProgramPtr) = 0;
     };
 
+    struct Textures
+    {
+      struct Layer
+      {
+        glm::vec2 origin_m = glm::vec2(0);
+        unsigned int resolution_m = 0;
+        ElevationMap::ConstPtr height_map;
+        TerrainBase::TypeMap::ConstPtr type_map;
+        ImageGreyScale::ConstPtr forest_map;
+        MaterialMap::ConstPtr material_map;
+      };
+
+      std::unique_ptr<Layer> base_layer;
+      std::unique_ptr<Layer> detail_layer;
+
+      std::vector<ImageRGBA::Ptr> textures;
+      std::vector<ImageRGB::Ptr> textures_nm;
+      std::vector<float> texture_scale;
+      ImageRGBA::ConstPtr far_texture;
+      std::vector<ImageRGBA::ConstPtr> forest_layers;
+    //   ImageRGBA::ConstPtr forest_far;
+    };
+
     struct BuildParameters
     {
       const ShaderParameters &shader_parameters;
-      std::vector<ImageRGBA::Ptr> &textures;
-      std::vector<ImageRGB::Ptr> &textures_nm;
-      const std::vector<float> &texture_scale;
-      MaterialMap::ConstPtr material_map;
-      ElevationMap::ConstPtr map;
-      TypeMap::ConstPtr type_map;
-      glm::vec2 base_map_origin_m = glm::vec2(0);
-      unsigned int base_map_resolution_m = 0;
-      MaterialMap::ConstPtr base_material_map {};
-      ElevationMap::ConstPtr base_map {};
-      TypeMap::ConstPtr base_type_map {};
+      Textures &textures;
     };
 
     virtual ~TerrainBase() {}

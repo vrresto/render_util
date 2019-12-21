@@ -26,15 +26,17 @@
 #include <deque>
 
 using namespace render_util;
+using namespace render_util::terrain;
 using std::endl;
 
 namespace
 {
 
 
-TexturePtr createTypeMapTexture(TerrainBase::TypeMap::ConstPtr type_map_in,
+std::unique_ptr<TerrainTextureMap> createTypeMapTexture(TerrainBase::TypeMap::ConstPtr type_map_in,
                                 const std::map<unsigned, glm::uvec3> &mapping,
-                                std::string name)
+                                std::string name,
+                                unsigned int texunit)
 {
   auto type_map = std::make_shared<ImageRGBA>(type_map_in->getSize());
 
@@ -76,29 +78,40 @@ TexturePtr createTypeMapTexture(TerrainBase::TypeMap::ConstPtr type_map_in,
     }
   }
 
+  TexturePtr texture;
   {
-    TexturePtr t = render_util::createTexture(type_map, false);
+    texture = render_util::createTexture(type_map, false);
     TextureParameters<int> params;
     params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     params.set(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     params.set(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    params.apply(t);
-
-    return t;
+    params.apply(texture);
   }
+
+  auto map = new TerrainTextureMap
+  ({
+    .texunit = texunit,
+    .resolution_m = LandTextures::TYPE_MAP_RESOLUTION_M,
+    .size_m = type_map->getSize() * LandTextures::TYPE_MAP_RESOLUTION_M,
+    .size_px = type_map->getSize(),
+    .texture = texture,
+    .name = "type_map",
+  });
+
+  return std::unique_ptr<TerrainTextureMap>(map);
 }
 
 
 template <class T>
 void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
     const std::vector<float> &texture_scale_in,
-    TerrainBase::TypeMap::ConstPtr type_map_in,
     double max_texture_scale,
     std::array<TexturePtr, render_util::MAX_TERRAIN_TEXUNITS> &arrays_out,
-    TexturePtr &type_map_texture_out,
+    TerrainBase::TypeMap::ConstPtr type_map_in,
     TerrainBase::TypeMap::ConstPtr base_type_map_in,
-    TexturePtr &base_type_map_texture_out)
+    std::unique_ptr<TerrainTextureMap> &type_map_out,
+    std::unique_ptr<TerrainTextureMap> &base_type_map_out)
 {
   LOG_TRACE<<"createTextureArrays()"<<endl;
 
@@ -162,11 +175,14 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
     textures_in.at(i).reset();
   }
 
-  type_map_texture_out = createTypeMapTexture(type_map_in, mapping, "type_map");
+  type_map_out = createTypeMapTexture(type_map_in, mapping, "type_map", TEXUNIT_TYPE_MAP);
 
   if (base_type_map_in)
   {
-    base_type_map_texture_out = createTypeMapTexture(base_type_map_in, mapping, "type_map_base");
+    base_type_map_out = createTypeMapTexture(base_type_map_in,
+                                                     mapping,
+                                                     "type_map_base",
+                                                     TEXUNIT_TYPE_MAP_BASE);
   }
 
   for (int i = 0; i < texture_arrays.size(); i++)
@@ -193,12 +209,7 @@ namespace render_util::terrain
 {
 
 
-LandTextures::LandTextures(const TextureManager &texture_manager,
-                                      std::vector<ImageRGBA::Ptr> &textures,
-                                      std::vector<ImageRGB::Ptr> &textures_nm,
-                                      const std::vector<float> &texture_scale,
-                                      TerrainBase::TypeMap::ConstPtr type_map_,
-                                      TerrainBase::TypeMap::ConstPtr base_type_map_) :
+LandTextures::LandTextures(const TextureManager &texture_manager, TerrainBase::BuildParameters &params) :
     m_texture_manager(texture_manager)
 //     , m_type_map_size(type_map_->getSize())
 {
@@ -207,19 +218,25 @@ LandTextures::LandTextures(const TextureManager &texture_manager,
   using namespace render_util;
   using TextureArray = vector<ImageRGBA::ConstPtr>;
 
-  assert(textures.size() == texture_scale.size());
+  assert(params.textures.textures.size() == params.textures.texture_scale.size());
 
 //   if (base_type_map_)
 //     m_base_type_map_size = base_type_map_->getSize();
 
-  createTextureArrays<ImageRGBA>(textures,
-                      texture_scale,
-                      type_map_,
+  std::unique_ptr<TerrainTextureMap> type_map;
+  std::unique_ptr<TerrainTextureMap> base_type_map;
+
+  
+#if 1
+  createTextureArrays<ImageRGBA>(params.textures.textures,
+                      params.textures.texture_scale,
                       MAX_TEXTURE_SCALE,
                       m_textures,
-                      m_type_map_texture,
-                      base_type_map_,
-                      m_base_type_map_texture);
+                      params.textures.detail_layer->type_map,
+                      (params.textures.base_layer ? params.textures.base_layer->type_map : nullptr),
+                      type_map,
+                      base_type_map);
+#endif
 
 #if 0
   if (!textures_nm.empty())
@@ -239,31 +256,10 @@ LandTextures::LandTextures(const TextureManager &texture_manager,
   }
 #endif
 
-
-  TerrainTextureMap type_map =
-  {
-    .texunit = TEXUNIT_TYPE_MAP,
-    .resolution_m = TYPE_MAP_RESOLUTION_M,
-    .size_m = type_map_->getSize() * TYPE_MAP_RESOLUTION_M,
-    .size_px = type_map_->getSize(),
-    .texture = m_type_map_texture,
-    .name = "type_map",
-  };
-  m_texture_maps.push_back(type_map);
-
-  if (base_type_map_)
-  {
-    TerrainTextureMap type_map_base =
-    {
-      .texunit = TEXUNIT_TYPE_MAP_BASE,
-      .resolution_m = TYPE_MAP_RESOLUTION_M,
-      .size_m = type_map_->getSize() * TYPE_MAP_RESOLUTION_M,
-      .size_px = type_map_->getSize(),
-      .texture = m_base_type_map_texture,
-      .name = "type_map",
-    };
-    m_base_texture_maps.push_back(type_map_base);
-  }
+  assert(type_map);
+  addTextureMap(*type_map);
+  if (base_type_map)
+    addBaseTextureMap(*base_type_map);
 
   for (int i = 0; i < m_textures.size(); i++)
   {
@@ -375,11 +371,6 @@ void LandTextures::unbind(TextureManager &tm)
 //       CHECK_GL_ERROR();
 //     }
   }
-}
-
-
-void LandTextures::setUniforms(ShaderProgramPtr program)
-{
 }
 
 

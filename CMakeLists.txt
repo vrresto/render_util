@@ -109,9 +109,9 @@ add_subdirectory(util)
 if(render_util_build_viewer)
   add_subdirectory(viewer)
 
-  if(NOT platform_mingw)
-    add_subdirectory(testbed)
-  endif()
+#   if(NOT platform_mingw)
+#     add_subdirectory(testbed)
+#   endif()
 endif()
 
 if(platform_mingw)

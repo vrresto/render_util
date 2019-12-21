@@ -33,7 +33,7 @@
 #define LOW_DETAIL @low_detail:0@
 #define DETAILED_WATER @detailed_water:1@
 // #define ENABLE_WATER @enable_water:0@
-// #define ENABLE_FOREST @enable_forest:0@
+#define ENABLE_FOREST @enable_forest@
 
 #define ENABLE_TYPE_MAP @enable_type_map:0@
 // #define ENABLE_TYPE_MAP 1

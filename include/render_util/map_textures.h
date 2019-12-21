@@ -50,14 +50,6 @@ namespace render_util
     void setWaterTypeMap(ImageGreyScale::ConstPtr type_map);
     void setBeach(std::vector<ImageRGBA::ConstPtr> textures);
 
-    void setForestMap(ImageGreyScale::ConstPtr texture);
-    void setForestLayers(const std::vector<ImageRGBA::ConstPtr> &textures);
-
-    void setTerrainTextures(const std::vector<ImageRGBA::ConstPtr> &textures,
-                            const std::vector<float> &texture_scale,
-                            TerrainBase::TypeMap::ConstPtr type_map);
-
-
     void setWaterMap(const std::vector<ImageGreyScale::ConstPtr> &chunks,
                      Image<unsigned int>::ConstPtr table);
 

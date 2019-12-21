@@ -34,7 +34,7 @@ namespace util
 {
 
 
-constexpr auto PI = acosl(-1);
+const auto PI = std::acos(-1.l);
 
 
 inline bool isPrefix(const std::string &prefix, const std::string &s)
