@@ -24,7 +24,7 @@
 #if USE_PLOG
 
 #include <plog/Log.h>
-
+#include <glm/glm.hpp>
 
 namespace util::log
 {
@@ -43,7 +43,75 @@ namespace util::log
     record << "-----------------------------------------------------------" << std::endl;
     *plog::get<PLOG_DEFAULT_INSTANCE>() += record;
   }
+
+  template <typename T>
+  plog::Record& putVec2(plog::Record &record, const T &arg)
+  {
+    record << '[' << arg.x << ", " << arg.y << ']';
+    return record;
+  }
+
+  template <typename T>
+  plog::Record& putVec3(plog::Record &record, const T &arg)
+  {
+    record << '[' << arg.x << ", " << arg.y << ", " << arg.z << ']';
+    return record;
+  }
+
+  template <typename T>
+  plog::Record& putVec4(plog::Record &record, const T &arg)
+  {
+    record << '[' << arg.x << ", " << arg.y << ", " << arg.z << ", " << arg.w << ']';
+    return record;
+  }
 }
+
+
+inline plog::Record& operator<<(plog::Record &record, const glm::ivec2 &arg)
+{
+  return util::log::putVec2(record, arg);
+}
+
+inline plog::Record& operator<<(plog::Record &record, const glm::ivec3 &arg)
+{
+  return util::log::putVec3(record, arg);
+}
+
+inline plog::Record& operator<<(plog::Record &record, const glm::ivec4 &arg)
+{
+  return util::log::putVec4(record, arg);
+}
+
+inline plog::Record& operator<<(plog::Record &record, const glm::vec2 &arg)
+{
+  return util::log::putVec2(record, arg);
+}
+
+inline plog::Record& operator<<(plog::Record &record, const glm::vec3 &arg)
+{
+  return util::log::putVec3(record, arg);
+}
+
+inline plog::Record& operator<<(plog::Record &record, const glm::vec4 &arg)
+{
+  return util::log::putVec4(record, arg);
+}
+
+inline plog::Record& operator<<(plog::Record &record, const glm::dvec2 &arg)
+{
+  return util::log::putVec2(record, arg);
+}
+
+inline plog::Record& operator<<(plog::Record &record, const glm::dvec3 &arg)
+{
+  return util::log::putVec3(record, arg);
+}
+
+inline plog::Record& operator<<(plog::Record &record, const glm::dvec4 &arg)
+{
+  return util::log::putVec4(record, arg);
+}
+
 
 #define LOG_TRACE PLOG_VERBOSE
 #define LOG_DEBUG PLOG_DEBUG
