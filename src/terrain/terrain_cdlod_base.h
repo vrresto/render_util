@@ -52,7 +52,7 @@ public:
   {
     struct Map;
 
-    std::unique_ptr<Map> createMap(const TerrainBase::Textures::Layer&);
+    std::unique_ptr<Map> createMap(const TerrainBase::Loader::Layer&);
 
     std::unique_ptr<Map> m_map;
     std::unique_ptr<Map> m_base_map;

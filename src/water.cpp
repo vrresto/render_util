@@ -96,7 +96,8 @@ struct WaterAnimation::Private
 
   void update()
   {
-    assert(num_animation_steps);
+    if (!num_animation_steps)
+      return;
 
     Clock::time_point now = Clock::now();
 

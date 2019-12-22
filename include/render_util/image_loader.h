@@ -20,6 +20,7 @@
 #define RENDER_UTIL_IMAGE_LOADER_H
 
 #include <util.h>
+#include <file.h>
 #include <render_util/image.h>
 
 #include <glm/glm.hpp>
@@ -36,6 +37,12 @@ namespace render_util
     PNG
   };
 
+
+  bool loadImage(util::File &file,
+                 std::vector<unsigned char> &data_out,
+                 int &width,
+                 int &height,
+                 int &channels);
 
   bool loadImageFromMemory(const std::vector<char> &data_in,
                            int num_channels,
@@ -57,6 +64,9 @@ namespace render_util
                  const unsigned char* image_data,
                  size_t image_data_size,
                  ImageType type = ImageType::TGA);
+
+
+  std::unique_ptr<GenericImage> loadImage(util::File &file);
 
   template <typename T>
   std::shared_ptr<T> loadImageFromMemory(const std::vector<char> &data)
@@ -116,6 +126,8 @@ namespace render_util
               image->dataSize(),
               type);
   }
+
+  void getImageInfo(util::File&, glm::ivec2 &size, int &num_components);
 
 
 }

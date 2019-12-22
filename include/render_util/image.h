@@ -147,7 +147,8 @@ struct ImageComponentsVarying
 
   ImageComponentsVarying(int num_components) : m_num_components(num_components) {}
 
-  int numComponents() const { return m_num_components; }
+  int getNumComponents() const { return m_num_components; }
+  int numComponents() const { return getNumComponents(); }
 
 private:
   int m_num_components = 0;

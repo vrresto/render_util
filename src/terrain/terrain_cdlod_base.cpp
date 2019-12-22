@@ -66,19 +66,24 @@ struct TerrainCDLODBase::MaterialMap::Map
 {
   render_util::TerrainBase::MaterialMap::ConstPtr map;
   glm::vec2 origin_m = glm::vec2(0);
-  float resolution_m = 0;
+  unsigned int resolution_m = 0;
 
   unsigned int getMaterialID(const Rect &area)
   {
     assert(resolution_m);
 
     auto area_origin = (area.origin - origin_m);
-    assert(fract(area_origin / resolution_m) == glm::vec2(0));
+    assert(fract(area_origin / glm::vec2(resolution_m)) == glm::vec2(0));
 
-    auto area_origin_px = glm::ivec2(area_origin / resolution_m);
+    auto area_origin_px = glm::ivec2(area_origin / glm::vec2(resolution_m));
 
-    assert(fract(area.extent / resolution_m) == glm::vec2(0));
-    auto area_extent_px = area.extent / resolution_m;
+//     LOG_INFO << "area.extent: " << area.extent << endl;
+//     LOG_INFO << "resolution_m: " << resolution_m << endl;
+//     LOG_INFO << "fract(area.extent / resolution_m): "
+//              << fract(area.extent / glm::vec2(resolution_m)) << std::endl;
+
+    assert(fract(area.extent / glm::vec2(resolution_m)) == glm::vec2(0));
+    auto area_extent_px = area.extent / glm::vec2(resolution_m);
 
     return gatherMaterials(map, area_origin_px, area_extent_px);
   }
@@ -87,11 +92,10 @@ struct TerrainCDLODBase::MaterialMap::Map
 
 TerrainCDLODBase::MaterialMap::MaterialMap(const TerrainBase::BuildParameters &params)
 {
-  assert(params.textures.detail_layer);
-  m_map = createMap(*params.textures.detail_layer);
+  m_map = createMap(params.loader.getDetailLayer());
 
-  if (params.textures.base_layer)
-    m_base_map = createMap(*params.textures.base_layer);
+  if (params.loader.hasBaseLayer())
+    m_base_map = createMap(params.loader.getBaseLayer());
 }
 
 
@@ -101,12 +105,12 @@ TerrainCDLODBase::MaterialMap::~MaterialMap()
 
 
 std::unique_ptr<TerrainCDLODBase::MaterialMap::Map>
-TerrainCDLODBase::MaterialMap::createMap(const TerrainBase::Textures::Layer &layer)
+TerrainCDLODBase::MaterialMap::createMap(const TerrainBase::Loader::Layer &layer)
 {
   auto map = std::make_unique<Map>();
-  map->map = layer.material_map;
-  map->resolution_m = layer.resolution_m;
-  map->origin_m = layer.origin_m;
+  map->map = layer.loadMaterialMap();
+  map->resolution_m = layer.getResolutionM();
+  map->origin_m = layer.getOriginM();
   return map;
 }
 

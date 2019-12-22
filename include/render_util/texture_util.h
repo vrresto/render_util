@@ -66,6 +66,38 @@ namespace render_util::texture_format
 namespace render_util
 {
 
+  struct ImageResource
+  {
+    virtual glm::ivec2 getSize() const = 0;
+    virtual unsigned int getNumComponents() = 0;
+    virtual std::unique_ptr<GenericImage> load(int scale_exponent) const = 0;
+    virtual std::string getName() = 0;
+
+    int w() const { return getSize().x; }
+    int h() const { return getSize().y; }
+  };
+
+
+  struct ScaledImageResource
+  {
+    std::shared_ptr<ImageResource> resource;
+
+    glm::ivec2 getScaledSize() const
+    {
+      return glm::ivec2(glm::pow(2, scale_exponent) * glm::dvec2(resource->getSize()));
+    }
+
+    std::unique_ptr<GenericImage> load() const
+    {
+      auto image = resource->load(scale_exponent);
+      assert(image->getSize() == getScaledSize());
+      return image;
+    }
+
+    int scale_exponent = 0;
+  };
+
+// 
   TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_pixel, bool mipmaps);
   TexturePtr createTextureExt(const unsigned char *data,
                               size_t data_size,
@@ -82,6 +114,8 @@ namespace render_util
 //   unsigned int createTextureArray(const std::vector<render_util::ImageRGBA::ConstPtr> &textures, int mipmap_level);
   TexturePtr createTextureArray(const std::vector<const unsigned char*> &textures,
                                   int mipmap_levels, int texture_width, int bytes_per_pixel);
+
+  TexturePtr createTextureArray(const std::vector<ScaledImageResource>&);
 
   void setTextureImage(TexturePtr texture,
                       const unsigned char *data,

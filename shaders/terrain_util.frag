@@ -20,22 +20,22 @@
 
 #extension GL_ARB_texture_query_lod : require
 
-#define ENABLE_TERRAIN_NOISE 1
+// #define ENABLE_TERRAIN_NOISE 1
 #define ENABLE_WATER_TYPE_MAP 1
 #define ENABLE_FAR_FOREST 0
 #define DETAILED_FOREST false
 #define ENABLE_TERRAIN_NORMAL_MAP 1
 
-// #define ENABLE_BASE_MAP @enable_base_map@
-#define ENABLE_BASE_MAP 1
+#define ENABLE_BASE_MAP @enable_base_map@
+// #define ENABLE_BASE_MAP 1
 
 // #define ENABLE_FAR_TEXTURE !@enable_base_map@
 #define LOW_DETAIL @low_detail:0@
 #define DETAILED_WATER @detailed_water:1@
 // #define ENABLE_WATER @enable_water:0@
-#define ENABLE_FOREST @enable_forest@
+// #define ENABLE_FOREST @enable_forest@
 
-#define ENABLE_TYPE_MAP @enable_type_map:0@
+// #define ENABLE_TYPE_MAP @enable_type_map:0@
 // #define ENABLE_TYPE_MAP 1
 
 #define ENABLE_TERRAIN_DETAIL_NM !LOW_DETAIL && @enable_terrain_detail_nm:0@

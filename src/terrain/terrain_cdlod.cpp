@@ -595,7 +595,6 @@ void TerrainCDLOD::build(BuildParameters &params)
 
   assert(!root_node);
   assert(m_layers.empty());
-  assert(params.textures.detail_layer);
 
   m_shader_params = params.shader_parameters;
 
@@ -616,23 +615,25 @@ void TerrainCDLOD::build(BuildParameters &params)
 //     m_textures.push_back(std::move(water_textures));
 //   }
 
-  auto hm_image = params.textures.detail_layer->height_map;
-  auto new_size = glm::ceilPowerOfTwo(hm_image->size());
-
-  if (new_size != hm_image->size())
-  {
-    hm_image = image::extend(hm_image, new_size, 0.f, image::TOP_LEFT);
-  }
 
   {
-    auto hm = ::createHeightMap(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP, hm_image);
-    auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP,
-                                params.textures.detail_layer->height_map);
+    auto hm_image = params.loader.getDetailLayer().loadHeightMap();
+    
+    auto hm_image_resized = hm_image;
+    
+    auto new_size = glm::ceilPowerOfTwo(hm_image->size());
+
+    if (new_size != hm_image->size())
+    {
+      hm_image_resized = image::extend(hm_image, new_size, 0.f, image::TOP_LEFT);
+    }
+
+    auto hm = ::createHeightMap(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP, hm_image_resized);
+    auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP, hm_image);
 
     TerrainLayer layer;
     layer.origin_m = vec2(0);
-    layer.size_m = vec2(params.textures.detail_layer->height_map->getSize() *
-                        (int)HEIGHT_MAP_METERS_PER_GRID);
+    layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
     layer.uniform_prefix = "terrain.detail_layer.";
     layer.texture_maps.push_back(hm);
     layer.texture_maps.push_back(nm);
@@ -646,17 +647,16 @@ void TerrainCDLOD::build(BuildParameters &params)
     m_layers.push_back(layer);
   }
 
-  if (params.textures.base_layer)
+  if (params.loader.hasBaseLayer())
   {
-    auto hm = ::createHeightMap(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE,
-                                params.textures.base_layer->height_map);
-    auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE,
-                                params.textures.base_layer->height_map);
+    auto hm_image = params.loader.getBaseLayer().loadHeightMap();
+
+    auto hm = ::createHeightMap(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, hm_image);
+    auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, hm_image);
 
     TerrainLayer layer;
     layer.origin_m = m_base_map_origin;
-    layer.size_m = vec2(params.textures.base_layer->height_map->getSize() *
-                        (int)HEIGHT_MAP_METERS_PER_GRID);
+    layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
     layer.uniform_prefix = "terrain.base_layer.";
     layer.texture_maps.push_back(hm);
     layer.texture_maps.push_back(nm);

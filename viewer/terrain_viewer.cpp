@@ -291,48 +291,52 @@ void TerrainViewerScene::setup()
 
   m_map = make_unique<terrain_viewer::Map>(getTextureManager());
 
-  TerrainBase::Textures land_textures;
+//   TerrainBase::Textures land_textures;
+  
+  auto &terrain_loader = m_map_loader->getTerrainLoader();
 
 #if ENABLE_BASE_MAP
-  auto base_elevation_map = m_map_loader->createBaseElevationMap();
+//   auto base_elevation_map = m_map_loader->createBaseElevationMap();
 
-  if (base_elevation_map)
-  {
-    m_base_map_origin = m_map_loader->getBaseMapOrigin();
-
-    m_map_loader->generateBaseTypeMap(base_elevation_map);
-
-    land_textures.base_layer->type_map = m_map_loader->getBaseTypeMap();
-  }
+//   if (base_elevation_map)
+//   {
+//     m_base_map_origin = m_map_loader->getBaseMapOrigin();
+// 
+//     m_map_loader->generateBaseTypeMap(base_elevation_map);
+// 
+//     land_textures.base_layer->type_map = m_map_loader->getBaseTypeMap();
+//   }
 #endif
 
-  m_map_loader->createMapTextures(m_map.get(), land_textures);
+//   m_map_loader->createMapTextures(m_map.get(), land_textures);
 
-  auto elevation_map = m_map_loader->createElevationMap();
-  assert(elevation_map);
-  assert(!m_map->getWaterAnimation().isEmpty());
+//   auto elevation_map = m_map_loader->createElevationMap();
+//   assert(elevation_map);
+// 
+//   assert(!m_map->getWaterAnimation().isEmpty());
 
-  m_map_loader->createLandTextures(land_textures);
+//   m_map_loader->createLandTextures(land_textures);
 
-  assert(m_map->getMaterialMap());
+//   assert(m_map->getMaterialMap());
 
-  m_map->getTextures().setTexture(TEXUNIT_TERRAIN_FAR, land_textures.far_texture);
+//   m_map->getTextures().setTexture(TEXUNIT_TERRAIN_FAR, land_textures.far_texture);
 
-  land_textures.detail_layer->height_map = elevation_map;
+//   land_textures.detail_layer->height_map = elevation_map;
 
-  land_textures.base_layer->height_map = base_elevation_map;
-  land_textures.base_layer->origin_m = glm::xy(m_base_map_origin);
-  land_textures.base_layer->resolution_m = m_map_loader->getBaseElevationMapMetersPerPixel();
+//   land_textures.base_layer->height_map = base_elevation_map;
+//   land_textures.base_layer->origin_m = glm::xy(m_base_map_origin);
+//   land_textures.base_layer->resolution_m = m_map_loader->getBaseElevationMapMetersPerPixel();
 
   render_util::TerrainBase::BuildParameters params =
   {
     .shader_parameters = shader_params,
-    .textures = land_textures,
+//     .textures = land_textures,
+    .loader = terrain_loader,
   };
 
   createTerrain(params, shader_search_path, glm::xy(m_base_map_origin));
 
-  map_size = glm::vec2(elevation_map->getSize() * m_map_loader->getHeightMapMetersPerPixel());
+  map_size = glm::vec2(terrain_loader.getDetailLayer().loadHeightMap()->getSize()) * glm::vec2(terrain_loader.getDetailLayer().getResolutionM());
 
   assert(map_size != vec2(0));
 

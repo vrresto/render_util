@@ -103,8 +103,8 @@ std::unique_ptr<TerrainTextureMap> createTypeMapTexture(TerrainBase::TypeMap::Co
 }
 
 
-template <class T>
-void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
+void createTextureArrays(
+    const std::vector<std::shared_ptr<render_util::ImageResource>> &textures_in,
     const std::vector<float> &texture_scale_in,
     double max_texture_scale,
     std::array<TexturePtr, render_util::MAX_TERRAIN_TEXUNITS> &arrays_out,
@@ -113,12 +113,12 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
     std::unique_ptr<TerrainTextureMap> &type_map_out,
     std::unique_ptr<TerrainTextureMap> &base_type_map_out)
 {
-  LOG_TRACE<<"createTextureArrays()"<<endl;
+  LOG_INFO<<"createTextureArrays()"<<endl;
 
   using namespace glm;
   using namespace std;
   using namespace render_util;
-  using TextureArray = vector<typename T::ConstPtr>;
+  using TextureArray = std::vector<ScaledImageResource>;
 
   std::array<TextureArray, MAX_TERRAIN_TEXUNITS> texture_arrays;
   map<unsigned, glm::uvec3> mapping;
@@ -159,20 +159,22 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
     if (!image)
       continue;
 
-    while (image->w() < smallest_size)
+
+    ScaledImageResource scaled_image;
+    scaled_image.resource = image;
+
+    while (scaled_image.getScaledSize().x < smallest_size)
     {
 //       auto biggest_size = texture_sizes.back();
 //       LOG_INFO<<"image->w(): "<<image->w()<<", smallest_size: "
 //         <<smallest_size<<", biggest_size: "<<biggest_size<<endl;
-      image = render_util::upSample(image, 2);
+      scaled_image.scale_exponent++;
     }
 
-    auto index = array_index_for_size.at(image->w());
+    auto index = array_index_for_size.at(scaled_image.getScaledSize().x);
 
-    texture_arrays.at(index).push_back(image);
+    texture_arrays.at(index).push_back(scaled_image);
     mapping.insert(make_pair(i, glm::uvec3{index, texture_arrays[index].size()-1, scale}));
-
-    textures_in.at(i).reset();
   }
 
   type_map_out = createTypeMapTexture(type_map_in, mapping, "type_map", TEXUNIT_TYPE_MAP);
@@ -194,8 +196,7 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
       continue;
 
     LOG_TRACE<<"array: "<<i<<endl;
-    arrays_out.at(i) = render_util::createTextureArray<T>(textures);
-    textures.clear();
+    arrays_out.at(i) = render_util::createTextureArray(textures);
 
     CHECK_GL_ERROR();
   }
@@ -218,7 +219,9 @@ LandTextures::LandTextures(const TextureManager &texture_manager, TerrainBase::B
   using namespace render_util;
   using TextureArray = vector<ImageRGBA::ConstPtr>;
 
-  assert(params.textures.textures.size() == params.textures.texture_scale.size());
+  auto &loader = params.loader;
+
+  assert(loader.getLandTextures().size() == loader.getLandTexturesScale().size());
 
 //   if (base_type_map_)
 //     m_base_type_map_size = base_type_map_->getSize();
@@ -226,14 +229,14 @@ LandTextures::LandTextures(const TextureManager &texture_manager, TerrainBase::B
   std::unique_ptr<TerrainTextureMap> type_map;
   std::unique_ptr<TerrainTextureMap> base_type_map;
 
-  
+
 #if 1
-  createTextureArrays<ImageRGBA>(params.textures.textures,
-                      params.textures.texture_scale,
+  createTextureArrays(loader.getLandTextures(),
+                      loader.getLandTexturesScale(),
                       MAX_TEXTURE_SCALE,
                       m_textures,
-                      params.textures.detail_layer->type_map,
-                      (params.textures.base_layer ? params.textures.base_layer->type_map : nullptr),
+                      loader.getDetailLayer().loadTypeMap(),
+                      (loader.hasBaseLayer() ? loader.getBaseLayer().loadTypeMap() : nullptr),
                       type_map,
                       base_type_map);
 #endif
