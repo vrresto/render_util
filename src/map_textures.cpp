@@ -112,6 +112,7 @@ public:
 
 TexturePtr createNoiseTexture()
 {
+  LOG_INFO << "Creating noise texture ..." << endl;
   auto image = image::create<unsigned char>(0, glm::ivec2(2048));
 
   const double pi = util::PI;
@@ -190,6 +191,8 @@ TexturePtr createNoiseTexture()
   params.set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   params.apply(texture);
 
+  LOG_INFO << "Creating noise texture ... done." << endl;
+
   return texture;
 }
 
@@ -214,6 +217,7 @@ float sampleShoreWave(float pos)
 
 ImageGreyScale::Ptr createShoreWaveTexture()
 {
+  LOG_INFO << "Creating shore wave texture ..." << endl;
   auto shore_wave = render_util::image::create<unsigned char>(0, glm::ivec2(4096, 1));
   assert(shore_wave);
   for (int i = 0; i < shore_wave->w(); i++)
@@ -223,6 +227,7 @@ ImageGreyScale::Ptr createShoreWaveTexture()
     float value = sampleShoreWave(pos);
     shore_wave->at(i,0) = value * 255;
   }
+  LOG_INFO << "Creating shore wave texture ... done." << endl;
   return shore_wave;
 }
 

@@ -506,7 +506,9 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene, st
   g_scene = f_create_scene();
   assert(g_scene);
 
+  LOG_INFO << "Setting up scene ..." << endl;
   g_scene->setup();
+  LOG_INFO << "Setting up scene ... done." << endl;
 
   CHECK_GL_ERROR();
 

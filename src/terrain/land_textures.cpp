@@ -113,8 +113,6 @@ void createTextureArrays(
     std::unique_ptr<TerrainTextureMap> &type_map_out,
     std::unique_ptr<TerrainTextureMap> &base_type_map_out)
 {
-  LOG_INFO<<"createTextureArrays()"<<endl;
-
   using namespace glm;
   using namespace std;
   using namespace render_util;
@@ -229,6 +227,7 @@ LandTextures::LandTextures(const TextureManager &texture_manager, TerrainBase::B
   std::unique_ptr<TerrainTextureMap> type_map;
   std::unique_ptr<TerrainTextureMap> base_type_map;
 
+  LOG_INFO << "Creating land textures ..." << endl;
 
 #if 1
   createTextureArrays(loader.getLandTextures(),
@@ -283,6 +282,8 @@ LandTextures::LandTextures(const TextureManager &texture_manager, TerrainBase::B
 
     m_shader_params.set(string( "enable_terrain_detail_nm") + to_string(i), true);
   }
+
+  LOG_INFO << "Creating land textures ... done." << endl;
 }
 
 

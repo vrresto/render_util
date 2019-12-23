@@ -617,12 +617,12 @@ void TerrainCDLOD::build(BuildParameters &params)
 
 
   {
-    auto hm_image = params.loader.getDetailLayer().loadHeightMap();
-    
-    auto hm_image_resized = hm_image;
-    
-    auto new_size = glm::ceilPowerOfTwo(hm_image->size());
+    LOG_INFO << "Creating detail layer ..." << endl;
 
+    auto hm_image = params.loader.getDetailLayer().loadHeightMap();
+
+    auto hm_image_resized = hm_image;
+    auto new_size = glm::ceilPowerOfTwo(hm_image->size());
     if (new_size != hm_image->size())
     {
       hm_image_resized = image::extend(hm_image, new_size, 0.f, image::TOP_LEFT);
@@ -645,6 +645,8 @@ void TerrainCDLOD::build(BuildParameters &params)
     }
 
     m_layers.push_back(layer);
+
+    LOG_INFO << "Creating detail layer ... done." << endl;
   }
 
   if (params.loader.hasBaseLayer())
@@ -670,13 +672,15 @@ void TerrainCDLOD::build(BuildParameters &params)
     m_layers.push_back(layer);
   }
 
+  LOG_INFO<<"TerrainCDLOD: creating material map ..."<<endl;
   auto material_map = std::make_unique<MaterialMap>(params);
+  LOG_INFO<<"TerrainCDLOD: creating material map ... done."<<endl;
 
-  LOG_DEBUG<<"TerrainCDLOD: creating nodes ..."<<endl;
+  LOG_INFO<<"TerrainCDLOD: creating nodes ..."<<endl;
   root_node = createNode(params, root_node_pos, MAX_LOD, *material_map);
-  LOG_DEBUG<<"TerrainCDLOD: creating nodes done."<<endl;
+  LOG_INFO<<"TerrainCDLOD: creating nodes ... done."<<endl;
 
-  LOG_DEBUG<<"TerrainCDLOD: done building terrain."<<endl;
+  LOG_INFO<<"TerrainCDLOD: done building terrain."<<endl;
 }
 
 
