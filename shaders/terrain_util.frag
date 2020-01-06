@@ -33,9 +33,9 @@
 #define LOW_DETAIL @low_detail:0@
 #define DETAILED_WATER @detailed_water:1@
 // #define ENABLE_WATER @enable_water:0@
-// #define ENABLE_FOREST @enable_forest@
+#define ENABLE_FOREST @enable_forest@
 
-// #define ENABLE_TYPE_MAP @enable_type_map:0@
+#define ENABLE_TYPE_MAP @enable_type_map:0@
 // #define ENABLE_TYPE_MAP 1
 
 #define ENABLE_TERRAIN_DETAIL_NM !LOW_DETAIL && @enable_terrain_detail_nm:0@
@@ -59,8 +59,10 @@
 vec3 textureColorCorrection(vec3 color);
 float getDetailMapBlend(vec2 pos);
 float genericNoise(vec2 coord);
+
 vec4 getForestFarColor(vec2 pos);
 vec4 getForestFarColorSimple(vec2 pos);
+
 vec4 getForestColor(vec2 pos, int layer);
 float getWaterDepth(vec2 pos);
 void sampleWaterType(vec2 pos, out float shallow_sea_amount, out float river_amount);
@@ -247,10 +249,11 @@ vec3 sampleTerrainDetailNormal(vec3 type)
 #endif
 
 
-#if @enable_type_map@
+#if ENABLE_TYPE_MAP
+
 vec4 sampleTerrainTextures(vec2 pos)
 {
-  return vec4(pass_type_map_coords / getTypeMapSizePx(), 0, 1);
+//   return vec4(pass_type_map_coords / getTypeMapSizePx(), 0, 1);
 
 
   vec3 types[4];
@@ -272,10 +275,7 @@ vec4 sampleTerrainTextures(vec2 pos)
     c10 * weights[2] +
     c11 * weights[3];
 }
-#endif
 
-
-#if @enable_type_map@
 #if ENABLE_TERRAIN_DETAIL_NM
 vec3 getTerrainDetailNormal(vec2 pos)
 {
@@ -296,6 +296,7 @@ vec3 getTerrainDetailNormal(vec2 pos)
     c11 * weights[3];
 }
 #endif
+
 #endif
 
 
@@ -380,7 +381,6 @@ vec4 sampleBaseTerrainTextures(vec2 pos)
 vec4 applyForest(vec4 color, vec2 pos, vec3 view_dir, float dist)
 {
   vec4 forest_far_simple = getForestFarColorSimple(pos.xy);
-
   vec4 far_simple_color = vec4(mix(color, forest_far_simple, forest_far_simple.a * 0.8).xyz, 1);
 
 #if LOW_DETAIL

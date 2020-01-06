@@ -99,8 +99,10 @@ namespace render_util
       virtual const std::vector<std::shared_ptr<ImageResource>> &getLandTexturesNM() const = 0;
       virtual const std::vector<float> &getLandTexturesScale() const = 0;
 
+      virtual std::vector<ImageRGBA::Ptr> loadForestLayers() const = 0;
+      virtual ImageRGBA::Ptr loadForestFarTexture() const = 0;
+
 //       ImageRGBA::ConstPtr far_texture;
-//       std::vector<ImageRGBA::ConstPtr> forest_layers;
     //   ImageRGBA::ConstPtr forest_far;
     };
 

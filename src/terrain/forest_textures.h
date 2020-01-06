@@ -38,15 +38,17 @@ class ForestTextures : public Textures
 {
   const TextureManager &m_texture_manager;
   ShaderParameters m_shader_params;
+  TexturePtr m_forest_layers_texture;
+  TexturePtr m_forest_far_texture;
 
 public:
 
   ForestTextures(const TextureManager &texture_manager, TerrainBase::BuildParameters&);
 
   const ShaderParameters &getShaderParameters() const override { return m_shader_params; }
-
   void bind(TextureManager&) override;
   void unbind(TextureManager&) override;
+  void setUniforms(ShaderProgramPtr program) const override;
 };
 
 

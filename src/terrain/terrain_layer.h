@@ -53,6 +53,12 @@ struct TerrainLayer
       tex_mgr.bind(map.texunit, map.texture);
   }
 
+  void unbindTextures(render_util::TextureManager& tex_mgr)
+  {
+    for (auto& map : texture_maps)
+      tex_mgr.unbind(map.texunit, map.texture->getTarget());
+  }
+
   void setUniforms(ShaderProgramPtr program, render_util::TextureManager &tex_mgr)
   {
     program->setUniform(uniform_prefix + "size_m", size_m);

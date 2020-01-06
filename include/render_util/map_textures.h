@@ -65,7 +65,7 @@ namespace render_util
     }
 
     template <class T>
-    void setTextureArray(unsigned texunit, const std::vector<std::shared_ptr<const T>> &images)
+    void setTextureArray(unsigned texunit, T &images)
     {
       setTexture(texunit, createTextureArray<T>(images));
     }

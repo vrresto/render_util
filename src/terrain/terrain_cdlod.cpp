@@ -414,6 +414,9 @@ TerrainCDLOD::~TerrainCDLOD()
   for (auto &t : m_textures)
     t->unbind(texture_manager);
 
+  for (auto &layer : m_layers)
+    layer.unbindTextures(texture_manager);
+
   CHECK_GL_ERROR();
 }
 
@@ -472,6 +475,9 @@ Material *TerrainCDLOD::getMaterial(unsigned int id)
 
 void TerrainCDLOD::setUniforms(ShaderProgramPtr program)
 {
+  for (auto &t : m_textures)
+    t->setUniforms(program);
+
   for (auto& layer : m_layers)
     layer.setUniforms(program, texture_manager);
 
@@ -481,9 +487,6 @@ void TerrainCDLOD::setUniforms(ShaderProgramPtr program)
 
   program->setUniformi("terrain.tile_size_m", TILE_SIZE_M);
   program->setUniform("terrain.max_texture_scale", LandTextures::MAX_TEXTURE_SCALE);
-
-//   assert(m_land_textures);
-//   m_land_textures->setUniforms(program);
 }
 
 
@@ -606,8 +609,8 @@ void TerrainCDLOD::build(BuildParameters &params)
   }
 
   {
-//    auto forest_textures = std::make_unique<ForestTextures>(texture_manager, params);
-//    m_textures.push_back(std::move(forest_textures));
+    auto forest_textures = std::make_unique<ForestTextures>(texture_manager, params);
+    m_textures.push_back(std::move(forest_textures));
   }
 
 //   {

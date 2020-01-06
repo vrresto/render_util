@@ -244,7 +244,7 @@ TexturePtr createTextureArray(const std::vector<ImageRGBA::ConstPtr> &textures)
   }
 
   LOG_INFO << "resampling textures ... done." << endl;
-  return render_util::createTextureArray<ImageRGBA>(textures_resampled);
+  return render_util::createTextureArray(textures_resampled);
 }
 
 
@@ -321,7 +321,7 @@ void render_util::MapTextures::setWaterMap(const std::vector<ImageGreyScale::Con
 
   auto table_float = image::convert<float>(table);
 
-  TexturePtr chunks_texture = createTextureArray<ImageGreyScale>(chunks);
+  TexturePtr chunks_texture = createTextureArray(chunks);
 
   TextureParameters<int> chunks_params;
   chunks_params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR);

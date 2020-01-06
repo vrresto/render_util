@@ -32,6 +32,7 @@ public:
   virtual const ShaderParameters &getShaderParameters() const = 0;
   virtual void bind(TextureManager&) = 0;
   virtual void unbind(TextureManager&) = 0;
+  virtual void setUniforms(ShaderProgramPtr program) const {}
 };
 
 

@@ -153,6 +153,8 @@ bool render_util::loadImage(util::File &file,
   // so channels_in_file can be safely ingnored
   auto image_data = stbi_load_from_callbacks(&g_callbacks, &file, &width, &height, &channels, 0);
 
+  file.rewind();
+
   if (image_data)
   {
     data_out.resize(width * height * channels);
