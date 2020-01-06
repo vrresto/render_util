@@ -83,7 +83,7 @@ public:
 };
 
 
-template <typename T, int N>
+template <typename T, unsigned N>
 struct Pixel
 {
   enum { NUM_COMPONENTS = N };
@@ -131,7 +131,7 @@ inline RGBA vectorToPixel(glm::vec4 v)
 }
 
 
-template <typename T, int N>
+template <typename T, unsigned N>
 struct ImageComponentsConst
 {
   using ComponentType = T;
@@ -170,14 +170,14 @@ protected:
   std::vector<unsigned char> _data;
 
   unsigned numPixels() const {
-    return _w * _h;
+    return static_cast<unsigned>(_w * _h);
   }
   unsigned sizeBytes() const {
     return numPixels() * BYTES_PER_COMPONENT * Base::numComponents();
   }
 
   unsigned getPixelOffset(int x, int y) const {
-    return (y * _w + x) * BYTES_PER_COMPONENT * Base::numComponents();
+    return static_cast<unsigned>((y * _w + x) * BYTES_PER_COMPONENT * Base::numComponents());
   }
 
   ComponentType *getPixel(int x, int y)
@@ -301,7 +301,7 @@ public:
 };
 
 
-template <typename T, int N = 1>
+template <typename T, unsigned N = 1>
 class Image : public ImageBase<ImageComponentsConst<T,N>>
 {
   static_assert(N >= 1);

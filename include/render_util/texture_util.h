@@ -68,13 +68,13 @@ namespace render_util
 
   struct ImageResource
   {
-    virtual glm::ivec2 getSize() const = 0;
-    virtual unsigned int getNumComponents() = 0;
+    virtual glm::uvec2 getSize() const = 0;
+    virtual unsigned getNumComponents() = 0;
     virtual std::unique_ptr<GenericImage> load(int scale_exponent) const = 0;
     virtual std::string getName() = 0;
 
-    int w() const { return getSize().x; }
-    int h() const { return getSize().y; }
+    unsigned w() const { return getSize().x; }
+    unsigned h() const { return getSize().y; }
   };
 
 

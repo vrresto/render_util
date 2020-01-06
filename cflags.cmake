@@ -18,11 +18,14 @@ else()
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-strict-aliasing")
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wfatal-errors")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wreturn-type -Werror -Wmissing-field-initializers")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_REENTRANT")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wconversion")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wsign-conversion")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wfatal-errors")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wreturn-type -Werror -Wmissing-field-initializers")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 
 # disable win32 defines
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNODRAWTEXT")

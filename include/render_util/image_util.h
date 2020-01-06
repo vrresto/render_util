@@ -105,7 +105,7 @@ clear(T image)
 }
 
 
-template <typename T, int N>
+template <typename T, unsigned int N>
 std::shared_ptr<Image<T,N>>
 create(Pixel<T,N> color, glm::ivec2 size)
 {
@@ -148,7 +148,7 @@ convert(T_ptr_src src)
   {
     for (int x = 0; x < src->w(); x++)
     {
-      for (int i = 0; i < T_src::NUM_COMPONENTS; i++)
+      for (unsigned i = 0; i < T_src::NUM_COMPONENTS; i++)
       {
         dst->at(x,y,i) = src->get(x,y,i);
       }

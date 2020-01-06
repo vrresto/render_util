@@ -79,9 +79,10 @@ include_directories(${SOURCE_DIR}/include)
 
 if(platform_mingw)
   if (render_util_build_viewer)
+    set(glfw_cflags "${CMAKE_C_FLAGS} -Wno-conversion -Wno-sign-conversion")
     ExternalProject_Add(glfw_source
       URL "https://github.com/glfw/glfw/releases/download/3.2.1/glfw-3.2.1.zip"
-      CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=CMake/i686-w64-mingw32.cmake -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+      CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=CMake/i686-w64-mingw32.cmake -DCMAKE_C_FLAGS=${glfw_cflags}
       INSTALL_COMMAND ""
     )
     ExternalProject_Get_Property(glfw_source SOURCE_DIR)
