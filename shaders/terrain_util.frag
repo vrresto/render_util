@@ -48,7 +48,7 @@
 
 #include lighting_definitions.glsl
 #include water_definitions.glsl
-#include terrain_params.glsl
+#include terrain_params.h.glsl
 #include terrain_geometry_util.h.glsl
 
 vec3 textureColorCorrection(vec3 color);
