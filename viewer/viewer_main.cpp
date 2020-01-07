@@ -100,6 +100,7 @@ namespace
     using namespace util::log;
     using FileSink = FileAppender<TxtFormatter<ADD_NEW_LINE>>;
     using ConsoleSink = ConsoleAppender<MessageOnlyFormatter<ADD_NEW_LINE>>;
+//     using ConsoleSink = ConsoleAppender<TxtFormatter<ADD_NEW_LINE>>;
 
     static FileSink file_sink_warn(app_name + "_warnings.log");
     static FileSink file_sink_info(app_name + "_info.log");

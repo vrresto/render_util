@@ -88,6 +88,8 @@ namespace render_util
         virtual TerrainBase::TypeMap::Ptr loadTypeMap() const = 0;
         virtual ImageGreyScale::Ptr loadForestMap() const = 0;
         virtual MaterialMap::Ptr loadMaterialMap() const = 0;
+        virtual void loadWaterMap(std::vector<ImageGreyScale::Ptr> &chunks,
+                                  Image<unsigned int>::Ptr &table) const = 0;
       };
 
       virtual bool hasBaseLayer() const = 0;
@@ -104,6 +106,7 @@ namespace render_util
 
 //       ImageRGBA::ConstPtr far_texture;
     //   ImageRGBA::ConstPtr forest_far;
+
     };
 
 

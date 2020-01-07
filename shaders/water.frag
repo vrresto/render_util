@@ -25,7 +25,9 @@
 
 #version 130
 
-#define LOW_DETAIL !@detailed_water:1@
+// #define LOW_DETAIL !@detailed_water:1@
+#define LOW_DETAIL 1
+
 #define ENABLE_WAVES !LOW_DETAIL
 #define ENABLE_WAVE_INTERPOLATION 1
 // #define ENABLE_WAVE_FOAM 1
@@ -38,8 +40,8 @@
 #define ENABLE_UNLIT_OUTPUT @enable_unlit_output:0@
 
 // const float water_map_chunk_size_m = 1600;
-const float water_map_chunk_size_m = 1600 * 4;
-const vec2 water_map_table_shift = vec2(0, 200);
+// const float water_map_chunk_size_m = 1600 * 4;
+// const vec2 water_map_table_shift = vec2(0, 200);
 const float SPEC_HARDNESS = 256.0;
 // const float sea_roughness = 0.4;
 const float sea_roughness = 1.0;
@@ -60,25 +62,26 @@ vec3 textureColorCorrection(vec3 color);
 vec3 getSkyColor(vec3 camera_pos, vec3 viewDir);
 
 
+#if !LOW_DETAIL
 uniform sampler2DArray sampler_beach;
 uniform sampler2DArray sampler_foam_mask;
-uniform sampler2DArray sampler_water_normal_map;
-uniform sampler2D sampler_shallow_water;
-uniform sampler2D sampler_deep_water;
-uniform sampler2D sampler_water_map_simple;
-uniform sampler2D sampler_shore_wave;
+#endif
 
-uniform sampler2D sampler_water_type_map;
+// uniform sampler2D sampler_shore_wave;
+// uniform sampler2D sampler_water_map_simple;
+
+uniform sampler2DArray sampler_water_normal_map;
 uniform sampler2D sampler_water_map_table;
 uniform sampler2DArray sampler_water_map;
+uniform sampler2D sampler_water_type_map;
 
-#if ENABLE_BASE_MAP
-  uniform vec2 height_map_base_size_m;
-  uniform vec2 height_map_base_origin;
-  #if ENABLE_BASE_WATER_MAP
-    uniform sampler2D sampler_water_map_base;
-  #endif
-#endif
+// #if ENABLE_BASE_MAP
+//   uniform vec2 height_map_base_size_m;
+//   uniform vec2 height_map_base_origin;
+//   #if ENABLE_BASE_WATER_MAP
+//     uniform sampler2D sampler_water_map_base;
+//   #endif
+// #endif
 
 uniform vec3 sunDir;
 uniform vec3 water_color;
@@ -97,15 +100,35 @@ struct WaterAnimationParameters
 uniform WaterAnimationParameters water_animation_params[2];
 
 uniform int water_animation_num_frames = 0;
-uniform vec2 water_map_shift = vec2(0);
-uniform vec2 water_map_scale = vec2(1);
-uniform ivec2 water_map_table_size;
+// uniform vec2 water_map_shift = vec2(0);
+// uniform vec2 water_map_scale = vec2(1);
+// uniform ivec2 water_map_table_size;
 uniform vec4 shore_wave_scroll;
-uniform ivec2 typeMapSize;
+// uniform ivec2 typeMapSize;
 
 varying vec2 pass_texcoord;
 varying vec2 pass_type_map_coord;
 
+
+float sampleWaterMap(vec2 pos, in TerrainLayer layer)
+{
+  // tiled
+  // vec2 waterMapTablePos = fract((pos.xy + water_map_table_shift) / terrain.detail_layer.size_m) * terrain.detail_layer.size_m;
+
+  // cropped
+  vec2 table_pos = ((pos + layer.water_map.table_shift_m) / layer.water_map.table_size_m) *
+    layer.water_map.table_size_m;
+
+  vec2 table_coords = table_pos / (layer.water_map.table_size_px * layer.water_map.chunk_size_m);
+
+  float water_map_index = texture(layer.water_map.sampler_table, table_coords).x;
+
+  vec2 coords =
+    (fract(((pos + layer.water_map.shift) / layer.water_map.chunk_size_m)) * layer.water_map.scale)
+      + layer.water_map.shift;
+
+  return texture(layer.water_map.sampler, vec3(coords, water_map_index)).x;
+}
 
 vec3 calcWaterEnvColor(vec3 pos, vec3 normal, vec3 viewDir)
 {
@@ -245,6 +268,7 @@ float getShoreWaveNoise(float pos)
 }
 
 
+#if 0
 float sampleShoreWave(vec2 pos, float waterDepth, float offset)
 {
   const float shore_wave_length = 600;
@@ -285,6 +309,7 @@ float sampleShoreWave(vec2 pos, float waterDepth, float offset)
 //   shore_wave_strength2_w *= 2;
 //   return mix(shore_wave_strength, shore_wave_strength2, shore_wave_strength2_w);
 }
+#endif
 
 
 vec3 blendNormal(vec3 n1, vec3 n2, float dist, float vis, float strength)
@@ -556,6 +581,8 @@ float getWaterDepthBase(vec2 pos)
 float getWaterDepth(vec2 pos)
 {
 #if ENABLE_WATER_MAP
+
+#if 0
   // tiled
   // vec2 waterMapTablePos = fract((pos.xy + water_map_table_shift) / terrain.detail_layer.size_m) * terrain.detail_layer.size_m;
 
@@ -577,22 +604,26 @@ float getWaterDepth(vec2 pos)
 //   if (mirror_water_map_coords.y)
 //     waterMapCoords.y = 1.0 - waterMapCoords.y;
 
-  float depth = 1 - texture(sampler_water_map, vec3(waterMapCoords, water_map_index)).x;
-
-#if ENABLE_BASE_MAP
-  {
-    float detail_map_blend = getDetailMapBlend(pos);
-    detail_map_blend = smoothstep(0.7, 1.0, detail_map_blend);
-
-    #if ENABLE_BASE_WATER_MAP
-      float base_depth = getWaterDepthBase(pos);
-      depth = mix(base_depth, depth, detail_map_blend);
-    #else
-      depth *= detail_map_blend;
-    #endif
-
-  }
+//   float depth = 1 - texture(sampler_water_map, vec3(waterMapCoords, water_map_index)).x;
 #endif
+  
+  float depth = 1 - sampleWaterMap(pos, terrain.detail_layer);
+//   texture(sampler_water_map, vec3(waterMapCoords, water_map_index)).x;
+
+// #if ENABLE_BASE_MAP
+//   {
+//     float detail_map_blend = getDetailMapBlend(pos);
+//     detail_map_blend = smoothstep(0.7, 1.0, detail_map_blend);
+// 
+//     #if ENABLE_BASE_WATER_MAP
+//       float base_depth = getWaterDepthBase(pos);
+//       depth = mix(base_depth, depth, detail_map_blend);
+//     #else
+//       depth *= detail_map_blend;
+//     #endif
+// 
+//   }
+// #endif
 
   return depth;
 #else
@@ -601,6 +632,7 @@ float getWaterDepth(vec2 pos)
 }
 
 
+#if 0
 float getShoreWaveStrength(vec2 pos, float waterDepth, float amount)
 {
   float shore_wave_strength = 0;
@@ -630,6 +662,7 @@ float getShoreWaveStrength(vec2 pos, float waterDepth, float amount)
 
   return shore_wave_strength;
 }
+#endif
 
 
 #if ENABLE_UNLIT_OUTPUT

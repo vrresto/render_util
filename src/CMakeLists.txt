@@ -4,6 +4,7 @@ set(CXX_SRCS
   terrain/terrain_util.cpp
   terrain/land_textures.cpp
   terrain/forest_textures.cpp
+  terrain/water_textures.cpp
   atmosphere.cpp
   camera.cpp
   texunits.cpp

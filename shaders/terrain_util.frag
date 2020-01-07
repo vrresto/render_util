@@ -21,7 +21,9 @@
 #extension GL_ARB_texture_query_lod : require
 
 // #define ENABLE_TERRAIN_NOISE 1
-#define ENABLE_WATER_TYPE_MAP 1
+
+#define ENABLE_WATER_TYPE_MAP 0
+
 #define ENABLE_FAR_FOREST 0
 #define DETAILED_FOREST false
 #define ENABLE_TERRAIN_NORMAL_MAP 1
@@ -31,8 +33,13 @@
 
 // #define ENABLE_FAR_TEXTURE !@enable_base_map@
 #define LOW_DETAIL @low_detail:0@
-#define DETAILED_WATER @detailed_water:1@
+
+// #define DETAILED_WATER @detailed_water:1@
+#define DETAILED_WATER 0
+
+#define ENABLE_WATER 1
 // #define ENABLE_WATER @enable_water:0@
+
 #define ENABLE_FOREST @enable_forest@
 
 #define ENABLE_TYPE_MAP @enable_type_map:0@
@@ -76,7 +83,7 @@ const float near_distance = 80000;
 // uniform sampler2D sampler_type_map_normals;
 uniform sampler2D sampler_terrain_noise;
 uniform sampler2D sampler_terrain_far;
-uniform sampler2D sampler_shallow_water;
+// uniform sampler2D sampler_shallow_water;
 uniform sampler2DArray sampler_beach;
 
 // uniform ivec2 typeMapSize;
@@ -579,7 +586,8 @@ float bank_amount = 0;
 
   waterDepth = getWaterDepth(pos_flat.xy);
 
-  vec3 shallowWaterColor = texture2D(sampler_shallow_water, pass_texcoord * 2).xyz;
+//   vec3 shallowWaterColor = texture2D(sampler_shallow_water, pass_texcoord * 2).xyz;
+  vec3 shallowWaterColor = vec3(1,0,1);
 
   color.xyz = mix(color.xyz, shallowWaterColor, smoothstep(0.55, 0.9, waterDepth));
 

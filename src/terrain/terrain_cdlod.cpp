@@ -27,6 +27,7 @@
 #include "textures.h"
 #include "land_textures.h"
 #include "forest_textures.h"
+#include "water_textures.h"
 #include "grid_mesh.h"
 #include "vao.h"
 #include <render_util/terrain_cdlod.h>
@@ -613,10 +614,13 @@ void TerrainCDLOD::build(BuildParameters &params)
     m_textures.push_back(std::move(forest_textures));
   }
 
-//   {
-//     auto water_textures = std::make_unique<WaterTextures>(texture_manager);
-//     m_textures.push_back(std::move(water_textures));
-//   }
+  terrain::WaterMap water_map;
+
+  {
+    auto water_textures = std::make_unique<WaterTextures>(texture_manager, params);
+    water_map = water_textures->getWaterMap();
+    m_textures.push_back(std::move(water_textures));
+  }
 
 
   {
@@ -638,8 +642,13 @@ void TerrainCDLOD::build(BuildParameters &params)
     layer.origin_m = vec2(0);
     layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
     layer.uniform_prefix = "terrain.detail_layer.";
+    LOG_INFO << "adding height map ..." << endl;
     layer.texture_maps.push_back(hm);
+    LOG_INFO << "adding normal map ..." << endl;
     layer.texture_maps.push_back(nm);
+    LOG_INFO << "adding water map ..." << endl;
+    layer.water_map = water_map;
+    LOG_INFO << "done." << endl;
 
     for (auto &t : m_textures)
     {

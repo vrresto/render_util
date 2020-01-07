@@ -24,6 +24,20 @@ struct TerrainTextureMap
   vec2 size_m;
 };
 
+
+struct WaterMap
+{
+  sampler2D sampler_table;
+  sampler2DArray sampler;
+
+  ivec2 table_size_px;
+  vec2 table_size_m;
+  vec2 table_shift_m;
+  int chunk_size_m;
+  vec2 scale;
+  vec2 shift;
+};
+
 struct TerrainLayer
 {
   vec2 size_m;
@@ -39,6 +53,7 @@ struct TerrainLayer
   TerrainTextureMap forest_map;
 #endif
 
+  WaterMap water_map;
 };
 
 struct Terrain
@@ -61,3 +76,7 @@ struct Terrain
     ivec2 getBaseTypeMapSizePx();
   #endif
 #endif
+
+// vec2 getWaterMapCoords(in WaterMap map);
+// vec2 getWaterMapTableCoords(in WaterMap map);
+float sampleWaterMap(vec2 pos, in TerrainLayer layer);
