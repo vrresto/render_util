@@ -128,9 +128,9 @@ size_t getDetailLevelAtDistance(double dist)
 
 
 
-TerrainTextureMap createHeightMap(unsigned int texunit, render_util::ElevationMap::ConstPtr image)
+Map createHeightMap(unsigned int texunit, render_util::ElevationMap::ConstPtr image)
 {
-  TerrainTextureMap hm =
+  Map hm =
   {
     .texunit = texunit,
     .resolution_m = TerrainCDLODBase::HEIGHT_MAP_METERS_PER_GRID,
@@ -142,9 +142,9 @@ TerrainTextureMap createHeightMap(unsigned int texunit, render_util::ElevationMa
   return hm;
 }
 
-TerrainTextureMap createNormalMap(unsigned int texunit, render_util::ElevationMap::ConstPtr image)
+Map createNormalMap(unsigned int texunit, render_util::ElevationMap::ConstPtr image)
 {
-  TerrainTextureMap nm =
+  Map nm =
   {
     .texunit = texunit,
     .resolution_m = TerrainCDLODBase::HEIGHT_MAP_METERS_PER_GRID,
@@ -639,8 +639,8 @@ void TerrainCDLOD::build(BuildParameters &params)
     layer.origin_m = vec2(0);
     layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
     layer.uniform_prefix = "terrain.detail_layer.";
-    layer.texture_maps.push_back(hm);
-    layer.texture_maps.push_back(nm);
+    layer.maps.push_back(hm);
+    layer.maps.push_back(nm);
 
     for (auto &t : m_textures)
     {
@@ -664,13 +664,13 @@ void TerrainCDLOD::build(BuildParameters &params)
 //     layer.origin_m = m_base_map_origin;
 //     layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
 //     layer.uniform_prefix = "terrain.base_layer.";
-//     layer.texture_maps.push_back(hm);
-//     layer.texture_maps.push_back(nm);
+//     layer.maps.push_back(hm);
+//     layer.maps.push_back(nm);
 // 
 //     for (auto &t : m_textures)
 //     {
 //       for (auto &map : t->getBaseTextureMaps())
-//         layer.texture_maps.push_back(map);
+//         layer.maps.push_back(map);
 //     }
 // 
 //     m_layers.push_back(layer);
@@ -755,7 +755,7 @@ void TerrainCDLOD::setBaseMapOrigin(glm::vec2 origin)
 render_util::TexturePtr TerrainCDLOD::getNormalMapTexture()
 {
   assert(!m_layers.empty());
-  auto &map = m_layers.at(0).texture_maps.at(1); //FIXME
+  auto &map = m_layers.at(0).maps.at(1); //FIXME
   assert(map.name == "normal_map");
   return map.texture;
 }

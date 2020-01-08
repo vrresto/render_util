@@ -78,7 +78,7 @@ void ForestTextures::loadLayer(Layer &layer,
 
     params.apply(texture);
 
-    TerrainTextureMap map
+    Map map
     {
       .texunit = is_base_layer ? TEXUNIT_FOREST_MAP_BASE : TEXUNIT_FOREST_MAP,
       .resolution_m = TerrainBase::GRID_RESOLUTION_M,
@@ -88,7 +88,7 @@ void ForestTextures::loadLayer(Layer &layer,
       .name = "forest_map",
     };
 
-    layer.texture_maps.push_back(map);
+    layer.maps.push_back(map);
   }
 
 }
