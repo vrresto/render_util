@@ -31,7 +31,7 @@ WaterTextures::WaterTextures(const TextureManager &texture_manager,
 }
 
 
-void WaterTextures::loadLayer(TerrainLayer &layer,
+void WaterTextures::loadLayer(Layer &layer,
                               const TerrainBase::Loader::Layer &loader,
                               bool is_base_layer) const
 {

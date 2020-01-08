@@ -60,7 +60,7 @@ void ForestTextures::setUniforms(ShaderProgramPtr program) const
                        m_texture_manager.getTexUnitNum(TEXUNIT_FOREST_FAR));
 }
 
-void ForestTextures::loadLayer(TerrainLayer &layer,
+void ForestTextures::loadLayer(Layer &layer,
                               const TerrainBase::Loader::Layer &loader,
                               bool is_base_layer) const
 {

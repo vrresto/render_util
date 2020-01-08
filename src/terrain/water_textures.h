@@ -2,7 +2,7 @@
 #define RENDER_UTIL_TERRAIN_WATER_TEXTURES_H
 
 #include "textures.h"
-#include "terrain_layer.h"
+#include "layer.h"
 #include <render_util/terrain_base.h>
 
 namespace render_util::terrain
@@ -24,7 +24,7 @@ public:
   void unbind(TextureManager&) override {}
   void setUniforms(ShaderProgramPtr program) const override {}
 
-  void loadLayer(TerrainLayer&, const TerrainBase::Loader::Layer&,
+  void loadLayer(Layer&, const TerrainBase::Loader::Layer&,
                  bool is_base_layer/*FIXME HACK*/) const override;
 };
 

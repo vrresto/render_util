@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef RENDER_UTIL_TERRAIN_TERRAIN_LAYER_H
-#define RENDER_UTIL_TERRAIN_TERRAIN_LAYER_H
+#ifndef RENDER_UTIL_TERRAIN_LAYER_H
+#define RENDER_UTIL_TERRAIN_LAYER_H
 
 #include <render_util/texture_manager.h>
 #include <render_util/shader.h>
@@ -58,7 +58,7 @@ struct WaterMap
 };
 
 
-struct TerrainLayer
+struct Layer
 {
   glm::vec2 origin_m;
   glm::vec2 size_m;

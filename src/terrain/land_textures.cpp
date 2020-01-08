@@ -260,7 +260,7 @@ LandTextures::LandTextures(const TextureManager &texture_manager,
 }
 
 
-void LandTextures::loadLayer(TerrainLayer &layer, const TerrainBase::Loader::Layer &loader,
+void LandTextures::loadLayer(Layer &layer, const TerrainBase::Loader::Layer &loader,
                              bool is_base_layer) const
 {
   auto texunit = is_base_layer ? TEXUNIT_TYPE_MAP_BASE : TEXUNIT_TYPE_MAP;

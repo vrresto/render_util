@@ -20,7 +20,7 @@
 #define _RENDER_UTIL_TERRAIN_LAND_TEXTURES_H
 
 #include "textures.h"
-#include "terrain_layer.h"
+#include "layer.h"
 
 #include <render_util/texture_manager.h>
 #include <render_util/texunits.h>
@@ -64,7 +64,7 @@ public:
   void bind(TextureManager&) override;
   void unbind(TextureManager&) override;
 
-  void loadLayer(TerrainLayer&, const TerrainBase::Loader::Layer&,
+  void loadLayer(Layer&, const TerrainBase::Loader::Layer&,
                  bool is_base_layer/*FIXME HACK*/) const override;
 };
 

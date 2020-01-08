@@ -1,7 +1,7 @@
 #ifndef RENDER_UTIL_TERRAIN_TEXTURES_H
 #define RENDER_UTIL_TERRAIN_TEXTURES_H
 
-#include "terrain_layer.h"
+#include "layer.h"
 #include <render_util/terrain_base.h>
 
 #include <vector>
@@ -18,7 +18,7 @@ public:
   virtual void unbind(TextureManager&) = 0;
   virtual void setUniforms(ShaderProgramPtr program) const {}
 
-  virtual void loadLayer(TerrainLayer&, const TerrainBase::Loader::Layer&,
+  virtual void loadLayer(Layer&, const TerrainBase::Loader::Layer&,
                          bool is_base_layer/*FIXME HACK*/) const = 0;
 
 };

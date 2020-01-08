@@ -23,7 +23,7 @@
  */
 
 #include "terrain_cdlod_base.h"
-#include "terrain_layer.h"
+#include "layer.h"
 #include "textures.h"
 #include "land_textures.h"
 #include "forest_textures.h"
@@ -368,7 +368,7 @@ class TerrainCDLOD : public TerrainCDLODBase
 
   vec2 m_base_map_origin = vec2(0);
 
-  std::vector<TerrainLayer> m_layers;
+  std::vector<Layer> m_layers;
   std::unordered_map<unsigned int, std::unique_ptr<Material>> materials;
 
   std::vector<std::unique_ptr<terrain::Textures>> m_textures;
@@ -635,7 +635,7 @@ void TerrainCDLOD::build(BuildParameters &params)
     auto hm = ::createHeightMap(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP, hm_image_resized);
     auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP, hm_image);
 
-    TerrainLayer layer;
+    Layer layer;
     layer.origin_m = vec2(0);
     layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
     layer.uniform_prefix = "terrain.detail_layer.";
@@ -660,7 +660,7 @@ void TerrainCDLOD::build(BuildParameters &params)
 //     auto hm = ::createHeightMap(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, hm_image);
 //     auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, hm_image);
 // 
-//     TerrainLayer layer;
+//     Layer layer;
 //     layer.origin_m = m_base_map_origin;
 //     layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
 //     layer.uniform_prefix = "terrain.base_layer.";
