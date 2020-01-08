@@ -13,9 +13,6 @@ class WaterTextures : public Textures
 {
   const TextureManager &m_texture_manager;
   ShaderParameters m_shader_params;
-//   TexturePtr m_forest_layers_texture;
-//   TexturePtr m_forest_far_texture;
-  std::unique_ptr<WaterMap> m_water_map;
 
 public:
 
@@ -27,11 +24,8 @@ public:
   void unbind(TextureManager&) override {}
   void setUniforms(ShaderProgramPtr program) const override {}
 
-  const WaterMap &getWaterMap()
-  {
-    assert(m_water_map);
-    return *m_water_map;
-  }
+  void loadLayer(TerrainLayer&, const TerrainBase::Loader::Layer&,
+                 bool is_base_layer/*FIXME HACK*/) const override;
 };
 
 

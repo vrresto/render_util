@@ -614,11 +614,8 @@ void TerrainCDLOD::build(BuildParameters &params)
     m_textures.push_back(std::move(forest_textures));
   }
 
-  terrain::WaterMap water_map;
-
   {
     auto water_textures = std::make_unique<WaterTextures>(texture_manager, params);
-    water_map = water_textures->getWaterMap();
     m_textures.push_back(std::move(water_textures));
   }
 
@@ -642,18 +639,12 @@ void TerrainCDLOD::build(BuildParameters &params)
     layer.origin_m = vec2(0);
     layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
     layer.uniform_prefix = "terrain.detail_layer.";
-    LOG_INFO << "adding height map ..." << endl;
     layer.texture_maps.push_back(hm);
-    LOG_INFO << "adding normal map ..." << endl;
     layer.texture_maps.push_back(nm);
-    LOG_INFO << "adding water map ..." << endl;
-    layer.water_map = water_map;
-    LOG_INFO << "done." << endl;
 
     for (auto &t : m_textures)
     {
-      for (auto &map : t->getTextureMaps())
-        layer.texture_maps.push_back(map);
+      t->loadLayer(layer, params.loader.getDetailLayer(), false);
     }
 
     m_layers.push_back(layer);
@@ -661,28 +652,29 @@ void TerrainCDLOD::build(BuildParameters &params)
     LOG_INFO << "Creating detail layer ... done." << endl;
   }
 
-  if (params.loader.hasBaseLayer())
-  {
-    auto hm_image = params.loader.getBaseLayer().loadHeightMap();
 
-    auto hm = ::createHeightMap(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, hm_image);
-    auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, hm_image);
-
-    TerrainLayer layer;
-    layer.origin_m = m_base_map_origin;
-    layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
-    layer.uniform_prefix = "terrain.base_layer.";
-    layer.texture_maps.push_back(hm);
-    layer.texture_maps.push_back(nm);
-
-    for (auto &t : m_textures)
-    {
-      for (auto &map : t->getBaseTextureMaps())
-        layer.texture_maps.push_back(map);
-    }
-
-    m_layers.push_back(layer);
-  }
+//   if (params.loader.hasBaseLayer())
+//   {
+//     auto hm_image = params.loader.getBaseLayer().loadHeightMap();
+// 
+//     auto hm = ::createHeightMap(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, hm_image);
+//     auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, hm_image);
+// 
+//     TerrainLayer layer;
+//     layer.origin_m = m_base_map_origin;
+//     layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
+//     layer.uniform_prefix = "terrain.base_layer.";
+//     layer.texture_maps.push_back(hm);
+//     layer.texture_maps.push_back(nm);
+// 
+//     for (auto &t : m_textures)
+//     {
+//       for (auto &map : t->getBaseTextureMaps())
+//         layer.texture_maps.push_back(map);
+//     }
+// 
+//     m_layers.push_back(layer);
+//   }
 
   LOG_INFO<<"TerrainCDLOD: creating material map ..."<<endl;
   auto material_map = std::make_unique<MaterialMap>(params);

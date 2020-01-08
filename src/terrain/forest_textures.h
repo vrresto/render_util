@@ -49,6 +49,8 @@ public:
   void bind(TextureManager&) override;
   void unbind(TextureManager&) override;
   void setUniforms(ShaderProgramPtr program) const override;
+  void loadLayer(TerrainLayer&, const TerrainBase::Loader::Layer&,
+                 bool is_base_layer/*FIXME HACK*/) const override;
 };
 
 

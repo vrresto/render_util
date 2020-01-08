@@ -39,7 +39,7 @@ class LandTextures : public Textures
   const TextureManager &m_texture_manager;
   ShaderParameters m_shader_params;
   bool m_enable_normal_maps = false;
-  
+  std::map<unsigned, glm::uvec3> m_mapping;
 
 
 // //   glm::ivec2 m_type_map_size = glm::ivec2(0);
@@ -63,6 +63,9 @@ public:
 
   void bind(TextureManager&) override;
   void unbind(TextureManager&) override;
+
+  void loadLayer(TerrainLayer&, const TerrainBase::Loader::Layer&,
+                 bool is_base_layer/*FIXME HACK*/) const override;
 };
 
 

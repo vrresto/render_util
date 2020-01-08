@@ -33,7 +33,7 @@ namespace
 {
 
 
-std::unique_ptr<TerrainTextureMap> createTypeMapTexture(TerrainBase::TypeMap::ConstPtr type_map_in,
+TerrainTextureMap createTypeMapTexture(TerrainBase::TypeMap::ConstPtr type_map_in,
                                 const std::map<unsigned, glm::uvec3> &mapping,
                                 std::string name,
                                 unsigned int texunit)
@@ -89,17 +89,17 @@ std::unique_ptr<TerrainTextureMap> createTypeMapTexture(TerrainBase::TypeMap::Co
     params.apply(texture);
   }
 
-  auto map = new TerrainTextureMap
-  ({
+  TerrainTextureMap map
+  {
     .texunit = texunit,
     .resolution_m = LandTextures::TYPE_MAP_RESOLUTION_M,
     .size_m = type_map->getSize() * LandTextures::TYPE_MAP_RESOLUTION_M,
     .size_px = type_map->getSize(),
     .texture = texture,
     .name = "type_map",
-  });
+  };
 
-  return std::unique_ptr<TerrainTextureMap>(map);
+  return map;
 }
 
 
@@ -108,10 +108,7 @@ void createTextureArrays(
     const std::vector<float> &texture_scale_in,
     double max_texture_scale,
     std::array<TexturePtr, render_util::MAX_TERRAIN_TEXUNITS> &arrays_out,
-    TerrainBase::TypeMap::ConstPtr type_map_in,
-    TerrainBase::TypeMap::ConstPtr base_type_map_in,
-    std::unique_ptr<TerrainTextureMap> &type_map_out,
-    std::unique_ptr<TerrainTextureMap> &base_type_map_out)
+    std::map<unsigned, glm::uvec3> &mapping_out)
 {
   using namespace glm;
   using namespace std;
@@ -175,15 +172,7 @@ void createTextureArrays(
     mapping.insert(make_pair(i, glm::uvec3{index, texture_arrays[index].size()-1, scale}));
   }
 
-  type_map_out = createTypeMapTexture(type_map_in, mapping, "type_map", TEXUNIT_TYPE_MAP);
-
-  if (base_type_map_in)
-  {
-    base_type_map_out = createTypeMapTexture(base_type_map_in,
-                                                     mapping,
-                                                     "type_map_base",
-                                                     TEXUNIT_TYPE_MAP_BASE);
-  }
+  mapping_out = mapping;
 
   for (int i = 0; i < texture_arrays.size(); i++)
   {
@@ -208,9 +197,9 @@ namespace render_util::terrain
 {
 
 
-LandTextures::LandTextures(const TextureManager &texture_manager, TerrainBase::BuildParameters &params) :
+LandTextures::LandTextures(const TextureManager &texture_manager,
+                           TerrainBase::BuildParameters &params) :
     m_texture_manager(texture_manager)
-//     , m_type_map_size(type_map_->getSize())
 {
   using namespace glm;
   using namespace std;
@@ -221,24 +210,13 @@ LandTextures::LandTextures(const TextureManager &texture_manager, TerrainBase::B
 
   assert(loader.getLandTextures().size() == loader.getLandTexturesScale().size());
 
-//   if (base_type_map_)
-//     m_base_type_map_size = base_type_map_->getSize();
-
-  std::unique_ptr<TerrainTextureMap> type_map;
-  std::unique_ptr<TerrainTextureMap> base_type_map;
-
   LOG_INFO << "Creating land textures ..." << endl;
 
-#if 1
   createTextureArrays(loader.getLandTextures(),
                       loader.getLandTexturesScale(),
                       MAX_TEXTURE_SCALE,
                       m_textures,
-                      loader.getDetailLayer().loadTypeMap(),
-                      (loader.hasBaseLayer() ? loader.getBaseLayer().loadTypeMap() : nullptr),
-                      type_map,
-                      base_type_map);
-#endif
+                      m_mapping);
 
 #if 0
   if (!textures_nm.empty())
@@ -257,11 +235,6 @@ LandTextures::LandTextures(const TextureManager &texture_manager, TerrainBase::B
                                   m_base_type_map_texture_nm);
   }
 #endif
-
-  assert(type_map);
-  addTextureMap(*type_map);
-  if (base_type_map)
-    addBaseTextureMap(*base_type_map);
 
   for (int i = 0; i < m_textures.size(); i++)
   {
@@ -284,6 +257,15 @@ LandTextures::LandTextures(const TextureManager &texture_manager, TerrainBase::B
   }
 
   LOG_INFO << "Creating land textures ... done." << endl;
+}
+
+
+void LandTextures::loadLayer(TerrainLayer &layer, const TerrainBase::Loader::Layer &loader,
+                             bool is_base_layer) const
+{
+  auto texunit = is_base_layer ? TEXUNIT_TYPE_MAP_BASE : TEXUNIT_TYPE_MAP;
+  auto type_map = createTypeMapTexture(loader.loadTypeMap(), m_mapping, "type_map", texunit);
+  layer.texture_maps.push_back(type_map);
 }
 
 
@@ -336,8 +318,6 @@ void LandTextures::unbind(TextureManager &tm)
   LOG_TRACE<<endl;
 
   using namespace render_util;
-
-//   tm.unbind(TEXUNIT_TYPE_MAP, m_type_map_texture->getTarget());
 
   for (int i = 0; i < m_textures.size(); i++)
   {
