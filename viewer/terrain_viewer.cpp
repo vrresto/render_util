@@ -110,8 +110,6 @@ namespace terrain_viewer
 {
   class Map : public MapBase
   {
-    TerrainBase::MaterialMap::ConstPtr m_material_map;
-    TerrainBase::MaterialMap::ConstPtr m_base_material_map;
     MapTextures m_map_textures;
     WaterAnimation m_water_animation;
 
@@ -120,22 +118,6 @@ namespace terrain_viewer
 
     MapTextures &getTextures() override { return m_map_textures; }
     WaterAnimation &getWaterAnimation() override { return m_water_animation; }
-    void setMaterialMap(TerrainBase::MaterialMap::ConstPtr map) override
-    {
-      m_material_map = map;
-    }
-    void setBaseMaterialMap(TerrainBase::MaterialMap::ConstPtr map) override
-    {
-      cout<<"setBaseMaterialMap()"<<endl;
-      m_base_material_map = map;
-    }
-
-    TerrainBase::MaterialMap::ConstPtr getMaterialMap() { return m_material_map; }
-    TerrainBase::MaterialMap::ConstPtr getBaseMaterialMap()
-    {
-      assert(m_base_material_map);
-      return m_base_material_map;
-    }
   };
 }
 

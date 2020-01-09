@@ -349,6 +349,9 @@ public:
 };
 
 
+template <typename T>
+using GenericImageWithComponentType = ImageBase<ImageComponentsVarying<T>>;
+
 typedef ImageBase<ImageComponentsVarying<unsigned char>> GenericImage;
 typedef Image<unsigned char, 1> ImageGreyScale;
 typedef Image<unsigned char, 3> ImageRGB;

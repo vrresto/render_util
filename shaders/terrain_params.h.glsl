@@ -30,10 +30,9 @@ struct WaterMap
   sampler2D sampler_table;
   sampler2DArray sampler;
 
-  ivec2 table_size_px;
   vec2 table_size_m;
   vec2 table_shift_m;
-  int chunk_size_m;
+  float chunk_size_m;
   vec2 scale;
   vec2 shift;
 };

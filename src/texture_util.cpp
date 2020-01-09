@@ -103,7 +103,7 @@ void createTextureArrayLevel0(const std::vector<ScaledImageResource> &textures,
     LOG_INFO << "Loading texture: " << textures.at(i).resource->getName()
              << " (" << i+1 << " of " << num_textures << ")" << endl;
 
-    auto image = textures.at(i).load();
+    auto image = textures.at(i).load(bytes_per_pixel);
     assert(image->getSize() == glm::ivec2(texture_width));
     assert(image->getNumComponents() == bytes_per_pixel);
 
@@ -511,7 +511,7 @@ TexturePtr createTextureArray(const std::vector<const unsigned char*> &textures,
   gl::TexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   createTextureArrayLevel0(textures, texture_width, bytes_per_pixel);
-  
+
   CHECK_GL_ERROR();
 
   gl::GenerateMipmap(GL_TEXTURE_2D_ARRAY);
@@ -932,15 +932,14 @@ Image<Normal>::Ptr createNormalMap(ElevationMap::ConstPtr elevation_map, float g
 }
 
 
-TexturePtr createTextureArray(const std::vector<ScaledImageResource> &images)
+TexturePtr createTextureArray(const std::vector<ScaledImageResource> &images, int num_components)
 {
   auto texture_width = images.at(0).getScaledSize().x;
-  auto bytes_per_pixel = images.at(0).resource->getNumComponents();
+  auto bytes_per_pixel = num_components ? num_components : images.at(0).resource->getNumComponents();
 
   for (auto &image : images)
   {
     assert(image.getScaledSize() == glm::ivec2(texture_width));
-    assert(image.resource->getNumComponents() == bytes_per_pixel);
   }
 
   TexturePtr texture = Texture::create(GL_TEXTURE_2D_ARRAY);

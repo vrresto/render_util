@@ -59,4 +59,27 @@ bool NormalFile::eof()
 }
 
 
+void NormalFile::readAll(std::vector<char> &out)
+{
+  bool success = false;
+
+  if (m_stream.good())
+  {
+    m_stream.seekg (0, m_stream.end);
+    size_t size = m_stream.tellg();
+    m_stream.seekg (0, m_stream.beg);
+    out.resize(size);
+    m_stream.read(reinterpret_cast<char*>(out.data()), out.size());
+
+    if (m_stream.good())
+      success = true;
+  }
+
+  if (!success)
+  {
+    throw std::runtime_error("Failed to read " + m_path);
+  }
+}
+
+
 }

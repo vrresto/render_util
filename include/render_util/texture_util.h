@@ -70,7 +70,7 @@ namespace render_util
   {
     virtual glm::ivec2 getSize() const = 0;
     virtual unsigned int getNumComponents() = 0;
-    virtual std::unique_ptr<GenericImage> load(int scale_exponent) const = 0;
+    virtual std::unique_ptr<GenericImage> load(int scale_exponent, int num_components = 0) const = 0;
     virtual std::string getName() = 0;
 
     int w() const { return getSize().x; }
@@ -87,9 +87,9 @@ namespace render_util
       return glm::ivec2(glm::pow(2, scale_exponent) * glm::dvec2(resource->getSize()));
     }
 
-    std::unique_ptr<GenericImage> load() const
+    std::unique_ptr<GenericImage> load(int num_components = 0) const
     {
-      auto image = resource->load(scale_exponent);
+      auto image = resource->load(scale_exponent, num_components);
       assert(image->getSize() == getScaledSize());
       return image;
     }
@@ -115,11 +115,12 @@ namespace render_util
   TexturePtr createTextureArray(const std::vector<const unsigned char*> &textures,
                                   int mipmap_levels, int texture_width, int bytes_per_pixel);
 
-  TexturePtr createTextureArray(const std::vector<ScaledImageResource>&);
-  inline TexturePtr createTextureArray(std::vector<ScaledImageResource> &resources_)
+  TexturePtr createTextureArray(const std::vector<ScaledImageResource>&, int num_components = 0);
+  inline TexturePtr createTextureArray(std::vector<ScaledImageResource> &resources_,
+                                       int num_components = 0)
   {
     const auto &resources = resources_;
-    return createTextureArray(resources);
+    return createTextureArray(resources, num_components);
   }
 
   void setTextureImage(TexturePtr texture,

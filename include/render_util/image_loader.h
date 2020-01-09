@@ -42,7 +42,8 @@ namespace render_util
                  std::vector<unsigned char> &data_out,
                  int &width,
                  int &height,
-                 int &channels);
+                 int &channels,
+                 int force_channels);
 
   bool loadImageFromMemory(const std::vector<char> &data_in,
                            int num_channels,
@@ -66,7 +67,7 @@ namespace render_util
                  ImageType type = ImageType::TGA);
 
 
-  std::unique_ptr<GenericImage> loadImage(util::File &file);
+  std::unique_ptr<GenericImage> loadImage(util::File &file, int force_channels);
 
   template <typename T>
   std::shared_ptr<T> loadImageFromMemory(const std::vector<char> &data)

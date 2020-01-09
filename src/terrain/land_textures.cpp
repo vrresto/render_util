@@ -183,7 +183,7 @@ void createTextureArrays(
       continue;
 
     LOG_TRACE<<"array: "<<i<<endl;
-    arrays_out.at(i) = render_util::createTextureArray(textures);
+    arrays_out.at(i) = render_util::createTextureArray(textures, 3);
 
     CHECK_GL_ERROR();
   }

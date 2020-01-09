@@ -110,24 +110,23 @@ varying vec2 pass_texcoord;
 varying vec2 pass_type_map_coord;
 
 
-float sampleWaterMap(vec2 pos, in TerrainLayer layer)
+float sampleWaterMap(vec2 pos, in WaterMap map)
 {
   // tiled
   // vec2 waterMapTablePos = fract((pos.xy + water_map_table_shift) / terrain.detail_layer.size_m) * terrain.detail_layer.size_m;
 
   // cropped
-  vec2 table_pos = ((pos + layer.water_map.table_shift_m) / layer.water_map.table_size_m) *
-    layer.water_map.table_size_m;
+  vec2 table_pos = pos + map.table_shift_m;
 
-  vec2 table_coords = table_pos / (layer.water_map.table_size_px * layer.water_map.chunk_size_m);
+  vec2 table_coords = table_pos / map.table_size_m;
 
-  float water_map_index = texture(layer.water_map.sampler_table, table_coords).x;
+  float chunk_nr = texture(map.sampler_table, table_coords).x;
 
   vec2 coords =
-    (fract(((pos + layer.water_map.shift) / layer.water_map.chunk_size_m)) * layer.water_map.scale)
-      + layer.water_map.shift;
+    (fract(((pos + map.shift) / map.chunk_size_m)) * map.scale)
+      + map.shift;
 
-  return texture(layer.water_map.sampler, vec3(coords, water_map_index)).x;
+  return texture(map.sampler, vec3(coords, chunk_nr)).x;
 }
 
 vec3 calcWaterEnvColor(vec3 pos, vec3 normal, vec3 viewDir)
@@ -607,7 +606,7 @@ float getWaterDepth(vec2 pos)
 //   float depth = 1 - texture(sampler_water_map, vec3(waterMapCoords, water_map_index)).x;
 #endif
   
-  float depth = 1 - sampleWaterMap(pos, terrain.detail_layer);
+  float depth = 1 - sampleWaterMap(pos, terrain.detail_layer.water_map);
 //   texture(sampler_water_map, vec3(waterMapCoords, water_map_index)).x;
 
 // #if ENABLE_BASE_MAP

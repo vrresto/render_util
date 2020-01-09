@@ -75,6 +75,36 @@ getChannel(T image, int channel)
 
 
 template <typename T>
+std::unique_ptr<GenericImageWithComponentType<typename TypeFromPtr<T>::Type::ComponentType>>
+makeGeneric(T &image, int num_channels)
+{
+  if (!num_channels)
+    num_channels = image->numComponents();
+
+  assert(num_channels <= image->numComponents());
+
+  using ComponentType = typename TypeFromPtr<T>::Type::ComponentType;
+  using OutImageType = GenericImageWithComponentType<ComponentType>;
+
+  auto image_out =
+    std::make_unique<OutImageType>(image->getSize(), num_channels);
+
+  for (int y = 0; y < image_out->h(); y++)
+  {
+    for (int x = 0; x < image_out->w(); x++)
+    {
+      for (int c = 0; c < num_channels; c++)
+      {
+        image_out->at(x,y,c) = image->get(x, y, c);
+      }
+    }
+  }
+
+  return image_out;
+}
+
+
+template <typename T>
 void
 fill(T image, typename TypeFromPtr<T>::Type::PixelType color)
 {

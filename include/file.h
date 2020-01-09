@@ -1,6 +1,7 @@
 #ifndef UTIL_FILE_BASE_H
 #define UTIL_FILE_BASE_H
 
+#include <vector>
 #include <string>
 #include <fstream>
 
@@ -10,10 +11,12 @@ namespace util
 
 struct File
 {
+  virtual ~File() {}
   virtual int read(char *out, int bytes) = 0;
   virtual void skip(int bytes) = 0;
   virtual void rewind() = 0;
   virtual bool eof() = 0;
+  virtual void readAll(std::vector<char>&) = 0;
 };
 
 
@@ -31,6 +34,7 @@ public:
   void skip(int bytes) override;
   void rewind() override;
   bool eof() override;
+  void readAll(std::vector<char>&) override;
 };
 
 

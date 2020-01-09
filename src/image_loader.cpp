@@ -147,16 +147,21 @@ bool render_util::loadImage(util::File &file,
                             std::vector<unsigned char> &data_out,
                             int &width,
                             int &height,
-                            int &channels)
+                            int &channels,
+                            int force_channels)
 {
-  // num_channels forces the number of channels in the returned data
-  // so channels_in_file can be safely ingnored
-  auto image_data = stbi_load_from_callbacks(&g_callbacks, &file, &width, &height, &channels, 0);
+  auto image_data = stbi_load_from_callbacks(&g_callbacks, &file, &width, &height, &channels,
+                                             force_channels);
 
   file.rewind();
 
   if (image_data)
   {
+    //FIXME don't copy but pass buffer and deleter
+
+    if (force_channels)
+      channels = force_channels;
+
     data_out.resize(width * height * channels);
     memcpy(data_out.data(), image_data, data_out.size());
 
@@ -172,14 +177,14 @@ bool render_util::loadImage(util::File &file,
   }
 }
 
-std::unique_ptr<render_util::GenericImage> render_util::loadImage(util::File &file)
+std::unique_ptr<render_util::GenericImage> render_util::loadImage(util::File &file, int force_channels)
 {
   std::vector<unsigned char> data;
   int width = 0;
   int height = 0;
   int channels = 0;
 
-  if (loadImage(file, data, width, height, channels))
+  if (loadImage(file, data, width, height, channels, force_channels))
   {
     return std::make_unique<GenericImage>(glm::ivec2(width, height), std::move(data), channels);
   }

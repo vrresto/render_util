@@ -49,10 +49,9 @@ struct WaterMap
   TexturePtr texture_table;
   TexturePtr texture;
 
-  glm::ivec2 table_size_px;
   glm::vec2 table_size_m;
   glm::vec2 table_shift_m;
-  int chunk_size_m;
+  float chunk_size_m;
   glm::vec2 scale;
   glm::vec2 shift;
 };
@@ -113,8 +112,7 @@ private:
     program->setUniformi(uniform_prefix + "water_map" + ".sampler_table",
                          tex_mgr.getTexUnitNum(map.texunit_table));
 
-    program->setUniformi(uniform_prefix + "water_map" + ".chunk_size_m", map.chunk_size_m);
-    program->setUniform(uniform_prefix + "water_map" + ".table_size_px", map.table_size_px);
+    program->setUniform(uniform_prefix + "water_map" + ".chunk_size_m", map.chunk_size_m);
     program->setUniform(uniform_prefix + "water_map" + ".table_size_m", map.table_size_m);
     program->setUniform(uniform_prefix + "water_map" + ".table_shift_m", map.table_shift_m);
     program->setUniform(uniform_prefix + "water_map" + ".scale", map.scale);
