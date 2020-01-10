@@ -123,8 +123,8 @@ float sampleWaterMap(vec2 pos, in WaterMap map)
   float chunk_nr = texture(map.sampler_table, table_coords).x;
 
   vec2 coords =
-    (fract(((pos + map.shift) / map.chunk_size_m)) * map.scale)
-      + map.shift;
+    (fract(((pos + map.chunk_shift_m) / map.chunk_size_m)) * map.chunk_scale)
+      + map.chunk_shift_m;
 
   return texture(map.sampler, vec3(coords, chunk_nr)).x;
 }

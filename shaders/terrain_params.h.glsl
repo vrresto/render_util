@@ -33,8 +33,8 @@ struct WaterMap
   vec2 table_size_m;
   vec2 table_shift_m;
   float chunk_size_m;
-  vec2 scale;
-  vec2 shift;
+  vec2 chunk_scale;
+  vec2 chunk_shift_m;
 };
 
 struct TerrainLayer

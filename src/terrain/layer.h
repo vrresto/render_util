@@ -52,8 +52,8 @@ struct WaterMap
   glm::vec2 table_size_m;
   glm::vec2 table_shift_m;
   float chunk_size_m;
-  glm::vec2 scale;
-  glm::vec2 shift;
+  glm::vec2 chunk_scale;
+  glm::vec2 chunk_shift_m;
 };
 
 
@@ -115,8 +115,8 @@ private:
     program->setUniform(uniform_prefix + "water_map" + ".chunk_size_m", map.chunk_size_m);
     program->setUniform(uniform_prefix + "water_map" + ".table_size_m", map.table_size_m);
     program->setUniform(uniform_prefix + "water_map" + ".table_shift_m", map.table_shift_m);
-    program->setUniform(uniform_prefix + "water_map" + ".scale", map.scale);
-    program->setUniform(uniform_prefix + "water_map" + ".shift", map.shift);
+    program->setUniform(uniform_prefix + "water_map" + ".chunk_scale", map.chunk_scale);
+    program->setUniform(uniform_prefix + "water_map" + ".chunk_shift_m", map.chunk_shift_m);
   }
 
   void setMapUniforms(Map &map, ShaderProgramPtr program,
