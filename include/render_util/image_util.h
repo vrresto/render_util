@@ -228,6 +228,31 @@ flipY(T src)
   return dst;
 }
 
+
+template <typename T>
+void flipYInPlace(T &image)
+{
+  int start = 0;
+  int end = image->h()-1;
+
+  while (start < end)
+  {
+    for (int x = 0; x < image->w(); x++)
+    {
+      for (int c = 0; c < image->getNumComponents(); c++)
+      {
+        auto tmp = image->at(x, start, c);
+        image->at(x, start, c) = image->get(x, end, c);
+        image->at(x, end, c) = tmp;
+      }
+    }
+
+    start++;
+    end--;
+  }
+}
+
+
 template <typename T>
 typename T::Ptr
 swapXY(typename T::ConstPtr src)

@@ -81,6 +81,8 @@ namespace render_util
   struct ScaledImageResource
   {
     std::shared_ptr<ImageResource> resource;
+    int scale_exponent = 0;
+    bool flip_y = false;
 
     glm::ivec2 getScaledSize() const
     {
@@ -91,13 +93,13 @@ namespace render_util
     {
       auto image = resource->load(scale_exponent, num_components);
       assert(image->getSize() == getScaledSize());
+      if (flip_y)
+        image::flipYInPlace(image);
       return image;
     }
-
-    int scale_exponent = 0;
   };
 
-// 
+
   TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_pixel, bool mipmaps);
   TexturePtr createTextureExt(const unsigned char *data,
                               size_t data_size,

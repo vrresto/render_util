@@ -157,6 +157,7 @@ void createTextureArrays(
 
     ScaledImageResource scaled_image;
     scaled_image.resource = image;
+    scaled_image.flip_y = true;
 
     while (scaled_image.getScaledSize().x < smallest_size)
     {
