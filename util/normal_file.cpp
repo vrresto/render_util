@@ -9,6 +9,10 @@ NormalFile::NormalFile(std::string path) : m_path(path)
   m_stream.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
   m_stream.open(m_path, std::ios_base::binary);
   assert(m_stream.good());
+
+  m_stream.seekg (0, m_stream.end);
+  m_size = m_stream.tellg();
+  m_stream.seekg (0, m_stream.beg);
 }
 
 
@@ -79,6 +83,12 @@ void NormalFile::readAll(std::vector<char> &out)
   {
     throw std::runtime_error("Failed to read " + m_path);
   }
+}
+
+
+int NormalFile::getSize()
+{
+  return m_size;
 }
 
 

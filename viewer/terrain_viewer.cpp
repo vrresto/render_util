@@ -397,7 +397,7 @@ void TerrainViewerScene::render(float frame_delta)
   getCurrentGLContext()->setCurrentProgram(sky_program);
   updateUniforms(sky_program);
 
-//   render_util::drawSkyBox();
+  render_util::drawSkyBox();
 
   gl::Disable(GL_DEPTH_TEST);
   gl::DepthMask(GL_TRUE);

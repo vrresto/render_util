@@ -63,7 +63,7 @@ varying vec2 pass_texcoord;
 varying vec2 pass_type_map_coords;
 
 #if ENABLE_BASE_MAP
-uniform float terrain_base_map_height = 0.0;
+// uniform float terrain_base_map_height = 0.0;
 varying vec2 pass_base_type_map_coords;
 #endif
 
@@ -95,13 +95,14 @@ float getHeight(vec2 world_coord, float approx_dist)
   vec2 base_height_map_texture_coord = getHeightMapTextureCoords(terrain.base_layer, world_coord);
 
   float base = texture2D(terrain.base_layer.height_map.sampler, base_height_map_texture_coord).x;
-  base += terrain_base_map_height;
+//   base += terrain_base_map_height;
+  base += terrain.base_layer.origin_m.z;
 
   float detail_blend = getDetailMapBlend(world_coord);
 
-//   return mix(base, detail, detail_blend);
+  return mix(base, detail, detail_blend);
 
-  return base;
+//   return base;
 #else
   return detail;
 #endif
@@ -154,7 +155,7 @@ void main(void)
 
 #if ENABLE_BASE_MAP
   vec2 base_map_origin_px =
-    terrain.base_layer.origin_m / 200; //FIXME
+    terrain.base_layer.origin_m.xy / 200; //FIXME
   pass_base_type_map_coords = pass_type_map_coords - base_map_origin_px;
 //   pass_base_type_map_coords = pass_type_map_coords;
 #endif

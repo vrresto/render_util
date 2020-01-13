@@ -636,7 +636,7 @@ void TerrainCDLOD::build(BuildParameters &params)
     auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP, hm_image);
 
     Layer layer;
-    layer.origin_m = vec2(0);
+    layer.origin_m = vec3(0);
     layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
     layer.uniform_prefix = "terrain.detail_layer.";
     layer.maps.push_back(hm);
@@ -653,28 +653,35 @@ void TerrainCDLOD::build(BuildParameters &params)
   }
 
 
-//   if (params.loader.hasBaseLayer())
-//   {
-//     auto hm_image = params.loader.getBaseLayer().loadHeightMap();
-// 
-//     auto hm = ::createHeightMap(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, hm_image);
-//     auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, hm_image);
-// 
-//     Layer layer;
+  if (params.loader.hasBaseLayer())
+  {
+    LOG_INFO << "Creating base layer ..." << endl;
+
+    LOG_INFO << "Loading height map ..." << endl;
+    auto hm_image = params.loader.getBaseLayer().loadHeightMap();
+    assert(hm_image);
+    LOG_INFO << "Loading height map ... done." << endl;
+
+    auto hm = ::createHeightMap(TEXUNIT_TERRAIN_CDLOD_HEIGHT_MAP_BASE, hm_image);
+    auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, hm_image);
+
+    Layer layer;
 //     layer.origin_m = m_base_map_origin;
-//     layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
-//     layer.uniform_prefix = "terrain.base_layer.";
-//     layer.maps.push_back(hm);
-//     layer.maps.push_back(nm);
-// 
-//     for (auto &t : m_textures)
-//     {
-//       for (auto &map : t->getBaseTextureMaps())
-//         layer.maps.push_back(map);
-//     }
-// 
-//     m_layers.push_back(layer);
-//   }
+    layer.origin_m = params.loader.getBaseLayer().getOriginM();
+    layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
+    layer.uniform_prefix = "terrain.base_layer.";
+    layer.maps.push_back(hm);
+    layer.maps.push_back(nm);
+
+    for (auto &t : m_textures)
+    {
+      t->loadLayer(layer, params.loader.getBaseLayer(), true);
+    }
+
+    m_layers.push_back(layer);
+
+    LOG_INFO << "Creating base layer ... done." << endl;
+  }
 
   LOG_INFO<<"TerrainCDLOD: creating material map ..."<<endl;
   auto material_map = std::make_unique<MaterialMap>(params);
@@ -747,7 +754,8 @@ void TerrainCDLOD::setBaseMapOrigin(glm::vec2 origin)
   if (hasBaseMap())
   {
     assert(m_layers.at(1).uniform_prefix == "terrain.base_layer.");
-    m_layers.at(1).origin_m = origin;
+    m_layers.at(1).origin_m.x = origin.x;
+    m_layers.at(1).origin_m.y = origin.y;
   }
 }
 

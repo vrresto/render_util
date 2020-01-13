@@ -82,7 +82,7 @@ namespace render_util
     {
       struct Layer
       {
-        virtual glm::vec2 getOriginM() const = 0;
+        virtual glm::vec3 getOriginM() const = 0;
         virtual unsigned int getResolutionM() const = 0;
         virtual ElevationMap::Ptr loadHeightMap() const = 0;
         virtual TerrainBase::TypeMap::Ptr loadTypeMap() const = 0;

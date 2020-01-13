@@ -17,6 +17,7 @@ struct File
   virtual void rewind() = 0;
   virtual bool eof() = 0;
   virtual void readAll(std::vector<char>&) = 0;
+  virtual int getSize() = 0;
 };
 
 
@@ -24,6 +25,7 @@ class NormalFile : public File
 {
   std::ifstream m_stream;
   std::string m_path;
+  int m_size = 0;
 
   void checkState();
 
@@ -35,6 +37,7 @@ public:
   void rewind() override;
   bool eof() override;
   void readAll(std::vector<char>&) override;
+  int getSize() override;
 };
 
 

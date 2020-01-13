@@ -40,7 +40,7 @@ struct WaterMap
 struct TerrainLayer
 {
   vec2 size_m;
-  vec2 origin_m;
+  vec3 origin_m;
   TerrainTextureMap height_map;
   TerrainTextureMap normal_map;
 

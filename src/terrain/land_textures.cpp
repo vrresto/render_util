@@ -264,9 +264,11 @@ LandTextures::LandTextures(const TextureManager &texture_manager,
 void LandTextures::loadLayer(Layer &layer, const TerrainBase::Loader::Layer &loader,
                              bool is_base_layer) const
 {
+  LOG_INFO << "Loading layer ..." << endl;
   auto texunit = is_base_layer ? TEXUNIT_TYPE_MAP_BASE : TEXUNIT_TYPE_MAP;
   auto type_map = createTypeMap(loader.loadTypeMap(), m_mapping, "type_map", texunit);
   layer.maps.push_back(type_map);
+  LOG_INFO << "Loading layer ... done." << endl;
 }
 
 

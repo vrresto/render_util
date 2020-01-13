@@ -56,7 +56,7 @@ float sampleForestAlpha(vec2 typeMapCoords, vec2 pos)
 
   #if ENABLE_BASE_MAP
   {
-    vec2 coords = (pos - terrain.base_layer.origin_m) / terrain.base_layer.size_m;
+    vec2 coords = (pos - terrain.base_layer.origin_m.xy) / terrain.base_layer.size_m;
     float forest_alpha_base =
       texture2D(terrain.base_layer.forest_map.sampler, coords).x;
     forest_alpha = mix(forest_alpha_base, forest_alpha, getDetailMapBlend(pos));

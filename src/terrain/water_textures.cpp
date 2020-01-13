@@ -39,7 +39,14 @@ void WaterTextures::loadLayer(Layer &layer,
   std::vector<ImageGreyScale::Ptr> chunks;
   Image<unsigned int>::Ptr table;
 
-  loader.loadWaterMap(chunks, table);
+  try
+  {
+    loader.loadWaterMap(chunks, table);
+  }
+  catch (...)
+  {
+    return;
+  }
 
   auto chunks_texture = createTextureArray(chunks);
   TextureParameters<int> chunks_params;
@@ -74,6 +81,7 @@ void WaterTextures::loadLayer(Layer &layer,
   };
 
   layer.water_map = map;
+  layer.has_water_map = true;
 }
 
 

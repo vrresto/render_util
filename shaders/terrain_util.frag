@@ -37,7 +37,7 @@
 // #define DETAILED_WATER @detailed_water:1@
 #define DETAILED_WATER 0
 
-#define ENABLE_WATER 1
+// #define ENABLE_WATER 1
 // #define ENABLE_WATER @enable_water:0@
 
 #define ENABLE_FOREST @enable_forest@
@@ -530,8 +530,8 @@ vec3 getTerrainColor(vec3 pos_curved, vec3 pos_flat)
 
     vec3 normal_base = sampleTerrainNormalMap(terrain.base_layer, pos_flat.xy);
 
-//     normal = mix(normal_base, normal, detail_blend);
-    normal = normal_base;
+    normal = mix(normal_base, normal, detail_blend);
+//     normal = normal_base;
   }
 #endif
 
@@ -562,8 +562,8 @@ vec3 normal_detail = vec3(0,0,1);
   #if !LOW_DETAIL
     color = sampleTerrainTextures(pos_flat.xy);
     #if ENABLE_BASE_MAP
-//       color = mix(sampleBaseTerrainTextures(pos_flat.xy), color, detail_blend);
-      color = sampleBaseTerrainTextures(pos_flat.xy);
+      color = mix(sampleBaseTerrainTextures(pos_flat.xy), color, detail_blend);
+//       color = sampleBaseTerrainTextures(pos_flat.xy);
     #endif
     #if ENABLE_TERRAIN_DETAIL_NM
       normal_detail = getTerrainDetailNormal(pos_flat.xy);

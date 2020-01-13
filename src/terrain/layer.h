@@ -59,8 +59,9 @@ struct WaterMap
 
 struct Layer
 {
-  glm::vec2 origin_m;
-  glm::vec2 size_m;
+  bool has_water_map = false;
+  glm::vec3 origin_m = glm::vec3(0);
+  glm::vec2 size_m = glm::vec2(0);
   std::string uniform_prefix;
   std::vector<Map> maps;
   std::optional<WaterMap> water_map;
@@ -83,6 +84,7 @@ struct Layer
 
   void setUniforms(ShaderProgramPtr program, const render_util::TextureManager &tex_mgr)
   {
+    program->setUniform(uniform_prefix + "has_water_map", has_water_map);
     program->setUniform(uniform_prefix + "size_m", size_m);
     program->setUniform(uniform_prefix + "origin_m", origin_m);
     for (auto& map : maps)
