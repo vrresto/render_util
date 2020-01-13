@@ -76,7 +76,7 @@ float getDetailMapBlend(vec2 pos)
 {
   vec2 map_size = terrain.detail_layer.size_m;
 
-  float blend_dist = 18000.0;
+  float blend_dist = 10000.0;
 
 //   float threshold_noise = clamp(genericNoise(pos * 0.0008), -1, 1);
 //   float threshold_noise_coarse = clamp(genericNoise(pos * 0.00005), -1, 1);
