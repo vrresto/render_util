@@ -32,7 +32,7 @@
 #define ENABLE_BASE_MAP @enable_base_map@
 
 
-// #define ENABLE_CURVATURE @enable_curvature:1@
+#define ENABLE_CURVATURE @enable_curvature:1@
 
 attribute vec4 attrib_pos;
 

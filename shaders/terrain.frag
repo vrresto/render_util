@@ -70,9 +70,9 @@ void main(void)
 #endif
 
 #if ENABLE_UNLIT_OUTPUT
-//   fogAndToneMap(out_color0.xyz, out_color1.xyz, out_color0.xyz, out_color1.xyz);
+  fogAndToneMap(out_color0.xyz, out_color1.xyz, out_color0.xyz, out_color1.xyz);
 #else
-//   out_color0.xyz = fogAndToneMap(out_color0.xyz);
+  out_color0.xyz = fogAndToneMap(out_color0.xyz);
 #endif
 
 //   if (getDebugColor() != vec3(0))
