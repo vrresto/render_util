@@ -18,15 +18,30 @@
 
 #version 330
 
-#define ONLY_WATER @enable_water_only:0@
+#define ONLY_WATER 1
+#define ENABLE_WATER 1
+
+
+// #define ONLY_WATER @enable_water_only:0@
+// #define ENABLE_WATER @enable_water:0@
 #define ENABLE_UNLIT_OUTPUT @enable_unlit_output:0@
 
 #include water_definitions.glsl
+#include lighting_definitions.glsl
 
 void resetDebugColor();
 vec3 getDebugColor();
-void getTerrainColor(vec3 pos_curved, vec3 pos_flat, out vec3 lit_color, out vec3 unlit_color);
-vec3 getTerrainColor(vec3 pos_curved, vec3 pos_flat);
+// void getTerrainColor(vec3 pos_curved, vec3 pos_flat, out vec3 lit_color, out vec3 unlit_color);
+// vec3 getTerrainColor(vec3 pos_curved, vec3 pos_flat);
+
+
+#if ENABLE_UNLIT_OUTPUT
+void getTerrainColor(vec3 pos_curved, vec3 pos_flat, out vec3 lit_color, out vec3 unlit_color, in; WaterParameters water_params)
+#else
+vec3 getTerrainColor(vec3 pos_curved, vec3 pos_flat, in WaterParameters water_params);
+#endif
+
+
 vec3 fogAndToneMap(vec3);
 void fogAndToneMap(in vec3 in_color0, in vec3 in_color1,
                    out vec3 out_color0, out vec3 out_color0);
@@ -43,6 +58,7 @@ uniform vec3 cameraPosWorld;
 varying float vertexHorizontalDist;
 varying vec3 passObjectPosFlat;
 varying vec3 passObjectPos;
+varying vec2 pass_texcoord;
 
 
 void main(void)
@@ -55,17 +71,38 @@ void main(void)
   out_color1 = vec4(0.5, 0.5, 0.5, 1.0);
 #endif
 
+#if ENABLE_WATER
+//   {
+    float dist = distance(cameraPosWorld, passObjectPosFlat);
+    vec3 view_dir_curved = normalize(passObjectPos - cameraPosWorld);
+
+    //FIXME pass these to getTerrainColor() and getWaterColorSimple()
+    vec3 water_normal = getWaterNormal(passObjectPos, dist, pass_texcoord);
+    vec3 water_env_color = calcWaterEnvColor(passObjectPos, water_normal, view_dir_curved);
+    
+    WaterParameters water_params;
+    getWaterParameters(passObjectPos, view_dir_curved, dist, water_params, passObjectPosFlat);
+    
+//   }
+#endif
+
 //   resetDebugColor();
 #if ONLY_WATER
-  float dist = distance(cameraPosWorld, passObjectPosFlat);
-  vec3 view_dir = normalize(passObjectPosFlat - cameraPosWorld);
-  vec3 view_dir_curved = normalize(passObjectPos - cameraPosWorld);
-  out_color0.xyz = getWaterColorSimple(passObjectPos, view_dir_curved, dist);
+//   float dist = distance(cameraPosWorld, passObjectPosFlat);
+//   vec3 view_dir = normalize(passObjectPosFlat - cameraPosWorld);
+//   vec3 view_dir_curved = normalize(passObjectPos - cameraPosWorld);
+//   out_color0.xyz = getWaterColorSimple(passObjectPos, view_dir_curved, dist);
+//   out_color0.xyz = getWaterColorSimple(passObjectPos, view_dir_curved, dist,
+//                                        water_normal, water_env_color);
+
+  out_color0.xyz = getWaterColorSimple(passObjectPos, view_dir_curved, dist,
+                                       water_params);
+
 #else
   #if ENABLE_UNLIT_OUTPUT
-    getTerrainColor(passObjectPos, passObjectPosFlat, out_color0.xyz, out_color1.xyz);
+    getTerrainColor(passObjectPos, passObjectPosFlat, out_color0.xyz, out_color1.xyz, water_params);
   #else
-    out_color0.xyz = getTerrainColor(passObjectPos, passObjectPosFlat);
+    out_color0.xyz = getTerrainColor(passObjectPos, passObjectPosFlat, water_params);
   #endif
 #endif
 

@@ -23,7 +23,7 @@
  *    http://www.cs.virginia.edu/~jdl/bib/appearance/analytic%20models/schlick94b.pdf
  */
 
-#version 130
+#version 330
 
 #define LOW_DETAIL !@detailed_water:1@
 #define ENABLE_WAVES !LOW_DETAIL
@@ -31,6 +31,7 @@
 // #define ENABLE_WAVE_FOAM 1
 #define ENABLE_WATER_MAP 1
 // #define ENABLE_SHORE_WAVES 1
+
 #define ENABLE_SKY_REFLECTION @enable_sky_reflection:1@
 
 #define ENABLE_BASE_MAP @enable_base_map@
@@ -337,9 +338,35 @@ vec3 getWaterNormal(vec3 pos, float dist, vec2 coord)
 }
 
 
-vec3 getWaterColorSimple(vec3 pos, vec3 viewDir, float dist)
+void getWaterParameters(vec3 pos, vec3 view_dir, float dist, out WaterParameters p, vec3 pos_flat)
 {
-  vec3 normal = getWaterNormal(pos, dist, pass_texcoord);
+#if !LOW_DETAIL
+  p.depth = getWaterDepth(pos_flat.xy);
+#endif
+
+  p.normal = getWaterNormal(pos, dist, pass_texcoord);
+
+#if !LOW_DETAIL
+  float wave_strength = mix(0.0, 1.0, 1 - exp(-2 * clamp(waterDepth, 0, 1)));
+  wave_strength = mix(wave_strength, wave_strength * 0.3, river_amount);
+  p.wave_strength = wave_strength;
+
+  p.normal.xy *= wave_strength;
+  p.normal = normalize(p.normal);
+#endif
+
+#if ENABLE_SKY_REFLECTION
+  p.env_color =  calcWaterEnvColor(pos, p.normal, view_dir);
+#else
+  p.env_color = calcWaterEnvColor(ambientLight, incomingDirectLight);
+#endif
+}
+
+
+vec3 getWaterColorSimple(vec3 pos, vec3 viewDir, float dist, in WaterParameters params)
+{
+//   vec3 normal = getWaterNormal(pos, dist, pass_texcoord);
+  vec3 normal = params.normal;
 
   vec3 ambientLight;
   vec3 incomingDirectLight;
@@ -354,17 +381,10 @@ vec3 getWaterColorSimple(vec3 pos, vec3 viewDir, float dist)
   float specular = calcSpecular(-viewDir, normal, specHardness);
   specular = mix(specular * 0.5, specular, specularDetailFactor);
 
-#if ENABLE_SKY_REFLECTION
-  vec3 envColor = calcWaterEnvColor(pos, normal, viewDir);
-#else
-  vec3 envColor = calcWaterEnvColor(ambientLight, incomingDirectLight);
-#endif
-
   vec3 refractionColor = 0.9 * textureColorCorrection(water_color);
   refractionColor *= ambientLight + 0.5 * directLight;
 
-
-  vec3 color = mix(refractionColor, envColor, fresnel);
+  vec3 color = mix(refractionColor, params.env_color, fresnel);
   color += specular * incomingDirectLight;
 
   return color;
@@ -376,17 +396,18 @@ void getWaterColor(vec3 pos, vec3 viewDir, float dist, vec2 coord,
                    float waterDepth,
                    vec3 groundColor,
                    vec3 groundColorUnlit,
-                   vec3 normal,
+                   in WaterParameters params,
                    float shallow_sea_amount, float river_amount,
                    out vec3 lit_color, out vec3 unlit_color)
 #else
 vec3 getWaterColor(vec3 pos, vec3 viewDir, float dist, vec2 coord,
                    float waterDepth,
                    vec3 groundColor,
-                   vec3 normal,
+                   in WaterParameters params,
                    float shallow_sea_amount, float river_amount)
 #endif
 {
+
   float extinction_factor = waterDepth * 0.15;
   waterDepth = 1 - pow(1-waterDepth, 2);
 
@@ -405,11 +426,8 @@ vec3 getWaterColor(vec3 pos, vec3 viewDir, float dist, vec2 coord,
   float specular = calcSpecular(-viewDir, normal, specHardness);
   specular = mix(specular * 0.5, specular, specularDetailFactor);
 
-#if ENABLE_SKY_REFLECTION
-  vec3 envColor = calcWaterEnvColor(pos, normal, viewDir);
-#else
-  vec3 envColor = calcWaterEnvColor(ambientLight, incomingDirectLight);
-#endif
+
+  vec3 envColor = params.env_color;
 
   vec3 refractionColor = 0.9 * textureColorCorrection(water_color);
 
@@ -643,7 +661,8 @@ void applyWater(in vec3 lit_color_in, in vec3 unlit_color_in,
   float river_amount,
   float bank_amount,
   out vec3 lit_color,
-  out vec3 unlit_color)
+  out vec3 unlit_color,
+  WaterParameters params)
 #else
 vec3 applyWater(in vec3 color_in,
   vec3 view_dir,
@@ -653,7 +672,8 @@ vec3 applyWater(in vec3 color_in,
   vec3 pos,
   float shallow_sea_amount,
   float river_amount,
-  float bank_amount)
+  float bank_amount,
+  WaterParameters params)
 #endif
 {
   const float foam_threshold = 0.8;
@@ -667,6 +687,8 @@ vec3 applyWater(in vec3 color_in,
   const float surf_threshold_smooth = 0.05;
   const float surf_threshold_min = 0.7;
   const float surf_threshold_max = 1.0;
+
+//   return vec3(0);
 
 #if !LOW_DETAIL
   float foamDetail = texture(sampler_beach, vec3(mapCoords * 40, 0)).a;
@@ -724,13 +746,6 @@ vec3 applyWater(in vec3 color_in,
 
   waterDepth = water_level - terrain_height;
 
-#if !LOW_DETAIL
-  float wave_strength = mix(0.0, 1.0, 1 - exp(-2 * clamp(waterDepth, 0, 1)));
-  wave_strength = mix(wave_strength, wave_strength * 0.3, river_amount);
-#endif
-
-  vec3 water_normal = getWaterNormal(pos, dist, mapCoords);
-
 #if ENABLE_WAVE_FOAM
   float wave_foam_amount = getFoamAmountWithNoise(mapCoords * 2);
 //   wave_foam_amount = pow(wave_foam_amount, 1.25);
@@ -738,11 +753,6 @@ vec3 applyWater(in vec3 color_in,
   wave_foam_amount *= sea_roughness;
   wave_foam_amount *= wave_strength;
   wave_foam_amount *= 1 - river_amount;
-#endif
-
-#if !LOW_DETAIL
-  water_normal.xy *= wave_strength;
-  water_normal = normalize(water_normal);
 #endif
 
   float water_alpha = smoothstep(0.0, 0.01, waterDepth);
@@ -779,7 +789,7 @@ vec3 color = color_in;
                 waterDepth,
                 lit_color,
                 unlit_color,
-                water_normal,
+                params,
                 shallow_sea_amount,
                 river_amount,
                 water_color,
@@ -791,7 +801,7 @@ vec3 color = color_in;
                         mapCoords,
                         waterDepth,
                         color,
-                        water_normal,
+                        params,
                         shallow_sea_amount,
                         river_amount);
 #endif
@@ -799,6 +809,11 @@ vec3 color = color_in;
 #if ENABLE_WAVE_FOAM
 //   waterColor = mix(waterColor, vec3(1), wave_foam_amount);
 #endif
+
+
+// water_color = vec3(0);
+
+// water_alpha = 1;
 
 #if ENABLE_UNLIT_OUTPUT
   lit_color.xyz = mix(lit_color.xyz, water_color, water_alpha);

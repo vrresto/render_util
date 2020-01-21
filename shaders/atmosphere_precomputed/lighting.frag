@@ -56,12 +56,15 @@ vec3 calcCirrusLight(vec3 pos)
 
 vec3 getSkyRadiance(vec3 camera_pos, vec3 view_direction)
 {
+
   float shadow_length = 0;
   vec3 transmittance;
   vec3 radiance = GetSkyRadiance(
       camera_pos - earth_center,
       view_direction, shadow_length, sunDir,
       transmittance);
+
+//   return vec3(0);
 
   // If the view ray intersects the Sun, add the Sun radiance.
   if (dot(view_direction, sunDir) > sun_size.y) {

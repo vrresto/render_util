@@ -10,3 +10,5 @@ void calcLightWithDetail(vec3 pos, vec3 normal, vec3 normal_detail, out vec3 dir
 vec3 calcLight(vec3 pos, vec3 normal, float direct_scale, float ambient_scale);
 
 vec3 calcCirrusLight(vec3 pos);
+
+vec3 getSkyColor(vec3 camera_pos, vec3 view_direction);

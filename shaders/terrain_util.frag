@@ -16,7 +16,7 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#version 130
+#version 330
 
 #extension GL_ARB_texture_query_lod : require
 
@@ -30,7 +30,9 @@
 #define ENABLE_FAR_TEXTURE !@enable_base_map@
 #define LOW_DETAIL @low_detail:0@
 #define DETAILED_WATER @detailed_water:1@
+
 #define ENABLE_WATER @enable_water:0@
+
 #define ENABLE_FOREST @enable_forest:0@
 #define ENABLE_TYPE_MAP @enable_type_map:0@
 #define ENABLE_TERRAIN_DETAIL_NM !LOW_DETAIL && @enable_terrain_detail_nm:0@
@@ -441,9 +443,9 @@ vec4 applyFarTexture(vec4 color, vec2 pos, float dist)
 }
 
 #if ENABLE_UNLIT_OUTPUT
-void getTerrainColor(vec3 pos_curved, vec3 pos_flat, out vec3 lit_color, out vec3 unlit_color)
+void getTerrainColor(vec3 pos_curved, vec3 pos_flat, out vec3 lit_color, out vec3 unlit_color, in WaterParameters water_params)
 #else
-vec3 getTerrainColor(vec3 pos_curved, vec3 pos_flat)
+vec3 getTerrainColor(vec3 pos_curved, vec3 pos_flat, in WaterParameters water_params)
 #endif
 {
   float dist_curved = distance(cameraPosWorld, pos_curved);
@@ -513,14 +515,12 @@ vec3 light_ambient;
 #endif
 
 #if ENABLE_WATER
-float waterDepth = 0;
+float waterDepth = water_params.depth;
 float bank_amount = 0;
 
-  waterDepth = getWaterDepth(pos_flat.xy);
+//   vec3 shallowWaterColor = texture2D(sampler_shallow_water, pass_texcoord * 2).xyz;
 
-  vec3 shallowWaterColor = texture2D(sampler_shallow_water, pass_texcoord * 2).xyz;
-
-  color.xyz = mix(color.xyz, shallowWaterColor, smoothstep(0.55, 0.9, waterDepth));
+//   color.xyz = mix(color.xyz, shallowWaterColor, smoothstep(0.55, 0.9, waterDepth));
 
 #if DETAILED_WATER
   vec4 bankColor = texture(sampler_beach, vec3(pass_texcoord * 5, 2));
@@ -560,9 +560,9 @@ float bank_amount = 0;
 
 #if ENABLE_WATER
   #if ENABLE_UNLIT_OUTPUT
-    applyWater(lit_color, unlit_color, view_dir_curved, dist_curved, waterDepth, pass_texcoord, pos_curved, shallow_sea_amount, river_amount, bank_amount, lit_color, unlit_color);
+    applyWater(lit_color, unlit_color, view_dir_curved, dist_curved, pass_texcoord, pos_curved, shallow_sea_amount, river_amount, bank_amount, lit_color, unlit_color, water_params);
   #else
-    color.xyz = applyWater(color.xyz, view_dir_curved, dist_curved, waterDepth, pass_texcoord, pos_curved, shallow_sea_amount, river_amount, bank_amount);
+    color.xyz = applyWater(color.xyz, view_dir_curved, dist_curved, pass_texcoord, pos_curved, shallow_sea_amount, river_amount, bank_amount, water_params);
   #endif
 #endif
 
