@@ -247,14 +247,10 @@ AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mg
 
   {
     using namespace render_util;
-    m_transmittance_texture_unit = 50;
-    m_scattering_texture_unit = 51;
-    m_irradiance_texture_unit = 52;
-    m_single_mie_scattering_texture_unit = 53;
-//     m_transmittance_texture_unit = tex_mgr.getTexUnitNum(TEXUNIT_ATMOSPHERE0);
-//     m_scattering_texture_unit = tex_mgr.getTexUnitNum(TEXUNIT_ATMOSPHERE1);
-//     m_irradiance_texture_unit = tex_mgr.getTexUnitNum(TEXUNIT_ATMOSPHERE2);
-//     m_single_mie_scattering_texture_unit = tex_mgr.getTexUnitNum(TEXUNIT_ATMOSPHERE3);
+    m_transmittance_texture_unit = tex_mgr.getTexUnitNum(TEXUNIT_ATMOSPHERE0);
+    m_scattering_texture_unit = tex_mgr.getTexUnitNum(TEXUNIT_ATMOSPHERE1);
+    m_irradiance_texture_unit = tex_mgr.getTexUnitNum(TEXUNIT_ATMOSPHERE2);
+    m_single_mie_scattering_texture_unit = tex_mgr.getTexUnitNum(TEXUNIT_ATMOSPHERE3);
   }
 
   glm::dvec3 white_point(1.0);
