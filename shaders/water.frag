@@ -31,7 +31,7 @@
 // #define ENABLE_WAVE_FOAM 1
 #define ENABLE_WATER_MAP 1
 // #define ENABLE_SHORE_WAVES 1
-#define ENABLE_SKY_REFLECTION @enable_sky_reflection:1@
+#define ENABLE_SKY_REFLECTION @enable_sky_reflection:0@
 
 #define ENABLE_BASE_MAP @enable_base_map@
 #define ENABLE_BASE_WATER_MAP @enable_base_water_map@
