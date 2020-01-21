@@ -61,6 +61,14 @@ bool util::fileExists(std::string path)
   }
 }
 
+#else
+
+bool util::mkdir(const char *name)
+{
+  auto res = ::mkdir(name, S_IRWXU);
+  return res == 0 || (res == -1 && errno == EEXIST);
+}
+
 #endif
 
 

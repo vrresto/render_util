@@ -69,8 +69,8 @@ namespace
 {
 
 
-// constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
-constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
+constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
+// constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
 
 const bool g_terrain_use_lod = true;
 
@@ -344,6 +344,7 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
   m_map->getTextures().setUniforms(program);
   program->setUniform("shore_wave_scroll", shore_wave_pos);
   program->setUniform("terrain_height_offset", 0.f);
+  program->setUniform("terrain_base_map_height", 0.f);
 
   CHECK_GL_ERROR();
 }
