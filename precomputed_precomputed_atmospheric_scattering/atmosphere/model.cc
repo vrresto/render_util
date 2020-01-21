@@ -787,8 +787,9 @@ void Model::SetProgramUniforms(
   if (optional_single_mie_scattering_texture_ != 0) {
     gl::ActiveTexture(GL_TEXTURE0 + single_mie_scattering_texture_unit);
     gl::BindTexture(GL_TEXTURE_3D, optional_single_mie_scattering_texture_);
-    program->setUniformi("single_mie_scattering_texture", single_mie_scattering_texture_unit);
   }
+
+  program->setUniformi("single_mie_scattering_texture", single_mie_scattering_texture_unit);
 
   gl::ActiveTexture(active_unit_save);
 }
