@@ -42,36 +42,39 @@ vec3 toneMap(vec3 color);
 
 vec3 fogAndToneMap(vec3 in_color)
 {
-  vec3 view_direction = normalize(passObjectPos - cameraPosWorld);
-  vec3 normal = normalize(passObjectPos - earth_center);
 
-  vec3 radiance = in_color;
+
+  vec3 view_direction = normalize(passObjectPos - cameraPosWorld);
+  float dist = distance(passObjectPos, cameraPosWorld);
 
   float shadow_length = 0;
-  vec3 transmittance;
+  vec3 transmittance = vec3(1);
 
   vec3 in_scatter = GetSkyRadianceToPoint(cameraPosWorld - earth_center,
       passObjectPos - earth_center, shadow_length, sunDir, transmittance);
 
-  radiance = radiance * transmittance + in_scatter;
+  vec3 radiance = in_color * transmittance + in_scatter;
 
-  float blue_ratio = in_scatter.b / dot(vec3(1), in_scatter);
-  float in_scatter_ratio = length(in_scatter) / length(radiance);
+  // FIXME HACK to avoid artifacts at close distance
+  radiance = mix(in_color, radiance, smoothstep(50, 150, dist));
+
+  float blue_ratio = radiance.b / dot(vec3(1), radiance);
 
   vec3 color = toneMap(radiance);
-  color = adjustSaturation(color, mix(1, blue_saturation, blue_ratio * in_scatter_ratio));
+  color = adjustSaturation(color, mix(1, blue_saturation, blue_ratio));
 
   return color;
 }
 
 
-vec3 fogAndToneMap(vec3 radiance, vec3 in_scatter, vec3 transmittance, float blue_ratio)
+vec3 fogAndToneMap(vec3 radiance, vec3 in_scatter, vec3 transmittance)
 {
   radiance = radiance * transmittance + in_scatter;
-  float in_scatter_ratio = length(in_scatter) / length(radiance);
+
+  float blue_ratio = radiance.b / dot(vec3(1), radiance);
 
   vec3 color = toneMap(radiance);
-  color = adjustSaturation(color, mix(1, blue_saturation, blue_ratio * in_scatter_ratio));
+  color = adjustSaturation(color, mix(1, blue_saturation, blue_ratio));
 
   return color;
 }
@@ -89,10 +92,8 @@ void fogAndToneMap(in vec3 in_color0, in vec3 in_color1,
   vec3 in_scatter = GetSkyRadianceToPoint(cameraPosWorld - earth_center,
       passObjectPos - earth_center, shadow_length, sunDir, transmittance);
 
-  float blue_ratio = in_scatter.b / dot(vec3(1), in_scatter);
-
-  out_color0 = fogAndToneMap(in_color0, in_scatter, transmittance, blue_ratio);
-  out_color1 = fogAndToneMap(in_color1, in_scatter, transmittance, blue_ratio);
+  out_color0 = fogAndToneMap(in_color0, in_scatter, transmittance);
+  out_color1 = fogAndToneMap(in_color1, in_scatter, transmittance);
 }
 
 
