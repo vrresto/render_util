@@ -46,7 +46,7 @@ private:
   float m_gamma = 2.2;
   float m_exposure = 20;
   float m_saturation = 1.0;
-  float m_brightness_curve_exponent = 1.0;
+  float m_brightness_curve_exponent = 1.3;
   float m_texture_brightness = 0.2;
   float m_texture_brightness_curve_exponent = 1.0;
   float m_texture_saturation = 1.0;
