@@ -50,6 +50,9 @@ vec3 calcCirrusLight(vec3 pos)
   vec3 direct;
   getIncomingLight(pos, ambient, direct);
 
+  vec3 normal = normalize(pos - earth_center);
+  direct *= mix(max(dot(normal, sunDir), 0.0), 1.0, 0.6);
+
   return MAX_CIRRUS_ALBEDO * (direct + ambient);
 }
 
