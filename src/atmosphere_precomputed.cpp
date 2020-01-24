@@ -317,7 +317,7 @@ bool AtmospherePrecomputed::hasParameter(Parameter p)
     case Parameter::TEXTURE_BRIGHTNESS:
     case Parameter::TEXTURE_SATURATION:
     case Parameter::TEXTURE_BRIGHTNESS_CURVE_EXPONENT:
-    case Parameter::BLUE_SATURATION:
+//     case Parameter::BLUE_SATURATION:
       return true;
     default:
       return m_tone_mapping_operator->hasParameter(p);
