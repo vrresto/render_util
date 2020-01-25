@@ -296,8 +296,17 @@ void AtmospherePrecomputed::setUniforms(ShaderProgramPtr program)
     m_irradiance_texture_unit,
     m_single_mie_scattering_texture_unit);
 
+  float min_exposure = 20;
+  float max_exposure = 200000;
+
   program->setUniform<float>("exposure",
                              use_luminance_ != Luminance::NONE ? m_exposure * 1e-5 : m_exposure);
+
+  program->setUniform<float>("min_exposure",
+                             use_luminance_ != Luminance::NONE ? min_exposure * 1e-5 : min_exposure);
+
+  program->setUniform<float>("max_exposure",
+                             use_luminance_ != Luminance::NONE ? max_exposure * 1e-5 : max_exposure);
 
   program->setUniform("gamma", m_gamma);
   program->setUniform("saturation", m_saturation);

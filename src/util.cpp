@@ -91,6 +91,7 @@ void render_util::updateUniforms(render_util::ShaderProgramPtr program, const re
   glm::mat4 mvp(camera.getProjectionMatrixFarD() * camera.getWorld2ViewMatrixD());
 
   program->setUniform("cameraPosWorld", camera.getPos());
+  program->setUniform("camera_dir", camera.getDirection());
   program->setUniform("projectionMatrixFar", camera.getProjectionMatrixFar());
   program->setUniform("world2ViewMatrix", camera.getWorld2ViewMatrix());
   program->setUniform("view2WorldMatrix", camera.getView2WorldMatrix());

@@ -92,6 +92,8 @@ namespace render_util
       return glm::vec3(getPosD());
     }
 
+    glm::vec3 getDirection() const;
+
     Beam createBeamThroughViewportCoord(const glm::vec2&) const;
 
     void setTransform(Unit x, Unit y, Unit z, Unit yaw, Unit pitch, Unit roll);

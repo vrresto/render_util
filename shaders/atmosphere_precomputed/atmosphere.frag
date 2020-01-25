@@ -28,6 +28,8 @@ uniform vec3 earth_center;
 uniform vec2 sun_size;
 uniform float blue_saturation;
 
+uniform vec3 white_point;
+
 varying vec3 passObjectPos;
 
 #if USE_LUMINANCE
@@ -42,8 +44,6 @@ vec3 toneMap(vec3 color);
 
 vec3 fogAndToneMap(vec3 in_color)
 {
-
-
   vec3 view_direction = normalize(passObjectPos - cameraPosWorld);
   float dist = distance(passObjectPos, cameraPosWorld);
 

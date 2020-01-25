@@ -72,6 +72,19 @@ vec3 getSkyRadiance(vec3 camera_pos, vec3 view_direction)
 }
 
 
+vec3 getSkyRadianceNoSun(vec3 camera_pos, vec3 view_direction)
+{
+  float shadow_length = 0;
+  vec3 transmittance;
+  vec3 radiance = GetSkyRadiance(
+      camera_pos - earth_center,
+      view_direction, shadow_length, sunDir,
+      transmittance);
+
+  return radiance;
+}
+
+
 vec3 getSkyColor(vec3 camera_pos, vec3 view_direction)
 {
   return getSkyRadiance(camera_pos, view_direction);

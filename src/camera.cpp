@@ -49,6 +49,7 @@ namespace render_util
     Mat4 view_to_world_rot;
 
     Vec3 pos;
+    glm::vec3 direction;
     ivec2 viewport_size;
 
     vec2 ndc_to_view = vec2(1);
@@ -240,6 +241,25 @@ namespace render_util
       world_to_y_up;
 
     p->view_to_world_rot = affineInverse(p->world_to_view_rotation);
+
+    {
+      glm::mat4 rot_yaw = glm::rotate(glm::mat4(1), glm::radians((float)yaw), glm::vec3(0,0,1));
+      glm::vec4 pitch_axis(0,1,0,0);
+      pitch_axis = rot_yaw * pitch_axis;
+      glm::mat4 rot_pitch =
+        glm::rotate(glm::mat4(1), glm::radians((float)-pitch), glm::vec3(pitch_axis.x, pitch_axis.y, pitch_axis.z));
+
+      glm::vec4 direction(1,0,0,0);
+      direction = rot_pitch * rot_yaw * direction;
+
+      p->direction = direction;
+    }
+  }
+
+
+  glm::vec3 Camera::getDirection() const
+  {
+    return p->direction;
   }
 
 

@@ -23,11 +23,46 @@
 uniform vec3 white_point;
 uniform float gamma;
 uniform float exposure;
+uniform float min_exposure;
+uniform float max_exposure;
 uniform float saturation;
 uniform float brightness_curve_exponent;
 uniform float texture_brightness;
 uniform float texture_brightness_curve_exponent;
 uniform float texture_saturation;
+
+uniform vec3 cameraPosWorld;
+uniform vec3 camera_direction;
+uniform vec3 sunDir;
+
+varying vec3 passObjectPos;
+
+
+vec3 getSkyRadiance(vec3 camera_pos, vec3 view_direction);
+vec3 getSkyRadianceNoSun(vec3 camera_pos, vec3 view_direction);
+
+
+float getExposure()
+{
+  const float c = 0.99;
+
+  vec3 sun_dir = normalize(vec3(sunDir.xy, 0));
+
+// c =  1 - exp(-radiance * exposure)
+// c+exp(-radiance * exposure) = 1
+// exp(-radiance * exposure) = 1-c
+// -radiance * exposure = ln(1-c)
+// exposure = ln(1-c)/-radiance
+
+//   vec3 radiance = getSkyRadiance(cameraPosWorld, camera_direction);
+//   vec3 radiance = getSkyRadiance(cameraPosWorld, sunDir);
+//   float radiance = length(getSkyRadianceNoSun(cameraPosWorld, vec3(0,0,1)));
+  float radiance = length(getSkyRadianceNoSun(cameraPosWorld, sun_dir));
+
+//   return clamp(1 - (length(radiance) / 500), 0, 1);
+
+  return log(1.0 - c) / -radiance;
+}
 
 
 vec3 deGamma(vec3 color)
@@ -58,10 +93,20 @@ vec3 textureColorCorrection(vec3 color)
 #if USE_DEFAULT_TONE_MAPPING
 vec3 toneMap(vec3 color)
 {
-  color = pow(color, vec3(brightness_curve_exponent));
+//   color = pow(color, vec3(brightness_curve_exponent));
+  
+#if 1
   color = pow(vec3(1.0)
-          - exp(-color / white_point * pow(exposure, brightness_curve_exponent)), vec3(1.0 / gamma));
-  color = adjustSaturation(color, saturation);
+          - exp(-color / white_point * pow(getExposure(), brightness_curve_exponent)), vec3(1.0 / gamma));
+
+
+//   color = pow(vec3(1.0)
+//           - exp(-color / white_point * pow(exposure, brightness_curve_exponent)), vec3(1.0 / gamma));
+// //           - exp(-color / white_point * pow(mix(min_exposure, max_exposure, getExposure()), brightness_curve_exponent)), vec3(1.0 / gamma));
+#else
+  color = vec3(1.0) - exp(-color * getExposure());
+#endif
+//   color = adjustSaturation(color, saturation);
   return color;
 }
 #endif
