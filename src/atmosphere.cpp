@@ -27,14 +27,16 @@ namespace render_util
 std::unique_ptr<Atmosphere> createAtmosphere(Atmosphere::Type type,
                                              float max_cirrus_albedo,
                                              render_util::TextureManager &tex_mgr,
-                                             std::string shader_dir)
+                                             std::string shader_dir,
+                                             bool enable_realtime_single_scattering,
+                                             int realtime_single_scattering_steps)
 {
   switch (type)
   {
     case Atmosphere::PRECOMPUTED:
-      return std::make_unique<AtmospherePrecomputed>(tex_mgr, shader_dir, max_cirrus_albedo, false);
-    case Atmosphere::PRECOMPUTED_REALTIME_SINGLE_SCATTERING:
-      return std::make_unique<AtmospherePrecomputed>(tex_mgr, shader_dir, max_cirrus_albedo, true);
+      return std::make_unique<AtmospherePrecomputed>(tex_mgr, shader_dir, max_cirrus_albedo,
+                                                     enable_realtime_single_scattering,
+                                                     realtime_single_scattering_steps);
     default:
       return std::make_unique<Atmosphere>();
   }

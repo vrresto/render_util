@@ -115,8 +115,8 @@ values slightly outside their theoretical bounds:
 #include definitions.glsl
 #include constants.glsl
 
-
 #define REALTIME_SINGLE_SCATTERING @enable_realtime_single_scattering@
+#define REALTIME_SINGLE_SCATTERING_STEPS @realtime_single_scattering_steps@
 
 
 Number ClampCosine(Number mu) {
@@ -753,7 +753,7 @@ void ComputeSingleScatteringRealTime(
   assert(nu >= -1.0 && nu <= 1.0);
 
   // Number of intervals for the numerical integration.
-  const int SAMPLE_COUNT = 10;
+  const int SAMPLE_COUNT = REALTIME_SINGLE_SCATTERING_STEPS;
   // The integration step, i.e. the length of each integration interval.
   Length dx = dist / Number(SAMPLE_COUNT);
   // Integration loop.

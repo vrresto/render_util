@@ -70,8 +70,9 @@ namespace
 
 
 // constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
-// constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
-constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED_REALTIME_SINGLE_SCATTERING;
+constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
+constexpr auto ENABLE_REALTIME_SINGLE_SCATTERING = true;
+constexpr auto REALTIME_SINGLE_SCATTERING_STEPS = 50;
 
 const bool g_terrain_use_lod = true;
 
@@ -254,7 +255,10 @@ void TerrainViewerScene::setup()
 {
   LOG_INFO<<"void TerrainViewerScene::setup()"<<endl;
 
-  m_atmosphere = createAtmosphere(ATMOSPHERE_TYPE, 0.4, getTextureManager(), RENDER_UTIL_SHADER_DIR);
+  m_atmosphere = createAtmosphere(ATMOSPHERE_TYPE, 0.4, getTextureManager(),
+                                  RENDER_UTIL_SHADER_DIR,
+                                  ENABLE_REALTIME_SINGLE_SCATTERING,
+                                  REALTIME_SINGLE_SCATTERING_STEPS);
 
   getTextureManager().setActive(true);
 

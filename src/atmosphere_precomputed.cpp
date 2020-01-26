@@ -137,7 +137,8 @@ namespace render_util
 
 AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mgr,
                                              std::string shader_dir, float max_cirrus_albedo,
-                                             bool realtime_single_scattering) :
+                                             bool realtime_single_scattering,
+                                             int realtime_single_scattering_steps) :
   m_max_cirrus_albedo(max_cirrus_albedo)
 {
   switch (TONE_MAPPING_OPERATOR_TYPE)
@@ -243,7 +244,7 @@ AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mg
       ozone_density, absorption_extinction, ground_albedo, max_sun_zenith_angle,
       kLengthUnitInMeters, use_luminance_ == Luminance::PRECOMPUTED ? 15 : 3,
       use_combined_textures_, use_half_precision_, shader_dir + "/" + getShaderPath(),
-      tex_mgr, realtime_single_scattering));
+      tex_mgr, realtime_single_scattering, realtime_single_scattering_steps));
 
   m_model->Init(6);
 

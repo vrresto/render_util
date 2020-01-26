@@ -286,7 +286,8 @@ class Model {
     bool half_precision,
     std::string shader_dir,
     const render_util::TextureManager&,
-    bool realtime_single_scattering);
+    bool realtime_single_scattering,
+    int realtime_single_scattering_steps);
 
   ~Model();
 
