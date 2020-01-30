@@ -450,6 +450,12 @@ namespace
 //     }
 
 //     vec4 direction = g_scene->camera.getDirection();
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+      g_scene->camera.roll += camera_rotation_speed * frame_delta;
+    }
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+      g_scene->camera.roll -= camera_rotation_speed * frame_delta;
+    }
 //     cout<<direction.x<<" "<<direction.y<<" "<<direction.z<<endl;
 
     g_scene->camera.updateTransform();

@@ -35,6 +35,7 @@ struct Camera : public render_util::Camera
   float z = 0;
   float yaw = 0;
   float pitch = 0;
+  float roll = 0;
 
   Camera() {
     updateTransform();
@@ -74,7 +75,7 @@ struct Camera : public render_util::Camera
   void updateTransform()
   {
 //       cout<<"yaw: "<<yaw<<"\tpitch: "<<pitch<<endl;
-    setTransform(x, y, z, yaw, pitch, 0);
+    setTransform(x, y, z, yaw, pitch, roll);
   }
 
 };
