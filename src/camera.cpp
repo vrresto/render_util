@@ -151,9 +151,17 @@ namespace render_util
   }
 
 
-  Camera::Camera() : p(new Private) {}
+  Camera::Camera() : p(std::make_unique<Private>()) {}
 
-  Camera::Camera(const Camera &other) : p(new Private(*other.p)) {}
+  Camera::Camera(const Camera &other) : p(std::make_unique<Private>(*other.p)) {}
+
+  Camera &Camera::operator=(const Camera &other)
+  {
+    *p = *other.p;
+    return *this;
+  }
+
+  Camera::~Camera() {}
 
   const Mat4 &Camera::getWorldToViewRotationD() const { return p->world_to_view_rotation; }
   const Mat4 &Camera::getProjectionMatrixFarD() const { return p->projection_far; }

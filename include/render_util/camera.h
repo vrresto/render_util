@@ -21,6 +21,7 @@
 
 #include <render_util/geometry.h>
 
+#include <memory>
 
 namespace render_util
 {
@@ -33,7 +34,7 @@ namespace render_util
   class Camera
   {
     struct Private;
-    Private *p = 0;
+    std::unique_ptr<Private> p;
 
   public:
     using Mat4 = glm::dmat4;
@@ -43,6 +44,8 @@ namespace render_util
 
     Camera();
     Camera(const Camera &other);
+    Camera &operator=(const Camera &other);
+    ~Camera();
 
     const Mat4 &getWorldToViewRotationD() const;
     const Mat4 &getView2WorldMatrixD() const;
