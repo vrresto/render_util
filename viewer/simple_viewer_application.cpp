@@ -239,16 +239,16 @@ namespace
           p.reset();
           break;
         case GLFW_KEY_LEFT:
-          p.changeX(-step_factor);
+          p.decrease(step_factor);
           break;
         case GLFW_KEY_RIGHT:
-            p.changeX(step_factor);
+          p.increase(step_factor);
           break;
         case GLFW_KEY_UP:
-          p.changeY(step_factor);
+          p.increase(step_factor, Parameter::Dimension::Y);
           break;
         case GLFW_KEY_DOWN:
-          p.changeY(-step_factor);
+          p.decrease(step_factor, Parameter::Dimension::Y);
           break;
       }
     }

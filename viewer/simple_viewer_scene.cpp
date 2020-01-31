@@ -183,8 +183,8 @@ void SimpleViewerScene::setup()
   camera.y = map_center.y;
   camera.z = 10000;
 
-  addParameter("base_map_height", m_base_map_height, 100.f);
-  addParameter("base_map_origin", m_base_map_origin, 1000.f);
+  m_parameters.add("base_map_height", m_base_map_height, 100.f);
+  m_parameters.add("base_map_origin", m_base_map_origin, 1000.f);
 }
 
 

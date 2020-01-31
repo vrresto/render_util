@@ -20,6 +20,7 @@
 #define SCENE_H
 
 #include "camera.h"
+#include "parameter.h"
 
 #include <render_util/land_textures.h>
 #include <render_util/render_util.h>
@@ -27,7 +28,6 @@
 #include <render_util/terrain_util.h>
 #include <render_util/atmosphere.h>
 #include <render_util/globals.h>
-#include <render_util/parameter_wrapper.h>
 #include <render_util/gl_binding/gl_functions.h>
 
 
@@ -66,8 +66,6 @@ class Scene
   render_util::TextureManager texture_manager = render_util::TextureManager(0);
 
 public:
-  using Controller = render_util::ParameterWrapper<float>;
-
   virtual ~Scene() {}
 
   const bool m_use_base_map = false;
@@ -83,26 +81,24 @@ public:
   float sun_azimuth = 0.0;
   bool toggle_lod_morph = false;
   bool pause_animations = false;
-  int m_active_controller = 0;
-  std::vector<Controller> m_controllers;
+
+  Parameters m_parameters;
 
   Terrain m_terrain;
   std::unique_ptr<Atmosphere> m_atmosphere;
-
-
-  void addController(std::string name, Controller::GetFunc get, Controller::SetFunc set)
-  {
-    m_controllers.push_back(Controller(name, get, set));
-  }
-
 
   void addAtmosphereController(std::string name, Atmosphere::Parameter p)
   {
     if (m_atmosphere->hasParameter(p))
     {
-      addController(name,
-                    [this,p] { return m_atmosphere->getParameter(p); },
-                    [this,p] (auto value) { m_atmosphere->setParameter(p, value); });
+      using Wrapper = ValueWrapper<float>;
+
+      Wrapper wrapper =
+      {
+        [this,p] { return m_atmosphere->getParameter(p); },
+        [this,p] (auto value) { m_atmosphere->setParameter(p, value); },
+      };
+      m_parameters.add<float>(name, wrapper);
     }
   }
 
@@ -127,25 +123,18 @@ public:
     addAtmosphereController("uncharted2_w", Atmosphere::Parameter::UNCHARTED2_W);
   }
 
-
-  bool hasActiveController()
+  bool hasActiveParameter()
   {
-    return m_active_controller >= 0 && m_active_controller < m_controllers.size();
+    return !m_parameters.getParameters().empty();
   }
 
-  Controller &getActiveController() { return m_controllers.at(m_active_controller); }
-
-  void setActiveController(int index)
+  const std::vector<std::unique_ptr<Parameter>> &getParameters()
   {
-    if (m_controllers.empty())
-      return;
-
-    if (index < 0)
-      index += m_controllers.size();
-    index = index % m_controllers.size();
-    m_active_controller = index;
+    return m_parameters.getParameters();
   }
-
+  Parameter &getActiveParameter() { return m_parameters.getActive(); }
+  void setActiveParameter(int index) { m_parameters.setActive(index); }
+  int getActiveParameterIndex() { return m_parameters.getActiveIndex(); }
 
   glm::vec3 getSunDir()
   {

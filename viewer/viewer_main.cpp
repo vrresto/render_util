@@ -202,64 +202,60 @@ namespace
     }
 
     else if (key == GLFW_KEY_F4 && action == GLFW_PRESS) {
-      g_scene->setActiveController(0);
+      g_scene->setActiveParameter(0);
     }
     else if (key == GLFW_KEY_F5 && action == GLFW_PRESS) {
-      g_scene->setActiveController(1);
+      g_scene->setActiveParameter(1);
     }
     else if (key == GLFW_KEY_F6 && action == GLFW_PRESS) {
-      g_scene->setActiveController(2);
+      g_scene->setActiveParameter(2);
     }
     else if (key == GLFW_KEY_F7 && action == GLFW_PRESS) {
-      g_scene->setActiveController(3);
+      g_scene->setActiveParameter(3);
     }
     else if (key == GLFW_KEY_F8 && action == GLFW_PRESS) {
-      g_scene->setActiveController(4);
+      g_scene->setActiveParameter(4);
     }
     else if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
-      g_scene->setActiveController(g_scene->m_active_controller-1);
+      g_scene->setActiveParameter(g_scene->getActiveParameterIndex()-1);
     }
     else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
-      g_scene->setActiveController(g_scene->m_active_controller+1);
+      g_scene->setActiveParameter(g_scene->getActiveParameterIndex()+1);
     }
 
     else if (key == GLFW_KEY_PAGE_UP && action == GLFW_PRESS &&
-        g_scene->hasActiveController())
+        g_scene->hasActiveParameter())
     {
       auto step_size = mods & GLFW_MOD_ALT ? 1.0 :
           mods & GLFW_MOD_SHIFT ? 0.01 :
             mods & GLFW_MOD_CONTROL ? 10.0 : 0.1;
-      auto value = g_scene->getActiveController().get();
-      g_scene->getActiveController().set(value + step_size);
+      g_scene->getActiveParameter().increase(step_size);
     }
     else if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_PRESS &&
-        g_scene->hasActiveController())
+        g_scene->hasActiveParameter())
     {
       auto step_size = mods & GLFW_MOD_ALT ? 1.0 :
           mods & GLFW_MOD_SHIFT ? 0.01 :
             mods & GLFW_MOD_CONTROL ? 10.0 : 0.1;
-      auto value = g_scene->getActiveController().get();
-      g_scene->getActiveController().set(value - step_size);
+      g_scene->getActiveParameter().decrease(step_size);
     }
     else if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT) &&
-        g_scene->hasActiveController())
+        g_scene->hasActiveParameter())
     {
       auto step_size = 0.01;
-      auto value = g_scene->getActiveController().get();
-      g_scene->getActiveController().set(value - step_size);
+      g_scene->getActiveParameter().decrease(step_size);
     }
     else if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT) &&
-        g_scene->hasActiveController())
+        g_scene->hasActiveParameter())
     {
       auto step_size = 0.01;
-      auto value = g_scene->getActiveController().get();
-      g_scene->getActiveController().set(value + step_size);
+      g_scene->getActiveParameter().increase(step_size);
     }
 
     else if (key == GLFW_KEY_R && action == GLFW_PRESS &&
-        g_scene->hasActiveController())
+        g_scene->hasActiveParameter())
     {
-      g_scene->getActiveController().reset();
+      g_scene->getActiveParameter().reset();
     }
 
     else if (key == GLFW_KEY_F9 && action == GLFW_PRESS)
@@ -267,9 +263,9 @@ namespace
       auto &out = cout;
 
       out << endl;
-      for (auto &c : g_scene->m_controllers)
+      for (auto &p : g_scene->getParameters())
       {
-        out << c.name << ": " << c.get() << endl;
+        out << p->name << ": " << p->getValueString() << endl;
       }
       out << endl;
     }
@@ -573,25 +569,21 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene, st
     text_renderer->DrawText(stats.str(), 0, 0);
 
 
-    for (int i = 0; i < g_scene->m_controllers.size(); i++)
+    for (int i = 0; i < g_scene->getParameters().size(); i++)
     {
-      auto &controller = g_scene->m_controllers.at(i);
-
-      char buf[100];
-      snprintf(buf, sizeof(buf), "%.2f", controller.get());
-
-      auto controller_text = controller.name + ": " + buf;
+      auto &parameter = *g_scene->getParameters().at(i);
+      auto parameter_text = parameter.name + ": " + parameter.getValueString();
 
       float offset_y = i * 30;;
 
       text_renderer->SetColor(0,0,0);
-      text_renderer->DrawText(controller_text, 1, 31 + offset_y);
+      text_renderer->DrawText(parameter_text, 1, 31 + offset_y);
 
-      if (i == g_scene->m_active_controller)
+      if (i == g_scene->getActiveParameterIndex())
         text_renderer->SetColor(1,1,1);
       else
         text_renderer->SetColor(0.6, 0.6, 0.6);
-      text_renderer->DrawText(controller_text, 0, 30 + offset_y);
+      text_renderer->DrawText(parameter_text, 0, 30 + offset_y);
     }
 
     CHECK_GL_ERROR();
