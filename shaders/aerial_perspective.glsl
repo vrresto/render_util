@@ -20,7 +20,7 @@
 #version 430
 
 
-// float genericNoise(vec2 pos);
+float genericNoise(vec2 pos);
 float mapFromFrustumTextureZ(float z);
 void castRayThroughFrustum(vec2 ndc_xy,
     out vec3 ray_dir,
@@ -31,6 +31,7 @@ void castRayThroughFrustum(vec2 ndc_xy,
 layout(local_size_x = 1, local_size_y = 1) in;
 layout(rgba32f) uniform image3D img_output;
 
+uniform vec3 cameraPosWorld;
 uniform vec3 compute_cameraPosWorld;
 uniform mat4 compute_view_to_world_rotation;
 uniform vec3 earth_center;
@@ -40,7 +41,9 @@ uniform ivec2 pixel_coords_offset = ivec2(0);
 uniform ivec2 pixel_coords_multiplier = ivec2(1);
 
 
-const float haze_visibility = 20000;
+// const float haze_visibility = 20000;
+const float haze_visibility = 10000;
+// const float haze_visibility = 3000;
 
 
 float getHeightAtPos(vec3 pos)
@@ -60,7 +63,25 @@ float calcHazeDensityAtHeight(float height)
 float calcHazeDensityAtPos(vec3 pos)
 {
   float height = getHeightAtPos(pos);
+#if 0
   return calcHazeDensityAtHeight(height);
+#else
+  float dist = distance(cameraPosWorld, pos);
+  float noise = genericNoise(pos.xy * 0.002);
+
+
+  float density_near = 1-smoothstep(200, 400, height);
+//   float density_far = 1-smoothstep(0, 2000, height);
+  float density_far = exp(-(height/700));
+
+  density_near = mix(density_near * 0.0, density_near, noise);
+
+  float density = mix(density_near, density_far, smoothstep(0, 40000, dist));
+
+//   density = density_far;
+
+  return density;
+#endif
 }
 
 

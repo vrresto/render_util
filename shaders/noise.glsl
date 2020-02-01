@@ -16,7 +16,7 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#version 130
+#version 430
 
 uniform sampler2D sampler_generic_noise;
 
