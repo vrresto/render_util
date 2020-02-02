@@ -42,8 +42,9 @@ uniform ivec2 pixel_coords_multiplier = ivec2(1);
 
 
 // const float haze_visibility = 20000;
-const float haze_visibility = 10000;
+// const float haze_visibility = 10000;
 // const float haze_visibility = 3000;
+const float haze_visibility = 400;
 
 
 float getHeightAtPos(vec3 pos)
@@ -67,14 +68,16 @@ float calcHazeDensityAtPos(vec3 pos)
   return calcHazeDensityAtHeight(height);
 #else
   float dist = distance(cameraPosWorld, pos);
-  float noise = genericNoise(pos.xy * 0.002);
 
+  float noise = genericNoise(pos.xy * 0.001);
+  noise *= clamp(pow(genericNoise(pos.xy * 0.0001), 2), 0, 1);
 
   float density_near = 1-smoothstep(200, 400, height);
 //   float density_far = 1-smoothstep(0, 2000, height);
-  float density_far = exp(-(height/700));
+  float density_far = 0.02 *  exp(-(height/700));
 
   density_near = mix(density_near * 0.0, density_near, noise);
+  density_near = mix(density_near, density_far, 0.2);
 
   float density = mix(density_near, density_far, smoothstep(0, 40000, dist));
 

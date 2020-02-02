@@ -69,7 +69,7 @@ namespace
 {
 
 constexpr int frustum_texture_scale = 2;
-constexpr int frustum_texture_depth_scale = 2;
+constexpr int frustum_texture_depth_scale = 8;
 
 constexpr glm::ivec3 frustum_texture_res = glm::ivec3(160 * frustum_texture_scale,
                                                       90 * frustum_texture_scale,
