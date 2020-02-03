@@ -69,7 +69,7 @@ namespace
 {
 
 constexpr int frustum_texture_scale = 2;
-constexpr int frustum_texture_depth_scale = 8;
+constexpr int frustum_texture_depth_scale = 4;
 
 constexpr glm::ivec3 frustum_texture_res = glm::ivec3(160 * frustum_texture_scale,
                                                       90 * frustum_texture_scale,
@@ -491,6 +491,9 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program,
   program->setUniform("map_size", map_size);
   
   program->setUniform("frame_delta", m_frame_delta);
+  
+  float phase = fract(current_seconds);
+  program->setUniform("frame_phase", phase);
 
   program->setUniformi("sampler_aerial_perspective",
                         getTextureManager().getTexUnitNum(TEXUNIT_AERIAL_PERSPECTIVE));

@@ -61,7 +61,7 @@ float calcHazeDensityAtHeight(float height)
 //   return 1-smoothstep(500, 500, height);
   
   return
-    (1-smoothstep(500, 500, height)) +
+    (1-smoothstep(0, 1000, height)) +
     0.1 * exp(-(height/1000));
 }
 
@@ -94,6 +94,7 @@ float calcHazeDensityAtPos(vec3 pos)
 
 
 uniform sampler2D sampler_generic_noise;
+
 
 void main(void)
 {
@@ -153,7 +154,7 @@ void main(void)
     float step_size = next_step_dist - dist;
     
     
-    dist += jitter.z * step_size;
+//     dist += jitter.z * step_size;
 
     vec3 pos = compute_cameraPosWorld + dist * ray_dir;
 

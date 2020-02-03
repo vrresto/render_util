@@ -82,6 +82,8 @@ public:
   bool toggle_lod_morph = false;
   bool pause_animations = false;
 
+  double current_seconds = 0;
+
   Parameters m_parameters;
 
   Terrain m_terrain;

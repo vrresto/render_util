@@ -534,6 +534,8 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene, st
   Clock::time_point last_frame_time = Clock::now();
   Clock::time_point last_stats_time = Clock::now();
 
+  auto start_time = Clock::now();
+  
   while (!glfwWindowShouldClose(window))
   {
 //     gl::Finish();
@@ -544,6 +546,16 @@ void render_util::viewer::runApplication(util::Factory<Scene> f_create_scene, st
     std::chrono::milliseconds frame_delta =
       std::chrono::duration_cast<std::chrono::milliseconds>(current_frame_time - last_frame_time);
     last_frame_time = current_frame_time;
+
+    auto current_frame_time_ms =
+      std::chrono::duration_cast<std::chrono::milliseconds>(current_frame_time - start_time);
+
+//     auto current_ms = current_frame_time_ms % 1000;
+    auto current_seconds = current_frame_time_ms.count() / 1000.0;
+
+//     cout << "current_seconds: " << current_seconds << endl;
+    
+    g_scene->current_seconds = current_seconds;
 
     glfwPollEvents();
     processInput(window, (float)frame_delta.count() / 1000.0);

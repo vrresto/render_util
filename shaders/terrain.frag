@@ -106,8 +106,8 @@ void main(void)
   vec3 frustum_color = getFogColorFromFrustumTexture(frustum_texture_pos_ndc_xy,
     frustum_texture_pos_view.xyz, sampler_aerial_perspective, passObjectPos);
 
-//   out_color0.rgb = frustum_color;
-//   return;
+  out_color0.rgb = frustum_color;
+  return;
 
 //   out_color0 *= 0;
 //   out_color0.xy = prev_pos_ndc_xy;
