@@ -19,7 +19,7 @@ const float fps = 30;
 float genericNoise(vec2 pos);
 
 
-float sampleJitterNoise(vec2 sample_offset, vec3 coords)
+float sampleJitterNoise(vec2 sample_offset, vec3 coords, float freq)
 {
   float jitter_noise = 1;
 
@@ -27,17 +27,21 @@ float sampleJitterNoise(vec2 sample_offset, vec3 coords)
 
   coords.x *= 1.5;
 
+  coords.x *= 0.3;
+  
+  coords *= freq;
+
   float freq1 = -1 + 2 * texture(sampler_generic_noise, sample_offset + 0.5 * coords.xy).x;
   float freq2 = -1 + 2 * texture(sampler_generic_noise, sample_offset + 1.0 * coords.xy).x;
   float freq3 = -1 + 2 * texture(sampler_generic_noise, sample_offset + 0.25 * coords.xy).x;
 //   jitter_noise *= -1 + 2 * texture(sampler_generic_noise, sample_offset + 0.1 * coords.xy).x;
 
-  jitter_noise = mix(freq1, freq2, 0.25);
-  
-  jitter_noise = mix(jitter_noise, freq3, 0.2);
+  jitter_noise = freq1;
 
-//   jitter_noise *= 2;
-  
+//   jitter_noise = mix(jitter_noise, freq2, 0.25);
+//   jitter_noise = mix(jitter_noise, freq3, 0.2);
+
+
   jitter_noise = clamp(jitter_noise, -1, 1);
 
 
@@ -150,9 +154,9 @@ vec3 getFogColorFromFrustumTexture(vec2 ndc_xy, vec3 view_pos, sampler3D frustum
   vec3 noise_offset = vec3(0.0, 0.5, 0.0);
   vec3 jitter = vec3(0);
   
-  jitter.x = sampleJitterNoise(vec2(0), frustum_coords);
-  jitter.y = sampleJitterNoise(vec2(0.5), frustum_coords);
-  jitter.z = sampleJitterNoise(vec2(0.1, 0.2), frustum_coords);
+  jitter.x = sampleJitterNoise(vec2(0), frustum_coords, 1.0);
+  jitter.y = sampleJitterNoise(vec2(0.5), frustum_coords, 1.0);
+  jitter.z = sampleJitterNoise(vec2(0.1, 0.2), frustum_coords, 1.0);
 
 //   jitter.xy = vec2(1,0);
   
