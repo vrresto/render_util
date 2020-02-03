@@ -7,6 +7,9 @@ uniform float z_near;
 // uniform vec2 viewport_size;
 // uniform mat4 ndc_to_view;
 uniform vec2 ndc_xy_to_view;
+uniform ivec3 frustum_texture_size;
+
+float genericNoise(vec2 pos);
 
 float distance_to_plane(vec3 lineP,
                vec3 lineN,
@@ -60,22 +63,35 @@ const float EXPONENT = 4;
 
 float mapToFrustumTextureZ(float z)
 {
-  z = clamp(z, 0, 1);
+//   return z;
 
+  z = clamp(z, 0, 1);
   return pow(z, 1.0 / EXPONENT);
 }
 
 
 float mapFromFrustumTextureZ(float z)
 {
-  z = clamp(z, 0, 1);
+//   return z;
 
+  z = clamp(z, 0, 1);
   return pow(z, EXPONENT);
 }
 
+uniform sampler2D sampler_generic_noise;
 
-vec3 getFogColorFromFrustumTexture(vec2 ndc_xy, vec3 view_pos, sampler3D frustum_texture)
+vec3 getFogColorFromFrustumTexture(vec2 ndc_xy, vec3 view_pos, sampler3D frustum_texture, vec3 pos)
 {
+  float noise_scale = 0.000008;
+
+  float noise1 = texture(sampler_generic_noise, noise_scale * pos.xy).x;
+  float noise2 = texture(sampler_generic_noise, vec2(0.5) + noise_scale * pos.xy).x;
+  float noise3 = texture(sampler_generic_noise, vec2(0.25) + noise_scale * pos.xy).x;
+
+  vec3 jitter = vec3(noise1, noise2, noise3);
+  jitter -= vec3(0.5);
+//   jitter *= 0.3;
+//   return jitter;
 
   vec3 frustum_coords = vec3(0);
   frustum_coords.xy = (ndc_xy + vec2(1)) / 2;
@@ -94,6 +110,22 @@ vec3 getFogColorFromFrustumTexture(vec2 ndc_xy, vec3 view_pos, sampler3D frustum
 
 
   frustum_coords.z = mapToFrustumTextureZ(clamp(dist_in_frustum_relative, 0, 1));
+  
+  noise_scale = 0.02;
+  jitter.x = texture(sampler_generic_noise, noise_scale * frustum_coords.xy).x;
+  jitter.y = texture(sampler_generic_noise, vec2(0.5) + noise_scale * frustum_coords.xy).x;
+  jitter.z = texture(sampler_generic_noise, vec2(0.2) + noise_scale * frustum_coords.xy).x;
+  jitter -= vec3(0.5);
+
+  jitter *= -1;
+  
+  
+  frustum_coords *= vec3(frustum_texture_size);
+  
+//   frustum_coords += jitter;
+//   frustum_coords.z += jitter.z;
+  
+  frustum_coords /= vec3(frustum_texture_size);
   
 //   frustum_coords.z = dist / 1000;
 

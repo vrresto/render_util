@@ -75,10 +75,9 @@ void main(void)
 
   gl_FragColor.xyz = getSkyColor(cameraPosWorld, viewDir);
 
-  vec3 frustum_color = getFogColorFromFrustumTexture(frustum_texture_pos_ndc_xy,
-    frustum_texture_pos_view.xyz, sampler_aerial_perspective);
-
-  gl_FragColor.xyz = mix(gl_FragColor.xyz, vec3(1), frustum_color.r);
+//   vec3 frustum_color = getFogColorFromFrustumTexture(frustum_texture_pos_ndc_xy,
+//     frustum_texture_pos_view.xyz, sampler_aerial_perspective);
+//   gl_FragColor.xyz = mix(gl_FragColor.xyz, vec3(1), frustum_color.r);
 
   if (getDebugColor() != vec3(0)) {
     gl_FragColor.xyz = getDebugColor();

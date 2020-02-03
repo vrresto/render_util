@@ -139,6 +139,8 @@ class TerrainViewerScene : public Scene
   ivec2 mark_pixel_coords = ivec2(0);
 
   unique_ptr<terrain_viewer::Map> m_map;
+  
+  float m_frame_delta = 0;
 
 //   render_util::TexturePtr current_frustum_texture;
 //   render_util::TexturePtr next_frustum_texture;
@@ -451,7 +453,7 @@ void TerrainViewerScene::setup()
   setComputeSteps(1);
 
   {
-    std::vector<int> values = { 1, 2, 4 };
+    std::vector<int> values = { 4, 2, 1 };
     auto apply = [this] (int value) { setComputeSteps(value); };
     m_parameters.addMultipleChoice<int>("compute_steps", apply, values);
   }
@@ -487,6 +489,8 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program,
   program->setUniform("terrain_height_offset", 0.f);
   program->setUniform("terrain_base_map_height", 0.f);
   program->setUniform("map_size", map_size);
+  
+  program->setUniform("frame_delta", m_frame_delta);
 
   program->setUniformi("sampler_aerial_perspective",
                         getTextureManager().getTexUnitNum(TEXUNIT_AERIAL_PERSPECTIVE));
@@ -613,6 +617,8 @@ void TerrainViewerScene::computeStep()
 
 void TerrainViewerScene::render(float frame_delta)
 {
+  m_frame_delta = frame_delta;
+  
   if (!pause_animations)
   {
     shore_wave_pos.x = shore_wave_pos.x + (frame_delta * shore_wave_hz.x);
