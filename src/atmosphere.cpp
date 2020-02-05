@@ -28,15 +28,13 @@ std::unique_ptr<Atmosphere> createAtmosphere(Atmosphere::Type type,
                                              float max_cirrus_albedo,
                                              render_util::TextureManager &tex_mgr,
                                              std::string shader_dir,
-                                             bool enable_realtime_single_scattering,
-                                             int realtime_single_scattering_steps)
+                                             bool precomputed_luminance)
 {
   switch (type)
   {
     case Atmosphere::PRECOMPUTED:
       return std::make_unique<AtmospherePrecomputed>(tex_mgr, shader_dir, max_cirrus_albedo,
-                                                     enable_realtime_single_scattering,
-                                                     realtime_single_scattering_steps);
+                                                     precomputed_luminance);
     default:
       return std::make_unique<Atmosphere>();
   }

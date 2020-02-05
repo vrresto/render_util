@@ -74,27 +74,11 @@ public:
 };
 
 
-enum class Luminance
-{
-  // Render the spectral radiance at kLambdaR, kLambdaG, kLambdaB.
-  NONE,
-  // Render the sRGB luminance, using an approximate (on the fly) conversion
-  // from 3 spectral radiance values only (see section 14.3 in <a href=
-  // "https://arxiv.org/pdf/1612.04336.pdf">A Qualitative and Quantitative
-  //  Evaluation of 8 Clear Sky Models</a>).
-  APPROXIMATE,
-  // Render the sRGB luminance, precomputed from 15 spectral radiance values
-  // (see section 4.4 in <a href=
-  // "http://www.oskee.wz.cz/stranka/uploads/SCCG10ElekKmoch.pdf">Real-time
-  //  Spectral Scattering in Large-scale Natural Participating Media</a>).
-  PRECOMPUTED
-};
-
-
 enum class ToneMappingOperatorType
 {
   DEFAULT,
 };
+
 
 constexpr double kPi = util::PI;
 constexpr double kSunAngularRadius = render_util::physics::SUN_ANGULAR_RADIUS;
@@ -108,9 +92,6 @@ constexpr double kTopRadius = kBottomRadius + 80000;
 constexpr bool use_half_precision_ = false;
 constexpr bool use_constant_solar_spectrum_ = false;
 constexpr bool use_ozone_ = true;
-// constexpr Luminance use_luminance_ = Luminance::PRECOMPUTED;
-constexpr Luminance use_luminance_ = Luminance::APPROXIMATE;
-// constexpr Luminance use_luminance_ = Luminance::NONE;
 constexpr bool use_combined_textures_ = true;
 constexpr bool do_white_balance_ = true;
 constexpr auto TONE_MAPPING_OPERATOR_TYPE = ToneMappingOperatorType::DEFAULT;
@@ -137,9 +118,9 @@ namespace render_util
 
 AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mgr,
                                              std::string shader_dir, float max_cirrus_albedo,
-                                             bool realtime_single_scattering,
-                                             int realtime_single_scattering_steps) :
-  m_max_cirrus_albedo(max_cirrus_albedo)
+                                             bool precomputed_luminance) :
+  m_max_cirrus_albedo(max_cirrus_albedo),
+  m_use_luminance(precomputed_luminance ? Luminance::PRECOMPUTED : Luminance::APPROXIMATE)
 {
   switch (TONE_MAPPING_OPERATOR_TYPE)
   {
@@ -242,9 +223,9 @@ AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mg
       {rayleigh_layer}, rayleigh_scattering,
       {mie_layer}, mie_scattering, mie_extinction, kMiePhaseFunctionG,
       ozone_density, absorption_extinction, ground_albedo, max_sun_zenith_angle,
-      kLengthUnitInMeters, use_luminance_ == Luminance::PRECOMPUTED ? 15 : 3,
+      kLengthUnitInMeters, m_use_luminance == Luminance::PRECOMPUTED ? 15 : 3,
       use_combined_textures_, use_half_precision_, shader_dir + "/" + getShaderPath(),
-      tex_mgr, realtime_single_scattering, realtime_single_scattering_steps));
+      tex_mgr, false, 0));
 
   m_model->Init(6);
 
@@ -274,7 +255,7 @@ AtmospherePrecomputed::~AtmospherePrecomputed() {}
 ShaderParameters AtmospherePrecomputed::getShaderParameters()
 {
   auto p = m_model->getShaderParameters();
-  p.set("use_luminance", use_luminance_ != Luminance::NONE);
+  p.set("use_luminance", m_use_luminance != Luminance::NONE);
   p.set("use_hdr", true);
   p.set("max_cirrus_albedo", m_max_cirrus_albedo);
 
@@ -298,7 +279,7 @@ void AtmospherePrecomputed::setUniforms(ShaderProgramPtr program)
     m_single_mie_scattering_texture_unit);
 
   program->setUniform<float>("exposure",
-                             use_luminance_ != Luminance::NONE ? m_exposure * 1e-5 : m_exposure);
+                             m_use_luminance != Luminance::NONE ? m_exposure * 1e-5 : m_exposure);
 
   program->setUniform("gamma", m_gamma);
   program->setUniform("saturation", m_saturation);

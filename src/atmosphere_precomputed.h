@@ -34,6 +34,22 @@ public:
   class ToneMappingOperator;
 
 private:
+  enum class Luminance
+  {
+    // Render the spectral radiance at kLambdaR, kLambdaG, kLambdaB.
+    NONE,
+    // Render the sRGB luminance, using an approximate (on the fly) conversion
+    // from 3 spectral radiance values only (see section 14.3 in <a href=
+    // "https://arxiv.org/pdf/1612.04336.pdf">A Qualitative and Quantitative
+    //  Evaluation of 8 Clear Sky Models</a>).
+    APPROXIMATE,
+    // Render the sRGB luminance, precomputed from 15 spectral radiance values
+    // (see section 4.4 in <a href=
+    // "http://www.oskee.wz.cz/stranka/uploads/SCCG10ElekKmoch.pdf">Real-time
+    //  Spectral Scattering in Large-scale Natural Participating Media</a>).
+    PRECOMPUTED
+  };
+
   std::unique_ptr<atmosphere::Model> m_model;
   std::unique_ptr<ToneMappingOperator> m_tone_mapping_operator;
 
@@ -53,13 +69,13 @@ private:
   float m_blue_saturation = 1.0;
 
   float m_max_cirrus_albedo = 1.0;
+  Luminance m_use_luminance = Luminance::APPROXIMATE;
 
 public:
   AtmospherePrecomputed(render_util::TextureManager &tex_mgr,
                         std::string shader_dir,
                         float max_cirrus_albedo,
-                        bool realtime_single_scattering,
-                        int realtime_single_scattering_steps);
+                        bool precomputed_luminance);
   ~AtmospherePrecomputed();
 
   std::string getShaderPath() override { return "atmosphere_precomputed"; }

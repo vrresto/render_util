@@ -70,8 +70,7 @@ public:
 std::unique_ptr<Atmosphere> createAtmosphere(Atmosphere::Type,
                                              float max_cirrus_albedo,
                                              render_util::TextureManager&, std::string shader_dir,
-                                             bool enable_realtime_single_scattering = false,
-                                             int realtime_single_scattering_steps = 0);
+                                             bool precomputed_luminance = false);
 
 
 }
