@@ -5,4 +5,5 @@ frag atmosphere
 frag lighting
 frag util
 frag main
+frag cirrus_util
 texunit atmosphere_thickness_map

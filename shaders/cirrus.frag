@@ -43,67 +43,7 @@ const float near_dist = 40000;
 const float near_fade_dist = 10000;
 
 
-float getCloudDensityNear(vec3 view_dir)
-{
-  const int num_layers = 20;
-  const float layer_alpha = 1.0 / num_layers;
-
-  float cloud_density_near = 0;
-
-  for (int i = 0; i < num_layers; i++)
-  {
-    float pos_in_layer = float(i) / float(num_layers);
-    pos_in_layer = (2 * pos_in_layer) - 1.0;
-
-    float density = 1 - abs(pos_in_layer);
-
-    float height = cirrus_height + (pos_in_layer * (cirrus_layer_thickness / 2));
-
-    vec3 coord = vec3(0);
-    float dist = 0;
-
-    vec3 sphere_center = vec3(cameraPosWorld.xy, -planet_radius);
-    float sphere_radius = planet_radius + height;
-
-    if (cameraPosWorld.z < height)
-    {
-      float t0 = getSphereIntersectionFromInside(cameraPosWorld, view_dir,
-                                                 sphere_center, sphere_radius);
-      if (t0 > 0)
-      {
-        coord = cameraPosWorld + view_dir * t0;
-        dist = t0;
-      }
-    }
-    else
-    {
-      float t0, t1;
-      if (sphereIntersection(cameraPosWorld, view_dir, 0, sphere_center, sphere_radius, t0, t1))
-      {
-        if (t0 > 0)
-        {
-          coord = cameraPosWorld + view_dir * t0;
-          dist = t0;
-        }
-        else
-        {
-          coord = cameraPosWorld + view_dir * t1;
-          dist = t1;
-        }
-      }
-    }
-
-    density *= texture2D(sampler_cirrus, coord.xy * 0.00002).x;
-
-    if (dist > 0)
-      cloud_density_near += density * layer_alpha;
-  }
-
-  cloud_density_near = min(2 * cloud_density_near, 1);
-
-  return cloud_density_near;
-}
-
+float getCirrusDensity(vec3 camera_pos, vec3 view_dir);
 
 void main()
 {
@@ -115,7 +55,7 @@ void main()
   if (cameraPosWorld.z > cirrus_height)
     normal = -normal;
 
-  float cloud_density = MAX_CIRRUS_OPACITY * getCloudDensityNear(view_dir);
+  float cloud_density = MAX_CIRRUS_OPACITY * getCirrusDensity(cameraPosWorld, view_dir);
 
   vec3 color = calcCirrusLight(passObjectPos);
 
