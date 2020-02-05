@@ -109,6 +109,7 @@ namespace terrain_viewer
     TerrainBase::MaterialMap::ConstPtr m_material_map;
     MapTextures m_map_textures;
     WaterAnimation m_water_animation;
+    std::shared_ptr<GenericImage> m_cirrus_texture;
 
   public:
     Map(const TextureManager &texture_manager) : m_map_textures(texture_manager) {}
@@ -119,6 +120,13 @@ namespace terrain_viewer
     {
       m_material_map = map;
     }
+
+    void setCirrusTexture(std::shared_ptr<GenericImage> texture) override
+    {
+      m_cirrus_texture = texture;
+    }
+
+    std::shared_ptr<GenericImage> getCirrusTexture() { return m_cirrus_texture; }
 
     TerrainBase::MaterialMap::ConstPtr getMaterialMap() { return m_material_map; }
   };
@@ -319,7 +327,7 @@ void TerrainViewerScene::setup()
 #endif
 
   m_cirrus_clouds = make_unique<CirrusClouds>(0.7, getTextureManager(), shader_search_path,
-                                              shader_params, 7000);
+                                              shader_params, 7000, m_map->getCirrusTexture());
 
   CHECK_GL_ERROR();
   m_map->getTextures().bind(getTextureManager());
