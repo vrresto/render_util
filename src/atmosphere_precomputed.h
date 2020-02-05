@@ -75,7 +75,8 @@ public:
   AtmospherePrecomputed(render_util::TextureManager &tex_mgr,
                         std::string shader_dir,
                         float max_cirrus_albedo,
-                        bool precomputed_luminance);
+                        bool precomputed_luminance,
+                        float haziness);
   ~AtmospherePrecomputed();
 
   std::string getShaderPath() override { return "atmosphere_precomputed"; }

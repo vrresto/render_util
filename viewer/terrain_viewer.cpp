@@ -72,6 +72,7 @@ namespace
 // constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
 constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
 constexpr auto PRECOMPUTED_LUMINANCE = true;
+constexpr auto HAZINESS = 1.0;
 
 const bool g_terrain_use_lod = true;
 
@@ -256,7 +257,7 @@ void TerrainViewerScene::setup()
 
   m_atmosphere = createAtmosphere(ATMOSPHERE_TYPE, 0.4, getTextureManager(),
                                   RENDER_UTIL_SHADER_DIR,
-                                  PRECOMPUTED_LUMINANCE);
+                                  PRECOMPUTED_LUMINANCE, HAZINESS);
 
   getTextureManager().setActive(true);
 

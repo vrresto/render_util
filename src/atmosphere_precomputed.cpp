@@ -94,6 +94,7 @@ constexpr bool use_constant_solar_spectrum_ = false;
 constexpr bool use_ozone_ = true;
 constexpr bool use_combined_textures_ = true;
 constexpr bool do_white_balance_ = true;
+constexpr double MAX_MIE_ANGSTROM_BETA_FACTOR = 10;
 constexpr auto TONE_MAPPING_OPERATOR_TYPE = ToneMappingOperatorType::DEFAULT;
 
 // calculated using CIECAM02 according to http://www.magnetkern.de/spektrum.html
@@ -118,7 +119,8 @@ namespace render_util
 
 AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mgr,
                                              std::string shader_dir, float max_cirrus_albedo,
-                                             bool precomputed_luminance) :
+                                             bool precomputed_luminance,
+                                             float haziness_) :
   m_max_cirrus_albedo(max_cirrus_albedo),
   m_use_luminance(precomputed_luminance ? Luminance::PRECOMPUTED : Luminance::APPROXIMATE)
 {
@@ -190,6 +192,9 @@ AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mg
   ozone_density.push_back(
       DensityProfileLayer(0.0, 0.0, 0.0, -1.0 / 15000.0, 8.0 / 3.0));
 
+  auto haziness = glm::clamp(static_cast<double>(haziness_), 0.0, 1.0);
+  auto mie_angstrom_beta_factor = glm::mix(1.0, MAX_MIE_ANGSTROM_BETA_FACTOR, haziness);
+
   std::vector<double> wavelengths;
   std::vector<double> solar_irradiance;
   std::vector<double> rayleigh_scattering;
@@ -199,8 +204,8 @@ AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mg
   std::vector<double> ground_albedo;
   for (int l = kLambdaMin; l <= kLambdaMax; l += 10) {
     double lambda = static_cast<double>(l) * 1e-3;  // micro-meters
-    double mie =
-        kMieAngstromBeta / kMieScaleHeight * pow(lambda, -kMieAngstromAlpha);
+    double mie = mie_angstrom_beta_factor * kMieAngstromBeta / kMieScaleHeight
+                 * pow(lambda, -kMieAngstromAlpha);
     wavelengths.push_back(l);
     if (use_constant_solar_spectrum_) {
       solar_irradiance.push_back(kConstantSolarIrradiance);
