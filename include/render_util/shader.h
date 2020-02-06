@@ -34,6 +34,13 @@ namespace render_util
   using ShaderSearchPath = std::vector<std::string>;
 
 
+  class ShaderCreationError : public std::exception
+  {
+  public:
+    const char *what() const noexcept override { return "Failed to create shader."; }
+  };
+
+
   class ShaderParameters
   {
     std::unordered_map<std::string, std::string> m_map;

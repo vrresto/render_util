@@ -73,7 +73,7 @@ string getParameterValue(const string &parameter, const ShaderParameters &params
     else
     {
       LOG_ERROR << "unset parameter: " << parameter_name << endl;
-      abort();
+      throw ShaderCreationError();
     }
   }
 }
@@ -382,7 +382,16 @@ ShaderProgram::ShaderProgram(const std::string &name,
     must_be_valid(must_be_valid),
     attribute_locations(attribute_locations)
 {
-  create();
+  try
+  {
+    create();
+  }
+  catch (ShaderCreationError&)
+  {
+    LOG_ERROR << "Failed to create shader program: " << name << endl;
+    throw;
+  }
+
   assertIsValid();
 }
 
