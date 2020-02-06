@@ -119,6 +119,7 @@ values slightly outside their theoretical bounds:
 #define REALTIME_SINGLE_SCATTERING_STEPS @realtime_single_scattering_steps@
 #define SINGLE_MIE_HORIZON_HACK @single_mie_horizon_hack@
 
+uniform bool single_mie_horizon_hack = false;
 
 Number ClampCosine(Number mu) {
   return clamp(mu, Number(-1.0), Number(1.0));
@@ -143,9 +144,13 @@ IrradianceSpectrum applySingleMieHorizonHack(IN(AtmosphereParameters) atmosphere
   Number mu_s,
   IrradianceSpectrum single_mie_scattering)
 {
-  Number mu_horiz =
-    -SafeSqrt(1.0 - (atmosphere.bottom_radius / r) * (atmosphere.bottom_radius / r));
-  return single_mie_scattering * smoothstep(mu_horiz, mu_horiz + Number(0.05), mu_s);
+  if (single_mie_horizon_hack) {
+    Number mu_horiz =
+      -SafeSqrt(1.0 - (atmosphere.bottom_radius / r) * (atmosphere.bottom_radius / r));
+    single_mie_scattering = single_mie_scattering *
+      smoothstep(mu_horiz, mu_horiz + Number(0.05), mu_s);
+  }
+  return single_mie_scattering;
 }
 #endif
 

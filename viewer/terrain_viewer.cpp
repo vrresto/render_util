@@ -73,7 +73,6 @@ namespace
 constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
 constexpr auto PRECOMPUTED_LUMINANCE = true;
 constexpr auto HAZINESS = 1.0;
-constexpr auto SINGLE_MIE_HORIZON_HACK = false;
 
 const bool g_terrain_use_lod = true;
 
@@ -157,6 +156,8 @@ class TerrainViewerScene : public Scene
   render_util::TexturePtr m_base_map_land_texture;
   ElevationMap::Ptr m_elevation_map_base;
 #endif
+
+  bool m_horizon_hack = true;
 
   void updateUniforms(render_util::ShaderProgramPtr program) override;
   void updateBaseWaterMapTexture();
@@ -269,7 +270,7 @@ void TerrainViewerScene::setup()
     params.max_cirrus_albedo = 0.4;
     params.precomputed_luminance = PRECOMPUTED_LUMINANCE;
     params.haziness = HAZINESS;
-    params.single_mie_horizon_hack = SINGLE_MIE_HORIZON_HACK;
+    params.single_mie_horizon_hack = true;
 
     m_atmosphere = createAtmosphere(ATMOSPHERE_TYPE, getTextureManager(),
                                     RENDER_UTIL_SHADER_DIR,
@@ -347,6 +348,12 @@ void TerrainViewerScene::setup()
   camera.z = 10000;
 
   createControllers();
+
+  auto apply_horizon_hack = [this] (bool value)
+  {
+    m_horizon_hack = value;
+  };
+  m_parameters.addBool("horizon_hack", apply_horizon_hack, false);
 }
 
 
@@ -366,6 +373,8 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
   program->setUniform("shore_wave_scroll", shore_wave_pos);
   program->setUniform("terrain_height_offset", 0.f);
   program->setUniform("terrain_base_map_height", 0.f);
+
+  program->setUniform("single_mie_horizon_hack", m_horizon_hack);
 
   CHECK_GL_ERROR();
 }
