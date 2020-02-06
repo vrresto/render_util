@@ -261,7 +261,8 @@ void Shader::compile()
 
   GLint success = 0;
   gl::GetShaderiv(id, GL_COMPILE_STATUS, &success);
-  if (success !=  GL_TRUE) {
+  if (success !=  GL_TRUE)
+  {
     GLint maxLength = 0;
     gl::GetShaderiv(id, GL_INFO_LOG_LENGTH, &maxLength);
 

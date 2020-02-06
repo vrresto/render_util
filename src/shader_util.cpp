@@ -128,7 +128,7 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
     program->setUniformi("sampler_" + name, tex_mgr.getTexUnitNum(number));
   }
 
-  CHECK_GL_ERROR(); 
+  CHECK_GL_ERROR();
 
   return program;
 }
