@@ -40,10 +40,8 @@ vec3 GetSkyRadianceToPoint(vec3 camera, vec3 point, float shadow_length,
 vec3 toneMap(vec3 color);
 
 
-vec3 fogAndToneMap(vec3 in_color)
+vec3 fogAndToneMap(vec3 in_color, bool no_inscattering)
 {
-
-
   vec3 view_direction = normalize(passObjectPos - cameraPosWorld);
   float dist = distance(passObjectPos, cameraPosWorld);
 
@@ -52,6 +50,9 @@ vec3 fogAndToneMap(vec3 in_color)
 
   vec3 in_scatter = GetSkyRadianceToPoint(cameraPosWorld - earth_center,
       passObjectPos - earth_center, shadow_length, sunDir, transmittance);
+
+  if (no_inscattering)
+    in_scatter = vec3(0);
 
   vec3 radiance = in_color * transmittance + in_scatter;
 
@@ -64,6 +65,12 @@ vec3 fogAndToneMap(vec3 in_color)
   color = adjustSaturation(color, mix(1, blue_saturation, blue_ratio));
 
   return color;
+}
+
+
+vec3 fogAndToneMap(vec3 in_color)
+{
+  return fogAndToneMap(in_color, false);
 }
 
 

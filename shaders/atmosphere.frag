@@ -717,13 +717,25 @@ vec3 fogAndToneMap(vec4 atmosphere_color, vec4 fog_color, vec3 in_color)
 }
 
 
-vec3 fogAndToneMap(vec3 in_color)
+vec3 fogAndToneMap(vec3 in_color, bool no_inscattering)
 {
   vec4 atmosphere_color;
   vec4 fog_color;
   getFogParameters(atmosphere_color, fog_color);
 
+  if (no_inscattering)
+  {
+    atmosphere_color.rgb = vec3(0);
+    fog_color.rgb = vec3(0);
+  }
+
   return fogAndToneMap(atmosphere_color, fog_color, in_color);
+}
+
+
+vec3 fogAndToneMap(vec3 in_color)
+{
+  return fogAndToneMap(in_color, false);
 }
 
 
