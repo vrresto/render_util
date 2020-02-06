@@ -25,18 +25,14 @@ namespace render_util
 
 
 std::unique_ptr<Atmosphere> createAtmosphere(Atmosphere::Type type,
-                                             float max_cirrus_albedo,
                                              render_util::TextureManager &tex_mgr,
                                              std::string shader_dir,
-                                             bool precomputed_luminance,
-                                             float haziness)
+                                             const AtmosphereCreationParameters &params)
 {
   switch (type)
   {
     case Atmosphere::PRECOMPUTED:
-      return std::make_unique<AtmospherePrecomputed>(tex_mgr, shader_dir, max_cirrus_albedo,
-                                                     precomputed_luminance,
-                                                     haziness);
+      return std::make_unique<AtmospherePrecomputed>(tex_mgr, shader_dir, params);
     default:
       return std::make_unique<Atmosphere>();
   }

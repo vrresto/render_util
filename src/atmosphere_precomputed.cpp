@@ -118,11 +118,10 @@ namespace render_util
 
 
 AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mgr,
-                                             std::string shader_dir, float max_cirrus_albedo,
-                                             bool precomputed_luminance,
-                                             float haziness_) :
-  m_max_cirrus_albedo(max_cirrus_albedo),
-  m_use_luminance(precomputed_luminance ? Luminance::PRECOMPUTED : Luminance::APPROXIMATE)
+                                             std::string shader_dir,
+                                             const AtmosphereCreationParameters &params) :
+  m_max_cirrus_albedo(params.max_cirrus_albedo),
+  m_use_luminance(params.precomputed_luminance ? Luminance::PRECOMPUTED : Luminance::APPROXIMATE)
 {
   switch (TONE_MAPPING_OPERATOR_TYPE)
   {
@@ -192,7 +191,7 @@ AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mg
   ozone_density.push_back(
       DensityProfileLayer(0.0, 0.0, 0.0, -1.0 / 15000.0, 8.0 / 3.0));
 
-  auto haziness = glm::clamp(static_cast<double>(haziness_), 0.0, 1.0);
+  auto haziness = glm::clamp(static_cast<double>(params.haziness), 0.0, 1.0);
   auto mie_angstrom_beta_factor = glm::mix(1.0, MAX_MIE_ANGSTROM_BETA_FACTOR, haziness);
 
   std::vector<double> wavelengths;

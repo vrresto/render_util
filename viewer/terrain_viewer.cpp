@@ -263,9 +263,16 @@ void TerrainViewerScene::setup()
 {
   LOG_INFO<<"void TerrainViewerScene::setup()"<<endl;
 
-  m_atmosphere = createAtmosphere(ATMOSPHERE_TYPE, 0.4, getTextureManager(),
-                                  RENDER_UTIL_SHADER_DIR,
-                                  PRECOMPUTED_LUMINANCE, HAZINESS);
+  {
+    AtmosphereCreationParameters params;
+    params.max_cirrus_albedo = 0.4;
+    params.precomputed_luminance = PRECOMPUTED_LUMINANCE;
+    params.haziness = HAZINESS;
+
+    m_atmosphere = createAtmosphere(ATMOSPHERE_TYPE, getTextureManager(),
+                                    RENDER_UTIL_SHADER_DIR,
+                                    params);
+  }
 
   getTextureManager().setActive(true);
 

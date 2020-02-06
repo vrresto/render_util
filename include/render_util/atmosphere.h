@@ -29,6 +29,14 @@ namespace render_util
 {
 
 
+struct AtmosphereCreationParameters
+{
+  float max_cirrus_albedo = 1.0;
+  bool precomputed_luminance = false;
+  float haziness = 0;
+};
+
+
 class Atmosphere
 {
 public:
@@ -68,10 +76,8 @@ public:
 
 
 std::unique_ptr<Atmosphere> createAtmosphere(Atmosphere::Type,
-                                             float max_cirrus_albedo,
                                              render_util::TextureManager&, std::string shader_dir,
-                                             bool precomputed_luminance = false,
-                                             float haziness = 0.f);
+                                             const AtmosphereCreationParameters&);
 
 
 }
