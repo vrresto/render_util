@@ -162,8 +162,7 @@ string readInclude(string include_file, vector<string> search_path, string &path
   }
 
   LOG_ERROR << "failed to read include file: " << include_file << endl;
-  assert(0);
-  abort();
+  throw ShaderCreationError();
 }
 
 
@@ -204,7 +203,7 @@ Shader::Shader(const std::string &name,
     type_str = "compute";
   }
   else
-    abort();
+    throw ShaderCreationError();
 
   vector<char> data;
 
@@ -249,7 +248,16 @@ void Shader::compile()
   const GLchar *sources[1] = { m_preprocessed_source.c_str() };
 
   gl::ShaderSource(id, 1, sources, 0);
-  gl::CompileShader(id);
+
+  try
+  {
+    gl::CompileShader(id);
+  }
+  catch (GLError&)
+  {
+    // ignore the error as we check for successful compilation anyway
+    GL_Interface::getCurrent()->clearError();
+  }
 
   GLint success = 0;
   gl::GetShaderiv(id, GL_COMPILE_STATUS, &success);
@@ -269,7 +277,7 @@ void Shader::compile()
 
     free(infoLog);
 
-    exit(1);
+    throw ShaderCreationError();
   }
 
   m_id = id;
@@ -495,7 +503,7 @@ void ShaderProgram::create()
     {
       LOG_ERROR<<"glAttachShader() failed for program "<<name<<", shader: "<<shader->getFileName()<<endl;
       LOG_ERROR<<"gl error: "<<gl_binding::getGLErrorString(error)<<endl;
-      abort();
+      throw ShaderCreationError();
     }
   }
 
@@ -510,7 +518,7 @@ void ShaderProgram::create()
       LOG_ERROR<<"gl::BindAttribLocation() failed for program "<<name<<endl;
       LOG_ERROR<<"index: "<<it.first<<", name: "<<it.second<<endl;
       LOG_ERROR<<"gl error: "<<gl_binding::getGLErrorString(error)<<endl;
-      abort();
+      throw ShaderCreationError();
     }
   }
 
@@ -541,7 +549,8 @@ GLuint ShaderProgram::getId()
 
 void ShaderProgram::assertIsValid()
 {
-  assert(is_valid || !must_be_valid);
+  if (must_be_valid && !is_valid)
+    throw ShaderCreationError();
 }
 
 void ShaderProgram::assertUniformsAreSet()

@@ -47,8 +47,7 @@ ifstream openDefinition(const std::string &definition, const render_util::Shader
       return in;
   }
 
-  assert(0);
-  abort();
+  throw render_util::ShaderCreationError();
 }
 
 
@@ -109,7 +108,7 @@ ShaderProgramPtr createShaderProgram(const std::string &definition,
         texunits.push_back(name);
       else
       {
-        assert(false);
+        throw ShaderCreationError();
       }
     }
   }
