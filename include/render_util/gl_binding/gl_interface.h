@@ -39,7 +39,11 @@ namespace render_util::gl_binding
 
     GL_Interface(GetProcAddressFunc *getProcAddress);
 
+  #if ENABLE_GL_DEBUG_CALLBACK
     bool hasError() { return has_error; }
+  #else
+    static constexpr bool hasError() { return false; }
+  #endif
 
     #include <gl_binding/_generated/gl_p_proc.inc>
 
@@ -57,8 +61,6 @@ namespace render_util::gl_binding
         const void* userParam);
 
     std::atomic_bool has_error = false;
-  #else
-    static constexpr bool has_error = false;
   #endif
 
     static GL_Interface *s_current;

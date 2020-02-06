@@ -43,7 +43,8 @@ for func in api.functionIterateByOffset():
 
     print ret_assignment + "iface->" + ep_name + "(" + getArgs(func, ep) + ");"
 
-    print "  assert(!iface->hasError());"
+    print "  if (iface->hasError())"
+    print "    throw GLError();"
 
     if func.return_type != "void":
       print "  return ret;"

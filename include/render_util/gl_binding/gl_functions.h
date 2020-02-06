@@ -21,6 +21,7 @@
 
 #include <cassert>
 #include <cstdio>
+#include <exception>
 
 #include <render_util/gl_binding/gl_interface.h>
 #include <render_util/gl_binding/gl_binding.h>
@@ -34,6 +35,11 @@ namespace render_util::gl_binding
     assert(gl_interface);
     return gl_interface;
   }
+
+  struct GLError : public std::exception
+  {
+    const char *what() const noexcept override { return "GL error"; }
+  };
 }
 
 namespace render_util::gl_binding::gl
