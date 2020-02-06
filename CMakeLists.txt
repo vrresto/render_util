@@ -131,9 +131,9 @@ install(DIRECTORY shaders
 )
 
 install(FILES
-  precomputed_precomputed_atmospheric_scattering/atmosphere/definitions.glsl
-  precomputed_precomputed_atmospheric_scattering/atmosphere/constants.glsl
-  precomputed_precomputed_atmospheric_scattering/atmosphere/functions.glsl
+  precomputed_atmospheric_scattering/atmosphere/definitions.glsl
+  precomputed_atmospheric_scattering/atmosphere/constants.glsl
+  precomputed_atmospheric_scattering/atmosphere/functions.glsl
   DESTINATION ${renderutil_base_dir}/shaders/atmosphere_precomputed
 )
 
@@ -142,13 +142,13 @@ install(FILES LICENSE
   RENAME LICENSE.txt
 )
 
-install(FILES precomputed_precomputed_atmospheric_scattering/LICENSE
+install(FILES precomputed_atmospheric_scattering/LICENSE
   DESTINATION ${thirdparty_base_dir}/precomputed_atmospheric_scattering
-#   RENAME precomputed_precomputed_atmospheric_scattering_LICENSE.txt
+#   RENAME precomputed_atmospheric_scattering_LICENSE.txt
 )
-install(FILES precomputed_precomputed_atmospheric_scattering/README.md
+install(FILES precomputed_atmospheric_scattering/README.md
   DESTINATION ${thirdparty_base_dir}/precomputed_atmospheric_scattering
-#   RENAME precomputed_precomputed_atmospheric_scattering_README.md
+#   RENAME precomputed_atmospheric_scattering_README.md
 )
 
 install(FILES text_renderer/LICENSE

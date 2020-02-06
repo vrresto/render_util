@@ -27,7 +27,7 @@ set(CXX_SRCS
   vao.cpp
   state.cpp
   ${PROJECT_SOURCE_DIR}/_modules/FastNoise/FastNoise.cpp
-  ${PROJECT_SOURCE_DIR}/precomputed_precomputed_atmospheric_scattering/atmosphere/model.cc
+  ${PROJECT_SOURCE_DIR}/precomputed_atmospheric_scattering/atmosphere/model.cc
   ${PROJECT_SOURCE_DIR}/text_renderer/text_renderer.cc
 )
 

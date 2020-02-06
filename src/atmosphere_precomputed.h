@@ -20,7 +20,7 @@
 #define RENDER_UTIL_ATMOSPHERE_PRECOMPUTED_H
 
 #include <render_util/atmosphere.h>
-#include <precomputed_precomputed_atmospheric_scattering/atmosphere/model.h>
+#include <precomputed_atmospheric_scattering/atmosphere/model.h>
 
 #include <string>
 
