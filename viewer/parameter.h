@@ -251,7 +251,6 @@ public:
 
   Parameter &getActive() { return *m_parameters.at(m_active_parameter_index); }
 
-  
   template <typename T>
   void addMultipleChoice(std::string name,
                          std::function<void(T)> apply,
@@ -259,6 +258,12 @@ public:
   {
     auto p = std::make_unique<MultipleChoiceParameter<T>>(name, apply, values);
     m_parameters.push_back(std::move(p));
+  }
+
+  void addBool(std::string name, std::function<void(bool)> apply, bool default_value)
+  {
+    std::vector<bool> values { default_value, !default_value };
+    addMultipleChoice<bool>(name, apply, values);
   }
 
   template <typename T, typename ... Args>
