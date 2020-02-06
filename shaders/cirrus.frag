@@ -93,7 +93,9 @@ float getCloudDensityNear(vec3 view_dir)
       }
     }
 
-    density *= texture2D(sampler_cirrus, coord.xy * 0.00002).x;
+    float bias = 4 * smoothstep(60000, 200000, dist);
+
+    density *= texture(sampler_cirrus, coord.xy * 0.00002, bias).x;
 
     if (dist > 0)
       cloud_density_near += density * layer_alpha;
