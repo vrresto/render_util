@@ -248,6 +248,8 @@ void Shader::compile()
 
   const GLchar *sources[1] = { m_preprocessed_source.c_str() };
 
+  LOG_INFO << "Compiling shader: " << m_filename << endl;
+
   gl::ShaderSource(id, 1, sources, 0);
   gl::CompileShader(id);
 
@@ -538,7 +540,8 @@ void ShaderProgram::assertIsValid()
 void ShaderProgram::assertUniformsAreSet()
 {
   // slow - enable only for debugging
-#if RENDER_UTIL_ENABLE_DEBUG
+// #if RENDER_UTIL_ENABLE_DEBUG
+#if 1
   int num_unset = 0;
   int num_active = 0;
   gl::GetProgramiv(id, GL_ACTIVE_UNIFORMS, &num_active);

@@ -107,6 +107,9 @@ varying vec2 pass_texcoord;
 varying vec2 pass_type_map_coord;
 
 
+float getCirrusDensity(vec3 camera_pos, vec3 view_dir);
+
+
 vec3 calcWaterEnvColor(vec3 pos, vec3 normal, vec3 viewDir)
 {
   viewDir = reflect(viewDir, normal);
@@ -116,6 +119,18 @@ vec3 calcWaterEnvColor(vec3 pos, vec3 normal, vec3 viewDir)
 
   vec3 radiance = getSkyColor(pos, viewDir);
 
+  float cirrus_density = 0.7 * getCirrusDensity(pos, viewDir);
+  cirrus_density = clamp(cirrus_density, 0, 1);
+
+  //FIXME
+  vec3 cirrus_color = calcCirrusLight(pos);
+  
+  radiance = mix(radiance, radiance * 0.9, cirrus_density);
+
+//   if (gl_FragCoord.x > 900)
+    radiance += cirrus_color * cirrus_density * 0.1;
+
+  
   return radiance;
 }
 

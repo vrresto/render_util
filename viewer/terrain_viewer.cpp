@@ -358,6 +358,14 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
   program->setUniform("terrain_height_offset", 0.f);
   program->setUniform("terrain_base_map_height", 0.f);
 
+  program->setUniformi("sampler_cirrus",
+                       getTextureManager().getTexUnitNum(TEXUNIT_CIRRUS));
+
+  // FIXME
+  program->setUniform("cirrus_height", 7000.f);
+  program->setUniform("cirrus_layer_thickness", 100.f);
+
+
   CHECK_GL_ERROR();
 }
 

@@ -14,6 +14,7 @@ frag util
 frag main
 frag lighting
 frag tonemap
+frag cirrus_util
 texunit terrain_cdlod_height_map
 texunit terrain_cdlod_normal_map
 #texunit terrain_cdlod_height_map_base

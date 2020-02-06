@@ -13,6 +13,7 @@ frag util
 frag main
 frag lighting
 frag tonemap
+frag cirrus_util
 texunit terrain
 texunit terrain1
 texunit terrain2
