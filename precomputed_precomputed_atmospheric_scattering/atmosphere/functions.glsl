@@ -117,6 +117,7 @@ values slightly outside their theoretical bounds:
 
 #define REALTIME_SINGLE_SCATTERING @enable_realtime_single_scattering@
 #define REALTIME_SINGLE_SCATTERING_STEPS @realtime_single_scattering_steps@
+#define SINGLE_MIE_HORIZON_HACK @single_mie_horizon_hack@
 
 
 Number ClampCosine(Number mu) {
@@ -134,6 +135,19 @@ Length ClampRadius(IN(AtmosphereParameters) atmosphere, Length r) {
 Length SafeSqrt(Area a) {
   return sqrt(max(a, 0.0 * m2));
 }
+
+#if SINGLE_MIE_HORIZON_HACK
+// Hack to avoid rendering artifacts when the sun is below the horizon.
+IrradianceSpectrum applySingleMieHorizonHack(IN(AtmosphereParameters) atmosphere,
+  Length r,
+  Number mu_s,
+  IrradianceSpectrum single_mie_scattering)
+{
+  Number mu_horiz =
+    -SafeSqrt(1.0 - (atmosphere.bottom_radius / r) * (atmosphere.bottom_radius / r));
+  return single_mie_scattering * smoothstep(mu_horiz, mu_horiz + Number(0.05), mu_s);
+}
+#endif
 
 /*
 <h3 id="transmittance">Transmittance</h3>
@@ -1827,6 +1841,10 @@ RadianceSpectrum GetSkyRadiance(
   scattering += single_scattering;
 #endif
 
+#if SINGLE_MIE_HORIZON_HACK
+  single_mie_scattering = applySingleMieHorizonHack(atmosphere, r, mu_s, single_mie_scattering);
+#endif
+
   return scattering * RayleighPhaseFunction(nu) + single_mie_scattering *
       MiePhaseFunction(atmosphere.mie_phase_function_g, nu);
 }
@@ -1927,9 +1945,9 @@ RadianceSpectrum GetSkyRadianceToPoint(
   scattering += single_scattering;
 #endif
 
-  // Hack to avoid rendering artifacts when the sun is below the horizon.
-  single_mie_scattering = single_mie_scattering *
-      smoothstep(Number(0.0), Number(0.01), mu_s);
+#if SINGLE_MIE_HORIZON_HACK
+  single_mie_scattering = applySingleMieHorizonHack(atmosphere, r, mu_s, single_mie_scattering);
+#endif
 
   return scattering * RayleighPhaseFunction(nu) + single_mie_scattering *
       MiePhaseFunction(atmosphere.mie_phase_function_g, nu);

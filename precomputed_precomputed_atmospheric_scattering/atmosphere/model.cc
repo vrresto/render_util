@@ -399,7 +399,8 @@ Model::Model(
     std::string shader_dir,
     const render_util::TextureManager &tex_mgr,
     bool realtime_single_scattering,
-    int realtime_single_scattering_steps) :
+    int realtime_single_scattering_steps,
+    bool single_mie_horizon_hack) :
         rgb_lambdas(rgb_lambdas),
         num_precomputed_wavelengths_(num_precomputed_wavelengths),
         half_precision_(half_precision),
@@ -559,6 +560,8 @@ Model::Model(
     params.set("enable_realtime_single_scattering", realtime_single_scattering);
     params.set("realtime_single_scattering_steps",
                glm::clamp(realtime_single_scattering_steps, 10, 50));
+
+    params.set("single_mie_horizon_hack", single_mie_horizon_hack);
 
     return params;
   };

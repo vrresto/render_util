@@ -287,7 +287,8 @@ class Model {
     std::string shader_dir,
     const render_util::TextureManager&,
     bool realtime_single_scattering,
-    int realtime_single_scattering_steps);
+    int realtime_single_scattering_steps,
+    bool single_mie_horizon_hack);
 
   ~Model();
 

@@ -34,6 +34,7 @@ struct AtmosphereCreationParameters
   float max_cirrus_albedo = 1.0;
   bool precomputed_luminance = false;
   float haziness = 0;
+  bool single_mie_horizon_hack = false;
 };
 
 

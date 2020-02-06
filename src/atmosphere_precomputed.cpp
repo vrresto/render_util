@@ -229,7 +229,7 @@ AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mg
       ozone_density, absorption_extinction, ground_albedo, max_sun_zenith_angle,
       kLengthUnitInMeters, m_use_luminance == Luminance::PRECOMPUTED ? 15 : 3,
       use_combined_textures_, use_half_precision_, shader_dir + "/" + getShaderPath(),
-      tex_mgr, false, 0));
+      tex_mgr, false, 0, params.single_mie_horizon_hack));
 
   m_model->Init(6);
 

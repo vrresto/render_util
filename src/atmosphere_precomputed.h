@@ -70,6 +70,7 @@ private:
 
   float m_max_cirrus_albedo = 1.0;
   Luminance m_use_luminance = Luminance::APPROXIMATE;
+  bool m_single_mie_horizon_hack = false;
 
 public:
   AtmospherePrecomputed(render_util::TextureManager &tex_mgr,

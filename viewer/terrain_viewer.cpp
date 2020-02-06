@@ -73,6 +73,7 @@ namespace
 constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
 constexpr auto PRECOMPUTED_LUMINANCE = true;
 constexpr auto HAZINESS = 1.0;
+constexpr auto SINGLE_MIE_HORIZON_HACK = false;
 
 const bool g_terrain_use_lod = true;
 
@@ -268,6 +269,7 @@ void TerrainViewerScene::setup()
     params.max_cirrus_albedo = 0.4;
     params.precomputed_luminance = PRECOMPUTED_LUMINANCE;
     params.haziness = HAZINESS;
+    params.single_mie_horizon_hack = SINGLE_MIE_HORIZON_HACK;
 
     m_atmosphere = createAtmosphere(ATMOSPHERE_TYPE, getTextureManager(),
                                     RENDER_UTIL_SHADER_DIR,
