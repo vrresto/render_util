@@ -10,6 +10,11 @@ vec3 deGamma(vec3 color)
   return color;
 }
 
+float deGamma(float color)
+{
+  return color;
+}
+
 vec3 toneMap(vec3 color)
 {
   return color;

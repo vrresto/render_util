@@ -36,6 +36,12 @@ vec3 deGamma(vec3 color)
 }
 
 
+float deGamma(float color)
+{
+  return pow(color, gamma);
+}
+
+
 vec3 adjustSaturation(vec3 rgb, float adjustment)
 {
   // Algorithm from Chapter 16 of OpenGL Shading Language
