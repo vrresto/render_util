@@ -31,7 +31,13 @@ namespace util::log
     using Converter = plog::UTF8Converter;
 
   public:
-    FileAppender(std::string file_name) : m_out(file_name) {}
+    FileAppender(std::string file_name) : m_out(file_name)
+    {
+      if (!m_out.good())
+      {
+        throw std::runtime_error("Failed to open log file for writing: " + file_name);
+      }
+    }
 
     virtual void write(const plog::Record& record)
     {
