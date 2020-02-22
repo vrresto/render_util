@@ -44,7 +44,8 @@ class AerialPerspective
 public:
   using UpdateUniformsFunc = std::function<void(ShaderProgramPtr)>;
 
-  AerialPerspective(UpdateUniformsFunc update_scene_uniforms,
+  AerialPerspective(ShaderParameters,
+                    UpdateUniformsFunc update_scene_uniforms,
                     ShaderSearchPath shader_search_path,
                     const TextureManager &txmgr);
 

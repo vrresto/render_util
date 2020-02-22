@@ -110,14 +110,14 @@ be compiled either with a GLSL compiler or with a C++ compiler (see the
 values slightly outside their theoretical bounds:
 */
 
-#version 330
+#version 430
 
 #include definitions.glsl
 #include constants.glsl
 
-#define REALTIME_SINGLE_SCATTERING @enable_realtime_single_scattering@
-#define REALTIME_SINGLE_SCATTERING_STEPS @realtime_single_scattering_steps@
-#define SINGLE_MIE_HORIZON_HACK @single_mie_horizon_hack@
+#define REALTIME_SINGLE_SCATTERING 0
+#define REALTIME_SINGLE_SCATTERING_STEPS 0
+#define SINGLE_MIE_HORIZON_HACK 0
 
 
 Number ClampCosine(Number mu) {
@@ -793,6 +793,50 @@ void ComputeSingleScatteringRealTime(
 
   mie = mie_sum * dx * atmosphere.solar_irradiance * atmosphere.mie_scattering;
 }
+
+
+void ComputeSingleScatteringRealTime2(
+    float dist,
+    IN(AtmosphereParameters) atmosphere,
+    IN(TransmittanceTexture) transmittance_texture,
+    Length r, Number mu, Number mu_s, Number nu,
+    bool ray_r_mu_intersects_ground,
+    OUT(IrradianceSpectrum) rayleigh, OUT(IrradianceSpectrum) mie)
+{
+  assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
+  assert(mu >= -1.0 && mu <= 1.0);
+  assert(mu_s >= -1.0 && mu_s <= 1.0);
+  assert(nu >= -1.0 && nu <= 1.0);
+
+  // Integration loop.
+  DimensionlessSpectrum rayleigh_sum = DimensionlessSpectrum(0.0);
+  DimensionlessSpectrum mie_sum = DimensionlessSpectrum(0.0);
+
+
+  // The integration step, i.e. the length of each integration interval.
+  Length dx = dist;
+
+  Length d_i = dx;
+  // The Rayleigh and Mie single scattering at the current sample point.
+  DimensionlessSpectrum rayleigh_i;
+  DimensionlessSpectrum mie_i;
+  ComputeSingleScatteringIntegrand(atmosphere, transmittance_texture,
+      r, mu, mu_s, nu, d_i, ray_r_mu_intersects_ground, rayleigh_i, mie_i);
+
+//     // Sample weight (from the trapezoidal rule).
+//     Number weight_i = (i == 0 || i == SAMPLE_COUNT) ? 0.5 : 1.0;
+
+  Number weight_i = 1;
+  rayleigh_sum += rayleigh_i * weight_i;
+  mie_sum += mie_i * weight_i;
+
+
+  rayleigh = rayleigh_sum * dx * atmosphere.solar_irradiance *
+      atmosphere.rayleigh_scattering;
+
+  mie = mie_sum * dx * atmosphere.solar_irradiance * atmosphere.mie_scattering;
+}
+
 
 /*
 <p>Note that we added the solar irradiance and the scattering coefficient terms
@@ -1849,6 +1893,34 @@ RadianceSpectrum GetSkyRadiance(
       MiePhaseFunction(atmosphere.mie_phase_function_g, nu);
 }
 
+
+vec3 getSingleScattering(in AtmosphereParameters atmosphere,
+  in TransmittanceTexture transmittance_texture,
+  in Position camera,
+  in Direction view_ray,
+  in float dist,
+  in Direction sun_direction
+)
+{
+  Length r = length(camera);
+  Length rmu = dot(camera, view_ray);
+  Number mu = rmu / r;
+  Number mu_s = dot(camera, sun_direction) / r;
+  Number nu = dot(view_ray, sun_direction);
+  bool ray_r_mu_intersects_ground = RayIntersectsGround(atmosphere, r, mu);
+
+  vec3 single_scattering;
+  vec3 single_mie_scattering;
+  ComputeSingleScatteringRealTime2(
+    dist,
+    atmosphere, transmittance_texture, r, mu, mu_s, nu,
+    ray_r_mu_intersects_ground,
+    single_scattering, single_mie_scattering);
+
+  return single_scattering * RayleighPhaseFunction(nu) +
+         single_mie_scattering * MiePhaseFunction(atmosphere.mie_phase_function_g, nu);
+}
+
 /*
 <h4 id="rendering_aerial_perspective">Aerial perspective</h4>
 
@@ -2030,6 +2102,17 @@ void GetSunAndSkyIrradiance(
       p, sun_direction, sun_irradiance, sky_irradiance);
 }
 #endif
+
+
+vec3 GetSingleScattering(vec3 camera, vec3 view_ray, float dist, vec3 sun_direction)
+{
+  return getSingleScattering(ATMOSPHERE,
+      transmittance_texture,
+      camera,
+      view_ray,
+      dist,
+      sun_direction) * SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+}
 
 Luminance3 GetSolarLuminance() {
   return ATMOSPHERE.solar_irradiance /

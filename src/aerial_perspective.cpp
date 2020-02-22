@@ -129,7 +129,8 @@ namespace render_util::aerial_perspective
 {
 
 
-AerialPerspective::AerialPerspective(UpdateUniformsFunc update_scene_uniforms,
+AerialPerspective::AerialPerspective(ShaderParameters shader_params,
+            UpdateUniformsFunc update_scene_uniforms,
             ShaderSearchPath shader_search_path,
             const TextureManager &txmgr)
 {
@@ -137,6 +138,8 @@ AerialPerspective::AerialPerspective(UpdateUniformsFunc update_scene_uniforms,
 
   createFrustumTextureFrames(m_frustum_texture_frames);
   assert(!m_frustum_texture_frames.empty());
+
+  m_shader_params = shader_params;
 
   m_shader_params.set("frustum_texture_frames_num", m_frustum_texture_frames.size());
 

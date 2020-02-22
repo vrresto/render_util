@@ -56,8 +56,15 @@ void main(void)
 
 
   vec3 terrain_color = getTerrainColor(passObjectPos, passObjectPosFlat);
-  vec4 aerial_perspective = sampleAerialPerpective(passObjectPos);
-  out_color0.rgb = mix(terrain_color, vec3(1), aerial_perspective.r);
+  
+  out_color0.rgb = terrain_color;
+
+  out_color0.rgb *= 0;
+  
+  out_color0.rgb = fogAndToneMap(out_color0.rgb);
+  
+//   vec4 aerial_perspective = sampleAerialPerpective(passObjectPos);
+//   out_color0.rgb = mix(terrain_color, vec3(1), aerial_perspective.r);
 
 //   if (getDebugColor() != vec3(0))
 //     out_color0.xyz = getDebugColor();

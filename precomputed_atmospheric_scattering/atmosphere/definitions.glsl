@@ -335,3 +335,4 @@ RadianceSpectrum ComputeMultipleScatteringTexture(
     IN(vec3) frag_coord, OUT(Number) nu);
 
 InverseSolidAngle RayleighPhaseFunction(Number nu);
+InverseSolidAngle MiePhaseFunction(Number g, Number nu);

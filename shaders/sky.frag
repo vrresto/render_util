@@ -62,8 +62,8 @@ void main(void)
 
   gl_FragColor.xyz = getSkyColor(cameraPosWorld, viewDir);
 
-  vec4 aerial_perspective = sampleAerialPerpective(cameraPosWorld + (viewDir * 1000 * 1000));
-  gl_FragColor.xyz = mix(gl_FragColor.xyz, vec3(1), aerial_perspective.r);
+//   vec4 aerial_perspective = sampleAerialPerpective(cameraPosWorld + (viewDir * 1000 * 1000));
+//   gl_FragColor.xyz = mix(gl_FragColor.xyz, vec3(1), aerial_perspective.r);
 
   if (getDebugColor() != vec3(0)) {
     gl_FragColor.xyz = getDebugColor();

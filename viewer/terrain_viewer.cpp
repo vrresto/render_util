@@ -70,10 +70,10 @@ namespace
 {
 
 
-constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
-// constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
-constexpr auto PRECOMPUTED_LUMINANCE = true;
-constexpr auto HAZINESS = 1.0;
+// constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
+constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
+constexpr auto PRECOMPUTED_LUMINANCE = false;
+constexpr auto HAZINESS = 0.0;
 constexpr auto SINGLE_MIE_HORIZON_HACK = false;
 constexpr auto g_terrain_use_lod = true;
 constexpr auto cache_path = RENDER_UTIL_CACHE_DIR;
@@ -304,7 +304,8 @@ void TerrainViewerScene::setup()
       updateUniforms(program);
     };
     m_aerial_perspective =
-      std::make_unique<aerial_perspective::AerialPerspective>(update_uniforms,
+      std::make_unique<aerial_perspective::AerialPerspective>(shader_params,
+                                                              update_uniforms,
                                                               shader_search_path,
                                                               getTextureManager());
   }

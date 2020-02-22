@@ -19,6 +19,9 @@
 
 #version 430
 
+#include definitions.glsl
+#include constants.glsl
+
 
 float mapFromFrustumTextureZ(float z);
 void castRayThroughFrustum(vec2 ndc_xy,
@@ -30,6 +33,17 @@ vec3 getCurrentFrustumSampleOffset();
 vec3 getCurrentFrustumTextureCamera();
 mat4 getCurrentFrustumTextureViewToWorldRotationMatrix();
 
+vec3 GetSingleScattering(vec3 camera, vec3 view_ray, float dist, vec3 sun_direction);
+
+
+void ComputeSingleScatteringIntegrand(
+    IN(AtmosphereParameters) atmosphere,
+    IN(TransmittanceTexture) transmittance_texture,
+    Length r, Number mu, Number mu_s, Number nu, Length d,
+    bool ray_r_mu_intersects_ground,
+    OUT(DimensionlessSpectrum) rayleigh, OUT(DimensionlessSpectrum) mie);
+
+
 layout(local_size_x = 1, local_size_y = 1) in;
 layout(rgba32f) uniform image3D img_output;
 
@@ -38,6 +52,15 @@ uniform float earth_radius;
 uniform ivec3 texture_size;
 
 uniform uint current_frustum_texture_frame;
+
+uniform vec3 sunDir;
+
+
+
+uniform sampler2D transmittance_texture;
+uniform sampler3D scattering_texture;
+uniform sampler3D single_mie_scattering_texture;
+uniform sampler2D irradiance_texture;
 
 const float haze_visibility = 20000;
 
@@ -85,7 +108,14 @@ void main(void)
   const vec3 ray_dir = (getCurrentFrustumTextureViewToWorldRotationMatrix() * vec4(ray_dir_view, 0)).xyz;
 
   float haze_dist = 0;
+  
+//   vec3 single_scattering_sum = vec3(0);
 
+  
+  vec3 rayleigh_sum = vec3(0.0);
+  vec3 mie_sum = vec3(0.0);
+
+  
   for (int i = 0; i < texture_size.z; i++)
   {
     float sample_coord_z = float(i);
@@ -101,11 +131,58 @@ void main(void)
 
     vec3 pos = getCurrentFrustumTextureCamera() + dist * ray_dir;
 
-    float haze_density_step = calcHazeDensityAtPos(pos);
-    haze_dist += haze_density_step * step_size;
-    float haze_opacity = 1 - exp(-3.0 * (haze_dist / haze_visibility));
+    vec3 view_ray = ray_dir;
+    
+    Length r = length(pos-earth_center);
+    Length rmu = dot(pos-earth_center, view_ray);
+    Number mu = rmu / r;
+    Number mu_s = dot(pos-earth_center, sunDir) / r;
+    Number nu = dot(view_ray, sunDir);
+    bool ray_r_mu_intersects_ground = RayIntersectsGround(ATMOSPHERE, r, mu);
 
-    pixel.rgb = vec3(haze_opacity);
+    
+//     float haze_density_step = calcHazeDensityAtPos(pos);
+//     haze_dist += haze_density_step * step_size;
+//     float haze_opacity = 1 - exp(-3.0 * (haze_dist / haze_visibility));
+//     pixel.rgb = vec3(haze_opacity);
+
+
+//     vec3 single_scattering = GetSingleScattering(pos, ray_dir, step_size, sunDir);
+#if 1
+    
+    {
+    
+      float d_i = dist;
+      // The Rayleigh and Mie single scattering at the current sample point.
+      vec3 rayleigh_i = vec3(0);
+      vec3 mie_i = vec3(0);
+#if 1
+      ComputeSingleScatteringIntegrand(ATMOSPHERE, transmittance_texture,
+          r, mu, mu_s, nu, d_i, ray_r_mu_intersects_ground, rayleigh_i, mie_i);
+#endif
+      // Sample weight (from the trapezoidal rule).
+//       float weight_i = (i == 0 || i == SAMPLE_COUNT) ? 0.5 : 1.0;
+      float weight_i = 1;
+
+      rayleigh_sum += rayleigh_i * weight_i * step_size;
+      mie_sum += mie_i * weight_i * step_size;
+    }
+    
+    
+    vec3 rayleigh = rayleigh_sum * ATMOSPHERE.solar_irradiance *
+        ATMOSPHERE.rayleigh_scattering;
+    vec3 mie = mie_sum * ATMOSPHERE.solar_irradiance * ATMOSPHERE.mie_scattering;
+
+    rayleigh *= RayleighPhaseFunction(nu);
+    mie *= MiePhaseFunction(ATMOSPHERE.mie_phase_function_g, nu);
+    
+    
+    vec3 scattering = rayleigh + mie;
+    
+//     scattering *= 10;
+    
+    pixel.rgb = scattering * SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+#endif
 
     imageStore(img_output, ivec3(pixel_coords, i), pixel);
   }
