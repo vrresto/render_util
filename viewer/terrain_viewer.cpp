@@ -74,13 +74,12 @@ constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
 constexpr auto PRECOMPUTED_LUMINANCE = true;
 constexpr auto HAZINESS = 1.0;
 constexpr auto SINGLE_MIE_HORIZON_HACK = false;
+constexpr auto g_terrain_use_lod = true;
+constexpr auto cache_path = RENDER_UTIL_CACHE_DIR;
+constexpr auto shader_path = RENDER_UTIL_SHADER_DIR;
 
-const bool g_terrain_use_lod = true;
+const auto shore_wave_hz = vec4(0.05, 0.07, 0, 0);
 
-const string cache_path = RENDER_UTIL_CACHE_DIR;
-const string shader_path = RENDER_UTIL_SHADER_DIR;
-
-const vec4 shore_wave_hz = vec4(0.05, 0.07, 0, 0);
 
 
 glm::dvec3 hitGround(const Beam &beam_)
