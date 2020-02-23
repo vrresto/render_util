@@ -115,6 +115,15 @@ void main(void)
   vec3 rayleigh_sum = vec3(0.0);
   vec3 mie_sum = vec3(0.0);
 
+  vec3 camera_pos = getCurrentFrustumTextureCamera() - earth_center;
+  vec3 view_ray = ray_dir;
+
+  Length r = length(camera_pos);
+  Length rmu = dot(camera_pos, view_ray);
+  Number mu = rmu / r;
+  Number mu_s = dot(camera_pos, sunDir) / r;
+  Number nu = dot(view_ray, sunDir);
+  bool ray_r_mu_intersects_ground = RayIntersectsGround(ATMOSPHERE, r, mu);
   
   for (int i = 0; i < texture_size.z; i++)
   {
@@ -131,14 +140,7 @@ void main(void)
 
     vec3 pos = getCurrentFrustumTextureCamera() + dist * ray_dir;
 
-    vec3 view_ray = ray_dir;
     
-    Length r = length(pos-earth_center);
-    Length rmu = dot(pos-earth_center, view_ray);
-    Number mu = rmu / r;
-    Number mu_s = dot(pos-earth_center, sunDir) / r;
-    Number nu = dot(view_ray, sunDir);
-    bool ray_r_mu_intersects_ground = RayIntersectsGround(ATMOSPHERE, r, mu);
 
     
 //     float haze_density_step = calcHazeDensityAtPos(pos);
