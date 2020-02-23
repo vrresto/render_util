@@ -33,6 +33,7 @@
 #include constants.glsl
 
 layout(location = 0) out vec3 scattering_density;
+layout(location = 1) out vec3 scattering_density_sum;
 
 uniform sampler2D transmittance_texture;
 uniform sampler3D single_rayleigh_scattering_texture;
@@ -49,4 +50,6 @@ void main()
       single_mie_scattering_texture, multiple_scattering_texture,
       irradiance_texture, vec3(gl_FragCoord.xy, layer + 0.5),
       scattering_order);
+
+  scattering_density_sum = scattering_density;
 }

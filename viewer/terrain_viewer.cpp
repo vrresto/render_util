@@ -73,7 +73,7 @@ namespace
 // constexpr auto ATMOSPHERE_TYPE = Atmosphere::DEFAULT;
 constexpr auto ATMOSPHERE_TYPE = Atmosphere::PRECOMPUTED;
 constexpr auto PRECOMPUTED_LUMINANCE = false;
-constexpr auto HAZINESS = 0.0;
+constexpr auto HAZINESS = 1.0;
 constexpr auto SINGLE_MIE_HORIZON_HACK = false;
 constexpr auto g_terrain_use_lod = true;
 constexpr auto cache_path = RENDER_UTIL_CACHE_DIR;

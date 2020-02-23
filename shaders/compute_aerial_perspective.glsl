@@ -61,6 +61,7 @@ uniform sampler2D transmittance_texture;
 uniform sampler3D scattering_texture;
 uniform sampler3D single_mie_scattering_texture;
 uniform sampler2D irradiance_texture;
+uniform sampler3D scattering_density_texture;
 
 const float haze_visibility = 20000;
 
@@ -114,6 +115,7 @@ void main(void)
   
   vec3 rayleigh_sum = vec3(0.0);
   vec3 mie_sum = vec3(0.0);
+  vec3 multiple_scattering_sum = vec3(0);
 
   vec3 camera_pos = getCurrentFrustumTextureCamera() - earth_center;
   vec3 view_ray = ray_dir;
@@ -124,7 +126,7 @@ void main(void)
   Number mu_s = dot(camera_pos, sunDir) / r;
   Number nu = dot(view_ray, sunDir);
   bool ray_r_mu_intersects_ground = RayIntersectsGround(ATMOSPHERE, r, mu);
-  
+
   for (int i = 0; i < texture_size.z; i++)
   {
     float sample_coord_z = float(i);
@@ -168,6 +170,32 @@ void main(void)
 
       rayleigh_sum += rayleigh_i * weight_i * step_size;
       mie_sum += mie_i * weight_i * step_size;
+      
+      #if 1
+      {
+      
+        // The r, mu and mu_s parameters at the current integration point (see the
+        // single scattering section for a detailed explanation).
+        Length r_i =
+            ClampRadius(ATMOSPHERE, sqrt(d_i * d_i + 2.0 * r * mu * d_i + r * r));
+        Number mu_i = ClampCosine((r * mu + d_i) / r_i);
+        Number mu_s_i = ClampCosine((r * mu_s + d_i * nu) / r_i);
+
+        vec3 multiple_scattering_i = GetScattering(ATMOSPHERE,
+            scattering_density_texture, r_i, mu_i, mu_s_i, nu,
+            ray_r_mu_intersects_ground);
+
+        vec3 transmittance = GetTransmittance(ATMOSPHERE,
+            transmittance_texture, r, mu, d_i,
+            ray_r_mu_intersects_ground);
+
+        multiple_scattering_i *= transmittance;
+        multiple_scattering_i *= step_size * weight_i;
+
+        multiple_scattering_sum += multiple_scattering_i;
+      }
+      #endif
+      
     }
     
     
@@ -178,8 +206,13 @@ void main(void)
     rayleigh *= RayleighPhaseFunction(nu);
     mie *= MiePhaseFunction(ATMOSPHERE.mie_phase_function_g, nu);
     
+    rayleigh *= 0;
+    mie *= 0;
     
-    vec3 scattering = rayleigh + mie;
+    vec3 multiple_scattering = multiple_scattering_sum;
+    multiple_scattering /= RayleighPhaseFunction(nu);
+    
+    vec3 scattering = rayleigh + mie + multiple_scattering;
     
 //     scattering *= 10;
     

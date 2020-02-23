@@ -239,6 +239,7 @@ AtmospherePrecomputed::AtmospherePrecomputed(render_util::TextureManager &tex_mg
     m_scattering_texture_unit = tex_mgr.getTexUnitNum(TEXUNIT_ATMOSPHERE1);
     m_irradiance_texture_unit = tex_mgr.getTexUnitNum(TEXUNIT_ATMOSPHERE2);
     m_single_mie_scattering_texture_unit = tex_mgr.getTexUnitNum(TEXUNIT_ATMOSPHERE3);
+    m_scattering_density_texture_unit = tex_mgr.getTexUnitNum(TEXUNIT_ATMOSPHERE4);
   }
 
   glm::dvec3 white_point(1.0);
@@ -280,7 +281,8 @@ void AtmospherePrecomputed::setUniforms(ShaderProgramPtr program)
     m_transmittance_texture_unit,
     m_scattering_texture_unit,
     m_irradiance_texture_unit,
-    m_single_mie_scattering_texture_unit);
+    m_single_mie_scattering_texture_unit,
+    m_scattering_density_texture_unit);
 
   program->setUniform<float>("exposure",
                              m_use_luminance != Luminance::NONE ? m_exposure * 1e-5 : m_exposure);

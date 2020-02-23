@@ -485,6 +485,13 @@ Model::Model(
   irradiance_texture_ = NewTexture2d(
       IRRADIANCE_TEXTURE_WIDTH, IRRADIANCE_TEXTURE_HEIGHT);
 
+  scattering_density_texture_ = NewTexture3d(
+      SCATTERING_TEXTURE_WIDTH,
+      SCATTERING_TEXTURE_HEIGHT,
+      SCATTERING_TEXTURE_DEPTH,
+      rgb_format_supported_ ? GL_RGB : GL_RGBA,
+      half_precision);
+
 //   unsigned int prev_vertex_array_binding = 0;
 //   gl::GetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint*)&prev_vertex_array_binding);
 //   FORCE_CHECK_GL_ERROR();
@@ -590,6 +597,7 @@ Model::~Model() {
     gl::DeleteTextures(1, &optional_single_mie_scattering_texture_);
   }
   gl::DeleteTextures(1, &irradiance_texture_);
+  gl::DeleteTextures(1, &scattering_density_texture_);
 }
 
 /*
@@ -776,7 +784,8 @@ void Model::SetProgramUniforms(
     GLuint transmittance_texture_unit,
     GLuint scattering_texture_unit,
     GLuint irradiance_texture_unit,
-    GLuint single_mie_scattering_texture_unit) const
+    GLuint single_mie_scattering_texture_unit,
+    GLuint scattering_density_texture_unit) const
 {
   GLenum active_unit_save;
   gl::GetIntegerv(GL_ACTIVE_TEXTURE, reinterpret_cast<GLint*>(&active_unit_save));
@@ -799,6 +808,10 @@ void Model::SetProgramUniforms(
   }
 
   program->setUniformi("single_mie_scattering_texture", single_mie_scattering_texture_unit);
+
+  gl::ActiveTexture(GL_TEXTURE0 + scattering_density_texture_unit);
+  gl::BindTexture(GL_TEXTURE_3D, scattering_density_texture_);
+  program->setUniformi("scattering_density_texture", scattering_density_texture_unit);
 
   gl::ActiveTexture(active_unit_save);
 }
@@ -940,7 +953,8 @@ void Model::Precompute(
     // delta_scattering_density_texture.
     gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
         delta_scattering_density_texture, 0);
-    gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 0, 0);
+    gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
+        scattering_density_texture_, 0);
     gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, 0, 0);
     gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, 0, 0);
     gl::DrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -950,7 +964,7 @@ void Model::Precompute(
     for (unsigned int layer = 0; layer < SCATTERING_TEXTURE_DEPTH; ++layer) {
       compute_scattering_density->setUniformi("layer", layer);
       compute_scattering_density->assertUniformsAreSet();
-      DrawQuad({}, full_screen_quad_vao_);
+      DrawQuad({false, true}, full_screen_quad_vao_);
     }
 
     // Compute the indirect irradiance, store it in delta_irradiance_texture and

@@ -57,6 +57,7 @@ private:
   unsigned int m_scattering_texture_unit = 0;
   unsigned int m_irradiance_texture_unit = 0;
   unsigned int m_single_mie_scattering_texture_unit = 0;
+  unsigned int m_scattering_density_texture_unit = 0;
   glm::dvec3 m_white_point = glm::dvec3(1);
 
   float m_gamma = 2.2;

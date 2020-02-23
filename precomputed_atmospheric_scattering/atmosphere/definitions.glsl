@@ -336,3 +336,25 @@ RadianceSpectrum ComputeMultipleScatteringTexture(
 
 InverseSolidAngle RayleighPhaseFunction(Number nu);
 InverseSolidAngle MiePhaseFunction(Number g, Number nu);
+
+TEMPLATE(AbstractSpectrum)
+AbstractSpectrum GetScattering(
+    IN(AtmosphereParameters) atmosphere,
+    IN(AbstractScatteringTexture TEMPLATE_ARGUMENT(AbstractSpectrum))
+        scattering_texture,
+    Length r, Number mu, Number mu_s, Number nu,
+    bool ray_r_mu_intersects_ground);
+
+RadianceSpectrum GetScattering(
+    IN(AtmosphereParameters) atmosphere,
+    IN(ReducedScatteringTexture) single_rayleigh_scattering_texture,
+    IN(ReducedScatteringTexture) single_mie_scattering_texture,
+    IN(ScatteringTexture) multiple_scattering_texture,
+    Length r, Number mu, Number mu_s, Number nu,
+    bool ray_r_mu_intersects_ground,
+    int scattering_order);
+
+DimensionlessSpectrum GetTransmittance(
+    IN(AtmosphereParameters) atmosphere,
+    IN(TransmittanceTexture) transmittance_texture,
+    Length r, Number mu, Length d, bool ray_r_mu_intersects_ground);
