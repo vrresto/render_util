@@ -59,7 +59,7 @@ void main(void)
   
   out_color0.rgb = terrain_color;
 
-  out_color0.rgb *= 0;
+//   out_color0.rgb *= 0;
   
   out_color0.rgb = fogAndToneMap(out_color0.rgb);
   

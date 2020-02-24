@@ -957,14 +957,15 @@ void Model::Precompute(
         scattering_density_texture_, 0);
     gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, 0, 0);
     gl::FramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, 0, 0);
-    gl::DrawBuffer(GL_COLOR_ATTACHMENT0);
+//     gl::DrawBuffer(GL_COLOR_ATTACHMENT0);
+    gl::DrawBuffers(2, kDrawBuffers);
     gl::Viewport(0, 0, SCATTERING_TEXTURE_WIDTH, SCATTERING_TEXTURE_HEIGHT);
     compute_scattering_density->setUniformi("scattering_order", scattering_order);
     useProgram(compute_scattering_density, false);
     for (unsigned int layer = 0; layer < SCATTERING_TEXTURE_DEPTH; ++layer) {
       compute_scattering_density->setUniformi("layer", layer);
       compute_scattering_density->assertUniformsAreSet();
-      DrawQuad({false, true}, full_screen_quad_vao_);
+      DrawQuad({ false, true }, full_screen_quad_vao_);
     }
 
     // Compute the indirect irradiance, store it in delta_irradiance_texture and

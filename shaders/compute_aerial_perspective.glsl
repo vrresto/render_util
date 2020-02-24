@@ -140,11 +140,7 @@ void main(void)
 
     float step_size = next_step_dist - dist;
 
-    vec3 pos = getCurrentFrustumTextureCamera() + dist * ray_dir;
-
-    
-
-    
+//     vec3 pos = getCurrentFrustumTextureCamera() + dist * ray_dir;
 //     float haze_density_step = calcHazeDensityAtPos(pos);
 //     haze_dist += haze_density_step * step_size;
 //     float haze_opacity = 1 - exp(-3.0 * (haze_dist / haze_visibility));
@@ -206,16 +202,11 @@ void main(void)
     rayleigh *= RayleighPhaseFunction(nu);
     mie *= MiePhaseFunction(ATMOSPHERE.mie_phase_function_g, nu);
     
-    rayleigh *= 0;
-    mie *= 0;
+//     rayleigh *= 0;
+//     mie *= 0;
     
-    vec3 multiple_scattering = multiple_scattering_sum;
-    multiple_scattering /= RayleighPhaseFunction(nu);
-    
-    vec3 scattering = rayleigh + mie + multiple_scattering;
-    
-//     scattering *= 10;
-    
+    vec3 scattering = rayleigh + mie + multiple_scattering_sum;
+
     pixel.rgb = scattering * SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
 #endif
 

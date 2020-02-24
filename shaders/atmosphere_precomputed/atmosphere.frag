@@ -20,6 +20,10 @@
 
 #define USE_LUMINANCE @use_luminance@
 
+#include definitions.glsl
+#include constants.glsl
+
+
 vec3 adjustSaturation(vec3 rgb, float adjustment);
 
 uniform vec3 cameraPosWorld;
@@ -27,6 +31,8 @@ uniform vec3 sunDir;
 uniform vec3 earth_center;
 uniform vec2 sun_size;
 uniform float blue_saturation;
+
+uniform sampler2D transmittance_texture;
 
 varying vec3 passObjectPos;
 
@@ -45,6 +51,18 @@ vec3 fogAndToneMap(vec3 in_color, bool no_inscattering)
   vec3 view_direction = normalize(passObjectPos - cameraPosWorld);
   float dist = distance(passObjectPos, cameraPosWorld);
 
+  
+  vec3 camera_pos = cameraPosWorld - earth_center;
+  vec3 view_ray = view_direction;
+  
+  Length r = length(camera_pos);
+  Length rmu = dot(camera_pos, view_ray);
+  Number mu = rmu / r;
+  Number mu_s = dot(camera_pos, sunDir) / r;
+  Number nu = dot(view_ray, sunDir);
+  bool ray_r_mu_intersects_ground = RayIntersectsGround(ATMOSPHERE, r, mu);
+
+  
   float shadow_length = 0;
   vec3 transmittance = vec3(1);
   vec3 in_scatter = vec3(0);
@@ -56,6 +74,11 @@ vec3 fogAndToneMap(vec3 in_color, bool no_inscattering)
 
 
 //   transmittance *= 1-aerial_perspective.r;
+
+  transmittance = GetTransmittance(ATMOSPHERE,
+      transmittance_texture, r, mu, dist,
+      ray_r_mu_intersects_ground);
+
 
   in_scatter = aerial_perspective.rgb;
   
