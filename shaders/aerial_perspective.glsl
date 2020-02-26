@@ -9,14 +9,18 @@ struct FrustumTextureFrame
   mat4 projection_matrix;
   vec2 ndc_xy_to_view;
   vec3 camera_pos;
-  float z_near;
-  float z_far;
+//   float z_near;
+//   float z_far;
 };
 
 
 uniform ivec3 frustum_texture_size;
 uniform FrustumTextureFrame frustum_texture_frames[@frustum_texture_frames_num@];
 uniform uint current_frustum_texture_frame;
+
+
+const float z_near = 1.0;
+const float z_far = 2000.0 * 1000.0;
 
 
 float distance_to_plane(vec3 lineP,
@@ -33,8 +37,8 @@ void castRayThroughFrustum(vec3 ray_dir,
     out float dist_to_z_near,
     out float dist_to_z_far)
 {
-  float z_near = frustum_texture_frames[frustum_texture_frame].z_near;
-  float z_far = frustum_texture_frames[frustum_texture_frame].z_far;
+//   float z_near = frustum_texture_frames[frustum_texture_frame].z_near;
+//   float z_far = frustum_texture_frames[frustum_texture_frame].z_far;
 
   dist_to_z_near = distance_to_plane(vec3(0), ray_dir, vec3(0,0,-1), z_near);
   dist_to_z_far = distance_to_plane(vec3(0), ray_dir, vec3(0,0,-1), z_far);
