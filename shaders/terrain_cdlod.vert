@@ -48,7 +48,9 @@ uniform mat4 projectionMatrixFar;
 
 uniform float cdlod_min_dist;
 uniform float terrain_height_offset = 0.0;
+#if @enable_base_map@
 uniform float terrain_base_map_height = 0.0;
+#endif
 
 uniform Terrain terrain;
 

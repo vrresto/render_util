@@ -22,7 +22,10 @@
 #include terrain_geometry_util.h.glsl
 
 uniform Terrain terrain;
+
+#if @enable_base_map@
 uniform float terrain_base_map_height = 0.0;
+#endif
 
 
 vec2 getHeightMapTextureCoords(in TerrainLayer layer, vec2 pos_m)
