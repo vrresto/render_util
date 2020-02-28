@@ -580,7 +580,7 @@ void ShaderProgram::assertUniformsAreSet()
     }
   }
   if (num_unset)
-    exit(1);
+    abort();
 #endif
 }
 
