@@ -35,7 +35,7 @@ constexpr int frustum_texture_depth_scale = 1;
 
 constexpr glm::ivec3 frustum_texture_res = glm::ivec3(160 * frustum_texture_scale,
                                                       90 * frustum_texture_scale,
-                                                      128 * frustum_texture_depth_scale);
+                                                      64 * frustum_texture_depth_scale);
 
 
 inline TexturePtr createFrustumTexture()
@@ -170,8 +170,6 @@ void AerialPerspective::computeStep(const render_util::Camera &camera, const Tex
 
   auto &frame = m_frustum_texture_frames[m_current_frustum_texture_frame];
 
-  gl::MemoryBarrier(GL_ALL_BARRIER_BITS);
-
   bool layered = true;
   int layer = 0;
   gl::BindImageTexture(0, frame.texture->getID(),
@@ -188,9 +186,7 @@ void AerialPerspective::computeStep(const render_util::Camera &camera, const Tex
   gl::DispatchCompute(frustum_texture_res.x, frustum_texture_res.y, 1);
 
   // make sure writing to image has finished before read
-  gl::MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-  gl::MemoryBarrier(GL_ALL_BARRIER_BITS);
-  FORCE_CHECK_GL_ERROR();
+//   gl::MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
 

@@ -42,15 +42,18 @@ struct Terrain
   std::shared_ptr<TerrainBase> m_terrain;
   std::shared_ptr<TerrainBase> getTerrain() { return m_terrain; }
 
+  void update(const Camera &camera)
+  {
+    getTerrain()->setDrawDistance(0);
+    getTerrain()->update(camera, false);
+  }
+
   void draw(const Camera &camera, TerrainBase::Client *client)
   {
     gl::FrontFace(GL_CCW);
     gl::Enable(GL_DEPTH_TEST);
     gl::DepthMask(GL_TRUE);
 //     gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    getTerrain()->setDrawDistance(0);
-    getTerrain()->update(camera, false);
 
     getTerrain()->draw(client);
 
@@ -179,11 +182,10 @@ public:
 
   }
 
-//   void updateTerrain()
-//   {
-//     m_terrain.update(camera);
-//     m_terrain_cdlod.update(camera);
-//   }
+  void updateTerrain()
+  {
+    m_terrain.update(camera);
+  }
 
   void drawTerrain();
 

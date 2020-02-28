@@ -55,13 +55,16 @@ void main(void)
 #endif
 
 
-  vec3 terrain_color = getTerrainColor(passObjectPos, passObjectPosFlat);
-  
-  out_color0.rgb = terrain_color;
+#if ENABLE_UNLIT_OUTPUT
+  getTerrainColor(passObjectPos, passObjectPosFlat, out_color0.rgb, out_color1.rgb);
+  fogAndToneMap(out_color0.rgb, out_color1.rgb, out_color0.rgb, out_color1.rgb);
+#else
+  out_color0.rgb = getTerrainColor(passObjectPos, passObjectPosFlat);
+  out_color0.rgb = fogAndToneMap(out_color0.rgb);
+#endif
 
 //   out_color0.rgb *= 0;
   
-  out_color0.rgb = fogAndToneMap(out_color0.rgb);
   
 //   vec4 aerial_perspective = sampleAerialPerpective(passObjectPos);
 //   out_color0.rgb = mix(terrain_color, vec3(1), aerial_perspective.r);

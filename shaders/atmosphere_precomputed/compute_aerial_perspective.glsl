@@ -54,6 +54,22 @@ uniform sampler2D transmittance_texture;
 uniform sampler3D scattering_density_texture;
 
 
+void ComputeSingleScatteringIntegrand(
+    Length r_d, Number mu, Number mu_s_d, Number nu, Length d,
+    bool ray_r_mu_intersects_ground,
+    OUT(DimensionlessSpectrum) rayleigh, OUT(DimensionlessSpectrum) mie)
+{
+  DimensionlessSpectrum transmittance_to_sun =
+      GetTransmittanceToSun(ATMOSPHERE, transmittance_texture, r_d, mu_s_d);
+
+  rayleigh = transmittance_to_sun * GetProfileDensity(ATMOSPHERE.rayleigh_density,
+      r_d - ATMOSPHERE.bottom_radius);
+
+  mie = transmittance_to_sun * GetProfileDensity(ATMOSPHERE.mie_density,
+      r_d - ATMOSPHERE.bottom_radius);
+}
+
+
 void main(void)
 {
   vec4 pixel = vec4(0.0, 0.0, 0.0, 1.0);
@@ -108,8 +124,21 @@ void main(void)
       vec3 rayleigh_i = vec3(0);
       vec3 mie_i = vec3(0);
 
-      ComputeSingleScatteringIntegrand(ATMOSPHERE, transmittance_texture,
-          r, mu, mu_s, nu, d_i, ray_r_mu_intersects_ground, rayleigh_i, mie_i);
+      // The r, mu and mu_s parameters at the current integration point (see the
+      // single scattering section for a detailed explanation).
+      Length r_i =
+          ClampRadius(ATMOSPHERE, sqrt(d_i * d_i + 2.0 * r * mu * d_i + r * r));
+      Number mu_i = ClampCosine((r * mu + d_i) / r_i);
+      Number mu_s_i = ClampCosine((r * mu_s + d_i * nu) / r_i);
+
+      vec3 transmittance = GetTransmittance(ATMOSPHERE,
+          transmittance_texture, r, mu, d_i,
+          ray_r_mu_intersects_ground);
+
+      ComputeSingleScatteringIntegrand(r_i, mu, mu_s_i, nu, d_i, ray_r_mu_intersects_ground,
+                                       rayleigh_i, mie_i);
+      rayleigh_i *= transmittance;
+      mie_i *= transmittance;
 
       // Sample weight (from the trapezoidal rule).
 //       float weight_i = (i == 0 || i == SAMPLE_COUNT) ? 0.5 : 1.0;
@@ -121,19 +150,8 @@ void main(void)
       // multiple scattering
       #if 1
       {
-        // The r, mu and mu_s parameters at the current integration point (see the
-        // single scattering section for a detailed explanation).
-        Length r_i =
-            ClampRadius(ATMOSPHERE, sqrt(d_i * d_i + 2.0 * r * mu * d_i + r * r));
-        Number mu_i = ClampCosine((r * mu + d_i) / r_i);
-        Number mu_s_i = ClampCosine((r * mu_s + d_i * nu) / r_i);
-
         vec3 multiple_scattering_i = GetScattering(ATMOSPHERE,
             scattering_density_texture, r_i, mu_i, mu_s_i, nu,
-            ray_r_mu_intersects_ground);
-
-        vec3 transmittance = GetTransmittance(ATMOSPHERE,
-            transmittance_texture, r, mu, d_i,
             ray_r_mu_intersects_ground);
 
         multiple_scattering_i *= transmittance;

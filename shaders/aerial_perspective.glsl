@@ -20,7 +20,7 @@ uniform uint current_frustum_texture_frame;
 
 
 const float z_near = 1.0;
-const float z_far = 2000.0 * 1000.0;
+const float z_far = 1000.0 * 1000.0;
 
 
 float distance_to_plane(vec3 lineP,

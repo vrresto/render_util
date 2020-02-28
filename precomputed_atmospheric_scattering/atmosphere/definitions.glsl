@@ -358,3 +358,10 @@ DimensionlessSpectrum GetTransmittance(
     IN(AtmosphereParameters) atmosphere,
     IN(TransmittanceTexture) transmittance_texture,
     Length r, Number mu, Length d, bool ray_r_mu_intersects_ground);
+
+DimensionlessSpectrum GetTransmittanceToSun(
+    IN(AtmosphereParameters) atmosphere,
+    IN(TransmittanceTexture) transmittance_texture,
+    Length r, Number mu_s);
+
+Number GetProfileDensity(IN(DensityProfile) profile, Length altitude);

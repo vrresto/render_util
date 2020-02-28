@@ -422,7 +422,7 @@ void TerrainViewerScene::render(float frame_delta)
   if (!m_manual_compute_trigger)
     m_aerial_perspective->computeStep(camera, getTextureManager());
 
-  CHECK_GL_ERROR();
+  updateTerrain();
 
   gl::Disable(GL_DEPTH_TEST);
 
@@ -431,6 +431,8 @@ void TerrainViewerScene::render(float frame_delta)
   gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   getCurrentGLContext()->setCurrentProgram(sky_program);
   updateUniforms(sky_program);
+
+  gl::MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
   render_util::drawSkyBox();
 

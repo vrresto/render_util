@@ -34,17 +34,20 @@ varying vec3 passObjectPosWorld;
 
 vec3 getSkyColor(vec3 view_direction)
 {
-  vec3 radiance = getSkyRadiance(cameraPosWorld, view_direction);
+//   vec3 radiance = getSkyRadiance(cameraPosWorld, view_direction);
+  vec3 radiance = vec3(0);
 
-  float blue_ratio = radiance.b / dot(vec3(1), radiance);
+  vec3 sun_radiance = getSunRadiance(cameraPosWorld, view_direction);
 
   vec4 aerial_perspective = sampleAerialPerpective(cameraPosWorld + (view_direction * 1000 * 1000));
 
 //   if (gl_FragCoord.x < 900)
   {
     radiance = aerial_perspective.rgb;
-    radiance += getSunRadiance(cameraPosWorld, view_direction);
+    radiance += sun_radiance;
   }
+
+  float blue_ratio = radiance.b / dot(vec3(1), radiance);
 
   vec3 color = toneMap(radiance);
   color = adjustSaturation(color, mix(1, blue_saturation, blue_ratio));
