@@ -49,8 +49,13 @@ vec4 sampleAerialPerpective(vec3 pos_world);
 
 void getInscatteringAndTransmittance(out vec3 in_scatter, out vec3 transmittance)
 {
-  vec3 view_direction = normalize(passObjectPos - cameraPosWorld);
+  transmittance = vec3(1);
+  in_scatter = vec3(0);
+
   float dist = distance(passObjectPos, cameraPosWorld);
+
+#if @enable_aerial_perspective@
+  vec3 view_direction = normalize(passObjectPos - cameraPosWorld);
 
   vec3 camera_pos = cameraPosWorld - earth_center;
   vec3 view_ray = view_direction;
@@ -62,21 +67,18 @@ void getInscatteringAndTransmittance(out vec3 in_scatter, out vec3 transmittance
   Number nu = dot(view_ray, sunDir);
   bool ray_r_mu_intersects_ground = RayIntersectsGround(ATMOSPHERE, r, mu);
 
-  float shadow_length = 0;
-  transmittance = vec3(1);
-  in_scatter = vec3(0);
-
   vec4 aerial_perspective = sampleAerialPerpective(passObjectPos);
-
-//   vec3 in_scatter = GetSkyRadianceToPoint(cameraPosWorld - earth_center,
-//       passObjectPos - earth_center, shadow_length, sunDir, transmittance);
-
 
   transmittance = GetTransmittance(ATMOSPHERE,
       transmittance_texture, r, mu, dist,
       ray_r_mu_intersects_ground);
 
   in_scatter = aerial_perspective.rgb;
+#else
+  float shadow_length = 0;
+  in_scatter = GetSkyRadianceToPoint(cameraPosWorld - earth_center,
+      passObjectPos - earth_center, shadow_length, sunDir, transmittance);
+#endif
 
   // FIXME HACK to avoid artifacts at close distance
   in_scatter = mix(vec3(0), in_scatter, smoothstep(50, 150, dist));

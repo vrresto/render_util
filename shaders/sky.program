@@ -2,6 +2,5 @@ frag main
 frag atmosphere
 frag util
 frag sky
-frag aerial_perspective
 vert sky
 texunit atmosphere_thickness_map

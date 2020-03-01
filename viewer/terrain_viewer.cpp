@@ -78,6 +78,7 @@ constexpr auto SINGLE_MIE_HORIZON_HACK = false;
 constexpr auto g_terrain_use_lod = true;
 constexpr auto cache_path = RENDER_UTIL_CACHE_DIR;
 constexpr auto shader_path = RENDER_UTIL_SHADER_DIR;
+constexpr auto ENABLE_AERIAL_PERSPECTIVE = true;
 
 const auto shore_wave_hz = vec4(0.05, 0.07, 0, 0);
 
@@ -202,7 +203,8 @@ TerrainViewerScene::~TerrainViewerScene()
 
 void TerrainViewerScene::recompute()
 {
-  m_aerial_perspective->computeStep(camera, getTextureManager());
+  if (ENABLE_AERIAL_PERSPECTIVE)
+    m_aerial_perspective->computeStep(camera, getTextureManager());
 }
 
 
@@ -298,6 +300,9 @@ void TerrainViewerScene::setup()
 
   auto shader_params = m_atmosphere->getShaderParameters();
 
+  shader_params.set("enable_aerial_perspective", ENABLE_AERIAL_PERSPECTIVE);
+
+  if (ENABLE_AERIAL_PERSPECTIVE)
   {
     auto update_uniforms = [this] (ShaderProgramPtr program)
     {
@@ -308,8 +313,8 @@ void TerrainViewerScene::setup()
                                                               update_uniforms,
                                                               shader_search_path,
                                                               getTextureManager());
+    shader_params.add(m_aerial_perspective->getShaderParameters());
   }
-  shader_params.add(m_aerial_perspective->getShaderParameters());
 
   sky_program = render_util::createShaderProgram("sky", getTextureManager(),
                                                  shader_search_path, {}, shader_params);
@@ -366,7 +371,8 @@ void TerrainViewerScene::setup()
   m_map->getTextures().bind(getTextureManager());
   CHECK_GL_ERROR();
 
-  m_aerial_perspective->bindTextures(getTextureManager());
+  if (ENABLE_AERIAL_PERSPECTIVE)
+    m_aerial_perspective->bindTextures(getTextureManager());
 
   camera.x = map_size.x / 2;
   camera.y = map_size.y / 2;
@@ -396,7 +402,8 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
 
   CHECK_GL_ERROR();
 
-  m_aerial_perspective->updateUniforms(program, getTextureManager());
+  if (ENABLE_AERIAL_PERSPECTIVE)
+    m_aerial_perspective->updateUniforms(program, getTextureManager());
 
   m_map->getTextures().setUniforms(program);
   program->setUniform("shore_wave_scroll", shore_wave_pos);
@@ -419,7 +426,7 @@ void TerrainViewerScene::render(float frame_delta)
     m_map->getWaterAnimation().update();
   }
 
-  if (!m_manual_compute_trigger)
+  if (ENABLE_AERIAL_PERSPECTIVE && !m_manual_compute_trigger)
     m_aerial_perspective->computeStep(camera, getTextureManager());
 
   updateTerrain();

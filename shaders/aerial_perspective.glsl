@@ -1,5 +1,9 @@
 #version 430
 
+#define FRUSTUM_TEXTURE_FRAMES_NUM @frustum_texture_frames_num:0@
+
+#if @enable_aerial_perspective@
+
 struct FrustumTextureFrame
 {
   vec3 sample_offset;
@@ -15,7 +19,7 @@ struct FrustumTextureFrame
 
 
 uniform ivec3 frustum_texture_size;
-uniform FrustumTextureFrame frustum_texture_frames[@frustum_texture_frames_num@];
+uniform FrustumTextureFrame frustum_texture_frames[FRUSTUM_TEXTURE_FRAMES_NUM];
 uniform uint current_frustum_texture_frame;
 
 
@@ -179,7 +183,7 @@ vec4 sampleAerialPerpective(vec3 pos_world)
 {
   vec4 sum_colors = vec4(0);
   float sum_weights = 0;
-  for (uint i = 0; i < @frustum_texture_frames_num@; i++)
+  for (uint i = 0; i < FRUSTUM_TEXTURE_FRAMES_NUM; i++)
   {
     vec4 color;
     float weight;
@@ -193,3 +197,9 @@ vec4 sampleAerialPerpective(vec3 pos_world)
   else
     return vec4(0);
 }
+
+#else
+
+void aerial_perspective_dummy() {}
+
+#endif

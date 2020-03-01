@@ -2,7 +2,6 @@ vert terrain_cdlod
 vert noise
 vert util
 vert terrain_geometry_util
-frag aerial_perspective
 frag terrain
 frag atmosphere
 frag noise
