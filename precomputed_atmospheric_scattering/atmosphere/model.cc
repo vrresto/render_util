@@ -964,7 +964,7 @@ void Model::Precompute(
     for (unsigned int layer = 0; layer < SCATTERING_TEXTURE_DEPTH; ++layer) {
       compute_scattering_density->setUniformi("layer", layer);
       compute_scattering_density->assertUniformsAreSet();
-      DrawQuad({ false, true }, full_screen_quad_vao_);
+      DrawQuad({ false, scattering_order == 2 ? false : true }, full_screen_quad_vao_);
     }
 
     // Compute the indirect irradiance, store it in delta_irradiance_texture and
