@@ -37,7 +37,6 @@ float distance_to_plane(vec3 lineP,
 
 
 void castRayThroughFrustum(vec3 ray_dir,
-    uint frustum_texture_frame,
     out float dist_to_z_near,
     out float dist_to_z_far)
 {
@@ -61,7 +60,7 @@ void castRayThroughFrustum(vec2 ndc_xy,
 
   ray_dir = normalize(vec3(view_xy, -1));
 
-  castRayThroughFrustum(ray_dir, frustum_texture_frame, dist_to_z_near, dist_to_z_far);
+  castRayThroughFrustum(ray_dir, dist_to_z_near, dist_to_z_far);
 }
 
 
@@ -84,12 +83,12 @@ float mapFromFrustumTextureZ(float z)
 }
 
 
-vec3 getFogColorFromFrustumTexture(vec2 ndc_xy, vec3 view_pos, uint frustum_texture_frame)
+vec3 getFogColorFromFrustumTexture(vec2 ndc_xy, vec3 view_pos, in FrustumTextureFrame frame)
 {
   // FIXME z-coord also needs to be corrected according to frustum pos xy
   // (also in aerial_perspective.glsl!)
 
-  vec3 sample_offset = frustum_texture_frames[frustum_texture_frame].sample_offset;
+  vec3 sample_offset = frame.sample_offset;
 
   vec3 frustum_coords = vec3(0);
   frustum_coords.xy = (ndc_xy + vec2(1)) / 2;
@@ -101,7 +100,7 @@ vec3 getFogColorFromFrustumTexture(vec2 ndc_xy, vec3 view_pos, uint frustum_text
   vec3 ray_dir_view;
   float dist_to_z_near;
   float dist_to_z_far;
-  castRayThroughFrustum(normalize(view_pos), frustum_texture_frame, dist_to_z_near, dist_to_z_far);
+  castRayThroughFrustum(normalize(view_pos), dist_to_z_near, dist_to_z_far);
 
   float frustum_dist = dist_to_z_far - dist_to_z_near;
 
@@ -117,26 +116,23 @@ vec3 getFogColorFromFrustumTexture(vec2 ndc_xy, vec3 view_pos, uint frustum_text
   frustum_coords.z -= sample_offset.z;
   frustum_coords.z /= float(frustum_texture_size.z);
 
-  vec3 frustum_color = texture(frustum_texture_frames[frustum_texture_frame].sampler,
-                               frustum_coords.xyz).xyz;
-
-  return frustum_color;
+  return texture(frame.sampler, frustum_coords.xyz).xyz;
 }
 
 
-void sampleFrustumTextureFrame(uint i, vec3 pos_world, out vec4 color, out float weight)
+void sampleFrustumTextureFrame(in FrustumTextureFrame frame, vec3 pos_world, out vec4 color, out float weight)
 {
   color = vec4(0);
   weight = 1.0;
 
-  vec4 frustum_texture_pos_view = frustum_texture_frames[i].world_to_view_matrix * vec4(pos_world, 1);
+  vec4 frustum_texture_pos_view = frame.world_to_view_matrix * vec4(pos_world, 1);
   vec4 frustum_texture_pos_clip =
-      frustum_texture_frames[i].projection_matrix * frustum_texture_pos_view;
+      frame.projection_matrix * frustum_texture_pos_view;
   vec2 frustum_texture_pos_ndc_xy = frustum_texture_pos_clip.xy / frustum_texture_pos_clip.w;
 
   color.rgb = getFogColorFromFrustumTexture(frustum_texture_pos_ndc_xy,
                                             frustum_texture_pos_view.xyz,
-                                            i);
+                                            frame);
 
   if (any(lessThan(frustum_texture_pos_ndc_xy, vec2(-1))) ||
       any(greaterThan(frustum_texture_pos_ndc_xy, vec2(1))))
@@ -156,7 +152,7 @@ vec4 sampleFrustumTextureCurrentFrame(vec3 pos_world)
 {
   vec4 color;
   float weight;
-  sampleFrustumTextureFrame(current_frustum_texture_frame, pos_world, color, weight);
+  sampleFrustumTextureFrame(frustum_texture_frames[current_frustum_texture_frame], pos_world, color, weight);
   return color;
 }
 
@@ -187,7 +183,7 @@ vec4 sampleAerialPerpective(vec3 pos_world)
   {
     vec4 color;
     float weight;
-    sampleFrustumTextureFrame(i, pos_world, color, weight);
+    sampleFrustumTextureFrame(frustum_texture_frames[i], pos_world, color, weight);
     sum_colors += color * weight;
     sum_weights += weight;
   }
