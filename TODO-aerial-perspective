@@ -1,0 +1,6 @@
+- multiple scattering artifacts at horizon
+- simpler (but higher resolution) scattering density texture possible?
+- merge frames into to one texture (and for each pixel blend between the nearest texture frame (sampling-offset-wise)) and the current frame
+- criterium for old frame to be used: compare distance between camera and object (for old and current frame)
+- transmittance frustum texture
+- support multiple haze/fog layers (with their own physical parameters like MieAngstromBeta)
