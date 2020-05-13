@@ -43,6 +43,12 @@ inline bool isPrefix(const std::string &prefix, const std::string &s)
 }
 
 
+inline bool isNullOrWhiteSpace(const std::string &s)
+{
+  return s.find_first_not_of(" \t\n\r") == std::string::npos;
+}
+
+
 inline std::string trim(const std::string &in)
 {
   size_t start = in.find_first_not_of(" \t\n\r");
