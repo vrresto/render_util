@@ -35,12 +35,6 @@ class VertexArrayObject
   unsigned int m_num_indices = 0; //FIXME remove this
 
 public:
-  enum class IndexType
-  {
-    SHORT,
-    INT
-  };
-
   VertexArrayObject(const IndexedMesh &mesh, bool enable_normal_buffer);
   VertexArrayObject(const void *vertex_data, size_t vertex_data_size,
                     const void *index_data, size_t index_data_size);
