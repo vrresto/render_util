@@ -176,6 +176,8 @@ inline std::string resolveRelativePathComponents(const std::string &path)
 
   std::string resolved;
 
+  bool starts_withg_slash = isPrefix("/", path);
+
   std::vector<std::string> new_components;
 
   for (auto &component : components)
@@ -195,7 +197,7 @@ inline std::string resolveRelativePathComponents(const std::string &path)
 
   for (auto &component : new_components)
   {
-    if (!resolved.empty())
+    if (starts_withg_slash || !resolved.empty())
       resolved += '/';
     resolved += component;
   }
