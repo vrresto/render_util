@@ -26,7 +26,7 @@
 #include "terrain_layer.h"
 #include "land_textures.h"
 #include "grid_mesh.h"
-#include "vao.h"
+#include <render_util/vao.h>
 #include <render_util/terrain_cdlod.h>
 #include <render_util/texture_manager.h>
 #include <render_util/texunits.h>

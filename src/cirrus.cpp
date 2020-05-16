@@ -17,8 +17,8 @@
  */
 
 #include "uv_dome.h"
-#include "vao.h"
 
+#include <render_util/vao.h>
 #include <render_util/render_util.h>
 #include <render_util/cirrus_clouds.h>
 #include <render_util/texture_manager.h>

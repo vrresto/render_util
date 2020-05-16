@@ -16,8 +16,7 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vao.h"
-
+#include <render_util/vao.h>
 #include <render_util/geometry.h>
 #include <render_util/gl_binding/gl_functions.h>
 
@@ -79,13 +78,21 @@ struct NormalsCreator
 namespace render_util
 {
 
-VertexArrayObject::VertexArrayObject(const IndexedMesh &mesh, bool enable_normal_buffer) :
-  m_num_indices(mesh.getNumIndices())
+
+void VertexArrayObject::create(const void *vertex_data, size_t vertex_data_size,
+                               const void *normal_data, size_t normal_data_size,
+                               const void *texcoord_data, size_t texcoord_data_size,
+                               const void *index_data, size_t index_data_size)
 {
+  constexpr auto TEXCOORD_SIZE = 2;
+
+
   gl::GenBuffers(1, &m_vertex_buffer_id);
   assert(m_vertex_buffer_id > 0);
   gl::GenBuffers(1, &m_normal_buffer_id);
   assert(m_normal_buffer_id > 0);
+  gl::GenBuffers(1, &m_texcoord_buffer_id);
+  assert(m_texcoord_buffer_id > 0);
   gl::GenBuffers(1, &m_index_buffer_id);
   assert(m_index_buffer_id > 0);
   gl::GenVertexArrays(1, &m_vao_id);
@@ -94,11 +101,70 @@ VertexArrayObject::VertexArrayObject(const IndexedMesh &mesh, bool enable_normal
   gl::BindVertexArray(m_vao_id);
 
   gl::BindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_id);
-  gl::BufferData(GL_ARRAY_BUFFER, mesh.getVertexDataSize(), mesh.getVertexData(), GL_STATIC_DRAW);
+  gl::BufferData(GL_ARRAY_BUFFER, vertex_data_size, vertex_data, GL_STATIC_DRAW);
   gl::VertexPointer(3, GL_FLOAT, 0, 0);
   gl::EnableClientState(GL_VERTEX_ARRAY);
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
 
+  if (normal_data)
+  {
+    gl::BindBuffer(GL_ARRAY_BUFFER, m_normal_buffer_id);
+    gl::BufferData(GL_ARRAY_BUFFER,
+                   normal_data_size,
+                   normal_data, GL_STATIC_DRAW);
+    gl::NormalPointer(GL_FLOAT, 0, 0);
+    gl::EnableClientState(GL_NORMAL_ARRAY);
+    gl::BindBuffer(GL_ARRAY_BUFFER, 0);
+  }
+
+  if (texcoord_data)
+  {
+    gl::BindBuffer(GL_ARRAY_BUFFER, m_texcoord_buffer_id);
+    gl::BufferData(GL_ARRAY_BUFFER,
+                   texcoord_data_size,
+                   texcoord_data, GL_STATIC_DRAW);
+    gl::TexCoordPointer(TEXCOORD_SIZE, GL_FLOAT, 0, 0);
+    gl::EnableClientState(GL_TEXTURE_COORD_ARRAY);
+    gl::BindBuffer(GL_ARRAY_BUFFER, 0);
+  }
+
+
+  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer_id);
+  gl::BufferData(GL_ELEMENT_ARRAY_BUFFER, index_data_size, index_data, GL_STATIC_DRAW);
+  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  CHECK_GL_ERROR();
+
+  gl::BindVertexArray(0);
+
+  FORCE_CHECK_GL_ERROR();
+}
+
+
+VertexArrayObject::VertexArrayObject(const void *vertex_data, size_t vertex_data_size,
+                                     const void *index_data, size_t index_data_size)
+{
+  create(vertex_data, vertex_data_size,
+         nullptr, 0,
+         nullptr, 0,
+         index_data, index_data_size);
+}
+
+
+VertexArrayObject::VertexArrayObject(const void *vertex_data, size_t vertex_data_size,
+                                     const void *normal_data, size_t normal_data_size,
+                                     const void *texcoord_data, size_t texcoord_data_size,
+                                     const void *index_data, size_t index_data_size)
+{
+  create(vertex_data, vertex_data_size,
+         normal_data, normal_data_size,
+         texcoord_data, texcoord_data_size,
+         index_data, index_data_size);
+}
+
+
+VertexArrayObject::VertexArrayObject(const IndexedMesh &mesh, bool enable_normal_buffer) :
+  m_num_indices(mesh.getNumIndices())
+{
   if (enable_normal_buffer)
   {
     NormalsCreator normals_creator(mesh);
@@ -110,23 +176,18 @@ VertexArrayObject::VertexArrayObject(const IndexedMesh &mesh, bool enable_normal
       normal_data.push_back({n.x, n.y, n.z});
     }
 
-    gl::BindBuffer(GL_ARRAY_BUFFER, m_normal_buffer_id);
-    gl::BufferData(GL_ARRAY_BUFFER,
-                   normal_data.size() * sizeof(render_util::Float3),
-                   normal_data.data(), GL_STATIC_DRAW);
-    gl::NormalPointer(GL_FLOAT, 0, 0);
-    gl::EnableClientState(GL_NORMAL_ARRAY);
-    gl::BindBuffer(GL_ARRAY_BUFFER, 0);
+    create(mesh.getVertexData(), mesh.getVertexDataSize(),
+          normal_data.data(), normal_data.size() * sizeof(render_util::Float3),
+          nullptr, 0,
+          mesh.getIndexData(), mesh.getIndexDataSize());
   }
-
-  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer_id);
-  gl::BufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.getIndexDataSize(), mesh.getIndexData(), GL_STATIC_DRAW);
-  gl::BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  CHECK_GL_ERROR();
-
-  gl::BindVertexArray(0);
-
-  FORCE_CHECK_GL_ERROR();
+  else
+  {
+    create(mesh.getVertexData(), mesh.getVertexDataSize(),
+           nullptr, 0,
+           nullptr, 0,
+           mesh.getIndexData(), mesh.getIndexDataSize());
+  }
 }
 
 
@@ -137,6 +198,8 @@ VertexArrayObject::~VertexArrayObject()
   gl::DeleteBuffers(1, &m_index_buffer_id);
   if (m_normal_buffer_id)
     gl::DeleteBuffers(1, &m_normal_buffer_id);
+  if (m_texcoord_buffer_id)
+    gl::DeleteBuffers(1, &m_texcoord_buffer_id);
 }
 
 

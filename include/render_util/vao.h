@@ -30,16 +30,36 @@ class VertexArrayObject
   unsigned int m_vao_id = 0;
   unsigned int m_vertex_buffer_id = 0;
   unsigned int m_normal_buffer_id = 0;
+  unsigned int m_texcoord_buffer_id = 0;
   unsigned int m_index_buffer_id = 0;
-  unsigned int m_num_indices = 0;
+  unsigned int m_num_indices = 0; //FIXME remove this
 
 public:
+  enum class IndexType
+  {
+    SHORT,
+    INT
+  };
+
   VertexArrayObject(const IndexedMesh &mesh, bool enable_normal_buffer);
+  VertexArrayObject(const void *vertex_data, size_t vertex_data_size,
+                    const void *index_data, size_t index_data_size);
+  VertexArrayObject(const void *vertex_data, size_t vertex_data_size,
+                    const void *normal_data, size_t normal_data_size,
+                    const void *texcoord_data, size_t texcoord_data_size,
+                    const void *index_data, size_t index_data_size);
   ~VertexArrayObject();
 
   unsigned int getID() { return m_vao_id; }
   unsigned int getIndexBufferID() { return m_index_buffer_id; }
   unsigned int getNumIndices() { return m_num_indices; }
+
+private:
+  void create(const void *vertex_data, size_t vertex_data_size,
+              const void *normal_data, size_t normal_data_size,
+              const void *texcoord_data, size_t texcoord_data_size,
+              const void *index_data, size_t index_data_size);
+
 };
 
 
