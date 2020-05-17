@@ -81,12 +81,9 @@ namespace render_util
 
 void VertexArrayObject::create(const void *vertex_data, size_t vertex_data_size,
                                const void *normal_data, size_t normal_data_size,
-                               const void *texcoord_data, size_t texcoord_data_size,
+                               const void *texcoord_data, size_t texcoord_data_size, size_t texcoord_components,
                                const void *index_data, size_t index_data_size)
 {
-  constexpr auto TEXCOORD_SIZE = 2;
-
-
   gl::GenBuffers(1, &m_vertex_buffer_id);
   assert(m_vertex_buffer_id > 0);
   gl::GenBuffers(1, &m_normal_buffer_id);
@@ -123,7 +120,7 @@ void VertexArrayObject::create(const void *vertex_data, size_t vertex_data_size,
     gl::BufferData(GL_ARRAY_BUFFER,
                    texcoord_data_size,
                    texcoord_data, GL_STATIC_DRAW);
-    gl::TexCoordPointer(TEXCOORD_SIZE, GL_FLOAT, 0, 0);
+    gl::TexCoordPointer(texcoord_components, GL_FLOAT, 0, 0);
     gl::EnableClientState(GL_TEXTURE_COORD_ARRAY);
     gl::BindBuffer(GL_ARRAY_BUFFER, 0);
   }
@@ -145,19 +142,19 @@ VertexArrayObject::VertexArrayObject(const void *vertex_data, size_t vertex_data
 {
   create(vertex_data, vertex_data_size,
          nullptr, 0,
-         nullptr, 0,
+         nullptr, 0, 0,
          index_data, index_data_size);
 }
 
 
 VertexArrayObject::VertexArrayObject(const void *vertex_data, size_t vertex_data_size,
                                      const void *normal_data, size_t normal_data_size,
-                                     const void *texcoord_data, size_t texcoord_data_size,
+                                     const void *texcoord_data, size_t texcoord_data_size, size_t texcoord_components,
                                      const void *index_data, size_t index_data_size)
 {
   create(vertex_data, vertex_data_size,
          normal_data, normal_data_size,
-         texcoord_data, texcoord_data_size,
+         texcoord_data, texcoord_data_size, texcoord_components,
          index_data, index_data_size);
 }
 
@@ -178,14 +175,14 @@ VertexArrayObject::VertexArrayObject(const IndexedMesh &mesh, bool enable_normal
 
     create(mesh.getVertexData(), mesh.getVertexDataSize(),
           normal_data.data(), normal_data.size() * sizeof(render_util::Float3),
-          nullptr, 0,
+          nullptr, 0, 0,
           mesh.getIndexData(), mesh.getIndexDataSize());
   }
   else
   {
     create(mesh.getVertexData(), mesh.getVertexDataSize(),
            nullptr, 0,
-           nullptr, 0,
+           nullptr, 0, 0,
            mesh.getIndexData(), mesh.getIndexDataSize());
   }
 }

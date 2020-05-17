@@ -40,7 +40,7 @@ public:
                     const void *index_data, size_t index_data_size);
   VertexArrayObject(const void *vertex_data, size_t vertex_data_size,
                     const void *normal_data, size_t normal_data_size,
-                    const void *texcoord_data, size_t texcoord_data_size,
+                    const void *texcoord_data, size_t texcoord_data_size, size_t texcoord_components,
                     const void *index_data, size_t index_data_size);
   ~VertexArrayObject();
 
@@ -51,7 +51,7 @@ public:
 private:
   void create(const void *vertex_data, size_t vertex_data_size,
               const void *normal_data, size_t normal_data_size,
-              const void *texcoord_data, size_t texcoord_data_size,
+              const void *texcoord_data, size_t texcoord_data_size, size_t texcoord_components,
               const void *index_data, size_t index_data_size);
 
 };
