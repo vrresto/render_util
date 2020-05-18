@@ -43,6 +43,19 @@ inline bool isPrefix(const std::string &prefix, const std::string &s)
 }
 
 
+inline bool isSuffix(const std::string &suffix, const std::string &s)
+{
+  if (s.size() >= suffix.size())
+  {
+    return s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+
 inline bool isNullOrWhiteSpace(const std::string &s)
 {
   return s.find_first_not_of(" \t\n\r") == std::string::npos;
