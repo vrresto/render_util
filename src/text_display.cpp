@@ -18,6 +18,8 @@
 
 
 #include <render_util/text_display.h>
+#include <util.h>
+
 
 namespace render_util
 {
@@ -36,6 +38,31 @@ void TextDisplay::addLine(const std::string &line, const glm::vec3 &color)
 
   m_lines.push_back(line);
   m_line_colors.push_back(color);
+}
+
+
+void TextDisplay::addText(const std::string &text, const glm::vec3 &color)
+{
+  for (auto &line : util::tokenize(text, '\n'))
+  {
+    m_max_line_size = std::max(line.size(), m_max_line_size);
+
+    m_lines.push_back(line);
+    m_line_colors.push_back(color);
+  }
+}
+
+
+void TextDisplay::setText(const std::string &text, const glm::vec3 &color)
+{
+  clear();
+  addText(text, color);
+}
+
+
+void TextDisplay::setBackground(const glm::vec4 &color)
+{
+  m_background.setColor(color);
 }
 
 

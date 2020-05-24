@@ -44,6 +44,9 @@ public:
   TextDisplay(TextureManager &tex_mgr, ShaderSearchPath shader_seach_path);
 
   void addLine(const std::string &line = {}, const glm::vec3 &color = glm::vec3(1.0));
+  void addText(const std::string &text, const glm::vec3 &color = glm::vec3(1.0));
+  void setText(const std::string &text, const glm::vec3 &color = glm::vec3(1.0));
+  void setBackground(const glm::vec4 &color);
   void clear();
   void draw(TextRenderer &renderer, int x, int y);
   int getWidth();
