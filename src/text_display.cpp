@@ -58,10 +58,10 @@ void TextDisplay::draw(TextRenderer &renderer, int x, int y)
     auto color = m_line_colors.at(i);
 
     renderer.SetColor(0,0,0);
-    renderer.DrawText(m_lines.at(i), 1, offset_y + 1);
+    renderer.DrawText(m_lines.at(i), x + 1, y + offset_y + 1);
 
     renderer.SetColor(color.r, color.g, color.b);
-    renderer.DrawText(m_lines.at(i), 0, offset_y);
+    renderer.DrawText(m_lines.at(i), x, y + offset_y);
   }
 }
 
