@@ -19,6 +19,7 @@
 #include <render_util/gl_binding/gl_functions.h>
 
 #include <array>
+#include <variant>
 
 #ifndef RENDER_UTIL_STATE_H
 #define RENDER_UTIL_STATE_H
@@ -30,20 +31,6 @@ namespace render_util
 
 struct State
 {
-  struct AttributeIndex
-  {
-    enum Enum : unsigned int
-    {
-      FRONT_FACE = 0,
-      CULL_FACE ,
-      DEPTH_FUNC,
-      BLEND_SRC,
-      BLEND_DST,
-      DEPTH_MASK,
-      MAX,
-    };
-  };
-
   struct EnableIndex
   {
     enum Enum : unsigned int
@@ -52,9 +39,22 @@ struct State
       BLEND,
       DEPTH_TEST,
       STENCIL_TEST,
+      ALPHA_TEST,
       MAX,
     };
   };
+
+  std::array<bool, EnableIndex::MAX> enables;
+  GLenum front_face = 0;
+  GLenum cull_face = 0;
+  GLenum depth_func = 0;
+  bool depth_mask = 0;
+  GLenum blend_src = 0;
+  GLenum blend_dst = 0;
+  GLenum alpha_test_func = 0;
+  GLclampf alpha_test_ref = 0;
+
+  static State fromCurrent();
 
   static GLenum getEnableNameFromIndex(unsigned int index)
   {
@@ -68,48 +68,18 @@ struct State
         return GL_DEPTH_TEST;
       case EnableIndex::STENCIL_TEST:
         return GL_STENCIL_TEST;
+      case EnableIndex::ALPHA_TEST:
+        return GL_ALPHA_TEST;
       default:
         assert(0);
         abort();
     }
   }
-
-  static GLenum getAttributeNameFromIndex(unsigned int index)
-  {
-    switch (index)
-    {
-      case AttributeIndex::FRONT_FACE:
-        return GL_FRONT_FACE;
-      case AttributeIndex::CULL_FACE:
-        return GL_CULL_FACE_MODE;
-      case AttributeIndex::DEPTH_FUNC:
-        return GL_DEPTH_FUNC;
-      case AttributeIndex::DEPTH_MASK:
-        return GL_DEPTH_WRITEMASK;
-      case AttributeIndex::BLEND_SRC:
-        return GL_BLEND_SRC;
-      case AttributeIndex::BLEND_DST:
-        return GL_BLEND_DST;
-      default:
-        assert(0);
-        abort();
-    }
-  }
-
-  static const State &defaults();
-  static State fromCurrent();
-
-  std::array<int, AttributeIndex::MAX> attributes;
-  std::array<bool, EnableIndex::MAX> enables;
-
-private:
-  State() {}
 };
 
 
 struct StateModifier
 {
-  using AttributeIndex = State::AttributeIndex;
   using EnableIndex = State::EnableIndex;
 
   StateModifier(const State &original_state) :
@@ -128,37 +98,56 @@ struct StateModifier
 
   void setDefaults();
 
+  template <auto Setter, typename T>
+  void set(T &attr, T value)
+  {
+    if (attr != value)
+    {
+      attr = value;
+      Setter(value);
+    }
+  }
+
   void setBlendFunc(GLenum sfactor, GLenum dfactor)
   {
-    using namespace render_util::gl_binding;
-
-    if (current_state.attributes.at(AttributeIndex::BLEND_SRC) != sfactor ||
-        current_state.attributes.at(AttributeIndex::BLEND_DST) != dfactor)
+    if (current_state.blend_src != sfactor ||
+        current_state.blend_dst != dfactor)
     {
-      current_state.attributes.at(AttributeIndex::BLEND_SRC) = sfactor;
-      current_state.attributes.at(AttributeIndex::BLEND_DST) = dfactor;
-      gl::BlendFunc(sfactor, dfactor);
+      current_state.blend_src = sfactor;
+      current_state.blend_dst = dfactor;
+      gl_binding::gl::BlendFunc(sfactor, dfactor);
+    }
+  }
+
+  void setAlphaFunc(GLenum func, GLclampf ref)
+  {
+    if (current_state.alpha_test_func != func ||
+        current_state.alpha_test_ref != ref)
+    {
+      current_state.alpha_test_func = func;
+      current_state.alpha_test_ref = ref;
+      gl_binding::gl::AlphaFunc(func, ref);
     }
   }
 
   void setFrontFace(GLenum value)
   {
-    setAttribute<AttributeIndex::FRONT_FACE>(value);
+    set<gl_binding::gl::FrontFace>(current_state.front_face, value);
   }
 
   void setCullFace(GLenum value)
   {
-    setAttribute<AttributeIndex::CULL_FACE>(value);
+    set<gl_binding::gl::CullFace>(current_state.cull_face, value);
   }
 
   void setDepthFunc(GLenum value)
   {
-    setAttribute<AttributeIndex::DEPTH_FUNC>(value);
+    set<gl_binding::gl::DepthFunc>(current_state.depth_func, value);
   }
 
   void setDepthMask(bool value)
   {
-    setAttribute<AttributeIndex::DEPTH_MASK>(value);
+    set<gl_binding::gl::DepthMask>(current_state.depth_mask, value);
   }
 
   void enableCullFace(bool value)
@@ -181,38 +170,12 @@ struct StateModifier
     enable(EnableIndex::STENCIL_TEST, value);
   }
 
+  void enableAlphaTest(bool value)
+  {
+    enable(EnableIndex::ALPHA_TEST, value);
+  }
+
 private:
-  template <auto T>
-  struct AttributeSetter
-  {
-    template <typename... Args>
-    static auto set(Args&&... args) -> decltype(T(std::forward<Args>(args)...))
-    {
-      return T(std::forward<Args>(args)...);
-    }
-  };
-
-  template <AttributeIndex::Enum T>
-  struct Attribute
-  {
-  };
-
-  template <AttributeIndex::Enum Index, typename T>
-  void setAttribute(T value)
-  {
-    if (current_state.attributes.at(Index) != value)
-    {
-      current_state.attributes.at(Index) = value;
-      Attribute<Index>::set(value);
-    }
-  }
-
-  template<AttributeIndex::Enum T>
-  void restoreAttribute()
-  {
-    setAttribute<T>(original_state.attributes.at(T));
-  }
-
   void enable(EnableIndex::Enum index, bool value)
   {
     using namespace render_util::gl_binding;
@@ -236,34 +199,6 @@ private:
 
   const State &original_state;
   State current_state;
-};
-
-
-template <>
-struct StateModifier::Attribute<StateModifier::AttributeIndex::FRONT_FACE> :
-  public StateModifier::AttributeSetter<render_util::gl_binding::gl::FrontFace>
-{
-};
-
-
-template <>
-struct StateModifier::Attribute<StateModifier::AttributeIndex::CULL_FACE>
- : public StateModifier::AttributeSetter <render_util::gl_binding::gl::CullFace>
-{
-};
-
-
-template <>
-struct StateModifier::Attribute<StateModifier::AttributeIndex::DEPTH_FUNC>
- : public StateModifier::AttributeSetter <render_util::gl_binding::gl::DepthFunc>
-{
-};
-
-
-template <>
-struct StateModifier::Attribute<StateModifier::AttributeIndex::DEPTH_MASK>
- : public StateModifier::AttributeSetter <render_util::gl_binding::gl::DepthMask>
-{
 };
 
 

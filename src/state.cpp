@@ -25,11 +25,28 @@ namespace
 {
 
 
-int getInt(GLenum name)
+void get(GLenum name, int *value)
 {
-  int value = 0;
-  gl::GetIntegerv(name, &value);
-  return value;
+  gl::GetIntegerv(name, value);
+}
+
+void get(GLenum name, unsigned int *value)
+{
+  int v = 0;
+  gl::GetIntegerv(name, &v);
+  *value = v;
+}
+
+void get(GLenum name, float *value)
+{
+  gl::GetFloatv(name, value);
+}
+
+void get(GLenum name, bool *value)
+{
+  int v = 0;
+  gl::GetIntegerv(name, &v);
+  *value = v;
 }
 
 
@@ -40,41 +57,20 @@ namespace render_util
 {
 
 
-const State &State::defaults()
-{
-  static State s;
-  static bool set = false;
-
-  if (!set)
-  {
-    s.attributes.at(AttributeIndex::FRONT_FACE) = GL_CW;
-    s.attributes.at(AttributeIndex::CULL_FACE) = GL_BACK;
-    s.attributes.at(AttributeIndex::DEPTH_FUNC) = GL_LEQUAL;
-    s.attributes.at(AttributeIndex::BLEND_SRC) = GL_SRC_ALPHA;
-    s.attributes.at(AttributeIndex::BLEND_DST) = GL_ONE_MINUS_SRC_ALPHA;
-    s.attributes.at(AttributeIndex::DEPTH_MASK) = true;
-
-    s.enables.at(EnableIndex::CULL_FACE) = true;
-    s.enables.at(EnableIndex::BLEND) = false;
-    s.enables.at(EnableIndex::DEPTH_TEST) = true;
-    s.enables.at(EnableIndex::STENCIL_TEST) = false;
-
-    set = true;
-  }
-
-  return s;
-}
-
-
 State State::fromCurrent()
 {
   State s;
 
-  for (unsigned int i = 0; i < AttributeIndex::MAX; i++)
-  {
-    auto name = getAttributeNameFromIndex(i);
-    s.attributes.at(i) = getInt(name);
-  }
+  #define LOAD(attr, name) { get(name, &s.attr); }
+  LOAD(front_face, GL_FRONT_FACE);
+  LOAD(cull_face, GL_CULL_FACE);
+  LOAD(depth_func, GL_DEPTH_FUNC);
+  LOAD(depth_mask, GL_DEPTH_WRITEMASK);
+  LOAD(blend_src, GL_BLEND_SRC);
+  LOAD(blend_dst, GL_BLEND_DST);
+  LOAD(alpha_test_func, GL_ALPHA_TEST_FUNC);
+  LOAD(alpha_test_ref, GL_ALPHA_TEST_REF);
+  #undef LOAD
 
   for (unsigned int i = 0; i < EnableIndex::MAX; i++)
   {
@@ -82,42 +78,41 @@ State State::fromCurrent()
     s.enables.at(i) = gl::IsEnabled(name);
   }
 
-  return std::move(s);
+  return s;
 }
 
 
 StateModifier::~StateModifier()
 {
-  restoreAttribute<AttributeIndex::FRONT_FACE>();
-  restoreAttribute<AttributeIndex::CULL_FACE>();
-  restoreAttribute<AttributeIndex::DEPTH_FUNC>();
-  restoreAttribute<AttributeIndex::DEPTH_MASK>();
+  setFrontFace(original_state.front_face);
+  setCullFace(original_state.cull_face);
+  setDepthFunc(original_state.depth_func);
+  setDepthMask(original_state.depth_mask);
+  setBlendFunc(original_state.blend_src, original_state.blend_dst);
+  setAlphaFunc(original_state.alpha_test_func, original_state.alpha_test_ref);
 
   restoreEnable(EnableIndex::CULL_FACE);
   restoreEnable(EnableIndex::BLEND);
   restoreEnable(EnableIndex::DEPTH_TEST);
-
-  setBlendFunc(original_state.attributes.at(AttributeIndex::BLEND_SRC),
-               original_state.attributes.at(AttributeIndex::BLEND_DST));
+  restoreEnable(EnableIndex::STENCIL_TEST);
+  restoreEnable(EnableIndex::ALPHA_TEST);
 }
 
 
 void StateModifier::setDefaults()
 {
-  static const auto defaults = State::defaults();
+  setFrontFace(GL_CW);
+  setCullFace(GL_BACK);
+  setDepthFunc(GL_LEQUAL);
+  setDepthMask(true);
+  setBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  setAlphaFunc(GL_ALWAYS, 0);
 
-  setFrontFace(defaults.attributes.at(AttributeIndex::FRONT_FACE));
-  setCullFace(defaults.attributes.at(AttributeIndex::CULL_FACE));
-  setDepthFunc(defaults.attributes.at(AttributeIndex::DEPTH_FUNC));
-  setDepthMask(defaults.attributes.at(AttributeIndex::DEPTH_MASK));
-
-  setBlendFunc(defaults.attributes.at(AttributeIndex::BLEND_SRC),
-               defaults.attributes.at(AttributeIndex::BLEND_DST));
-
-  enableBlend(defaults.enables.at(EnableIndex::BLEND));
-  enableCullFace(defaults.enables.at(EnableIndex::CULL_FACE));
-  enableDepthTest(defaults.enables.at(EnableIndex::CULL_FACE));
-  enableStencilTest(defaults.enables.at(EnableIndex::STENCIL_TEST));
+  enableBlend(false);
+  enableCullFace(false);
+  enableDepthTest(false);
+  enableStencilTest(false);
+  enableAlphaTest(false);
 }
 
 
