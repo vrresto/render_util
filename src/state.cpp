@@ -63,7 +63,7 @@ State State::fromCurrent()
 
   #define LOAD(attr, name) { get(name, &s.attr); }
   LOAD(front_face, GL_FRONT_FACE);
-  LOAD(cull_face, GL_CULL_FACE);
+  LOAD(cull_face, GL_CULL_FACE_MODE);
   LOAD(depth_func, GL_DEPTH_FUNC);
   LOAD(depth_mask, GL_DEPTH_WRITEMASK);
   LOAD(blend_src, GL_BLEND_SRC);
