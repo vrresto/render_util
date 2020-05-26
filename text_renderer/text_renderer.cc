@@ -204,9 +204,6 @@ void TextRenderer::DrawText(const std::string& text, int left, int top) {
   gl::BindTexture(GL_TEXTURE_2D, font_texture_);
   gl::Uniform1i(gl::GetUniformLocation(program_, "font_sampler"), 0);
 
-  gl::Enable(GL_BLEND);
-  gl::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
   int x = left;
   int y = viewport[3] - top - font.char_height;
   for (char c : text) {
@@ -224,7 +221,6 @@ void TextRenderer::DrawText(const std::string& text, int left, int top) {
     x += font.char_width;
   }
 
-  gl::Disable(GL_BLEND);
   gl::BindVertexArray(0);
 
   gl::BindTexture(GL_TEXTURE_2D, old_texture);
