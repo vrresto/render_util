@@ -297,6 +297,8 @@ vec2 getMaxAtmosphereThickness(float height, float mu)
 
 vec2 getMaxAtmosphereThickness(vec2 cameraPos, vec2 viewDir)
 {
+  cameraPos.y += 10; //avoids artifacts with objects at or close to height 0
+
   cameraPos.y += planet_radius;
 
 //   vec2 cameraPos = vec2(0, planet_radius + height);
