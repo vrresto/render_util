@@ -73,7 +73,7 @@ class SimpleValueWrapper
   T &m_value;
 
 public:
-  SimpleValueWrapper(T value) : m_value(value) {}
+  SimpleValueWrapper(T &value) : m_value(value) {}
   T get() { return m_value; }
   void set(T value) { m_value = value; }
 };
