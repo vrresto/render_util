@@ -20,8 +20,8 @@
 #define RENDER_UTIL_VIEWER_SCENEBASE_H
 
 #include "camera.h"
-#include "parameter.h"
 
+#include <render_util/viewer_parameter.h>
 #include <render_util/render_util.h>
 #include <render_util/shader.h>
 #include <render_util/terrain_util.h>

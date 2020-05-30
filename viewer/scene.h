@@ -20,8 +20,8 @@
 #define SCENE_H
 
 #include "camera.h"
-#include "parameter.h"
 
+#include <render_util/viewer_parameter.h>
 #include <render_util/land_textures.h>
 #include <render_util/render_util.h>
 #include <render_util/shader.h>
