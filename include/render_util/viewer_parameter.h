@@ -266,11 +266,10 @@ public:
     addMultipleChoice<bool>(name, apply, values);
   }
 
-  template <typename T, typename ... Args>
-  void add(Args ... args)
+  void addBool(std::string name, bool &value)
   {
-    auto p = std::make_unique<T>(args...);
-    m_parameters.push_back(std::move(p));
+    auto apply = [&value] (bool new_value) { value = new_value; };
+    addBool(name, apply, value);
   }
 
   template <typename T>
