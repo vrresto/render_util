@@ -560,13 +560,11 @@ float getWaterDepth(vec2 pos)
   // vec2 waterMapTablePos = fract((pos.xy + water_map_table_shift) / terrain.detail_layer.size_m) * terrain.detail_layer.size_m;
 
   // cropped
-  vec2 waterMapTablePos = ((pos.xy + water_map_table_shift) / terrain.detail_layer.size_m) * terrain.detail_layer.size_m;
-  
-  vec2 waterMapTableCoords = waterMapTablePos / (water_map_table_size * water_map_chunk_size_m);
-  
-//   float water_map_index = texelFetch(sampler_water_map_table, waterMapTableCoords, 0).x;
-  float water_map_index = texture(sampler_water_map_table, waterMapTableCoords).x;
-  
+  vec2 waterMapTablePos = pos.xy + water_map_table_shift;
+
+  vec2 waterMapTableCoords = waterMapTablePos / water_map_chunk_size_m;
+  float water_map_index = texelFetch(sampler_water_map_table, ivec2(waterMapTableCoords),0).x;
+
 //   bvec2 mirror_water_map_coords = bvec2(floor(waterMapTableCoords) / 2.0);
 
   vec2 waterMapCoords =
