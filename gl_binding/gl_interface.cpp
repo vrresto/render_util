@@ -17,6 +17,7 @@
  */
 
 
+#include <render_util/gl_binding/gl_binding.h>
 #include <log.h>
 
 #include <stdexcept>
@@ -45,13 +46,28 @@ namespace render_util::gl_binding
 
     #include "gl_binding/_generated/gl_p_proc_init.inc"
 
+    auto check_error = [this] ()
+    {
+      this->Finish();
+      auto err = this->GetError();
+      if (err != GL_NO_ERROR)
+      {
+        LOG_ERROR << "GL error: " << render_util::gl_binding::getGLErrorString(err) << std::endl;
+        abort();
+      }
+    };
+
+    check_error();
+
     #if ENABLE_GL_DEBUG_CALLBACK
+    LOG_INFO << "Enabling GL debug message callback." << std::endl;
     this->DebugMessageCallback(messageCallback, this);
     this->DebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, false);
     this->DebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_ERROR, GL_DONT_CARE, 0, nullptr, true);
     this->DebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR, GL_DONT_CARE, 0, nullptr, true);
     this->Enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     this->Enable(GL_DEBUG_OUTPUT);
+    check_error();
     #endif
   }
 
