@@ -334,6 +334,12 @@ processMaterialMap(render_util::TerrainBase::MaterialMap::ConstPtr in)
     return {};
 
   uvec2 new_size = uvec2(in->getSize()) / TerrainCDLODBase::MESH_GRID_SIZE;
+
+  if (in->w() % TerrainCDLODBase::MESH_GRID_SIZE != 0)
+    new_size.x++;
+  if (in->h() % TerrainCDLODBase::MESH_GRID_SIZE != 0)
+    new_size.y++;
+
   auto resized = std::make_shared<render_util::TerrainBase::MaterialMap>(new_size);
 
   for (int y = 0; y < resized->h(); y++)
