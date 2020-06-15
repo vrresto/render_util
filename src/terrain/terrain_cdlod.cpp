@@ -123,6 +123,12 @@ size_t getDetailLevelAtDistance(double dist)
 }
 
 
+unsigned int getDefaultMaterial()
+{
+  return TerrainBase::MaterialID::WATER;
+}
+
+
 render_util::ShaderProgramPtr createProgram(std::string name,
                                             unsigned int material,
                                             size_t detail_level,
@@ -300,16 +306,22 @@ public:
 };
 
 
-unsigned int gatherMaterials(render_util::TerrainBase::MaterialMap::ConstPtr map,
-                             uvec2 begin,
-                             uvec2 size)
+unsigned int getMaterial(render_util::TerrainBase::MaterialMap::ConstPtr map, ivec2 pos)
 {
-  assert(begin.x < map->w());
-  assert(begin.y < map->h());
+  if (pos.x < 0 || pos.y < 0 || pos.x >= map->w() || pos.y >= map->h())
+  {
+    return getDefaultMaterial();
+  }
 
-  uvec2 end = begin + size;
-  end.x = min(end.x, (unsigned int)map->w()-1);
-  end.y = min(end.y, (unsigned int)map->h()-1);
+  return map->get(pos);
+}
+
+
+unsigned int gatherMaterials(render_util::TerrainBase::MaterialMap::ConstPtr map,
+                             ivec2 begin,
+                             ivec2 size)
+{
+  auto end = begin + size;
 
   unsigned int material = 0;
 
@@ -317,7 +329,7 @@ unsigned int gatherMaterials(render_util::TerrainBase::MaterialMap::ConstPtr map
   {
     for (int x = begin.x; x < end.x; x++)
     {
-      material |= map->get(x,y);
+      material |= getMaterial(map, ivec2(x,y));
     }
   }
 
@@ -346,18 +358,9 @@ processMaterialMap(render_util::TerrainBase::MaterialMap::ConstPtr in)
   {
     for (int x = 0; x < resized->w(); x++)
     {
-      uvec2 src_coords = uvec2(x,y) * TerrainCDLODBase::MESH_GRID_SIZE;
-      uvec2 size = uvec2(TerrainCDLODBase::MESH_GRID_SIZE + 1);
-      if (src_coords.x > 0)
-      {
-        src_coords.x -= 1;
-        size.x += 1;
-      }
-      if (src_coords.y > 0)
-      {
-        src_coords.y -= 1;
-        size.y += 1;
-      }
+      auto src_coords = ivec2(x,y) * ivec2(TerrainCDLODBase::MESH_GRID_SIZE);
+      auto size = ivec2(TerrainCDLODBase::MESH_GRID_SIZE);
+
       resized->at(x,y) = gatherMaterials(in, src_coords, size);
     }
   }
@@ -369,15 +372,17 @@ processMaterialMap(render_util::TerrainBase::MaterialMap::ConstPtr in)
 unsigned int getMaterialID(render_util::TerrainBase::MaterialMap::ConstPtr material_map,
                          const glm::dvec2 &node_origin)
 {
+  assert(fract(node_origin) == dvec2(0));
+
   if (material_map)
   {
     const uvec2 grid_pos = uvec2(node_origin) / (unsigned int)TerrainCDLODBase::LEAF_NODE_SIZE;
 
     if (node_origin.x < 0 || node_origin.y < 0)
-      return MaterialID::WATER;
+      return getDefaultMaterial();
 
     if (grid_pos.x >= material_map->w() || grid_pos.y >= material_map->h())
-      return MaterialID::WATER;
+      return getDefaultMaterial();
 
     return material_map->get(grid_pos.x, grid_pos.y);
   }
