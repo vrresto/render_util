@@ -39,6 +39,7 @@ namespace render_util
   public:
     using Mat4 = glm::dmat4;
     using Vec3 = glm::dvec3;
+    using Vec4 = glm::dvec4;
     using Unit = double;
 
 
