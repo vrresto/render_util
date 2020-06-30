@@ -145,4 +145,8 @@ vec4 getForestColor(vec2 pos, int layer)
   return color;
 }
 
+#else
+
+void forest_util_dummy() {}
+
 #endif

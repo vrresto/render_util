@@ -66,16 +66,4 @@ struct Terrain
 #endif
 };
 
-
-#if @enable_type_map@
-  ivec2 getTypeMapSizePx();
-  sampler2D getTypeMapSampler();
-  #if @enable_base_map@
-    sampler2D getBaseTypeMapSampler();
-    ivec2 getBaseTypeMapSizePx();
-  #endif
-#endif
-
-// vec2 getWaterMapCoords(in WaterMap map);
-// vec2 getWaterMapTableCoords(in WaterMap map);
 float sampleWaterMap(vec2 pos, in TerrainLayer layer);

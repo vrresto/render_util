@@ -258,7 +258,7 @@ vec3 sampleTerrainDetailNormal(vec3 type)
 
 #if ENABLE_TYPE_MAP
 
-vec4 sampleTerrainTextures(vec2 pos)
+vec4 sampleTerrainTextures(vec2 pos, in TerrainLayer layer)
 {
 //   return vec4(pass_type_map_coords / getTypeMapSizePx(), 0, 1);
 
@@ -269,7 +269,7 @@ vec4 sampleTerrainTextures(vec2 pos)
 //   float lod = textureQueryLod(sampler_type_map, typeMapCoords).y;
 //   float lod = mip_map_level(pos.xy / map_size);
 
-  sampleTypeMap(getTypeMapSampler(), getTypeMapSizePx(), pass_type_map_coords, types, weights);
+  sampleTypeMap(layer.type_map.sampler, layer.type_map.size_px, pass_type_map_coords, types, weights);
 
   vec4 c00 = sampleTerrain(types[0]);
   vec4 c01 = sampleTerrain(types[1]);
@@ -560,7 +560,7 @@ vec3 normal_detail = vec3(0,0,1);
 
 #if ENABLE_TYPE_MAP
   #if !LOW_DETAIL
-    color = sampleTerrainTextures(pos_flat.xy);
+    color = sampleTerrainTextures(pos_flat.xy, terrain.detail_layer);
     #if ENABLE_BASE_MAP
       color = mix(sampleBaseTerrainTextures(pos_flat.xy), color, detail_blend);
 //       color = sampleBaseTerrainTextures(pos_flat.xy);
