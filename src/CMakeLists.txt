@@ -2,9 +2,9 @@ set(CXX_SRCS
   terrain/terrain_cdlod_base.cpp
   terrain/terrain_cdlod.cpp
   terrain/terrain_util.cpp
-  terrain/land_textures.cpp
-  terrain/forest_textures.cpp
-  terrain/water_textures.cpp
+  terrain/land.cpp
+  terrain/forest.cpp
+  terrain/water.cpp
   atmosphere.cpp
   camera.cpp
   texunits.cpp

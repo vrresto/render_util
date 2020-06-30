@@ -34,7 +34,7 @@ namespace render_util::terrain
 {
 
 
-class LandTextures : public Subsystem
+class Land : public Subsystem
 {
   const TextureManager &m_texture_manager;
   ShaderParameters m_shader_params;
@@ -57,7 +57,7 @@ public:
   static constexpr float MAX_TEXTURE_SCALE = 8;
   static constexpr int TYPE_MAP_RESOLUTION_M = TerrainBase::GRID_RESOLUTION_M;
 
-  LandTextures(const TextureManager &texture_manager, TerrainBase::BuildParameters&);
+  Land(const TextureManager &texture_manager, TerrainBase::BuildParameters&);
 
   const ShaderParameters &getShaderParameters() const override { return m_shader_params; }
 

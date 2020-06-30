@@ -1,4 +1,4 @@
-#include "forest_textures.h"
+#include "forest.h"
 #include <render_util/image_resample.h>
 #include <render_util/gl_binding/gl_functions.h>
 
@@ -7,7 +7,7 @@ namespace render_util::terrain
 {
 
 
-ForestTextures::ForestTextures(const TextureManager &texture_manager,
+Forest::Forest(const TextureManager &texture_manager,
                                TerrainBase::BuildParameters &params) :
   m_texture_manager(texture_manager)
 {
@@ -38,21 +38,21 @@ ForestTextures::ForestTextures(const TextureManager &texture_manager,
 }
 
 
-void ForestTextures::bindTextures(TextureManager &tm)
+void Forest::bindTextures(TextureManager &tm)
 {
   tm.bind(TEXUNIT_FOREST_LAYERS, m_forest_layers_texture);
   tm.bind(TEXUNIT_FOREST_FAR, m_forest_far_texture);
 }
 
 
-void ForestTextures::unbindTextures(TextureManager &tm)
+void Forest::unbindTextures(TextureManager &tm)
 {
   tm.unbind(TEXUNIT_FOREST_LAYERS, m_forest_layers_texture->getTarget());
   tm.unbind(TEXUNIT_FOREST_FAR, m_forest_far_texture->getTarget());
 }
 
 
-void ForestTextures::setUniforms(ShaderProgramPtr program) const
+void Forest::setUniforms(ShaderProgramPtr program) const
 {
   program->setUniformi("sampler_forest_layers",
                        m_texture_manager.getTexUnitNum(TEXUNIT_FOREST_LAYERS));
@@ -60,9 +60,9 @@ void ForestTextures::setUniforms(ShaderProgramPtr program) const
                        m_texture_manager.getTexUnitNum(TEXUNIT_FOREST_FAR));
 }
 
-void ForestTextures::loadLayer(Layer &layer,
-                              const TerrainBase::Loader::Layer &loader,
-                              bool is_base_layer) const
+void Forest::loadLayer(Layer &layer,
+                       const TerrainBase::Loader::Layer &loader,
+                       bool is_base_layer) const
 {
   {
     auto forest_map = loader.loadForestMap();

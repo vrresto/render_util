@@ -9,14 +9,14 @@ namespace render_util::terrain
 {
 
 
-class WaterTextures : public Subsystem
+class Water : public Subsystem
 {
   const TextureManager &m_texture_manager;
   ShaderParameters m_shader_params;
 
 public:
 
-  WaterTextures(const TextureManager &texture_manager, TerrainBase::BuildParameters&);
+  Water(const TextureManager &texture_manager, TerrainBase::BuildParameters&);
 
   const ShaderParameters &getShaderParameters() const override { return m_shader_params; }
 

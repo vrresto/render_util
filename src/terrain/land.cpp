@@ -16,7 +16,7 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "land_textures.h"
+#include "land.h"
 #include <log.h>
 #include <render_util/image_resample.h>
 #include <render_util/texture_util.h>
@@ -92,8 +92,8 @@ ParameterMap createTypeMap(TerrainBase::TypeMap::ConstPtr type_map_in,
   ParameterMap map
   {
     .texunit = texunit,
-    .resolution_m = LandTextures::TYPE_MAP_RESOLUTION_M,
-    .size_m = type_map->getSize() * LandTextures::TYPE_MAP_RESOLUTION_M,
+    .resolution_m = Land::TYPE_MAP_RESOLUTION_M,
+    .size_m = type_map->getSize() * Land::TYPE_MAP_RESOLUTION_M,
     .size_px = type_map->getSize(),
     .texture = texture,
     .name = "type_map",
@@ -154,7 +154,6 @@ void createTextureArrays(
     if (!image)
       continue;
 
-
     ScaledImageResource scaled_image;
     scaled_image.resource = image;
     scaled_image.flip_y = true;
@@ -198,8 +197,7 @@ namespace render_util::terrain
 {
 
 
-LandTextures::LandTextures(const TextureManager &texture_manager,
-                           TerrainBase::BuildParameters &params) :
+Land::Land(const TextureManager &texture_manager, TerrainBase::BuildParameters &params) :
     m_texture_manager(texture_manager)
 {
   using namespace glm;
@@ -261,7 +259,7 @@ LandTextures::LandTextures(const TextureManager &texture_manager,
 }
 
 
-void LandTextures::loadLayer(Layer &layer, const TerrainBase::Loader::Layer &loader,
+void Land::loadLayer(Layer &layer, const TerrainBase::Loader::Layer &loader,
                              bool is_base_layer) const
 {
   LOG_INFO << "Loading layer ..." << endl;
@@ -272,7 +270,7 @@ void LandTextures::loadLayer(Layer &layer, const TerrainBase::Loader::Layer &loa
 }
 
 
-void LandTextures::bindTextures(TextureManager &tm)
+void Land::bindTextures(TextureManager &tm)
 {
   using namespace render_util;
 
@@ -316,7 +314,7 @@ void LandTextures::bindTextures(TextureManager &tm)
 }
 
 
-void LandTextures::unbindTextures(TextureManager &tm)
+void Land::unbindTextures(TextureManager &tm)
 {
   LOG_TRACE<<endl;
 

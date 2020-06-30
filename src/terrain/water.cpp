@@ -1,4 +1,4 @@
-#include "water_textures.h"
+#include "water.h"
 #include <render_util/terrain_base.h>
 #include <render_util/texunits.h>
 #include <render_util/gl_binding/gl_functions.h>
@@ -25,16 +25,17 @@ const glm::vec2 water_map_table_shift_m = glm::vec2(0, 200);
 namespace render_util::terrain
 {
 
-WaterTextures::WaterTextures(const TextureManager &texture_manager,
-                              render_util::TerrainBase::BuildParameters &params) :
+
+Water::Water(const TextureManager &texture_manager,
+             render_util::TerrainBase::BuildParameters &params) :
     m_texture_manager(texture_manager)
 {
 }
 
 
-void WaterTextures::loadLayer(Layer &layer,
-                              const TerrainBase::Loader::Layer &loader,
-                              bool is_base_layer) const
+void Water::loadLayer(Layer &layer,
+                      const TerrainBase::Loader::Layer &loader,
+                      bool is_base_layer) const
 {
   std::vector<ImageGreyScale::Ptr> chunks;
   Image<unsigned int>::Ptr table;

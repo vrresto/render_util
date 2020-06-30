@@ -25,9 +25,9 @@
 #include "terrain_cdlod_base.h"
 #include "layer.h"
 #include "subsystem.h"
-#include "land_textures.h"
-#include "forest_textures.h"
-#include "water_textures.h"
+#include "land.h"
+#include "forest.h"
+#include "water.h"
 #include "grid_mesh.h"
 #include "vao.h"
 #include <render_util/terrain_cdlod.h>
@@ -486,7 +486,7 @@ void TerrainCDLOD::setUniforms(ShaderProgramPtr program)
   program->setUniformi("terrain.mesh_resolution_m", GRID_RESOLUTION_M);
 
   program->setUniformi("terrain.tile_size_m", TILE_SIZE_M);
-  program->setUniform("terrain.max_texture_scale", LandTextures::MAX_TEXTURE_SCALE);
+  program->setUniform("terrain.max_texture_scale", Land::MAX_TEXTURE_SCALE);
 }
 
 
@@ -603,21 +603,9 @@ void TerrainCDLOD::build(BuildParameters &params)
 
   CHECK_GL_ERROR();
 
-  {
-    auto land_textures = std::make_unique<LandTextures>(texture_manager, params);
-    m_subsystems.push_back(std::move(land_textures));
-  }
-
-  {
-    auto forest_textures = std::make_unique<ForestTextures>(texture_manager, params);
-    m_subsystems.push_back(std::move(forest_textures));
-  }
-
-  {
-    auto water_textures = std::make_unique<WaterTextures>(texture_manager, params);
-    m_subsystems.push_back(std::move(water_textures));
-  }
-
+  m_subsystems.push_back(std::make_unique<Land>(texture_manager, params));
+  m_subsystems.push_back(std::make_unique<Forest>(texture_manager, params));
+  m_subsystems.push_back(std::make_unique<Water>(texture_manager, params));
 
   {
     LOG_INFO << "Creating detail layer ..." << endl;
@@ -642,15 +630,12 @@ void TerrainCDLOD::build(BuildParameters &params)
     layer.parameter_maps.push_back(nm);
 
     for (auto &t : m_subsystems)
-    {
       t->loadLayer(layer, params.loader.getDetailLayer(), false);
-    }
 
     m_layers.push_back(layer);
 
     LOG_INFO << "Creating detail layer ... done." << endl;
   }
-
 
   if (params.loader.hasBaseLayer())
   {
@@ -665,7 +650,6 @@ void TerrainCDLOD::build(BuildParameters &params)
     auto nm = ::createNormalMap(TEXUNIT_TERRAIN_CDLOD_NORMAL_MAP_BASE, hm_image);
 
     Layer layer;
-//     layer.origin_m = m_base_map_origin;
     layer.origin_m = params.loader.getBaseLayer().getOriginM();
     layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
     layer.uniform_prefix = "terrain.base_layer.";
@@ -673,9 +657,7 @@ void TerrainCDLOD::build(BuildParameters &params)
     layer.parameter_maps.push_back(nm);
 
     for (auto &t : m_subsystems)
-    {
       t->loadLayer(layer, params.loader.getBaseLayer(), true);
-    }
 
     m_layers.push_back(layer);
 
