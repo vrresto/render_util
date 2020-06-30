@@ -54,30 +54,6 @@ namespace render_util
       virtual void setActiveProgram(ShaderProgramPtr) = 0;
     };
 
-//     struct Textures
-//     {
-//       struct Layer
-//       {
-//         glm::vec2 origin_m = glm::vec2(0);
-//         unsigned int resolution_m = 0;
-//         ElevationMap::ConstPtr height_map;
-//         TerrainBase::TypeMap::ConstPtr type_map;
-//         ImageGreyScale::ConstPtr forest_map;
-//         MaterialMap::ConstPtr material_map;
-//       };
-// 
-//       std::unique_ptr<Layer> base_layer;
-//       std::unique_ptr<Layer> detail_layer;
-// 
-//       std::vector<ImageRGBA::Ptr> textures;
-//       std::vector<ImageRGB::Ptr> textures_nm;
-//       std::vector<float> texture_scale;
-//       ImageRGBA::ConstPtr far_texture;
-//       std::vector<ImageRGBA::ConstPtr> forest_layers;
-//     //   ImageRGBA::ConstPtr forest_far;
-//     };
-
-
     struct Loader
     {
       struct Layer
@@ -103,12 +79,7 @@ namespace render_util
 
       virtual std::vector<ImageRGBA::Ptr> loadForestLayers() const = 0;
       virtual ImageRGBA::Ptr loadForestFarTexture() const = 0;
-
-//       ImageRGBA::ConstPtr far_texture;
-    //   ImageRGBA::ConstPtr forest_far;
-
     };
-
 
     struct BuildParameters
     {

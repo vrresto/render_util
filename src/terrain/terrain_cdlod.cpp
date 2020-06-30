@@ -24,7 +24,7 @@
 
 #include "terrain_cdlod_base.h"
 #include "layer.h"
-#include "textures.h"
+#include "subsystem.h"
 #include "land_textures.h"
 #include "forest_textures.h"
 #include "water_textures.h"
@@ -127,10 +127,9 @@ size_t getDetailLevelAtDistance(double dist)
 }
 
 
-
-Map createHeightMap(unsigned int texunit, render_util::ElevationMap::ConstPtr image)
+ParameterMap createHeightMap(unsigned int texunit, render_util::ElevationMap::ConstPtr image)
 {
-  Map hm =
+  ParameterMap hm =
   {
     .texunit = texunit,
     .resolution_m = TerrainCDLODBase::HEIGHT_MAP_METERS_PER_GRID,
@@ -142,9 +141,9 @@ Map createHeightMap(unsigned int texunit, render_util::ElevationMap::ConstPtr im
   return hm;
 }
 
-Map createNormalMap(unsigned int texunit, render_util::ElevationMap::ConstPtr image)
+ParameterMap createNormalMap(unsigned int texunit, render_util::ElevationMap::ConstPtr image)
 {
-  Map nm =
+  ParameterMap nm =
   {
     .texunit = texunit,
     .resolution_m = TerrainCDLODBase::HEIGHT_MAP_METERS_PER_GRID,
@@ -371,7 +370,7 @@ class TerrainCDLOD : public TerrainCDLODBase
   std::vector<Layer> m_layers;
   std::unordered_map<unsigned int, std::unique_ptr<Material>> materials;
 
-  std::vector<std::unique_ptr<terrain::Textures>> m_textures;
+  std::vector<std::unique_ptr<terrain::Subsystem>> m_subsystems;
 
   render_util::ShaderParameters m_shader_params;
   std::string m_program_name;
@@ -412,8 +411,8 @@ TerrainCDLOD::~TerrainCDLOD()
   root_node = nullptr;
   node_allocator.clear();
 
-  for (auto &t : m_textures)
-    t->unbind(texture_manager);
+  for (auto &t : m_subsystems)
+    t->unbindTextures(texture_manager);
 
   for (auto &layer : m_layers)
     layer.unbindTextures(texture_manager);
@@ -462,7 +461,7 @@ Material *TerrainCDLOD::getMaterial(unsigned int id)
 
   auto shader_params = m_shader_params;
 
-  for (auto &t : m_textures)
+  for (auto &t : m_subsystems)
     shader_params.add(t->getShaderParameters());
 
   materials[id] = std::make_unique<Material>(m_program_name,
@@ -476,7 +475,7 @@ Material *TerrainCDLOD::getMaterial(unsigned int id)
 
 void TerrainCDLOD::setUniforms(ShaderProgramPtr program)
 {
-  for (auto &t : m_textures)
+  for (auto &t : m_subsystems)
     t->setUniforms(program);
 
   for (auto& layer : m_layers)
@@ -606,17 +605,17 @@ void TerrainCDLOD::build(BuildParameters &params)
 
   {
     auto land_textures = std::make_unique<LandTextures>(texture_manager, params);
-    m_textures.push_back(std::move(land_textures));
+    m_subsystems.push_back(std::move(land_textures));
   }
 
   {
     auto forest_textures = std::make_unique<ForestTextures>(texture_manager, params);
-    m_textures.push_back(std::move(forest_textures));
+    m_subsystems.push_back(std::move(forest_textures));
   }
 
   {
     auto water_textures = std::make_unique<WaterTextures>(texture_manager, params);
-    m_textures.push_back(std::move(water_textures));
+    m_subsystems.push_back(std::move(water_textures));
   }
 
 
@@ -639,10 +638,10 @@ void TerrainCDLOD::build(BuildParameters &params)
     layer.origin_m = vec3(0);
     layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
     layer.uniform_prefix = "terrain.detail_layer.";
-    layer.maps.push_back(hm);
-    layer.maps.push_back(nm);
+    layer.parameter_maps.push_back(hm);
+    layer.parameter_maps.push_back(nm);
 
-    for (auto &t : m_textures)
+    for (auto &t : m_subsystems)
     {
       t->loadLayer(layer, params.loader.getDetailLayer(), false);
     }
@@ -670,10 +669,10 @@ void TerrainCDLOD::build(BuildParameters &params)
     layer.origin_m = params.loader.getBaseLayer().getOriginM();
     layer.size_m = vec2(hm_image->getSize() * (int)HEIGHT_MAP_METERS_PER_GRID);
     layer.uniform_prefix = "terrain.base_layer.";
-    layer.maps.push_back(hm);
-    layer.maps.push_back(nm);
+    layer.parameter_maps.push_back(hm);
+    layer.parameter_maps.push_back(nm);
 
-    for (auto &t : m_textures)
+    for (auto &t : m_subsystems)
     {
       t->loadLayer(layer, params.loader.getBaseLayer(), true);
     }
@@ -763,7 +762,7 @@ void TerrainCDLOD::setBaseMapOrigin(glm::vec2 origin)
 render_util::TexturePtr TerrainCDLOD::getNormalMapTexture()
 {
   assert(!m_layers.empty());
-  auto &map = m_layers.at(0).maps.at(1); //FIXME
+  auto &map = m_layers.at(0).parameter_maps.at(1); //FIXME
   assert(map.name == "normal_map");
   return map.texture;
 }
@@ -774,8 +773,8 @@ void TerrainCDLOD::draw(Client *client)
   if (render_list.isEmpty())
     return;
 
-  for (auto &t : m_textures)
-    t->bind(texture_manager);
+  for (auto &t : m_subsystems)
+    t->bindTextures(texture_manager);
 
   for (auto& layer : m_layers)
     layer.bindTextures(texture_manager);

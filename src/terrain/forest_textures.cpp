@@ -38,14 +38,14 @@ ForestTextures::ForestTextures(const TextureManager &texture_manager,
 }
 
 
-void ForestTextures::bind(TextureManager &tm)
+void ForestTextures::bindTextures(TextureManager &tm)
 {
   tm.bind(TEXUNIT_FOREST_LAYERS, m_forest_layers_texture);
   tm.bind(TEXUNIT_FOREST_FAR, m_forest_far_texture);
 }
 
 
-void ForestTextures::unbind(TextureManager &tm)
+void ForestTextures::unbindTextures(TextureManager &tm)
 {
   tm.unbind(TEXUNIT_FOREST_LAYERS, m_forest_layers_texture->getTarget());
   tm.unbind(TEXUNIT_FOREST_FAR, m_forest_far_texture->getTarget());
@@ -78,7 +78,7 @@ void ForestTextures::loadLayer(Layer &layer,
 
     params.apply(texture);
 
-    Map map
+    ParameterMap map
     {
       .texunit = is_base_layer ? TEXUNIT_FOREST_MAP_BASE : TEXUNIT_FOREST_MAP,
       .resolution_m = TerrainBase::GRID_RESOLUTION_M,
@@ -88,7 +88,7 @@ void ForestTextures::loadLayer(Layer &layer,
       .name = "forest_map",
     };
 
-    layer.maps.push_back(map);
+    layer.parameter_maps.push_back(map);
   }
 
 }

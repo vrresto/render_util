@@ -38,14 +38,10 @@ public:
   static constexpr int METERS_PER_GRID = render_util::TerrainBase::GRID_RESOLUTION_M; //FIXME remove
   static constexpr float MIN_LOD_DIST = 40000;
   static constexpr unsigned int MESH_GRID_SIZE = 64;
-
-  enum
-  {
-    LOD_LEVELS = 8,
-    HEIGHT_MAP_METERS_PER_GRID = 200,
-    LEAF_NODE_SIZE = MESH_GRID_SIZE * METERS_PER_GRID,
-    MAX_LOD = LOD_LEVELS,
-  };
+  static constexpr auto LOD_LEVELS = 8;
+  static constexpr auto HEIGHT_MAP_METERS_PER_GRID = 200;
+  static constexpr auto LEAF_NODE_SIZE = MESH_GRID_SIZE * METERS_PER_GRID;
+  static constexpr auto MAX_LOD = LOD_LEVELS;
 
 
   class MaterialMap

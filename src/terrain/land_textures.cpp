@@ -33,7 +33,7 @@ namespace
 {
 
 
-Map createTypeMap(TerrainBase::TypeMap::ConstPtr type_map_in,
+ParameterMap createTypeMap(TerrainBase::TypeMap::ConstPtr type_map_in,
                                 const std::map<unsigned, glm::uvec3> &mapping,
                                 std::string name,
                                 unsigned int texunit)
@@ -89,7 +89,7 @@ Map createTypeMap(TerrainBase::TypeMap::ConstPtr type_map_in,
     params.apply(texture);
   }
 
-  Map map
+  ParameterMap map
   {
     .texunit = texunit,
     .resolution_m = LandTextures::TYPE_MAP_RESOLUTION_M,
@@ -267,12 +267,12 @@ void LandTextures::loadLayer(Layer &layer, const TerrainBase::Loader::Layer &loa
   LOG_INFO << "Loading layer ..." << endl;
   auto texunit = is_base_layer ? TEXUNIT_TYPE_MAP_BASE : TEXUNIT_TYPE_MAP;
   auto type_map = createTypeMap(loader.loadTypeMap(), m_mapping, "type_map", texunit);
-  layer.maps.push_back(type_map);
+  layer.parameter_maps.push_back(type_map);
   LOG_INFO << "Loading layer ... done." << endl;
 }
 
 
-void LandTextures::bind(TextureManager &tm)
+void LandTextures::bindTextures(TextureManager &tm)
 {
   using namespace render_util;
 
@@ -316,7 +316,7 @@ void LandTextures::bind(TextureManager &tm)
 }
 
 
-void LandTextures::unbind(TextureManager &tm)
+void LandTextures::unbindTextures(TextureManager &tm)
 {
   LOG_TRACE<<endl;
 

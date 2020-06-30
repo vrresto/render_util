@@ -1,5 +1,5 @@
-#ifndef RENDER_UTIL_TERRAIN_TEXTURES_H
-#define RENDER_UTIL_TERRAIN_TEXTURES_H
+#ifndef RENDER_UTIL_TERRAIN_SUBSYSTEM_H
+#define RENDER_UTIL_TERRAIN_SUBSYSTEM_H
 
 #include "layer.h"
 #include <render_util/terrain_base.h>
@@ -10,12 +10,12 @@ namespace render_util::terrain
 {
 
 
-class Textures
+class Subsystem
 {
 public:
   virtual const ShaderParameters &getShaderParameters() const = 0;
-  virtual void bind(TextureManager&) = 0;
-  virtual void unbind(TextureManager&) = 0;
+  virtual void bindTextures(TextureManager&) = 0;
+  virtual void unbindTextures(TextureManager&) = 0;
   virtual void setUniforms(ShaderProgramPtr program) const {}
 
   virtual void loadLayer(Layer&, const TerrainBase::Loader::Layer&,

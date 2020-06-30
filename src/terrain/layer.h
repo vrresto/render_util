@@ -30,7 +30,7 @@ namespace render_util::terrain
 {
 
 
-struct Map
+struct ParameterMap
 {
   unsigned int texunit;
   int resolution_m;
@@ -63,12 +63,12 @@ struct Layer
   glm::vec3 origin_m = glm::vec3(0);
   glm::vec2 size_m = glm::vec2(0);
   std::string uniform_prefix;
-  std::vector<Map> maps;
+  std::vector<ParameterMap> parameter_maps;
   std::optional<WaterMap> water_map;
 
   void bindTextures(render_util::TextureManager& tex_mgr)
   {
-    for (auto& map : maps)
+    for (auto& map : parameter_maps)
       tex_mgr.bind(map.texunit, map.texture);
     if (water_map)
       bindWaterMap(*water_map, tex_mgr);
@@ -76,7 +76,7 @@ struct Layer
 
   void unbindTextures(render_util::TextureManager& tex_mgr)
   {
-    for (auto& map : maps)
+    for (auto& map : parameter_maps)
       tex_mgr.unbind(map.texunit, map.texture->getTarget());
     if (water_map)
       unbindWaterMap(*water_map, tex_mgr);
@@ -87,8 +87,8 @@ struct Layer
     program->setUniform(uniform_prefix + "has_water_map", has_water_map);
     program->setUniform(uniform_prefix + "size_m", size_m);
     program->setUniform(uniform_prefix + "origin_m", origin_m);
-    for (auto& map : maps)
-      setMapUniforms(map, program, tex_mgr);
+    for (auto& map : parameter_maps)
+      setParameterMapUniforms(map, program, tex_mgr);
     if (water_map)
       setWaterMapUniforms(*water_map, program, tex_mgr);
   }
@@ -109,20 +109,20 @@ private:
   void setWaterMapUniforms(WaterMap &map, ShaderProgramPtr program,
                            const render_util::TextureManager &tex_mgr)
   {
-    program->setUniformi(uniform_prefix + "water_map" + ".sampler",
+    program->setUniformi(uniform_prefix + "water_map.sampler",
                          tex_mgr.getTexUnitNum(map.texunit));
-    program->setUniformi(uniform_prefix + "water_map" + ".sampler_table",
+    program->setUniformi(uniform_prefix + "water_map.sampler_table",
                          tex_mgr.getTexUnitNum(map.texunit_table));
 
-    program->setUniform(uniform_prefix + "water_map" + ".chunk_size_m", map.chunk_size_m);
-    program->setUniform(uniform_prefix + "water_map" + ".table_size_m", map.table_size_m);
-    program->setUniform(uniform_prefix + "water_map" + ".table_shift_m", map.table_shift_m);
-    program->setUniform(uniform_prefix + "water_map" + ".chunk_scale", map.chunk_scale);
-    program->setUniform(uniform_prefix + "water_map" + ".chunk_shift_m", map.chunk_shift_m);
+    program->setUniform(uniform_prefix + "water_map.chunk_size_m", map.chunk_size_m);
+    program->setUniform(uniform_prefix + "water_map.table_size_m", map.table_size_m);
+    program->setUniform(uniform_prefix + "water_map.table_shift_m", map.table_shift_m);
+    program->setUniform(uniform_prefix + "water_map.chunk_scale", map.chunk_scale);
+    program->setUniform(uniform_prefix + "water_map.chunk_shift_m", map.chunk_shift_m);
   }
 
-  void setMapUniforms(Map &map, ShaderProgramPtr program,
-                      const render_util::TextureManager &tex_mgr)
+  void setParameterMapUniforms(ParameterMap &map, ShaderProgramPtr program,
+                               const render_util::TextureManager &tex_mgr)
   {
     program->setUniformi(uniform_prefix + map.name + ".sampler", tex_mgr.getTexUnitNum(map.texunit));
     program->setUniformi(uniform_prefix + map.name + ".resolution_m", map.resolution_m);

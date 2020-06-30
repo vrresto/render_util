@@ -19,7 +19,7 @@
 #ifndef _RENDER_UTIL_TERRAIN_FOREST_TEXTURES_H
 #define _RENDER_UTIL_TERRAIN_FOREST_TEXTURES_H
 
-#include "textures.h"
+#include "subsystem.h"
 #include "layer.h"
 
 #include <render_util/texture_manager.h>
@@ -34,7 +34,7 @@ namespace render_util::terrain
 {
 
 
-class ForestTextures : public Textures
+class ForestTextures : public Subsystem
 {
   const TextureManager &m_texture_manager;
   ShaderParameters m_shader_params;
@@ -46,8 +46,8 @@ public:
   ForestTextures(const TextureManager &texture_manager, TerrainBase::BuildParameters&);
 
   const ShaderParameters &getShaderParameters() const override { return m_shader_params; }
-  void bind(TextureManager&) override;
-  void unbind(TextureManager&) override;
+  void bindTextures(TextureManager&) override;
+  void unbindTextures(TextureManager&) override;
   void setUniforms(ShaderProgramPtr program) const override;
   void loadLayer(Layer&, const TerrainBase::Loader::Layer&,
                  bool is_base_layer/*FIXME HACK*/) const override;
