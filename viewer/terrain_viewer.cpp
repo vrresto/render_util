@@ -384,7 +384,7 @@ void TerrainViewerScene::render(float frame_delta)
   {
     shore_wave_pos.x = shore_wave_pos.x + (frame_delta * shore_wave_hz.x);
     shore_wave_pos.y = shore_wave_pos.y + (frame_delta * shore_wave_hz.y);
-    m_map->getWaterAnimation().update();
+    m_terrain.getTerrain()->updateAnimation(frame_delta);
   }
 
   CHECK_GL_ERROR();

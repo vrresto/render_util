@@ -17,6 +17,7 @@ public:
   virtual void bindTextures(TextureManager&) = 0;
   virtual void unbindTextures(TextureManager&) = 0;
   virtual void setUniforms(ShaderProgramPtr program) const {}
+  virtual void updateAnimation(float frame_delta) {}
 
   virtual void loadLayer(Layer&, const TerrainBase::Loader::Layer&,
                          bool is_base_layer/*FIXME HACK*/) const = 0;

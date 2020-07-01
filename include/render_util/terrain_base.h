@@ -102,6 +102,7 @@ namespace render_util
     virtual TexturePtr getNormalMapTexture() { return nullptr; }
     virtual void setProgramName(std::string) {}
     virtual void setBaseMapOrigin(glm::vec2 origin) {}
+    virtual void updateAnimation(float frame_delta) {}
   };
 
   using TerrainFactory = util::Factory<TerrainBase, TextureManager&, const ShaderSearchPath&>;

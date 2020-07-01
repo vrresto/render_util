@@ -3,6 +3,12 @@
 #include <render_util/texunits.h>
 #include <render_util/gl_binding/gl_functions.h>
 
+#include <chrono>
+
+
+using Clock = std::chrono::steady_clock;
+
+
 namespace
 {
 
@@ -56,23 +62,107 @@ ImageGreyScale::Ptr createShoreWaveTexture()
 #endif
 
 
-}
+constexpr int NUM_LAYERS = 2;
+
+struct WaterAnimationLayer
+{
+  const int step_duration_microseconds = 0;
+  int current_step = 0;
+  std::chrono::milliseconds delta_last_frame;
+
+  Clock::time_point last_step_time;
+  Clock::time_point next_step_time;
+
+  WaterAnimationLayer(float fps) : step_duration_microseconds(1000 * (1000.f / fps))
+  {
+    last_step_time = Clock::now();
+    next_step_time = Clock::now() + std::chrono::microseconds(step_duration_microseconds);
+  }
+
+  float getFrameDelta() const
+  {
+    return  (float)delta_last_frame.count() / ((float)step_duration_microseconds / 1000.f);
+  }
+};
+
+
+} // namespace
 
 
 namespace render_util::terrain
 {
 
 
+struct WaterAnimation
+{
+  std::array<WaterAnimationLayer, NUM_LAYERS> m_layers { 2, 6 };
+  int m_num_animation_steps = 0;
+
+  void update();
+  void setUniforms(ShaderProgramPtr program);
+};
+
+
+void WaterAnimation::update()
+{
+  if (!m_num_animation_steps)
+    return;
+
+  Clock::time_point now = Clock::now();
+
+  for (auto &l : m_layers)
+  {
+    if (now >= l.next_step_time)
+    {
+      l.last_step_time = l.next_step_time;
+      l.next_step_time += std::chrono::microseconds(l.step_duration_microseconds);
+      l.current_step++;
+      l.current_step %= m_num_animation_steps;
+    }
+    l.delta_last_frame =
+      std::chrono::duration_cast<std::chrono::milliseconds>(now - l.last_step_time);
+  }
+}
+
+
+void WaterAnimation::setUniforms(ShaderProgramPtr program)
+{
+  assert(m_num_animation_steps > 0);
+
+  program->setUniformi("water_animation_num_frames", m_num_animation_steps);
+
+  for (int i = 0; i < NUM_LAYERS; i++)
+  {
+    auto prefix = std::string("water_animation_params[") + std::to_string(i) + "].";
+    auto &layer = m_layers.at(i);
+
+    program->setUniformi(prefix + "pos", layer.current_step);
+    program->setUniform<float>(prefix + "frame_delta", layer.getFrameDelta());
+  }
+}
+
+
 Water::Water(const TextureManager &texture_manager,
              render_util::TerrainBase::BuildParameters &params) :
     m_texture_manager(texture_manager)
 {
-  assert(!params.loader.getWaterAnimationNormalMaps().empty());
-  assert(params.loader.getWaterAnimationNormalMaps().size() ==
-         params.loader.getWaterAnimationFoamMasks().size());
+  auto &normal_maps = params.loader.getWaterAnimationNormalMaps();
+  auto &foam_masks = params.loader.getWaterAnimationFoamMasks();
+  assert(normal_maps.size() == foam_masks.size());
 
-  m_animation_normal_maps = createTextureArray(params.loader.getWaterAnimationNormalMaps());
-  m_animation_foam_masks = createTextureArray(params.loader.getWaterAnimationFoamMasks());
+  auto animation_steps = normal_maps.size();
+  assert(animation_steps > 0);
+
+  m_animation_normal_maps = createTextureArray(normal_maps);
+  m_animation_foam_masks = createTextureArray(foam_masks);
+
+  m_animation = std::make_unique<WaterAnimation>();
+  m_animation->m_num_animation_steps = animation_steps;
+}
+
+
+Water::~Water()
+{
 }
 
 
@@ -90,6 +180,12 @@ void Water::unbindTextures(TextureManager &tm)
 }
 
 
+void Water::updateAnimation(float frame_delta)
+{
+  m_animation->update();
+}
+
+
 void Water::setUniforms(ShaderProgramPtr program) const
 {
   program->setUniformi("sampler_water_normal_map",
@@ -97,6 +193,8 @@ void Water::setUniforms(ShaderProgramPtr program) const
   program->setUniformi("sampler_foam_mask",
                        m_texture_manager.getTexUnitNum(TEXUNIT_FOAM_MASK));
   program->setUniform("water_color", m_water_color);
+
+  m_animation->setUniforms(program);
 }
 
 

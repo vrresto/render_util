@@ -396,6 +396,7 @@ public:
   render_util::TexturePtr getNormalMapTexture() override;
   void setProgramName(std::string name) override;
   void setBaseMapOrigin(glm::vec2 origin) override;
+  void updateAnimation(float frame_delta) override;
 };
 
 
@@ -446,6 +447,13 @@ TerrainCDLOD::TerrainCDLOD(TextureManager &tm, const ShaderSearchPath &shader_se
   CHECK_GL_ERROR();
 
   m_noise_texture = createNoiseTexture();
+}
+
+
+void TerrainCDLOD::updateAnimation(float frame_delta)
+{
+ for (auto &s : m_subsystems)
+  s->updateAnimation(frame_delta);
 }
 
 
