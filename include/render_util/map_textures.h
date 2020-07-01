@@ -46,29 +46,29 @@ namespace render_util
 
     const ShaderParameters &getShaderParameters();
 
-    void setWaterColor(const glm::vec3 &color);
-    void setWaterTypeMap(ImageGreyScale::ConstPtr type_map);
-    void setBeach(std::vector<ImageRGBA::ConstPtr> textures);
+//     void setWaterColor(const glm::vec3 &color);
+//     void setWaterTypeMap(ImageGreyScale::ConstPtr type_map);
+//     void setBeach(std::vector<ImageRGBA::ConstPtr> textures);
 
-    void setWaterMap(const std::vector<ImageGreyScale::ConstPtr> &chunks,
-                     Image<unsigned int>::ConstPtr table);
+//     void setWaterMap(const std::vector<ImageGreyScale::ConstPtr> &chunks,
+//                      Image<unsigned int>::ConstPtr table);
 
-    void setTexture(unsigned texunit, TexturePtr texture);
+//     void setTexture(unsigned texunit, TexturePtr texture);
 
-    void bind(TextureManager&);
-    void setUniforms(ShaderProgramPtr program);
+//     void bind(TextureManager&);
+//     void setUniforms(ShaderProgramPtr program);
 
-    template <class T>
-    void setTexture(unsigned texunit, T image)
-    {
-      setTexture(texunit, createTexture(image));
-    }
-
-    template <class T>
-    void setTextureArray(unsigned texunit, T &images)
-    {
-      setTexture(texunit, createTextureArray<T>(images));
-    }
+//     template <class T>
+//     void setTexture(unsigned texunit, T image)
+//     {
+//       setTexture(texunit, createTexture(image));
+//     }
+// 
+//     template <class T>
+//     void setTextureArray(unsigned texunit, T &images)
+//     {
+//       setTexture(texunit, createTextureArray<T>(images));
+//     }
   };
 
 }

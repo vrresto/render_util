@@ -88,8 +88,10 @@ struct WaterAnimation::Private
 
     num_animation_steps = normal_maps.size();
 
-    map_textures->setTextureArray(TEXUNIT_WATER_NORMAL_MAP, normal_maps);
-    map_textures->setTextureArray(TEXUNIT_FOAM_MASK, foam_masks);
+    assert(0);
+    abort();
+//     map_textures->setTextureArray(TEXUNIT_WATER_NORMAL_MAP, normal_maps);
+//     map_textures->setTextureArray(TEXUNIT_FOAM_MASK, foam_masks);
 
   }
 

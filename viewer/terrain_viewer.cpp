@@ -343,8 +343,8 @@ void TerrainViewerScene::setup()
   LOG_FLUSH;
 
   CHECK_GL_ERROR();
-  m_map->getTextures().bind(getTextureManager());
-  CHECK_GL_ERROR();
+//   m_map->getTextures().bind(getTextureManager());
+//   CHECK_GL_ERROR();
 
   camera.x = map_size.x / 2;
   camera.y = map_size.y / 2;
@@ -366,7 +366,7 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
 
   CHECK_GL_ERROR();
 
-  m_map->getTextures().setUniforms(program);
+//   m_map->getTextures().setUniforms(program);
   program->setUniform("shore_wave_scroll", shore_wave_pos);
   program->setUniform("terrain_height_offset", 0.f);
 

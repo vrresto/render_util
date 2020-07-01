@@ -273,37 +273,37 @@ render_util::MapTextures::~MapTextures()
 }
 
 
-const render_util::ShaderParameters &render_util::MapTextures::getShaderParameters()
-{
-  return p->shader_params;
-}
+// const render_util::ShaderParameters &render_util::MapTextures::getShaderParameters()
+// {
+//   return p->shader_params;
+// }
 
 
-void render_util::MapTextures::bind(TextureManager &mgr)
-{
-  //HACK
-  setTexture(TEXUNIT_SHORE_WAVE, createShoreWaveTexture());
+// void render_util::MapTextures::bind(TextureManager &mgr)
+// {
+//   //HACK
+//   setTexture(TEXUNIT_SHORE_WAVE, createShoreWaveTexture());
+// 
+//   //HACK
+//   p->m_material->setTexture(TEXUNIT_GENERIC_NOISE, createNoiseTexture());
+// 
+//   p->m_material->bind(mgr);
+// 
+//   CHECK_GL_ERROR();
+// }
 
-  //HACK
-  p->m_material->setTexture(TEXUNIT_GENERIC_NOISE, createNoiseTexture());
 
-  p->m_material->bind(mgr);
-
-  CHECK_GL_ERROR();
-}
-
-
-void render_util::MapTextures::setUniforms(ShaderProgramPtr program)
-{
-  using namespace glm;
-
-  program->setUniform("water_color", p->water_color);
-  program->setUniform("water_map_shift", glm::vec2(water_map_shift, water_map_shift));
-  program->setUniform("water_map_scale", glm::vec2(1.0 / water_map_scale));
-  program->setUniform("water_map_table_size", p->water_map_table_size);
-
-  p->m_material->setUniforms(program);
-}
+// void render_util::MapTextures::setUniforms(ShaderProgramPtr program)
+// {
+//   using namespace glm;
+// 
+//   program->setUniform("water_color", p->water_color);
+//   program->setUniform("water_map_shift", glm::vec2(water_map_shift, water_map_shift));
+//   program->setUniform("water_map_scale", glm::vec2(1.0 / water_map_scale));
+//   program->setUniform("water_map_table_size", p->water_map_table_size);
+// 
+//   p->m_material->setUniforms(program);
+// }
 
 
 // void render_util::MapTextures::setNormalMaps(const std::vector<ImageRGBA::ConstPtr> &textures)
@@ -314,77 +314,77 @@ void render_util::MapTextures::setUniforms(ShaderProgramPtr program)
 // 
 
 
-void render_util::MapTextures::setWaterMap(const std::vector<ImageGreyScale::ConstPtr> &chunks,
-                                      Image<unsigned int>::ConstPtr table)
-{
-  p->water_map_table_size = table->size();
-
-  auto table_float = image::convert<float>(table);
-
-  TexturePtr chunks_texture = createTextureArray(chunks);
-
-  TextureParameters<int> chunks_params;
-  chunks_params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  chunks_params.set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  chunks_params.apply(chunks_texture);
-
-  p->m_material->setTexture(TEXUNIT_WATER_MAP, chunks_texture);
-
-
-  TexturePtr table_texture = createFloatTexture(
-                                reinterpret_cast<const float*>(table_float->data()),
-                                table_float->w(),
-                                table_float->h(),
-                                1);
-
-  TextureParameters<int> table_params;
-  table_params.set(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  table_params.set(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  table_params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  table_params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-  table_params.apply(table_texture);
-
-  p->m_material->setTexture(TEXUNIT_WATER_MAP_TABLE, table_texture);
-}
-
-
-void render_util::MapTextures::setWaterTypeMap(ImageGreyScale::ConstPtr map)
-{
-  TexturePtr t = createTexture(map, false);
-  TextureParameters<int> params;
-  params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-  params.apply(t);
-  p->m_material->setTexture(TEXUNIT_WATER_TYPE_MAP, t);
-}
+// void render_util::MapTextures::setWaterMap(const std::vector<ImageGreyScale::ConstPtr> &chunks,
+//                                       Image<unsigned int>::ConstPtr table)
+// {
+//   p->water_map_table_size = table->size();
+// 
+//   auto table_float = image::convert<float>(table);
+// 
+//   TexturePtr chunks_texture = createTextureArray(chunks);
+// 
+//   TextureParameters<int> chunks_params;
+//   chunks_params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//   chunks_params.set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//   chunks_params.apply(chunks_texture);
+// 
+//   p->m_material->setTexture(TEXUNIT_WATER_MAP, chunks_texture);
+// 
+// 
+//   TexturePtr table_texture = createFloatTexture(
+//                                 reinterpret_cast<const float*>(table_float->data()),
+//                                 table_float->w(),
+//                                 table_float->h(),
+//                                 1);
+// 
+//   TextureParameters<int> table_params;
+//   table_params.set(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//   table_params.set(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//   table_params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+//   table_params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+//   table_params.apply(table_texture);
+// 
+//   p->m_material->setTexture(TEXUNIT_WATER_MAP_TABLE, table_texture);
+// }
 
 
-void render_util::MapTextures::setBeach(std::vector<ImageRGBA::ConstPtr> textures)
-{
-  p->m_material->setTexture(TEXUNIT_BEACH, ::createTextureArray(textures));
-}
+// void render_util::MapTextures::setWaterTypeMap(ImageGreyScale::ConstPtr map)
+// {
+//   TexturePtr t = createTexture(map, false);
+//   TextureParameters<int> params;
+//   params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+//   params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+//   params.apply(t);
+//   p->m_material->setTexture(TEXUNIT_WATER_TYPE_MAP, t);
+// }
 
 
-void render_util::MapTextures::setWaterColor(const glm::vec3 &color)
-{
-  p->water_color = color;
-}
+// void render_util::MapTextures::setBeach(std::vector<ImageRGBA::ConstPtr> textures)
+// {
+//   p->m_material->setTexture(TEXUNIT_BEACH, ::createTextureArray(textures));
+// }
 
 
-void render_util::MapTextures::setTexture(unsigned texunit, TexturePtr texture)
-{
-  TextureParameters<int> params;
+// void render_util::MapTextures::setWaterColor(const glm::vec3 &color)
+// {
+//   p->water_color = color;
+// }
 
-  switch (texunit)
-  {
-    case TEXUNIT_TERRAIN_FAR:
-      params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-      params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-      params.set(GL_TEXTURE_LOD_BIAS, -3.0);
-      break;
-  }
 
-  params.apply(texture);
-
-  p->m_material->setTexture(texunit, texture);
-}
+// void render_util::MapTextures::setTexture(unsigned texunit, TexturePtr texture)
+// {
+//   TextureParameters<int> params;
+// 
+//   switch (texunit)
+//   {
+//     case TEXUNIT_TERRAIN_FAR:
+//       params.set(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+//       params.set(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+//       params.set(GL_TEXTURE_LOD_BIAS, -3.0);
+//       break;
+//   }
+// 
+//   params.apply(texture);
+// 
+//   p->m_material->setTexture(texunit, texture);
+// }
