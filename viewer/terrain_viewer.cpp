@@ -23,11 +23,9 @@
 #include "camera.h"
 #include <render_util/viewer.h>
 #include <render_util/render_util.h>
-#include <render_util/water.h>
 #include <render_util/shader.h>
 #include <render_util/shader_util.h>
 #include <render_util/texture_manager.h>
-#include <render_util/map_textures.h>
 #include <render_util/texture_util.h>
 #include <render_util/texunits.h>
 #include <render_util/image_loader.h>
@@ -106,29 +104,11 @@ glm::dvec3 hitGround(const Beam &beam_)
 } // namespace
 
 
-namespace terrain_viewer
-{
-  class Map : public MapBase
-  {
-    MapTextures m_map_textures;
-    WaterAnimation m_water_animation;
-
-  public:
-    Map(const TextureManager &texture_manager) : m_map_textures(texture_manager) {}
-
-    MapTextures &getTextures() override { return m_map_textures; }
-    WaterAnimation &getWaterAnimation() override { return m_water_animation; }
-  };
-}
-
-
 class TerrainViewerScene : public Scene
 {
   vec4 shore_wave_pos = vec4(0);
   vec2 map_size = vec2(0);
   ivec2 mark_pixel_coords = ivec2(0);
-
-  unique_ptr<terrain_viewer::Map> m_map;
 
   render_util::TexturePtr curvature_map;
   render_util::TexturePtr atmosphere_map;
@@ -268,13 +248,8 @@ void TerrainViewerScene::setup()
 
   sky_program = render_util::createShaderProgram("sky", getTextureManager(),
                                                  shader_search_path, {}, shader_params);
-//   forest_program = render_util::createShaderProgram("forest", getTextureManager(), shader_path);
-//   forest_program = render_util::createShaderProgram("forest_cdlod", getTextureManager(), shader_path);
 
-  m_map = make_unique<terrain_viewer::Map>(getTextureManager());
 
-//   TerrainBase::Textures land_textures;
-  
   auto &terrain_loader = m_map_loader->getTerrainLoader();
 
 #if ENABLE_BASE_MAP
@@ -359,10 +334,6 @@ void TerrainViewerScene::updateUniforms(render_util::ShaderProgramPtr program)
   CHECK_GL_ERROR();
 
   Scene::updateUniforms(program);
-
-  CHECK_GL_ERROR();
-
-  m_map->getWaterAnimation().updateUniforms(program);
 
   CHECK_GL_ERROR();
 

@@ -13,8 +13,6 @@ set(CXX_SRCS
   texture_manager.cpp
   shader.cpp
   shader_util.cpp
-  map_textures.cpp
-  water.cpp
   image_loader.cpp
   image_writer.cpp
   util.cpp

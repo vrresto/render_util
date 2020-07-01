@@ -39,7 +39,6 @@
 #include <render_util/image.h>
 #include <render_util/image_util.h>
 #include <render_util/image_resample.h>
-#include <render_util/water_map.h>
 #include <render_util/shader_util.h>
 #include <render_util/render_util.h>
 #include <render_util/globals.h>

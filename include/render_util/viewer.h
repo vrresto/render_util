@@ -19,7 +19,6 @@
 #ifndef RENDER_UTIL_VIEWER_H
 #define RENDER_UTIL_VIEWER_H
 
-#include <render_util/map_base.h>
 #include <render_util/image.h>
 #include <render_util/terrain_base.h>
 #include <render_util/shader.h>
@@ -48,19 +47,6 @@ namespace render_util::viewer
     virtual ~MapLoaderBase() {}
 
     virtual const TerrainBase::Loader &getTerrainLoader() const = 0;
-
-//     virtual ElevationMap::Ptr createElevationMap() const = 0;
-//     virtual void createLandTextures(TerrainBase::Textures&) const = 0;
-
-//     virtual void createMapTextures(render_util::MapBase*p, TerrainBase::Textures&) const = 0;
-//     virtual int getHeightMapMetersPerPixel() const = 0;
-
-//     virtual ElevationMap::Ptr createBaseElevationMap() const = 0;
-//     virtual glm::vec3 getBaseMapOrigin() const = 0;
-//     virtual unsigned int getBaseElevationMapMetersPerPixel() const = 0;
-
-//     virtual std::shared_ptr<const render_util::TerrainBase::TypeMap> getBaseTypeMap() const = 0;
-//     virtual void generateBaseTypeMap(render_util::ElevationMap::ConstPtr map) = 0;
   };
 
 
