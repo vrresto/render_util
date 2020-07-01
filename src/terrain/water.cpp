@@ -158,6 +158,8 @@ Water::Water(const TextureManager &texture_manager,
 
   m_animation = std::make_unique<WaterAnimation>();
   m_animation->m_num_animation_steps = animation_steps;
+
+  m_water_color = params.loader.getWaterColor();
 }
 
 

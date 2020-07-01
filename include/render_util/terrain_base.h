@@ -83,6 +83,8 @@ namespace render_util
 
       virtual const ImageResourceList &getWaterAnimationNormalMaps() const = 0;
       virtual const ImageResourceList &getWaterAnimationFoamMasks() const = 0;
+
+      virtual glm::vec3 getWaterColor() const = 0;
     };
 
     struct BuildParameters
