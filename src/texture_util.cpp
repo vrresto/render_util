@@ -52,6 +52,8 @@ void createTextureArrayLevel0(const std::vector<ScaledImageResource> &textures,
   using namespace std;
   using std::min;
 
+  assert(!textures.empty());
+
   CHECK_GL_ERROR();
 
   size_t max_levels = 0;

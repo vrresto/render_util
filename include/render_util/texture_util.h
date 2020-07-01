@@ -124,6 +124,18 @@ namespace render_util
     const auto &resources = resources_;
     return createTextureArray(resources, num_components);
   }
+  inline TexturePtr createTextureArray(const std::vector<std::shared_ptr<ImageResource>> &resources_,
+                                       int num_components = 0)
+  {
+    std::vector<ScaledImageResource> resources;
+    for (auto &res : resources_)
+    {
+      ScaledImageResource scaled;
+      scaled.resource = res;
+      resources.push_back(scaled);
+    }
+    return createTextureArray(resources, num_components);
+  }
 
   void setTextureImage(TexturePtr texture,
                       const unsigned char *data,

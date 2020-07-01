@@ -48,6 +48,7 @@ namespace render_util
 
     using MaterialMap = Image<unsigned int>;
     using TypeMap = ImageGreyScale;
+    using ImageResourceList = std::vector<std::shared_ptr<ImageResource>>;
 
     struct Client
     {
@@ -73,12 +74,15 @@ namespace render_util
       virtual const Layer &getDetailLayer() const = 0;
       virtual const Layer &getBaseLayer() const = 0;
 
-      virtual const std::vector<std::shared_ptr<ImageResource>> &getLandTextures() const = 0;
-      virtual const std::vector<std::shared_ptr<ImageResource>> &getLandTexturesNM() const = 0;
+      virtual const ImageResourceList &getLandTextures() const = 0;
+      virtual const ImageResourceList &getLandTexturesNM() const = 0;
       virtual const std::vector<float> &getLandTexturesScale() const = 0;
 
       virtual std::vector<ImageRGBA::Ptr> loadForestLayers() const = 0;
       virtual ImageRGBA::Ptr loadForestFarTexture() const = 0;
+
+      virtual const ImageResourceList &getWaterAnimationNormalMaps() const = 0;
+      virtual const ImageResourceList &getWaterAnimationFoamMasks() const = 0;
     };
 
     struct BuildParameters

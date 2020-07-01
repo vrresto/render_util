@@ -13,6 +13,8 @@ class Water : public Subsystem
 {
   const TextureManager &m_texture_manager;
   ShaderParameters m_shader_params;
+  TexturePtr m_animation_normal_maps;
+  TexturePtr m_animation_foam_masks;
 
 public:
 
@@ -20,9 +22,9 @@ public:
 
   const ShaderParameters &getShaderParameters() const override { return m_shader_params; }
 
-  void bindTextures(TextureManager&) override {}
-  void unbindTextures(TextureManager&) override {}
-  void setUniforms(ShaderProgramPtr program) const override {}
+  void bindTextures(TextureManager&) override;
+  void unbindTextures(TextureManager&) override;
+  void setUniforms(ShaderProgramPtr program) const override;
 
   void loadLayer(Layer&, const TerrainBase::Loader::Layer&,
                  bool is_base_layer/*FIXME HACK*/) const override;

@@ -67,6 +67,35 @@ Water::Water(const TextureManager &texture_manager,
              render_util::TerrainBase::BuildParameters &params) :
     m_texture_manager(texture_manager)
 {
+  assert(!params.loader.getWaterAnimationNormalMaps().empty());
+  assert(params.loader.getWaterAnimationNormalMaps().size() ==
+         params.loader.getWaterAnimationFoamMasks().size());
+
+  m_animation_normal_maps = createTextureArray(params.loader.getWaterAnimationNormalMaps());
+  m_animation_foam_masks = createTextureArray(params.loader.getWaterAnimationFoamMasks());
+}
+
+
+void Water::bindTextures(TextureManager &tm)
+{
+  tm.bind(TEXUNIT_WATER_NORMAL_MAP, m_animation_normal_maps);
+  tm.bind(TEXUNIT_FOAM_MASK, m_animation_foam_masks);
+}
+
+
+void Water::unbindTextures(TextureManager &tm)
+{
+  tm.unbind(TEXUNIT_WATER_NORMAL_MAP, m_animation_normal_maps->getTarget());
+  tm.unbind(TEXUNIT_FOAM_MASK, m_animation_foam_masks->getTarget());
+}
+
+
+void Water::setUniforms(ShaderProgramPtr program) const
+{
+  program->setUniformi("sampler_water_normal_map",
+                       m_texture_manager.getTexUnitNum(TEXUNIT_WATER_NORMAL_MAP));
+  program->setUniformi("sampler_foam_mask",
+                       m_texture_manager.getTexUnitNum(TEXUNIT_FOAM_MASK));
 }
 
 
