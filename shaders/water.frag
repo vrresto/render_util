@@ -25,11 +25,11 @@
 
 #version 130
 
-// #define LOW_DETAIL !@detailed_water:1@
-#define LOW_DETAIL 1
+#define LOW_DETAIL !@detailed_water@
+// #define LOW_DETAIL 0
 
 #define ENABLE_WAVES !LOW_DETAIL
-#define ENABLE_WAVE_INTERPOLATION 1
+// #define ENABLE_WAVE_INTERPOLATION 1
 // #define ENABLE_WAVE_FOAM 1
 #define ENABLE_WATER_MAP 1
 // #define ENABLE_SHORE_WAVES 1
@@ -71,9 +71,9 @@ uniform sampler2DArray sampler_foam_mask;
 // uniform sampler2D sampler_water_map_simple;
 
 uniform sampler2DArray sampler_water_normal_map;
-uniform sampler2D sampler_water_map_table;
-uniform sampler2DArray sampler_water_map;
-uniform sampler2D sampler_water_type_map;
+// uniform sampler2D sampler_water_map_table;
+// uniform sampler2DArray sampler_water_map;
+// uniform sampler2D sampler_water_type_map;
 
 // #if ENABLE_BASE_MAP
 //   uniform vec2 height_map_base_size_m;
@@ -337,7 +337,7 @@ vec3 sampleWaterNormalMap(float scale, vec2 coord, int layer)
 
   return normal;
 #else
-  return texture(sampler_water_normal_map, vec3(coord * scale, getWaterAnimationPos(0))).xyz * 2 - 1;
+  return texture(sampler_water_normal_map, vec3(coord * scale, getWaterAnimationPos(0, layer))).xyz;
 #endif
 }
 
@@ -481,76 +481,76 @@ vec3 getWaterColor(vec3 pos, vec3 viewDir, float dist, vec2 coord,
 }
 
 
-void sampleWaterTypeMap(out float types[4], out float weights[4])
-{
-  float x = pass_type_map_coord.x;
-  float y = pass_type_map_coord.y;
+// void sampleWaterTypeMap(out float types[4], out float weights[4])
+// {
+//   float x = pass_type_map_coord.x;
+//   float y = pass_type_map_coord.y;
+// 
+//   float x0 = floor(x);
+//   float y0 = floor(y);
+// 
+//   float x1 = x0 + 1.0;
+//   float y1 = y0 + 1.0;
+// 
+//   float x0_w = abs(x - x1);
+//   float x1_w = 1.0 - x0_w;
+// 
+//   float y0_w = abs(y - y1);
+//   float y1_w = 1.0 - y0_w;
+// 
+//   types[0] = texelFetch(sampler_water_type_map, ivec2(x0, y0), 0).x;
+//   types[1] = texelFetch(sampler_water_type_map, ivec2(x0, y1), 0).x;
+//   types[2] = texelFetch(sampler_water_type_map, ivec2(x1, y0), 0).x;
+//   types[3] = texelFetch(sampler_water_type_map, ivec2(x1, y1), 0).x;
+// 
+//   weights[0] = x0_w * y0_w;
+//   weights[1] = x0_w * y1_w;
+//   weights[2] = x1_w * y0_w;
+//   weights[3] = x1_w * y1_w;
+// }
 
-  float x0 = floor(x);
-  float y0 = floor(y);
 
-  float x1 = x0 + 1.0;
-  float y1 = y0 + 1.0;
-
-  float x0_w = abs(x - x1);
-  float x1_w = 1.0 - x0_w;
-
-  float y0_w = abs(y - y1);
-  float y1_w = 1.0 - y0_w;
-
-  types[0] = texelFetch(sampler_water_type_map, ivec2(x0, y0), 0).x;
-  types[1] = texelFetch(sampler_water_type_map, ivec2(x0, y1), 0).x;
-  types[2] = texelFetch(sampler_water_type_map, ivec2(x1, y0), 0).x;
-  types[3] = texelFetch(sampler_water_type_map, ivec2(x1, y1), 0).x;
-
-  weights[0] = x0_w * y0_w;
-  weights[1] = x0_w * y1_w;
-  weights[2] = x1_w * y0_w;
-  weights[3] = x1_w * y1_w;
-}
-
-
-void sampleWaterType(vec2 pos, out float shallow_sea_amount, out float river_amount)
-{
-  vec2 typeMapCoords = pos.xy / 200.0;
-
-  float water_types[4];
-  float water_types_w[4];
-  sampleWaterTypeMap(water_types, water_types_w);
-
-  shallow_sea_amount = 0;
-  river_amount = 0;
-  
-  for (int i = 0; i < 4; i++)
-  {
-    uint water_type = uint(water_types[i] * 255);
-
-    switch(water_type)
-    {
-      case 0u:
-//         deep_sea_amount += water_types_w[i];
-//         debugColor = vec3(1,0,1);
-        break;
-      case 1u:
-// //         sea_amount += water_types_w[i];
-        break;
-      case 2u:
-// //         sea_amount += water_types_w[i];
-//         debugColor = vec3(1,0,0);
-        break;
-      case 3u:
-        river_amount += water_types_w[i];
-        break;
-      case 4u:
-        shallow_sea_amount += water_types_w[i];
-        break;
-      default:
-//         debugColor = vec3(float(water_type));
-//         debugColor = vec3(1,0,0);
-        break;
-    }
-  }
-}
+// void sampleWaterType(vec2 pos, out float shallow_sea_amount, out float river_amount)
+// {
+//   vec2 typeMapCoords = pos.xy / 200.0;
+// 
+//   float water_types[4];
+//   float water_types_w[4];
+//   sampleWaterTypeMap(water_types, water_types_w);
+// 
+//   shallow_sea_amount = 0;
+//   river_amount = 0;
+//   
+//   for (int i = 0; i < 4; i++)
+//   {
+//     uint water_type = uint(water_types[i] * 255);
+// 
+//     switch(water_type)
+//     {
+//       case 0u:
+// //         deep_sea_amount += water_types_w[i];
+// //         debugColor = vec3(1,0,1);
+//         break;
+//       case 1u:
+// // //         sea_amount += water_types_w[i];
+//         break;
+//       case 2u:
+// // //         sea_amount += water_types_w[i];
+// //         debugColor = vec3(1,0,0);
+//         break;
+//       case 3u:
+//         river_amount += water_types_w[i];
+//         break;
+//       case 4u:
+//         shallow_sea_amount += water_types_w[i];
+//         break;
+//       default:
+// //         debugColor = vec3(float(water_type));
+// //         debugColor = vec3(1,0,0);
+//         break;
+//     }
+//   }
+// }
 
 
 #if ENABLE_BASE_WATER_MAP

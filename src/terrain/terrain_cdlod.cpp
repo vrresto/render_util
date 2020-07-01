@@ -205,7 +205,7 @@ render_util::ShaderProgramPtr createProgram(std::string name,
     enable_forest = (material & MaterialID::FOREST);
   }
 
-//   params.set("detailed_water", detail_options & DetailOption::WATER);
+  params.set("detailed_water", detail_options & DetailOption::WATER);
 //   params.set("detailed_forest", detail_options & DetailOption::FOREST);
 
   params.set("enable_type_map", enable_type_map);

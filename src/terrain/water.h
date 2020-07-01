@@ -15,6 +15,7 @@ class Water : public Subsystem
   ShaderParameters m_shader_params;
   TexturePtr m_animation_normal_maps;
   TexturePtr m_animation_foam_masks;
+  glm::vec3 m_water_color = glm::vec3(0);
 
 public:
 

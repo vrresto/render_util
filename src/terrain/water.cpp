@@ -96,6 +96,7 @@ void Water::setUniforms(ShaderProgramPtr program) const
                        m_texture_manager.getTexUnitNum(TEXUNIT_WATER_NORMAL_MAP));
   program->setUniformi("sampler_foam_mask",
                        m_texture_manager.getTexUnitNum(TEXUNIT_FOAM_MASK));
+  program->setUniform("water_color", m_water_color);
 }
 
 
