@@ -16,8 +16,8 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _RENDER_UTIL_TERRAIN_FOREST_TEXTURES_H
-#define _RENDER_UTIL_TERRAIN_FOREST_TEXTURES_H
+#ifndef _RENDER_UTIL_TERRAIN_FOREST_H
+#define _RENDER_UTIL_TERRAIN_FOREST_H
 
 #include "subsystem.h"
 #include "layer.h"

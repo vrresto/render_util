@@ -19,6 +19,43 @@ const float water_map_chunk_size_m = 1600 * 4;
 const glm::vec2 water_map_table_shift_m = glm::vec2(0, 200);
 
 
+#if 0
+float sampleShoreWave(float pos)
+{
+  const float peak_pos = 0.05;
+
+  if (pos < peak_pos)
+  {
+    pos = pos /= peak_pos;
+    return pow(pos, 2);
+  }
+  else
+  {
+    pos -= peak_pos;
+    pos /= 1.0 - peak_pos;
+    return pow(1 - pos, 8);
+  }
+}
+
+
+ImageGreyScale::Ptr createShoreWaveTexture()
+{
+  LOG_INFO << "Creating shore wave texture ..." << endl;
+  auto shore_wave = render_util::image::create<unsigned char>(0, glm::ivec2(4096, 1));
+  assert(shore_wave);
+  for (int i = 0; i < shore_wave->w(); i++)
+  {
+    float pos = 1.0 * i;
+    pos /= shore_wave->w();
+    float value = sampleShoreWave(pos);
+    shore_wave->at(i,0) = value * 255;
+  }
+  LOG_INFO << "Creating shore wave texture ... done." << endl;
+  return shore_wave;
+}
+#endif
+
+
 }
 
 

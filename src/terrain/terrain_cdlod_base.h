@@ -22,8 +22,8 @@
  * by Filip Strugar <http://www.vertexasylum.com/downloads/cdlod/cdlod_latest.pdf>.
  */
 
-#ifndef TERRAIN_CDLOD_BASE_H
-#define TERRAIN_CDLOD_BASE_H
+#ifndef RENDER_UTIL_TERRAIN_TERRAIN_CDLOD_BASE_H
+#define RENDER_UTIL_TERRAIN_TERRAIN_CDLOD_BASE_H
 
 
 #include <render_util/terrain_base.h>

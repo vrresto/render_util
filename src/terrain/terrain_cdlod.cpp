@@ -30,6 +30,7 @@
 #include "water.h"
 #include "grid_mesh.h"
 #include "vao.h"
+#include "noise.h"
 #include <render_util/terrain_cdlod.h>
 #include <render_util/texture_manager.h>
 #include <render_util/texunits.h>
@@ -375,6 +376,8 @@ class TerrainCDLOD : public TerrainCDLODBase
   render_util::ShaderParameters m_shader_params;
   std::string m_program_name;
 
+  render_util::TexturePtr m_noise_texture;
+
   void processNode(Node *node, int lod_level, const Camera &camera, bool low_detail);
   void drawInstanced(TerrainBase::Client *client);
   Node *createNode(const BuildParameters&, dvec2 pos, int lod_level, const MaterialMap&);
@@ -441,6 +444,8 @@ TerrainCDLOD::TerrainCDLOD(TextureManager &tm, const ShaderSearchPath &shader_se
   gl::EnableVertexAttribArray(4);
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
   CHECK_GL_ERROR();
+
+  m_noise_texture = createNoiseTexture();
 }
 
 
@@ -487,6 +492,8 @@ void TerrainCDLOD::setUniforms(ShaderProgramPtr program)
 
   program->setUniformi("terrain.tile_size_m", TILE_SIZE_M);
   program->setUniform("terrain.max_texture_scale", Land::MAX_TEXTURE_SCALE);
+
+  program->setUniformi("sampler_generic_noise", texture_manager.getTexUnitNum(TEXUNIT_GENERIC_NOISE));
 }
 
 
@@ -761,7 +768,7 @@ void TerrainCDLOD::draw(Client *client)
   for (auto& layer : m_layers)
     layer.bindTextures(texture_manager);
 
-  assert(client);
+  texture_manager.bind(TEXUNIT_GENERIC_NOISE, m_noise_texture);
 
   VertexArrayObjectBinding vao_binding(*vao);
   IndexBufferBinding index_buffer_binding(*vao);

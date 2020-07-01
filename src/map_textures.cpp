@@ -47,205 +47,84 @@ namespace
 
 using namespace render_util;
 
-const float water_map_chunk_size = 128;
-const float water_map_crop_size = 4.0;
-const float water_map_scale = water_map_chunk_size / (water_map_chunk_size - (water_map_crop_size));
-const float water_map_shift_unit = 1.0 / (water_map_chunk_size - (water_map_crop_size));
-const float water_map_shift = 1 * (water_map_shift_unit / 2);
+// const float water_map_chunk_size = 128;
+// const float water_map_crop_size = 4.0;
+// const float water_map_scale = water_map_chunk_size / (water_map_chunk_size - (water_map_crop_size));
+// const float water_map_shift_unit = 1.0 / (water_map_chunk_size - (water_map_crop_size));
+// const float water_map_shift = 1 * (water_map_shift_unit / 2);
 
 // const int texture_size = 512;
-const int texture_size = 1024;
+// const int texture_size = 1024;
 // const int texture_size = 2048;
 
 
-struct TextureBinding
-{
-  string uniform_name;
-  unsigned int texture_unit = 0;
-  TexturePtr texture;
-
-  TextureBinding(const string &name, unsigned int texture_unit) :
-    uniform_name(name), texture_unit(texture_unit) {}
-};
-
-
-class Material
-{
-  vector<shared_ptr<TextureBinding>> m_bindings;
-  unordered_map<unsigned int, shared_ptr<TextureBinding>> m_map;
-  const TextureManager &m_texture_manager;
-
-public:
-  Material(const TextureManager &texture_manager) : m_texture_manager(texture_manager) {}
-
-  void setTexture(unsigned int texture_unit, TexturePtr texture)
-  {
-    auto b = m_map[texture_unit];
-    if (!b)
-    {
-      string uniform_name = string("sampler_") + getTexUnitName(texture_unit);
-      b = make_shared<TextureBinding>(uniform_name, texture_unit);
-      m_bindings.push_back(b);
-      m_map[texture_unit] = b;
-    }
-    assert(b);
-    b->texture = texture;
-  }
-
-  void setUniforms(ShaderProgramPtr program)
-  {
-    for (auto b : m_bindings)
-    {
-      program->setUniformi(b->uniform_name, m_texture_manager.getTexUnitNum(b->texture_unit));
-    }
-  }
-
-  void bind(TextureManager &mgr)
-  {
-    for (auto b : m_bindings)
-    {
-      mgr.bind(b->texture_unit, b->texture);
-    }
-  }
-};
+// struct TextureBinding
+// {
+//   string uniform_name;
+//   unsigned int texture_unit = 0;
+//   TexturePtr texture;
+// 
+//   TextureBinding(const string &name, unsigned int texture_unit) :
+//     uniform_name(name), texture_unit(texture_unit) {}
+// };
 
 
-TexturePtr createNoiseTexture()
-{
-  LOG_INFO << "Creating noise texture ..." << endl;
-  auto image = image::create<unsigned char>(0, glm::ivec2(2048));
-
-  const double pi = util::PI;
-
-  const double x1 = 0;
-  const double y1 = 0;
-  const double x2 = 800;
-  const double y2 = 800;
-
-//   siv::PerlinNoise noise_generator;
-  FastNoise noise_generator;
-  noise_generator.SetFrequency(0.4);
-
-  for (int y = 0; y < image->h(); y++)
-  {
-    for (int x = 0; x < image->w(); x++)
-    {
-      double s = (double)x / image->w();
-      double t = (double)y / image->h();
-      double dx=x2-x1;
-      double dy=y2-y1;
-
-      double nx=x1+cos(s*2*pi)*dx/(2*pi);
-      double ny=y1+cos(t*2*pi)*dy/(2*pi);
-      double nz=x1+sin(s*2*pi)*dx/(2*pi);
-      double nw=y1+sin(t*2*pi)*dy/(2*pi);
-      
-//       glm::dvec4 params(nx, ny, nz, nw);
-//       glm::vec2 params(s, t);
-      
-//       double value = glm::perlin(params);
-      
-//       double value = noise_generator.octaveNoise(nx, ny, nz, nw);
-      
-      double value = noise_generator.GetSimplex(nx, ny, nz, nw);
-     
-//       double value = glm::simplex(params);
-//       value = glm::clamp(value, 0.0, 1.0);
-      
-//       LOG_INFO<<"value:"<<value<<endl
-
-//       assert(value <= 1);
-      
-      
-
-//       assert(value < 0.006);
-
-      assert(!isnan(value));
-      assert(value >= -1);
-      assert(value <= 1);
-
-      value += 1;
-      value /= 2;
-
-//       value = glm::clamp(value, 0.0f, 1.0f);
-      
-//       value *= 0.0;
-      
-      value *= 255;
-
-      image->at(x,y) = value;
-    }
-  }
-  
-//   image->setPixel(0, 0, 255);
-//   image->setPixel(0, 1, 255);
-//   image->setPixel(1, 0, 255);
-//   image->setPixel(1, 1, 255);
-
-//   saveImageToFile("noise.tga", image.get());
-  
-  TexturePtr texture = createTexture(image);
-
-  TextureParameters<int> params;
-  params.set(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  params.set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  params.apply(texture);
-
-  LOG_INFO << "Creating noise texture ... done." << endl;
-
-  return texture;
-}
+// class Material
+// {
+//   vector<shared_ptr<TextureBinding>> m_bindings;
+//   unordered_map<unsigned int, shared_ptr<TextureBinding>> m_map;
+//   const TextureManager &m_texture_manager;
+// 
+// public:
+//   Material(const TextureManager &texture_manager) : m_texture_manager(texture_manager) {}
+// 
+//   void setTexture(unsigned int texture_unit, TexturePtr texture)
+//   {
+//     auto b = m_map[texture_unit];
+//     if (!b)
+//     {
+//       string uniform_name = string("sampler_") + getTexUnitName(texture_unit);
+//       b = make_shared<TextureBinding>(uniform_name, texture_unit);
+//       m_bindings.push_back(b);
+//       m_map[texture_unit] = b;
+//     }
+//     assert(b);
+//     b->texture = texture;
+//   }
+// 
+//   void setUniforms(ShaderProgramPtr program)
+//   {
+//     for (auto b : m_bindings)
+//     {
+//       program->setUniformi(b->uniform_name, m_texture_manager.getTexUnitNum(b->texture_unit));
+//     }
+//   }
+// 
+//   void bind(TextureManager &mgr)
+//   {
+//     for (auto b : m_bindings)
+//     {
+//       mgr.bind(b->texture_unit, b->texture);
+//     }
+//   }
+// };
 
 
-float sampleShoreWave(float pos)
-{
-  const float peak_pos = 0.05;
 
-  if (pos < peak_pos)
-  {
-    pos = pos /= peak_pos;
-    return pow(pos, 2);
-  }
-  else
-  {
-    pos -= peak_pos;
-    pos /= 1.0 - peak_pos;
-    return pow(1 - pos, 8);
-  }
-}
-
-
-ImageGreyScale::Ptr createShoreWaveTexture()
-{
-  LOG_INFO << "Creating shore wave texture ..." << endl;
-  auto shore_wave = render_util::image::create<unsigned char>(0, glm::ivec2(4096, 1));
-  assert(shore_wave);
-  for (int i = 0; i < shore_wave->w(); i++)
-  {
-    float pos = 1.0 * i;
-    pos /= shore_wave->w();
-    float value = sampleShoreWave(pos);
-    shore_wave->at(i,0) = value * 255;
-  }
-  LOG_INFO << "Creating shore wave texture ... done." << endl;
-  return shore_wave;
-}
-
-
-TexturePtr createTextureArray(const std::vector<ImageRGBA::ConstPtr> &textures)
-{
-  std::vector<ImageRGBA::ConstPtr> textures_resampled;
-  LOG_INFO << "resampling textures ..." << endl;
-  textures_resampled = resampleImages(textures, texture_size);
-
-  for (auto &texture : textures_resampled)
-  {
-    texture = image::flipY(texture);
-  }
-
-  LOG_INFO << "resampling textures ... done." << endl;
-  return render_util::createTextureArray(textures_resampled);
-}
+// TexturePtr createTextureArray(const std::vector<ImageRGBA::ConstPtr> &textures)
+// {
+//   std::vector<ImageRGBA::ConstPtr> textures_resampled;
+//   LOG_INFO << "resampling textures ..." << endl;
+//   textures_resampled = resampleImages(textures, texture_size);
+// 
+//   for (auto &texture : textures_resampled)
+//   {
+//     texture = image::flipY(texture);
+//   }
+// 
+//   LOG_INFO << "resampling textures ... done." << endl;
+//   return render_util::createTextureArray(textures_resampled);
+// }
 
 
 } // namespace
@@ -253,9 +132,9 @@ TexturePtr createTextureArray(const std::vector<ImageRGBA::ConstPtr> &textures)
 
 struct render_util::MapTextures::Private
 {
-  shared_ptr<Material> m_material;
-  glm::vec3 water_color = glm::vec3(0);
-  glm::ivec2 water_map_table_size = glm::ivec2(0);
+//   shared_ptr<Material> m_material;
+//   glm::vec3 water_color = glm::vec3(0);
+//   glm::ivec2 water_map_table_size = glm::ivec2(0);
   ShaderParameters shader_params;
 };
 
@@ -263,7 +142,7 @@ struct render_util::MapTextures::Private
 render_util::MapTextures::MapTextures(const TextureManager &texture_manager) :
   m_texture_manager(texture_manager), p(new Private)
 {
-  p->m_material.reset(new Material(m_texture_manager));
+//   p->m_material.reset(new Material(m_texture_manager));
 }
 
 

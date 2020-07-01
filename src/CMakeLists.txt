@@ -5,6 +5,7 @@ set(CXX_SRCS
   terrain/land.cpp
   terrain/forest.cpp
   terrain/water.cpp
+  terrain/noise.cpp
   atmosphere.cpp
   camera.cpp
   texunits.cpp

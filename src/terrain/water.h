@@ -1,5 +1,5 @@
-#ifndef RENDER_UTIL_TERRAIN_WATER_TEXTURES_H
-#define RENDER_UTIL_TERRAIN_WATER_TEXTURES_H
+#ifndef RENDER_UTIL_TERRAIN_WATER_H
+#define RENDER_UTIL_TERRAIN_WATER_H
 
 #include "subsystem.h"
 #include "layer.h"
