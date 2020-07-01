@@ -63,25 +63,10 @@ vec3 getSkyColor(vec3 camera_pos, vec3 viewDir);
 
 
 #if !LOW_DETAIL
-uniform sampler2DArray sampler_beach;
 uniform sampler2DArray sampler_foam_mask;
 #endif
 
-// uniform sampler2D sampler_shore_wave;
-// uniform sampler2D sampler_water_map_simple;
-
 uniform sampler2DArray sampler_water_normal_map;
-// uniform sampler2D sampler_water_map_table;
-// uniform sampler2DArray sampler_water_map;
-// uniform sampler2D sampler_water_type_map;
-
-// #if ENABLE_BASE_MAP
-//   uniform vec2 height_map_base_size_m;
-//   uniform vec2 height_map_base_origin;
-//   #if ENABLE_BASE_WATER_MAP
-//     uniform sampler2D sampler_water_map_base;
-//   #endif
-// #endif
 
 uniform vec3 sunDir;
 uniform vec3 water_color;
@@ -98,13 +83,8 @@ struct WaterAnimationParameters
 };
 
 uniform WaterAnimationParameters water_animation_params[2];
-
 uniform int water_animation_num_frames = 0;
-// uniform vec2 water_map_shift = vec2(0);
-// uniform vec2 water_map_scale = vec2(1);
-// uniform ivec2 water_map_table_size;
 uniform vec4 shore_wave_scroll;
-// uniform ivec2 typeMapSize;
 
 varying vec2 pass_texcoord;
 varying vec2 pass_type_map_coord;
@@ -688,27 +668,6 @@ vec3 applyWater(in vec3 color_in,
   float bank_amount)
 #endif
 {
-  const float foam_threshold = 0.8;
-  const float foam_threshold_smooth = 0.05;
-
-  const float foam_coarse_threshold_smooth = 0.4;
-  const float foam_coarse_threshold_min = 0.3;
-  const float foam_coarse_threshold_max = 1.0;
-  float foam_coarse_threshold = 0.8;
-
-  const float surf_threshold_smooth = 0.05;
-  const float surf_threshold_min = 0.7;
-  const float surf_threshold_max = 1.0;
-
-#if !LOW_DETAIL
-  float foamDetail = texture(sampler_beach, vec3(mapCoords * 40, 0)).a;
-
-  vec4 surfColor = texture(sampler_beach, vec3(mapCoords * 80, 1));
-  vec4 foamColor = texture(sampler_beach, vec3(mapCoords * 4, 1));
-  float waterline_noise = texture(sampler_beach, vec3(mapCoords * 10, 1)).a;
-  float waterline_noise2 = texture(sampler_beach, vec3(mapCoords * 40, 1)).a;
-#endif
-
   float terrain_height = (2 * (1-waterDepth)) - 1;
   if (terrain_height > 0)
   {
@@ -723,34 +682,6 @@ vec3 applyWater(in vec3 color_in,
 #endif
 
 #if !LOW_DETAIL
-  float foam_strength = shore_wave_strength;
-
-  water_level = mix(0, 0.03, 1 - exp(-5 * 1 * shore_wave_strength));
-
-//   float wetness = smoothstep(0.43, 0.5, waterDepth);
-  float wetness_secondary = smoothstep(0.34, 0.42, waterDepth);
-  wetness_secondary = mix(wetness_secondary, bank_amount, 1 - shallow_sea_amount);
-  wetness_secondary *= 0.7;
-//   float wetness_threshold = mix(1.0, 0.2, wetness);
-//   wetness = smoothstep(wetness_threshold, wetness_threshold + 0.01, surfColor.a);
-
-  surfColor.a = smoothstep(0.5, 1.0, surfColor.a);
-
-  float foam_noise_threshold = mix(1, 0.4, foam_strength);
-  float foam_noise = smoothstep(foam_noise_threshold, foam_noise_threshold + 0.5, surfColor.a);
-//   foam_noise *= texture(sampler_beach, vec3(mapCoords * 20, 1)).a;
-
-  foam_strength = foam_noise;
-//   foam_strength = clamp(foam_strength, 0.0, 0.3);
-
-  foam_strength *= shallow_sea_amount;
-
-  foamColor.xyz = vec3(1);
-//   foamColor.xyz = surfColor.xyz * 1.2;
-
-  water_level += 0.01 * pow(waterline_noise, 2);
-  water_level += 0.02 * pow(waterline_noise2, 8);
-
   water_level *= mix(0.25, 1.0, shallow_sea_amount);
 #endif
 
@@ -765,7 +696,6 @@ vec3 applyWater(in vec3 color_in,
 
 #if ENABLE_WAVE_FOAM
   float wave_foam_amount = getFoamAmountWithNoise(mapCoords * 2);
-//   wave_foam_amount = pow(wave_foam_amount, 1.25);
   wave_foam_amount *= smoothstep(0.6, 1.0, surfColor.a);
   wave_foam_amount *= sea_roughness;
   wave_foam_amount *= wave_strength;
@@ -779,27 +709,14 @@ vec3 applyWater(in vec3 color_in,
 
   float water_alpha = smoothstep(0.0, 0.01, waterDepth);
 
-#if !LOW_DETAIL
-  float wetness = smoothstep(-0.02, -0.01, waterDepth);
-  wetness = max(wetness, wetness_secondary);
-#endif
-
 
 #if ENABLE_UNLIT_OUTPUT
-lit_color = lit_color_in;
-unlit_color = unlit_color_in;
+  lit_color = lit_color_in;
+  unlit_color = unlit_color_in;
 #else
-vec3 color = color_in;
+  vec3 color = color_in;
 #endif
 
-#if !LOW_DETAIL
-  #if ENABLE_UNLIT_OUTPUT
-    lit_color = mix(lit_color, lit_color * 0.8, wetness);
-    unlit_color = mix(unlit_color, unlit_color * 0.8, wetness);
-  #else
-    color = mix(color, color * 0.8, wetness);
-  #endif
-#endif
 
 #if ENABLE_UNLIT_OUTPUT
   vec3 water_color;
@@ -839,9 +756,6 @@ vec3 color = color_in;
   color = mix(color, water_color, water_alpha);
 #endif
 
-#if !LOW_DETAIL
-//   color.xyz = mix(color.xyz, foamColor.xyz, foam_strength);
-#endif
 
 #if !ENABLE_UNLIT_OUTPUT
   return color;

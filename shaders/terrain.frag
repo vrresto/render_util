@@ -18,8 +18,7 @@
 
 #version 330
 
-#define ONLY_WATER 1
-// #define ONLY_WATER @enable_water_only:0@
+#define ONLY_WATER @enable_water_only@
 
 #define ENABLE_UNLIT_OUTPUT @enable_unlit_output:0@
 

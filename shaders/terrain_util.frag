@@ -37,8 +37,7 @@
 // #define DETAILED_WATER @detailed_water:1@
 #define DETAILED_WATER 0
 
-// #define ENABLE_WATER 1
-// #define ENABLE_WATER @enable_water:0@
+#define ENABLE_WATER @enable_water@
 
 #define ENABLE_FOREST @enable_forest@
 
@@ -79,14 +78,10 @@ uniform float terrain_tile_size_m;
 
 const float near_distance = 80000;
 
-// uniform sampler2D sampler_type_map;
-// uniform sampler2D sampler_type_map_normals;
 uniform sampler2D sampler_terrain_noise;
 uniform sampler2D sampler_terrain_far;
 // uniform sampler2D sampler_shallow_water;
-uniform sampler2DArray sampler_beach;
 
-// uniform ivec2 typeMapSize;
 uniform vec3 cameraPosWorld;
 uniform vec3 earth_center;
 
@@ -111,9 +106,6 @@ varying vec2 pass_base_type_map_coords;
 
 float sampleNoise(vec2 coord)
 {
-//   const float noise_strength = 2.0;
-//   const float noise_strength = 4;
-
   float noise = texture2D(sampler_terrain_noise, coord).x;
 
   noise *= 2;
@@ -581,8 +573,8 @@ vec3 light_ambient;
 #endif
 
 #if ENABLE_WATER
-float waterDepth = 0;
-float bank_amount = 0;
+  float waterDepth = 0;
+  float bank_amount = 0;
 
   waterDepth = getWaterDepth(pos_flat.xy);
 
@@ -590,17 +582,6 @@ float bank_amount = 0;
   vec3 shallowWaterColor = vec3(1,0,1);
 
   color.xyz = mix(color.xyz, shallowWaterColor, smoothstep(0.55, 0.9, waterDepth));
-
-#if DETAILED_WATER
-  vec4 bankColor = texture(sampler_beach, vec3(pass_texcoord * 5, 2));
-  bank_amount = smoothstep(0.4, 0.45, waterDepth);
-  bank_amount *= (1-shallow_sea_amount);
-//   bank_amount *= 0.8;
-  color.xyz = mix(color.xyz, bankColor.xyz, bank_amount);
-#endif
-
-//   color.xyz = mix(color.xyz, mix(bankColor.xyz, color.xyz, smoothstep(0.0, 0.05, terrain_height)), 0.9 * (1-shallow_sea_amount));
-//   color.xyz = mix(color.xyz, color.xyz * 0.8, wetness);
 #endif
 
 #if ENABLE_TERRAIN_NOISE
@@ -634,11 +615,6 @@ float bank_amount = 0;
     color.xyz = applyWater(color.xyz, view_dir_curved, dist_curved, waterDepth, pass_texcoord, pos_curved, shallow_sea_amount, river_amount, bank_amount);
   #endif
 #endif
-
-
-// DEBUG
-//   if (fract(pos.xy / water_map_chunk_size_m).x < 0.002 || fract(pos.xy / water_map_chunk_size_m).y < 0.002)
-//     color.xyz = vec3(1,0,0);
 
 
 #if !ENABLE_UNLIT_OUTPUT

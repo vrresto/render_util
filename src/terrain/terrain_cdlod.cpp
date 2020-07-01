@@ -186,17 +186,20 @@ render_util::ShaderProgramPtr createProgram(std::string name,
   params.set("enable_base_map", enable_base_map);
   params.set("enable_base_water_map", enable_base_water_map);
   params.set("is_editor", is_editor);
-  
+
   bool enable_type_map = false;
   bool enable_forest = false;
 
   if (material == MaterialID::WATER)
   {
-//     params.set("enable_water", true);
-//     params.set("enable_water_only", true);
+    params.set("enable_water", true);
+    params.set("enable_water_only", true);
   }
   else
   {
+    params.set("enable_water", material & MaterialID::WATER);
+    params.set("enable_water_only", false)
+;
     enable_type_map = ((material & MaterialID::LAND)
 //         && (detail_options & DetailOption::LAND)
       
