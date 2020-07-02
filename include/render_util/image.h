@@ -147,7 +147,8 @@ struct ImageComponentsVarying
 
   ImageComponentsVarying(int num_components) : m_num_components(num_components) {}
 
-  int numComponents() const { return m_num_components; }
+  int getNumComponents() const { return m_num_components; }
+  int numComponents() const { return getNumComponents(); }
 
 private:
   int m_num_components = 0;
@@ -347,6 +348,9 @@ public:
   }
 };
 
+
+template <typename T>
+using GenericImageWithComponentType = ImageBase<ImageComponentsVarying<T>>;
 
 typedef ImageBase<ImageComponentsVarying<unsigned char>> GenericImage;
 typedef Image<unsigned char, 1> ImageGreyScale;
