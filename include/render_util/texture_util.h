@@ -66,6 +66,40 @@ namespace render_util::texture_format
 namespace render_util
 {
 
+  struct ImageResource
+  {
+    virtual glm::ivec2 getSize() const = 0;
+    virtual unsigned int getNumComponents() = 0;
+    virtual std::unique_ptr<GenericImage> load(int scale_exponent, int num_components = 0) const = 0;
+    virtual std::string getName() = 0;
+
+    int w() const { return getSize().x; }
+    int h() const { return getSize().y; }
+  };
+
+
+  struct ScaledImageResource
+  {
+    std::shared_ptr<ImageResource> resource;
+    int scale_exponent = 0;
+    bool flip_y = false;
+
+    glm::ivec2 getScaledSize() const
+    {
+      return glm::ivec2(glm::pow(2, scale_exponent) * glm::dvec2(resource->getSize()));
+    }
+
+    std::unique_ptr<GenericImage> load(int num_components = 0) const
+    {
+      auto image = resource->load(scale_exponent, num_components);
+      assert(image->getSize() == getScaledSize());
+      if (flip_y)
+        image::flipYInPlace(image);
+      return image;
+    }
+  };
+
+
   TexturePtr createTexture(const unsigned char *data, int w, int h, int bytes_per_pixel, bool mipmaps);
   TexturePtr createTextureExt(const unsigned char *data,
                               size_t data_size,
@@ -82,6 +116,26 @@ namespace render_util
 //   unsigned int createTextureArray(const std::vector<render_util::ImageRGBA::ConstPtr> &textures, int mipmap_level);
   TexturePtr createTextureArray(const std::vector<const unsigned char*> &textures,
                                   int mipmap_levels, int texture_width, int bytes_per_pixel);
+
+  TexturePtr createTextureArray(const std::vector<ScaledImageResource>&, int num_components = 0);
+  inline TexturePtr createTextureArray(std::vector<ScaledImageResource> &resources_,
+                                       int num_components = 0)
+  {
+    const auto &resources = resources_;
+    return createTextureArray(resources, num_components);
+  }
+  inline TexturePtr createTextureArray(const std::vector<std::shared_ptr<ImageResource>> &resources_,
+                                       int num_components = 0)
+  {
+    std::vector<ScaledImageResource> resources;
+    for (auto &res : resources_)
+    {
+      ScaledImageResource scaled;
+      scaled.resource = res;
+      resources.push_back(scaled);
+    }
+    return createTextureArray(resources, num_components);
+  }
 
   void setTextureImage(TexturePtr texture,
                       const unsigned char *data,
@@ -105,16 +159,20 @@ namespace render_util
                     mipmaps);
   }
 
+
   template <typename T>
-  TexturePtr createTextureArray(const std::vector<typename T::ConstPtr> &textures, int mipmap_levels = 0)
+  TexturePtr createTextureArray(T &textures, int mipmap_levels = 0)
   {
-    static_assert(std::is_same<typename T::ComponentType, unsigned char>::value);
+    using ElementType = typename T::value_type;
+    using ImageType = typename image::TypeFromPtr<ElementType>::Type;
+
+    static_assert(std::is_same<typename ImageType::ComponentType, unsigned char>::value);
 
     assert(!textures.empty());
 
     assert(textures[0]);
     const int texture_width = textures[0]->w();
-    const unsigned texture_size = texture_width * texture_width * T::BYTES_PER_PIXEL;
+    const unsigned texture_size = texture_width * texture_width * ImageType::BYTES_PER_PIXEL;
 
     std::vector<const unsigned char*> texture_data(textures.size());
     for (unsigned i = 0; i < textures.size(); i++)
@@ -126,8 +184,9 @@ namespace render_util
       texture_data[i] = textures[i]->data();
     }
 
-    return createTextureArray(texture_data, mipmap_levels, texture_width, T::BYTES_PER_PIXEL);
+    return createTextureArray(texture_data, mipmap_levels, texture_width, ImageType::BYTES_PER_PIXEL);
   }
+
 
   template <typename T>
   TexturePtr createTexture(T image, bool mipmaps = true)

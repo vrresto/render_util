@@ -20,9 +20,7 @@
 #define SCENE_H
 
 #include "camera.h"
-
 #include <render_util/viewer_parameter.h>
-#include <render_util/land_textures.h>
 #include <render_util/render_util.h>
 #include <render_util/shader.h>
 #include <render_util/terrain_util.h>
@@ -47,13 +45,12 @@ struct Terrain
     gl::FrontFace(GL_CCW);
     gl::Enable(GL_DEPTH_TEST);
     gl::DepthMask(GL_TRUE);
-//     gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     getTerrain()->setDrawDistance(0);
     getTerrain()->update(camera, false);
 
+//     gl::PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     getTerrain()->draw(client);
-
 //     gl::PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     CHECK_GL_ERROR();
@@ -152,29 +149,17 @@ public:
     return glm::vec3(dir);
   }
 
-  void createTerrain(render_util::ElevationMap::ConstPtr elevation_map,
-                     render_util::TerrainBase::MaterialMap::ConstPtr material_map,
-                     LandTextures &textures,
+  void createTerrain(render_util::TerrainBase::BuildParameters &params,
                      const ShaderSearchPath &shader_search_path,
-                     const ShaderParameters &shader_params)
+                     glm::vec2 base_map_origin)
   {
     m_terrain.m_terrain = render_util::createTerrain(texture_manager, true, shader_search_path);
 
-    assert(textures.type_map);
-    assert(!textures.textures.empty());
-    assert(textures.texture_scale.size() == textures.textures.size());
+//     assert(textures.type_map);
+//     assert(!textures.textures.empty());
+//     assert(textures.texture_scale.size() == textures.textures.size());
 
-    render_util::TerrainBase::BuildParameters params =
-    {
-      .map = elevation_map,
-      .material_map = material_map,
-      .type_map = textures.type_map,
-      .textures = textures.textures,
-      .textures_nm = textures.textures_nm,
-      .texture_scale = textures.texture_scale,
-      .shader_parameters = shader_params,
-    };
-
+    m_terrain.getTerrain()->setBaseMapOrigin(base_map_origin);
     m_terrain.getTerrain()->build(params);
 
   }

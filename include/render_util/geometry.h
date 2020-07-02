@@ -50,6 +50,13 @@ namespace render_util
   }
 
 
+  struct Rect
+  {
+    glm::vec2 origin;
+    glm::vec2 extent;
+  };
+
+
   class Box
   {
     glm::vec3 m_origin;

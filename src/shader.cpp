@@ -557,7 +557,8 @@ void ShaderProgram::assertIsValid()
 void ShaderProgram::assertUniformsAreSet()
 {
   // slow - enable only for debugging
-#if RENDER_UTIL_ENABLE_DEBUG
+// #if RENDER_UTIL_ENABLE_DEBUG
+#if 1
   int num_unset = 0;
   int num_active = 0;
   gl::GetProgramiv(id, GL_ACTIVE_UNIFORMS, &num_active);
@@ -586,6 +587,8 @@ void ShaderProgram::assertUniformsAreSet()
 
 GLint ShaderProgram::getUniformLocation(const string &name)
 {
+//   assert(name != "sampler_type_map_base");
+
   auto it = uniform_locations.find(name);
   if (it != uniform_locations.end())
     return it->second;

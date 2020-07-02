@@ -34,7 +34,7 @@ namespace util
 {
 
 
-constexpr auto PI = acosl(-1);
+constexpr auto PI = std::acos(-1.l);
 
 
 inline bool isPrefix(const std::string &prefix, const std::string &s)
@@ -286,7 +286,7 @@ inline bool readFile(const std::string &path, T& content, bool quiet = false)
 }
 
 
-inline bool writeFile(const std::string &path, const char *data, size_t data_size)
+inline bool writeFile(const std::string &path, const char *data, int data_size)
 {
   using namespace std;
 

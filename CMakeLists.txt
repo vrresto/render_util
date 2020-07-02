@@ -32,6 +32,7 @@ if (NOT DEFINED enable_atmosphere_precomputed_plot_parameterisation)
   set(enable_atmosphere_precomputed_plot_parameterisation 0)
 endif()
 
+
 configure_file(include/render_util/config.h.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/render_util/config.h
 )

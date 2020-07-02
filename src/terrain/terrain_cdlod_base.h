@@ -22,8 +22,8 @@
  * by Filip Strugar <http://www.vertexasylum.com/downloads/cdlod/cdlod_latest.pdf>.
  */
 
-#ifndef TERRAIN_CDLOD_BASE_H
-#define TERRAIN_CDLOD_BASE_H
+#ifndef RENDER_UTIL_TERRAIN_TERRAIN_CDLOD_BASE_H
+#define RENDER_UTIL_TERRAIN_TERRAIN_CDLOD_BASE_H
 
 
 #include <render_util/terrain_base.h>
@@ -35,17 +35,30 @@ namespace render_util
 class TerrainCDLODBase : public TerrainBase
 {
 public:
-  static constexpr int METERS_PER_GRID = render_util::TerrainBase::GRID_RESOLUTION_M;
+  static constexpr int METERS_PER_GRID = render_util::TerrainBase::GRID_RESOLUTION_M; //FIXME remove
   static constexpr float MIN_LOD_DIST = 40000;
   static constexpr unsigned int MESH_GRID_SIZE = 64;
+  static constexpr auto LOD_LEVELS = 8;
+  static constexpr auto HEIGHT_MAP_METERS_PER_GRID = 200;
+  static constexpr auto LEAF_NODE_SIZE = MESH_GRID_SIZE * METERS_PER_GRID;
+  static constexpr auto MAX_LOD = LOD_LEVELS;
 
-  enum
+
+  class MaterialMap
   {
-    LOD_LEVELS = 8,
-    HEIGHT_MAP_METERS_PER_GRID = 200,
-    LEAF_NODE_SIZE = MESH_GRID_SIZE * METERS_PER_GRID,
-    MAX_LOD = LOD_LEVELS,
+    struct Map;
+
+    std::unique_ptr<Map> createMap(const TerrainBase::Loader::Layer&);
+
+    std::unique_ptr<Map> m_map;
+    std::unique_ptr<Map> m_base_map;
+
+  public:
+    MaterialMap(const TerrainBase::BuildParameters &params);
+    ~MaterialMap();
+    unsigned int getMaterialID(const Rect &area) const;
   };
+
 
   static constexpr size_t getNumLeafNodes()
   {
@@ -59,7 +72,7 @@ public:
   }
 
 
-  static float getMaxHeight(const render_util::ElevationMap &map, const glm::vec2 &pos, float size)
+  static float getMaxHeight(const TerrainBase::BuildParameters&, const glm::vec2 &pos, float size)
   {
     return 4000.0;
   }
@@ -83,7 +96,6 @@ public:
 
 static_assert(TerrainCDLODBase::getNodeSize(0) == TerrainCDLODBase::LEAF_NODE_SIZE);
 static_assert(TerrainCDLODBase::getNodeScale(0) == 1);
-
 
 
 } // namespace render_util

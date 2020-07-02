@@ -24,8 +24,108 @@
 using namespace std;
 
 
+namespace
+{
+
+
+unsigned int gatherMaterials(render_util::TerrainBase::MaterialMap::ConstPtr map,
+                             glm::ivec2 begin,
+                             glm::ivec2 size)
+{
+  using namespace glm;
+
+  auto end = begin + size;
+
+  begin = clamp(begin, ivec2(0), map->getSize());
+  end = clamp(end, ivec2(0), map->getSize());
+
+  unsigned int material = 0;
+
+  for (int y = begin.y; y < end.y; y++)
+  {
+    for (int x = begin.x; x < end.x; x++)
+    {
+      material |= map->get(x,y);
+    }
+  }
+
+  return material;
+}
+
+
+
+
+} // namespace
+
+
 namespace render_util
 {
+
+
+struct TerrainCDLODBase::MaterialMap::Map
+{
+  render_util::TerrainBase::MaterialMap::ConstPtr map;
+  glm::vec2 origin_m = glm::vec2(0);
+  unsigned int resolution_m = 0;
+
+  unsigned int getMaterialID(const Rect &area)
+  {
+    assert(resolution_m);
+
+    auto area_origin = (area.origin - origin_m);
+    assert(fract(area_origin / glm::vec2(resolution_m)) == glm::vec2(0));
+
+    auto area_origin_px = glm::ivec2(area_origin / glm::vec2(resolution_m));
+
+//     LOG_INFO << "area.extent: " << area.extent << endl;
+//     LOG_INFO << "resolution_m: " << resolution_m << endl;
+//     LOG_INFO << "fract(area.extent / resolution_m): "
+//              << fract(area.extent / glm::vec2(resolution_m)) << std::endl;
+
+    assert(fract(area.extent / glm::vec2(resolution_m)) == glm::vec2(0));
+    auto area_extent_px = area.extent / glm::vec2(resolution_m);
+
+    return gatherMaterials(map, area_origin_px, area_extent_px);
+  }
+};
+
+
+TerrainCDLODBase::MaterialMap::MaterialMap(const TerrainBase::BuildParameters &params)
+{
+  m_map = createMap(params.loader.getDetailLayer());
+
+  if (params.loader.hasBaseLayer())
+    m_base_map = createMap(params.loader.getBaseLayer());
+}
+
+
+TerrainCDLODBase::MaterialMap::~MaterialMap()
+{
+}
+
+
+std::unique_ptr<TerrainCDLODBase::MaterialMap::Map>
+TerrainCDLODBase::MaterialMap::createMap(const TerrainBase::Loader::Layer &layer)
+{
+  auto map = std::make_unique<Map>();
+  map->map = layer.loadMaterialMap();
+  map->resolution_m = layer.getResolutionM();
+  map->origin_m = layer.getOriginM();
+  return map;
+}
+
+
+unsigned int TerrainCDLODBase::MaterialMap::getMaterialID(const Rect &area) const
+{
+  auto material = m_map->getMaterialID(area);
+  if (m_base_map)
+    material |= m_base_map->getMaterialID(area);
+
+  if (!material)
+    material = MaterialID::WATER;
+
+  return material;
+}
 
 
 TexturePtr TerrainCDLODBase::createNormalMapTexture(render_util::ElevationMap::ConstPtr map,
