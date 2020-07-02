@@ -314,7 +314,7 @@ inline bool writeFile(const std::string &path, const char *data, size_t data_siz
 }
 
 
-bool mkdir(const char *name);
+bool mkdir(const std::string &path, bool recursive = false);
 bool fileExists(std::string path);
 
 std::string makeTimeStampString();

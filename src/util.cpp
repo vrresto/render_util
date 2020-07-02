@@ -30,11 +30,19 @@
 
 #include <direct.h>
 
-bool util::mkdir(const char *name)
+namespace
 {
-  auto res = _mkdir(name);
+
+
+bool createDir(const std::string &path)
+{
+  auto res = _mkdir(path.c_str());
   return res == 0 || (res == -1 && errno == EEXIST);
 }
+
+
+}
+
 
 bool util::fileExists(std::string path)
 {
@@ -61,15 +69,36 @@ bool util::fileExists(std::string path)
   }
 }
 
-#else
-
-bool util::mkdir(const char *name)
-{
-  auto res = ::mkdir(name, S_IRWXU);
-  return res == 0 || (res == -1 && errno == EEXIST);
-}
-
 #endif
+
+
+bool util::mkdir(const std::string &path_, bool recursive)
+{
+  if (recursive)
+  {
+    auto path = resolveRelativePathComponents(path_);
+
+    auto components = tokenize(path, "/\\");
+    assert(!components.empty());
+
+    if (isPrefix("/", path))
+      components.front() = '/' + components.front();
+
+    std::string path_to_create;
+
+    for (auto &component : components)
+    {
+      path_to_create += component + '/';
+      if (!createDir(path_to_create))
+        return false;
+    }
+    return true;
+  }
+  else
+  {
+    return createDir(path_);
+  }
+}
 
 
 std::string util::makeTimeStampString()
