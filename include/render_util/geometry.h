@@ -50,39 +50,54 @@ namespace render_util
   }
 
 
-  class Box
+  template <typename T>
+  class NDimensionalBox
   {
-    glm::vec3 m_origin;
-    glm::vec3 m_extent;
-    glm::vec3 m_center;
+    T m_origin = T(0);
+    T m_extent = T(1);
+    T m_center = T(0.5);
+
+  public:
+    const T &getOrigin() const { return m_origin; }
+    const T &getCenter() const { return m_center; }
+    const T &getExtent() const { return m_extent; }
+    const T getSize() const { return glm::abs(m_extent); }
+
+    void set(const T &origin, const T &extent)
+    {
+      m_origin = origin;
+      m_extent = extent;
+      m_center = origin + extent / T(2);
+    }
+  };
+
+
+  class Box : public NDimensionalBox<glm::vec3>
+  {
     std::array<glm::vec3, 8> m_corner_points;
 
     void updateCornerPoints()
     {
       auto it = m_corner_points.begin();
 
-      *(it++) = m_origin + (m_extent * glm::vec3(0, 0, 0));
-      *(it++) = m_origin + (m_extent * glm::vec3(0, 0, 1));
-      *(it++) = m_origin + (m_extent * glm::vec3(0, 1, 0));
-      *(it++) = m_origin + (m_extent * glm::vec3(0, 1, 1));
-      *(it++) = m_origin + (m_extent * glm::vec3(1, 0, 0));
-      *(it++) = m_origin + (m_extent * glm::vec3(1, 0, 1));
-      *(it++) = m_origin + (m_extent * glm::vec3(1, 1, 0));
-      *(it++) = m_origin + (m_extent * glm::vec3(1, 1, 1));
+      *(it++) = getOrigin() + (getExtent() * glm::vec3(0, 0, 0));
+      *(it++) = getOrigin() + (getExtent() * glm::vec3(0, 0, 1));
+      *(it++) = getOrigin() + (getExtent() * glm::vec3(0, 1, 0));
+      *(it++) = getOrigin() + (getExtent() * glm::vec3(0, 1, 1));
+      *(it++) = getOrigin() + (getExtent() * glm::vec3(1, 0, 0));
+      *(it++) = getOrigin() + (getExtent() * glm::vec3(1, 0, 1));
+      *(it++) = getOrigin() + (getExtent() * glm::vec3(1, 1, 0));
+      *(it++) = getOrigin() + (getExtent() * glm::vec3(1, 1, 1));
 
       assert(it == m_corner_points.end());
     }
 
   public:
     const std::array<glm::vec3, 8> &getCornerPoints() const { return m_corner_points; }
-    const glm::vec3 &getCenter() const { return m_center; }
-    const glm::vec3 &getSize() const { return m_extent; }
 
     void set(const glm::vec3 &origin, const glm::vec3 &extent)
     {
-      m_origin = origin;
-      m_extent = extent;
-      m_center = origin + extent / 2.f;
+      NDimensionalBox<glm::vec3>::set(origin, extent);
       updateCornerPoints();
     }
 
