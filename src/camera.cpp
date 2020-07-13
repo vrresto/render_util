@@ -248,6 +248,8 @@ namespace render_util
       world_to_y_up;
 
     p->view_to_world_rot = affineInverse(p->world_to_view_rotation);
+
+    p->calcFrustumPlanes();
   }
 
 
