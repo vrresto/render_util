@@ -471,11 +471,12 @@ TerrainCDLOD::TerrainCDLOD(TextureManager &tm, const ShaderSearchPath &shader_se
 
   VertexArrayObjectBinding vao_binding(*vao);
 
-  gl::BindBuffer(GL_ARRAY_BUFFER, node_pos_buffer_id);
-  gl::VertexAttribPointer(4, 4, GL_FLOAT, false, 0, 0);
   gl::EnableVertexAttribArray(4);
+  gl::VertexAttribDivisor(4, 1);
+
+  gl::BindBuffer(GL_ARRAY_BUFFER, node_pos_buffer_id);
+  gl::VertexAttribPointer(4, 4, GL_FLOAT, false, 0, nullptr);
   gl::BindBuffer(GL_ARRAY_BUFFER, 0);
-  CHECK_GL_ERROR();
 }
 
 
@@ -807,34 +808,21 @@ void TerrainCDLOD::draw(Client *client)
   VertexArrayObjectBinding vao_binding(*vao);
   IndexBufferBinding index_buffer_binding(*vao);
 
-  gl::VertexAttribDivisor(4, 1);
-  CHECK_GL_ERROR();
-
-  gl::BindBuffer(GL_ARRAY_BUFFER, node_pos_buffer_id);
-  gl::EnableVertexAttribArray(4);
-
   for (RenderBatch *batch : render_list.getBatches())
   {
-    const size_t offset = batch->node_pos_buffer_offset * sizeof(RenderBatch::NodePos);
-
     auto program = batch->program;
     assert(program);
     client->setActiveProgram(program);
     setUniforms(program);
-    CHECK_GL_ERROR();
     program->assertUniformsAreSet();
 
-    gl::VertexAttribPointer(4, 4, GL_FLOAT, false, 0, (void*)offset);
-    CHECK_GL_ERROR();
-
-    gl::DrawElementsInstancedARB(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, 0, batch->getSize());
-    CHECK_GL_ERROR();
+    gl::DrawElementsInstancedBaseInstance(GL_TRIANGLES,
+                                          num_indices,
+                                          GL_UNSIGNED_INT,
+                                          nullptr,
+                                          batch->getSize(),
+                                          batch->node_pos_buffer_offset);
   }
-
-  gl::BindBuffer(GL_ARRAY_BUFFER, 0);
-  CHECK_GL_ERROR();
-
-  CHECK_GL_ERROR();
 }
 
 
