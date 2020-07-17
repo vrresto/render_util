@@ -126,11 +126,11 @@ void sampleTypeMap(sampler2D sampler,
   float x1 = x0 + 1.0;
   float y1 = y0 + 1.0;
 
-  float x0_w = abs(x - x1);
-  float x1_w = 1.0 - x0_w;
+  float x1_w = fract(x);
+  float x0_w = 1.0 - x1_w;
 
-  float y0_w = abs(y - y1);
-  float y1_w = 1.0 - y0_w;
+  float y1_w = fract(y);
+  float y0_w = 1.0 - y1_w;
 
   float w00 = x0_w * y0_w;
   float w01 = x0_w * y1_w;
