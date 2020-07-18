@@ -411,6 +411,7 @@ void TerrainViewerScene::render(float frame_delta)
 
     state.setDefaults();
     state.enableBlend(true);
+    state.enableDepthTest(true);
 
     getCurrentGLContext()->setCurrentProgram(m_cirrus_clouds->getProgram());
     updateUniforms(m_cirrus_clouds->getProgram());
