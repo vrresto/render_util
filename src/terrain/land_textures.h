@@ -41,6 +41,7 @@ class LandTextures
   std::array<TexturePtr, MAX_TERRAIN_TEXUNITS> m_textures;
   std::array<TexturePtr, MAX_TERRAIN_TEXUNITS> m_textures_nm;
   bool m_enable_normal_maps = false;
+  std::vector<float> m_scale_levels;
 
 public:
   static constexpr float MAX_TEXTURE_SCALE = 8;

@@ -26,6 +26,8 @@
 #define DETAILED_FOREST false
 #define ENABLE_TERRAIN_NORMAL_MAP 1
 
+#define NUM_LAND_TEXTURE_SCALE_LEVELS uint(@num_land_texture_scale_levels@)
+
 // #define ENABLE_BASE_MAP @enable_base_map@
 #define ENABLE_FAR_TEXTURE !@enable_base_map@
 #define LOW_DETAIL @low_detail:0@
@@ -92,6 +94,14 @@ uniform sampler2DArray sampler_terrain_detail_nm3;
 varying vec2 pass_texcoord;
 varying vec2 pass_type_map_coord;
 
+
+struct ImplicitDerivatives
+{
+  vec2 dx;
+  vec2 dy;
+};
+
+
 float sampleNoise(vec2 coord)
 {
 //   const float noise_strength = 2.0;
@@ -139,56 +149,62 @@ void sampleTypeMap(sampler2D sampler,
 }
 
 
-vec4 sampleTerrain(vec3 type)
+vec4 sampleTerrain(vec3 type, in ImplicitDerivatives d[NUM_LAND_TEXTURE_SCALE_LEVELS])
 {
-  float sampler_nr = type.x * 255;
+  int sampler_nr = int(type.x * 255);
   uint index = uint(type.y * 255);
-  float scale = (type.z * 255) - 128;
-  if (scale < 0)
-    scale = 1 / -scale;
-  vec4 color = vec4(0);
+  uint scale_level = uint(type.z * 255);
 
-#if ENABLE_TERRAIN0
-  color += texture(sampler_terrain, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 0);
-#endif
-#if ENABLE_TERRAIN1
-  color += texture(sampler_terrain1, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 1);
-#endif
-#if ENABLE_TERRAIN2
-  color += texture(sampler_terrain2, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 2);
-#endif
-#if ENABLE_TERRAIN3
-  color += texture(sampler_terrain3, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 3);
-#endif
+  vec2 dx = d[scale_level].dx;
+  vec2 dy = d[scale_level].dy;
 
-  color.a = 1;
+  vec3 coords = vec3(pass_texcoord * terrain.land_texture_scale_levels[scale_level], index);
 
-  return color;
+  switch (sampler_nr)
+  {
+    case 0:
+      return textureGrad(sampler_terrain, coords, dx, dy);
+    case 1:
+      return textureGrad(sampler_terrain1, coords, dx, dy);
+    case 2:
+      return textureGrad(sampler_terrain2, coords, dx, dy);
+    case 3:
+      return textureGrad(sampler_terrain3, coords, dx, dy);
+  }
+
+  return vec4(0);
 }
 
 
 #if ENABLE_TERRAIN_DETAIL_NM
-vec3 sampleTerrainDetailNormal(vec3 type)
+vec3 sampleTerrainDetailNormal(vec3 type, in ImplicitDerivatives d[NUM_LAND_TEXTURE_SCALE_LEVELS])
 {
-  float sampler_nr = type.x * 255;
+  int sampler_nr = int(type.x * 255);
   uint index = uint(type.y * 255);
-  float scale = (type.z * 255) - 128;
-  if (scale < 0)
-    scale = 1 / -scale;
+  uint scale_level = uint(type.z * 255);
+
+  vec2 dx = d[scale_level].dx;
+  vec2 dy = d[scale_level].dy;
+
+  vec3 coords = vec3(pass_texcoord * terrain.land_texture_scale_levels[scale_level], index);
+
   vec4 color = vec4(0);
 
-#if ENABLE_TERRAIN_DETAIL_NM0
-  color += texture(sampler_terrain_detail_nm0, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 0);
-#endif
-#if ENABLE_TERRAIN_DETAIL_NM1
-  color += texture(sampler_terrain_detail_nm1, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 1);
-#endif
-#if ENABLE_TERRAIN_DETAIL_NM2
-  color += texture(sampler_terrain_detail_nm2, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 2);
-#endif
-#if ENABLE_TERRAIN_DETAIL_NM3
-  color += texture(sampler_terrain_detail_nm3, vec3(pass_texcoord * scale, index)) * float(sampler_nr == 3);
-#endif
+  switch (sampler_nr)
+  {
+    case 0:
+      color = textureGrad(sampler_terrain_detail_nm0, coords, dx, dy);
+      break;
+    case 1:
+      color = textureGrad(sampler_terrain_detail_nm1, coords, dx, dy);
+      break;
+    case 2:
+      color = textureGrad(sampler_terrain_detail_nm2, coords, dx, dy);
+      break;
+    case 3:
+      color = textureGrad(sampler_terrain_detail_nm3, coords, dx, dy);
+      break;
+  }
 
   vec3 normal = color.xyz * 2 - 1;
   normal.y *= -1;
@@ -201,44 +217,33 @@ vec3 sampleTerrainDetailNormal(vec3 type)
 #endif
 
 
-vec4 sampleTerrainTextures()
+vec4 sampleTerrainTextures(in ImplicitDerivatives d[NUM_LAND_TEXTURE_SCALE_LEVELS])
 {
+
   vec3 types[4];
   float weights[4];
-
   sampleTypeMap(sampler_type_map, pass_type_map_coord, types, weights);
 
-  vec4 c00 = sampleTerrain(types[0]);
-  vec4 c01 = sampleTerrain(types[1]);
-  vec4 c10 = sampleTerrain(types[2]);
-  vec4 c11 = sampleTerrain(types[3]);
-
   return
-    c00 * weights[0] +
-    c01 * weights[1] +
-    c10 * weights[2] +
-    c11 * weights[3];
+    sampleTerrain(types[0], d) * weights[0] +
+    sampleTerrain(types[1], d) * weights[1] +
+    sampleTerrain(types[2], d) * weights[2] +
+    sampleTerrain(types[3], d) * weights[3];
 }
 
 
 #if ENABLE_TERRAIN_DETAIL_NM
-vec3 getTerrainDetailNormal()
+vec3 getTerrainDetailNormal(in ImplicitDerivatives d[NUM_LAND_TEXTURE_SCALE_LEVELS])
 {
   vec3 types[4];
   float weights[4];
-
   sampleTypeMap(sampler_type_map_normals, pass_type_map_coord, types, weights);
 
-  vec3 c00 = sampleTerrainDetailNormal(types[0]);
-  vec3 c01 = sampleTerrainDetailNormal(types[1]);
-  vec3 c10 = sampleTerrainDetailNormal(types[2]);
-  vec3 c11 = sampleTerrainDetailNormal(types[3]);
-
   return
-    c00 * weights[0] +
-    c01 * weights[1] +
-    c10 * weights[2] +
-    c11 * weights[3];
+    sampleTerrainDetailNormal(types[0], d) * weights[0] +
+    sampleTerrainDetailNormal(types[1], d) * weights[1] +
+    sampleTerrainDetailNormal(types[2], d) * weights[2] +
+    sampleTerrainDetailNormal(types[3], d) * weights[3];
 }
 #endif
 
@@ -405,6 +410,16 @@ void getTerrainColor(vec3 pos_curved, vec3 pos_flat, out vec3 lit_color, out vec
 vec3 getTerrainColor(vec3 pos_curved, vec3 pos_flat)
 #endif
 {
+#if ENABLE_TYPE_MAP && !LOW_DETAIL
+  ImplicitDerivatives implicit_dervatives[NUM_LAND_TEXTURE_SCALE_LEVELS];
+  for (uint i = 0u; i < NUM_LAND_TEXTURE_SCALE_LEVELS; i++)
+  {
+    vec2 texcoord = pass_texcoord * terrain.land_texture_scale_levels[i];
+    implicit_dervatives[i].dx = dFdx(texcoord);
+    implicit_dervatives[i].dy = dFdy(texcoord);
+  }
+#endif
+
   float dist_curved = distance(cameraPosWorld, pos_curved);
   vec3 view_dir_curved = normalize(pos_curved - cameraPosWorld);
 
@@ -452,12 +467,12 @@ vec3 normal_detail = vec3(0,0,1);
 
 #if ENABLE_TYPE_MAP
   #if !LOW_DETAIL
-    color = sampleTerrainTextures();
+    color = sampleTerrainTextures(implicit_dervatives);
     #if ENABLE_BASE_MAP
       color = mix(sampleBaseTerrainTextures(pos_flat.xy), color, detail_blend);
     #endif
     #if ENABLE_TERRAIN_DETAIL_NM
-      normal_detail = getTerrainDetailNormal();
+      normal_detail = getTerrainDetailNormal(implicit_dervatives);
     #endif
   #endif
   color.w = 1;

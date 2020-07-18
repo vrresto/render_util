@@ -41,4 +41,5 @@ struct Terrain
 #if @enable_base_map@
   TerrainLayer base_layer;
 #endif
+  float land_texture_scale_levels[@num_land_texture_scale_levels@];
 };

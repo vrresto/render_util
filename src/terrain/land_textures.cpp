@@ -34,9 +34,8 @@ namespace
 
 template <class T>
 void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
-    const std::vector<float> &texture_scale_in,
+    const std::vector<int> &scale_level_indices,
     TerrainBase::TypeMap::ConstPtr type_map_in,
-    double max_texture_scale,
     std::array<TexturePtr, render_util::MAX_TERRAIN_TEXUNITS> &arrays_out,
     TexturePtr &type_map_texture_out)
 {
@@ -74,13 +73,6 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
 
   for (int i = 0; i < textures_in.size(); i++)
   {
-    float scale = texture_scale_in.at(i);
-    assert(scale != 0);
-    assert(fract(scale) == 0);
-    assert(scale <= max_texture_scale);
-    scale += 128;
-    assert(scale >= 0);
-    assert(scale <= 255);
 
     auto image = textures_in.at(i);
     if (!image)
@@ -95,6 +87,7 @@ void createTextureArrays(std::vector<typename T::Ptr> &textures_in,
     }
 
     auto index = array_index_for_size.at(image->w());
+    auto scale = scale_level_indices.at(i);
 
     texture_arrays.at(index).push_back(image);
     mapping.insert(make_pair(i, glm::uvec3{index, texture_arrays[index].size()-1, scale}));
@@ -180,7 +173,7 @@ namespace render_util::terrain
 LandTextures::LandTextures(const TextureManager &texture_manager,
                                       std::vector<ImageRGBA::Ptr> &textures,
                                       std::vector<ImageRGB::Ptr> &textures_nm,
-                                      const std::vector<float> &texture_scale,
+                                      const std::vector<float> &scales_,
                                       TerrainBase::TypeMap::ConstPtr type_map_) :
   m_texture_manager(texture_manager),
   m_type_map_size(type_map_->getSize())
@@ -190,20 +183,58 @@ LandTextures::LandTextures(const TextureManager &texture_manager,
   using namespace render_util;
   using TextureArray = vector<ImageRGBA::ConstPtr>;
 
-  assert(textures.size() == texture_scale.size());
+  assert(textures.size() == scales_.size());
+
+  std::vector<float> scales = scales_;
+  std::set<float> distinct_scales;
+
+  for (auto &scale : scales)
+  {
+    assert(scale != 0);
+    assert(fract(scale) == 0);
+    if (scale < 0)
+      scale = 1 / -scale;
+    distinct_scales.insert(scale);
+  }
+
+  for (auto scale : distinct_scales)
+    m_scale_levels.push_back(scale);
+
+  std::vector<int> scale_level_indices;
+
+  for (auto scale : scales)
+  {
+    int index = 0;
+    for (auto s : m_scale_levels)
+    {
+      if (s == scale)
+        break;
+      index++;
+    }
+    assert(index < m_scale_levels.size());
+    scale_level_indices.push_back(index);
+  }
 
   m_enable_normal_maps = !textures_nm.empty();
 
-  createTextureArrays<ImageRGBA>(textures, texture_scale, type_map_, MAX_TEXTURE_SCALE,
-                      m_textures, m_type_map_texture);
+  createTextureArrays<ImageRGBA>(textures,
+                                 scale_level_indices,
+                                 type_map_,
+                                 m_textures,
+                                 m_type_map_texture);
+
+  m_shader_params.set("num_land_texture_scale_levels", m_scale_levels.size());
 
   if (m_enable_normal_maps)
   {
     m_shader_params.set("enable_terrain_detail_nm", true);
     assert(textures.size() == textures_nm.size());
 
-    createTextureArrays<ImageRGB>(textures_nm, texture_scale, type_map_, MAX_TEXTURE_SCALE,
-                                  m_textures_nm, m_type_map_texture_nm);
+    createTextureArrays<ImageRGB>(textures_nm,
+                                  scale_level_indices,
+                                  type_map_,
+                                  m_textures_nm,
+                                  m_type_map_texture_nm);
   }
 
   for (int i = 0; i < m_textures.size(); i++)
@@ -324,6 +355,15 @@ void LandTextures::setUniforms(ShaderProgramPtr program)
 {
   assert(m_type_map_size != glm::ivec2(0));
   program->setUniform("typeMapSize", m_type_map_size);
+  assert(!m_scale_levels.empty());
+  program->setUniform("terrain.max_texture_scale", m_scale_levels.back());
+
+  int i = 0;
+  for (auto scale : m_scale_levels)
+  {
+    program->setUniform("terrain.land_texture_scale_levels[" + std::to_string(i) + "]", scale);
+    i++;
+  }
 }
 
 
