@@ -113,13 +113,9 @@ void sampleTypeMap(sampler2D sampler,
 {
 //   float x = coords.x - 0.5;
 //   float y = coords.y - 0.5;
+  float x = coords.x;
+  float y = coords.y;
 
-  float x = coords.x - 0.0;
-  float y = coords.y - 0.0;
-
-
-//   float x0 = floor(x + 0);
-// //   float y0 = floor(y - 0.5);
   float x0 = floor(x);
   float y0 = floor(y);
 
@@ -132,48 +128,15 @@ void sampleTypeMap(sampler2D sampler,
   float y1_w = fract(y);
   float y0_w = 1.0 - y1_w;
 
-  float w00 = x0_w * y0_w;
-  float w01 = x0_w * y1_w;
-  float w10 = x1_w * y0_w;
-  float w11 = x1_w * y1_w;
+  types[0] = texelFetch(sampler, ivec2(x0, y0), 0).xyz;
+  types[1] = texelFetch(sampler, ivec2(x0, y1), 0).xyz;
+  types[2] = texelFetch(sampler, ivec2(x1, y0), 0).xyz;
+  types[3] = texelFetch(sampler, ivec2(x1, y1), 0).xyz;
 
-  ivec2 p00 = ivec2(x0, y0);
-  ivec2 p01 = ivec2(x0, y1);
-  ivec2 p10 = ivec2(x1, y0);
-  ivec2 p11 = ivec2(x1, y1);
-
-//   // tiled
-//   vec4 c00 = texelFetch(sampler, p00 % textureSize, 0);
-//   vec4 c01 = texelFetch(sampler, p01 % textureSize, 0);
-//   vec4 c10 = texelFetch(sampler, p10 % textureSize, 0);
-//   vec4 c11 = texelFetch(sampler, p11 % textureSize, 0);
-
-  // clamped
-  vec4 c00 = texelFetch(sampler, p00, 0);
-  vec4 c01 = texelFetch(sampler, p01, 0);
-  vec4 c10 = texelFetch(sampler, p10, 0);
-  vec4 c11 = texelFetch(sampler, p11, 0);
-
-
-//ARTIFACTS!!!
-//   vec2 p00 = vec2(x0, y0);
-//   vec2 p01 = vec2(x0, y1);
-//   vec2 p10 = vec2(x1, y0);
-//   vec2 p11 = vec2(x1, y1);
-//   vec4 c00 = texture(sampler, p00 / textureSize);
-//   vec4 c01 = texture(sampler, p01 / textureSize);
-//   vec4 c10 = texture(sampler, p10 / textureSize);
-//   vec4 c11 = texture(sampler, p11 / textureSize);
-
-  types[0] = c00.xyz;
-  types[1] = c01.xyz;
-  types[2] = c10.xyz;
-  types[3] = c11.xyz;
-
-  weights[0] = w00;
-  weights[1] = w01;
-  weights[2] = w10;
-  weights[3] = w11;
+  weights[0] = x0_w * y0_w;
+  weights[1] = x0_w * y1_w;
+  weights[2] = x1_w * y0_w;
+  weights[3] = x1_w * y1_w;
 }
 
 
