@@ -106,7 +106,6 @@ float sampleNoise(vec2 coord)
 
 
 void sampleTypeMap(sampler2D sampler,
-            ivec2 textureSize,
             vec2 coords,
             out vec3 types[4],
             out float weights[4])
@@ -202,15 +201,12 @@ vec3 sampleTerrainDetailNormal(vec3 type)
 #endif
 
 
-vec4 sampleTerrainTextures(vec2 pos)
+vec4 sampleTerrainTextures()
 {
   vec3 types[4];
   float weights[4];
 
-//   float lod = textureQueryLod(sampler_type_map, typeMapCoords).y;
-//   float lod = mip_map_level(pos.xy / map_size);
-
-  sampleTypeMap(sampler_type_map, typeMapSize, pass_type_map_coord, types, weights);
+  sampleTypeMap(sampler_type_map, pass_type_map_coord, types, weights);
 
   vec4 c00 = sampleTerrain(types[0]);
   vec4 c01 = sampleTerrain(types[1]);
@@ -226,12 +222,12 @@ vec4 sampleTerrainTextures(vec2 pos)
 
 
 #if ENABLE_TERRAIN_DETAIL_NM
-vec3 getTerrainDetailNormal(vec2 pos)
+vec3 getTerrainDetailNormal()
 {
   vec3 types[4];
   float weights[4];
 
-  sampleTypeMap(sampler_type_map_normals, typeMapSize, pass_type_map_coord, types, weights);
+  sampleTypeMap(sampler_type_map_normals, pass_type_map_coord, types, weights);
 
   vec3 c00 = sampleTerrainDetailNormal(types[0]);
   vec3 c01 = sampleTerrainDetailNormal(types[1]);
@@ -267,7 +263,7 @@ vec4 sampleBaseTerrainTextures(vec2 pos)
 
   vec2 typeMapCoords = (pos.xy - height_map_base_origin) / type_map_base_meters_per_pixel;
 
-  sampleTypeMap(sampler_type_map_base, type_map_base_size_px, typeMapCoords, types, weights);
+  sampleTypeMap(sampler_type_map_base, typeMapCoords, types, weights);
 
   vec4 c00 = sampleBaseTerrain(types[0]);
   vec4 c01 = sampleBaseTerrain(types[1]);
@@ -456,12 +452,12 @@ vec3 normal_detail = vec3(0,0,1);
 
 #if ENABLE_TYPE_MAP
   #if !LOW_DETAIL
-    color = sampleTerrainTextures(pos_flat.xy);
+    color = sampleTerrainTextures();
     #if ENABLE_BASE_MAP
       color = mix(sampleBaseTerrainTextures(pos_flat.xy), color, detail_blend);
     #endif
     #if ENABLE_TERRAIN_DETAIL_NM
-      normal_detail = getTerrainDetailNormal(pos_flat.xy);
+      normal_detail = getTerrainDetailNormal();
     #endif
   #endif
   color.w = 1;
